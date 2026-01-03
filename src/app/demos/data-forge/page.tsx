@@ -14,6 +14,7 @@ import {
   type DataForgeState,
   type DataForgeAction,
   type GeneratedData,
+  type TableQuality,
 } from "./types";
 import { buildGenerationPrompt, parseGeneratedData, getTableGenerationOrder } from "./utils/prompts";
 
@@ -216,6 +217,7 @@ export default function DataForgePage() {
     try {
       const orderedTables = getTableGenerationOrder(state.schema);
       const generatedData: GeneratedData = {};
+      const qualityReport: TableQuality[] = [];
 
       for (let i = 0; i < orderedTables.length; i++) {
         const table = orderedTables[i];
@@ -230,12 +232,21 @@ export default function DataForgePage() {
 
         const prompt = buildGenerationPrompt(table, state.schema, generatedData);
         const response = await generate(prompt);
-        const rows = parseGeneratedData(response, table, state.schema, generatedData);
+        const result = parseGeneratedData(response, table, state.schema, generatedData);
 
-        generatedData[table.name] = rows;
+        generatedData[table.name] = result.rows;
+        qualityReport.push({
+          tableName: table.name,
+          quality: result.quality,
+          issues: result.issues,
+        });
       }
 
       dispatch({ type: "SET_GENERATED_DATA", data: generatedData });
+      dispatch({
+        type: "SET_GENERATION_PROGRESS",
+        progress: { qualityReport },
+      });
     } catch (err) {
       dispatch({
         type: "SET_GENERATION_PROGRESS",
@@ -304,6 +315,39 @@ export default function DataForgePage() {
         onGenerate={handleGenerate}
         onLoadModel={handleLoadModel}
       />
+
+      {/* Quality Warnings */}
+      {state.generationProgress.qualityReport && state.generationProgress.qualityReport.some(r => r.quality !== "good") && (
+        <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+          <h3 className="font-medium text-yellow-800 dark:text-yellow-300 mb-2">
+            Data Quality Warning
+          </h3>
+          <p className="text-sm text-yellow-700 dark:text-yellow-400 mb-3">
+            The model struggled to generate some data. Consider using a larger model (Qwen3 1.7B or 4B) for better results.
+          </p>
+          <div className="space-y-2">
+            {state.generationProgress.qualityReport
+              .filter(r => r.quality !== "good")
+              .map(r => (
+                <div key={r.tableName} className="text-sm">
+                  <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium mr-2 ${
+                    r.quality === "fallback"
+                      ? "bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300"
+                      : "bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300"
+                  }`}>
+                    {r.quality === "fallback" ? "Fallback" : "Partial"}
+                  </span>
+                  <span className="font-mono text-yellow-800 dark:text-yellow-300">{r.tableName}</span>
+                  {r.issues.length > 0 && (
+                    <span className="text-yellow-600 dark:text-yellow-500 ml-2">
+                      — {r.issues.join(", ")}
+                    </span>
+                  )}
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
 
       {/* Export Panel */}
       {state.generatedData && (

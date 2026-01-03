@@ -89,6 +89,12 @@ export const MODEL_OPTIONS: ModelOption[] = [
 
 export const DEFAULT_MODEL_ID = "Qwen3-0.6B-q4f16_1-MLC";
 
+export interface TableQuality {
+  tableName: string;
+  quality: "good" | "partial" | "fallback";
+  issues: string[];
+}
+
 export interface GenerationProgress {
   status: "idle" | "loading-model" | "generating" | "complete" | "error";
   currentTable?: string;
@@ -96,6 +102,7 @@ export interface GenerationProgress {
   totalTables: number;
   modelLoadProgress: number;
   error?: string;
+  qualityReport?: TableQuality[];
 }
 
 // Reducer types

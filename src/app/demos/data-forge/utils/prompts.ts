@@ -206,12 +206,20 @@ function getRealisticExample(type: ColumnType, colName: string): unknown {
   }
 }
 
+export interface ParseResult {
+  rows: Record<string, unknown>[];
+  quality: "good" | "partial" | "fallback";
+  issues: string[];
+}
+
 export function parseGeneratedData(
   jsonString: string,
   table: Table,
   schema?: Schema,
   existingData?: GeneratedData
-): Record<string, unknown>[] {
+): ParseResult {
+  const issues: string[] = [];
+
   // Get FK references for validation
   const references = schema && existingData
     ? getReferencedData(table, schema, existingData)
@@ -221,6 +229,8 @@ export function parseGeneratedData(
   for (const ref of references) {
     fkValueSets.set(ref.columnName, new Set(ref.values.map((v) => JSON.stringify(v))));
   }
+
+  console.log(`[Data Forge] Raw LLM response for "${table.name}":`, jsonString.substring(0, 500));
 
   try {
     // Clean the response - remove markdown code blocks if present
@@ -258,12 +268,26 @@ export function parseGeneratedData(
     }
 
     if (!rows || rows.length === 0) {
-      console.warn("LLM returned empty or invalid format, using fallback data. Response:", parsed);
-      return generateFallbackData(table, references);
+      console.warn("[Data Forge] Empty response, using fallback. Parsed:", parsed);
+      issues.push("Model returned empty data");
+      return { rows: generateFallbackData(table, references), quality: "fallback", issues };
     }
 
+    // Check what keys the LLM actually returned vs what we expected
+    const expectedCols = new Set(table.columns.map(c => c.name));
+    const firstRow = rows[0] as Record<string, unknown>;
+    const returnedKeys = Object.keys(firstRow || {});
+    const missingCols = table.columns.filter(c => !returnedKeys.includes(c.name)).map(c => c.name);
+
+    if (missingCols.length > 0) {
+      console.warn(`[Data Forge] LLM returned keys: [${returnedKeys.join(", ")}], missing: [${missingCols.join(", ")}]`);
+      issues.push(`Missing columns: ${missingCols.join(", ")}`);
+    }
+
+    let hadMissingValues = false;
+
     // Validate and clean the data, enforcing FK constraints
-    return rows.slice(0, table.rowCount).map((row: unknown, index: number) => {
+    const cleanedRows = rows.slice(0, table.rowCount).map((row: unknown, index: number) => {
       const cleanedRow: Record<string, unknown> = {};
       const rowData = row as Record<string, unknown>;
 
@@ -276,18 +300,30 @@ export function parseGeneratedData(
           const valueStr = JSON.stringify(value);
 
           if (!fkValueSets.get(col.name)!.has(valueStr) || value === undefined) {
-            // Pick a valid value based on index for distribution
             value = validValues[index % validValues.length];
           }
         }
 
-        cleanedRow[col.name] = value ?? (col.nullable ? null : getDefaultValue(col.type));
+        if (value === undefined || value === null) {
+          hadMissingValues = true;
+        }
+
+        cleanedRow[col.name] = value ?? (col.nullable ? null : generateFallbackValue(col, index));
       }
       return cleanedRow;
     });
+
+    const quality = missingCols.length === 0 && !hadMissingValues ? "good" : "partial";
+
+    if (quality === "partial") {
+      console.warn(`[Data Forge] Partial data quality for "${table.name}" - some values filled with fallbacks`);
+    }
+
+    return { rows: cleanedRows, quality, issues };
   } catch (err) {
-    console.error("Failed to parse generated data:", err, "\nRaw:", jsonString);
-    return generateFallbackData(table, references);
+    console.error("[Data Forge] Parse failed:", err, "\nRaw:", jsonString);
+    issues.push(`Parse error: ${err instanceof Error ? err.message : "Unknown error"}`);
+    return { rows: generateFallbackData(table, references), quality: "fallback", issues };
   }
 }
 
