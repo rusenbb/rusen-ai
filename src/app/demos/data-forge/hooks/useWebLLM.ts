@@ -111,21 +111,26 @@ export function useWebLLM(): UseWebLLMReturn {
       throw new Error("Model not loaded");
     }
 
+    // Add /no_think to disable Qwen3's thinking mode
     const response = await engineRef.current.chat.completions.create({
       messages: [
         {
           role: "system",
-          content:
-            "You are a data generator. Generate realistic fake data based on the schema provided. Always respond with valid JSON only, no explanation. Do not use markdown formatting.",
+          content: "You are a JSON data generator. Output ONLY valid JSON arrays, nothing else. No explanations, no markdown, no thinking. /no_think",
         },
-        { role: "user", content: prompt },
+        { role: "user", content: prompt + "\n\n/no_think" },
       ],
-      temperature: 0.8,
+      temperature: 0.3, // Lower temperature for more consistent structured output
       max_tokens: 4096,
       response_format: { type: "json_object" },
     });
 
-    return response.choices[0].message.content || "{}";
+    let content = response.choices[0].message.content || "{}";
+
+    // Strip any <think>...</think> tags that Qwen3 might still output
+    content = content.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+
+    return content;
   }, []);
 
   const unload = useCallback(async () => {

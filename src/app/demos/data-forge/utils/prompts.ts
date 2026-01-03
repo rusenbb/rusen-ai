@@ -87,23 +87,32 @@ export function buildGenerationPrompt(
     }
   }
 
-  const definitionLine = table.definition
-    ? `\nContext: ${table.definition}`
-    : "";
+  // Build a second example row with different values
+  const exampleRow2: Record<string, unknown> = {};
+  for (const col of table.columns) {
+    if (fkColumnNames.has(col.name)) {
+      const ref = references.find((r) => r.columnName === col.name)!;
+      exampleRow2[col.name] = ref.values[Math.min(1, ref.values.length - 1)];
+    } else {
+      exampleRow2[col.name] = getRealisticExample(col.type, col.name, 1);
+    }
+  }
 
-  const prompt = `You are generating realistic test data for a database.
+  const contextLine = table.definition ? ` (${table.definition})` : "";
 
-Table: "${table.name}"${definitionLine}
+  // Simplified, more direct prompt for small models
+  const prompt = `Generate ${table.rowCount} JSON objects for "${table.name}"${contextLine}.
 
-Columns:
-${columnDescriptions}
+Required fields for EACH object:
+${table.columns.map(col => `"${col.name}"`).join(", ")}
 
-Generate ${table.rowCount} realistic rows as a JSON array.${table.definition ? ` The data should fit the context: "${table.definition}".` : ""} Use real-sounding names, actual company names, realistic prices, proper dates, etc.
+Output a JSON array with exactly ${table.rowCount} objects like this:
+[
+${JSON.stringify(exampleRow)},
+${JSON.stringify(exampleRow2)}
+]
 
-Example format:
-[${JSON.stringify(exampleRow)}]
-
-Now generate ${table.rowCount} unique, realistic rows:`;
+Generate ${table.rowCount} unique realistic entries now:`;
 
   return prompt;
 }
@@ -156,51 +165,54 @@ function getRealisticHint(type: ColumnType, colName: string): string {
   }
 }
 
-function getRealisticExample(type: ColumnType, colName: string): unknown {
+function getRealisticExample(type: ColumnType, colName: string, index: number = 0): unknown {
   const nameLower = colName.toLowerCase();
+  const i = index % 2; // Alternate between two examples
 
-  // Context-aware examples
+  // Context-aware examples with variations
   if (nameLower.includes("name")) {
-    if (nameLower.includes("first")) return "Emma";
-    if (nameLower.includes("last")) return "Thompson";
-    if (nameLower.includes("company")) return "Acme Technologies";
-    if (nameLower.includes("product")) return "Premium Wireless Headphones";
-    return "Sarah Mitchell";
+    if (nameLower.includes("first")) return ["Emma", "James"][i];
+    if (nameLower.includes("last")) return ["Thompson", "Garcia"][i];
+    if (nameLower.includes("company")) return ["Acme Technologies", "TechFlow Inc"][i];
+    if (nameLower.includes("product")) return ["Premium Wireless Headphones", "Smart Watch Pro"][i];
+    return ["Sarah Mitchell", "James Chen"][i];
   }
-  if (nameLower.includes("title")) return "Senior Software Engineer";
-  if (nameLower.includes("description")) return "High-quality product with excellent features and durability.";
-  if (nameLower.includes("bio")) return "Passionate developer with 5 years of experience in web technologies.";
-  if (nameLower.includes("address")) return "123 Oak Street, Suite 400";
-  if (nameLower.includes("city")) return "San Francisco";
-  if (nameLower.includes("country")) return "United States";
-  if (nameLower.includes("phone")) return "+1-555-123-4567";
-  if (nameLower.includes("price") || nameLower.includes("amount")) return 49.99;
-  if (nameLower.includes("total")) return 159.97;
-  if (nameLower.includes("quantity")) return 3;
-  if (nameLower.includes("rating")) return 4.5;
-  if (nameLower.includes("status")) return "active";
-  if (nameLower.includes("category")) return "Electronics";
-  if (nameLower.includes("url") || nameLower.includes("website")) return "https://example.com/page";
-  if (nameLower.includes("image") || nameLower.includes("avatar")) return "/images/user-1.jpg";
+  if (nameLower.includes("title")) return ["Senior Software Engineer", "Product Manager"][i];
+  if (nameLower.includes("description")) return ["High-quality product with excellent features.", "Modern design with premium materials."][i];
+  if (nameLower.includes("bio")) return ["Developer with 5 years of experience.", "Tech lead specializing in cloud architecture."][i];
+  if (nameLower.includes("address")) return ["123 Oak Street, Suite 400", "456 Maple Avenue"][i];
+  if (nameLower.includes("city")) return ["San Francisco", "New York"][i];
+  if (nameLower.includes("country")) return ["United States", "Canada"][i];
+  if (nameLower.includes("phone")) return ["+1-555-123-4567", "+1-555-987-6543"][i];
+  if (nameLower.includes("price") || nameLower.includes("amount")) return [49.99, 89.99][i];
+  if (nameLower.includes("total")) return [159.97, 249.50][i];
+  if (nameLower.includes("quantity")) return [3, 5][i];
+  if (nameLower.includes("rating")) return [4.5, 4.8][i];
+  if (nameLower.includes("status")) return ["active", "pending"][i];
+  if (nameLower.includes("category")) return ["Electronics", "Software"][i];
+  if (nameLower.includes("url") || nameLower.includes("website")) return ["https://example.com/page1", "https://example.com/page2"][i];
+  if (nameLower.includes("image") || nameLower.includes("avatar")) return ["/images/user-1.jpg", "/images/user-2.jpg"][i];
+  if (nameLower.includes("content") || nameLower.includes("body")) return ["This article covers modern development practices.", "A guide to building scalable applications."][i];
+  if (nameLower.includes("comment")) return ["Great article, very helpful!", "Thanks for sharing this information."][i];
 
   // Default examples by type
   switch (type) {
     case "string":
-      return "Example value";
+      return ["Example value", "Another example"][i];
     case "integer":
-      return 42;
+      return [42, 17][i];
     case "float":
-      return 29.99;
+      return [29.99, 45.50][i];
     case "boolean":
-      return true;
+      return [true, false][i];
     case "date":
-      return "2024-03-15";
+      return ["2024-03-15", "2024-06-22"][i];
     case "email":
-      return "sarah.mitchell@gmail.com";
+      return ["sarah.mitchell@gmail.com", "james.chen@outlook.com"][i];
     case "uuid":
       return crypto.randomUUID();
     case "text":
-      return "This is a detailed description with multiple sentences. It provides context and information about the item.";
+      return ["Detailed description with context.", "Comprehensive overview of the topic."][i];
     default:
       return "value";
   }
