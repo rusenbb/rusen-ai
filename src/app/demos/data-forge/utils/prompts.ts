@@ -87,12 +87,18 @@ export function buildGenerationPrompt(
     }
   }
 
+  const definitionLine = table.definition
+    ? `\nContext: ${table.definition}`
+    : "";
+
   const prompt = `You are generating realistic test data for a database.
 
-Table: "${table.name}"
+Table: "${table.name}"${definitionLine}
+
+Columns:
 ${columnDescriptions}
 
-Generate ${table.rowCount} realistic rows as a JSON array. Use real-sounding names, actual company names, realistic prices, proper dates, etc.
+Generate ${table.rowCount} realistic rows as a JSON array.${table.definition ? ` The data should fit the context: "${table.definition}".` : ""} Use real-sounding names, actual company names, realistic prices, proper dates, etc.
 
 Example format:
 [${JSON.stringify(exampleRow)}]
