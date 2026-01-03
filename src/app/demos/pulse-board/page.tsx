@@ -512,132 +512,160 @@ function HackerNewsWidget() {
   );
 }
 
-// ISS Tracker Widget - Real-time International Space Station location
-function ISSTrackerWidget() {
-  const [issData, setIssData] = useState<{
-    latitude: number;
-    longitude: number;
-    timestamp: number;
-  } | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchISS = useCallback(async () => {
-    try {
-      const res = await fetch("https://api.open-notify.org/iss-now.json");
-      if (!res.ok) throw new Error("Failed to fetch");
-
-      const data = await res.json();
-      if (data.message === "success") {
-        setIssData({
-          latitude: parseFloat(data.iss_position.latitude),
-          longitude: parseFloat(data.iss_position.longitude),
-          timestamp: data.timestamp,
-        });
-        setError(null);
-      }
-    } catch (err) {
-      setError("Failed to fetch ISS data");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+// Live Crypto Ticker - Real-time WebSocket prices from Binance
+function LiveCryptoTickerWidget() {
+  const [prices, setPrices] = useState<{
+    btc: { price: number; prevPrice: number };
+    eth: { price: number; prevPrice: number };
+    sol: { price: number; prevPrice: number };
+  }>({
+    btc: { price: 0, prevPrice: 0 },
+    eth: { price: 0, prevPrice: 0 },
+    sol: { price: 0, prevPrice: 0 },
+  });
+  const [connected, setConnected] = useState(false);
+  const [updateCount, setUpdateCount] = useState(0);
+  const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    fetchISS();
-    // Update every 5 seconds for real-time tracking
-    const interval = setInterval(fetchISS, 5000);
-    return () => clearInterval(interval);
-  }, [fetchISS]);
+    // Binance WebSocket streams for BTC, ETH, SOL
+    const ws = new WebSocket(
+      "wss://stream.binance.com:9443/stream?streams=btcusdt@trade/ethusdt@trade/solusdt@trade"
+    );
 
-  const getLocationDescription = (lat: number, lon: number) => {
-    const latDir = lat >= 0 ? "N" : "S";
-    const lonDir = lon >= 0 ? "E" : "W";
-    return `${Math.abs(lat).toFixed(2)}° ${latDir}, ${Math.abs(lon).toFixed(2)}° ${lonDir}`;
+    ws.onopen = () => {
+      setConnected(true);
+    };
+
+    ws.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+      const { stream, data } = message;
+      const price = parseFloat(data.p);
+
+      setPrices((prev) => {
+        if (stream === "btcusdt@trade") {
+          return { ...prev, btc: { price, prevPrice: prev.btc.price || price } };
+        } else if (stream === "ethusdt@trade") {
+          return { ...prev, eth: { price, prevPrice: prev.eth.price || price } };
+        } else if (stream === "solusdt@trade") {
+          return { ...prev, sol: { price, prevPrice: prev.sol.price || price } };
+        }
+        return prev;
+      });
+      setUpdateCount((c) => c + 1);
+    };
+
+    ws.onerror = () => {
+      setConnected(false);
+    };
+
+    ws.onclose = () => {
+      setConnected(false);
+    };
+
+    wsRef.current = ws;
+
+    return () => {
+      ws.close();
+    };
+  }, []);
+
+  const formatPrice = (price: number, decimals: number = 2) => {
+    if (price === 0) return "--";
+    return price.toLocaleString("en-US", {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    });
   };
 
-  const getRegion = (lat: number, lon: number) => {
-    // Rough region detection
-    if (lat > 66.5) return "Arctic";
-    if (lat < -66.5) return "Antarctic";
-    if (lon >= -180 && lon < -30 && lat > 0) return "North America";
-    if (lon >= -180 && lon < -30 && lat <= 0) return "South America";
-    if (lon >= -30 && lon < 60 && lat > 0) return "Europe/Africa";
-    if (lon >= -30 && lon < 60 && lat <= 0) return "Africa";
-    if (lon >= 60 && lon < 150 && lat > 0) return "Asia";
-    if (lon >= 100 && lon < 180 && lat <= 0) return "Oceania";
-    return "Pacific Ocean";
+  const getPriceColor = (current: number, prev: number) => {
+    if (current === prev || prev === 0) return "";
+    return current > prev
+      ? "text-green-600 dark:text-green-400"
+      : "text-red-600 dark:text-red-400";
+  };
+
+  const getFlashClass = (current: number, prev: number) => {
+    if (current === prev || prev === 0) return "";
+    return current > prev ? "animate-flash-green" : "animate-flash-red";
   };
 
   return (
     <Card className="col-span-1 md:col-span-2">
       <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-        <span className="text-xl">&#128752;</span> ISS Live Tracker
+        <span className="text-xl">&#9889;</span> Live Crypto Ticker
+        <span className="ml-auto flex items-center gap-2">
+          {connected ? (
+            <>
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+              </span>
+              <span className="text-xs text-green-600 dark:text-green-400 font-normal">LIVE</span>
+            </>
+          ) : (
+            <>
+              <span className="h-2 w-2 rounded-full bg-red-500"></span>
+              <span className="text-xs text-red-500 font-normal">Connecting...</span>
+            </>
+          )}
+        </span>
       </h2>
-      {loading ? (
-        <div className="space-y-3">
-          <Skeleton className="h-6 w-48" />
-          <Skeleton className="h-32 w-full rounded" />
-        </div>
-      ) : error ? (
-        <p className="text-red-500 text-sm">{error}</p>
-      ) : issData ? (
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-            </span>
-            <span className="text-sm font-medium">Live - Updates every 5s</span>
-          </div>
 
-          <div className="relative bg-neutral-100 dark:bg-neutral-800 rounded-lg h-32 overflow-hidden mb-3">
-            {/* Simple world map representation */}
-            <div className="absolute inset-0 opacity-20">
-              <svg viewBox="0 0 360 180" className="w-full h-full" preserveAspectRatio="none">
-                <rect fill="currentColor" x="0" y="0" width="360" height="180" opacity="0.1"/>
-                {/* Simplified continents */}
-                <ellipse cx="90" cy="70" rx="40" ry="30" fill="currentColor" opacity="0.3"/>
-                <ellipse cx="90" cy="120" rx="25" ry="35" fill="currentColor" opacity="0.3"/>
-                <ellipse cx="180" cy="60" rx="50" ry="25" fill="currentColor" opacity="0.3"/>
-                <ellipse cx="170" cy="110" rx="30" ry="25" fill="currentColor" opacity="0.3"/>
-                <ellipse cx="260" cy="70" rx="45" ry="35" fill="currentColor" opacity="0.3"/>
-                <ellipse cx="300" cy="130" rx="25" ry="20" fill="currentColor" opacity="0.3"/>
-              </svg>
-            </div>
-            {/* ISS Position marker */}
-            <div
-              className="absolute w-4 h-4 transform -translate-x-1/2 -translate-y-1/2 transition-all duration-1000"
-              style={{
-                left: `${((issData.longitude + 180) / 360) * 100}%`,
-                top: `${((90 - issData.latitude) / 180) * 100}%`,
-              }}
-            >
-              <span className="absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75 animate-ping"></span>
-              <span className="relative inline-flex rounded-full h-4 w-4 bg-red-600 border-2 border-white dark:border-neutral-900"></span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <div className="text-neutral-500 text-xs">Coordinates</div>
-              <div className="font-mono font-medium">{getLocationDescription(issData.latitude, issData.longitude)}</div>
+      <div className="space-y-4">
+        {/* BTC */}
+        <div className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold text-sm">
+              ₿
             </div>
             <div>
-              <div className="text-neutral-500 text-xs">Flying Over</div>
-              <div className="font-medium">{getRegion(issData.latitude, issData.longitude)}</div>
+              <div className="font-semibold">Bitcoin</div>
+              <div className="text-xs text-neutral-500">BTC/USDT</div>
             </div>
           </div>
+          <div className={`text-right font-mono text-xl font-bold transition-colors ${getPriceColor(prices.btc.price, prices.btc.prevPrice)}`}>
+            ${formatPrice(prices.btc.price)}
+          </div>
         </div>
-      ) : null}
-      <a
-        href="https://spotthestation.nasa.gov/tracking_map.cfm"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-xs text-neutral-500 hover:underline mt-3 inline-block"
-      >
-        NASA Spot The Station &#8594;
-      </a>
+
+        {/* ETH */}
+        <div className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-sm">
+              Ξ
+            </div>
+            <div>
+              <div className="font-semibold">Ethereum</div>
+              <div className="text-xs text-neutral-500">ETH/USDT</div>
+            </div>
+          </div>
+          <div className={`text-right font-mono text-xl font-bold transition-colors ${getPriceColor(prices.eth.price, prices.eth.prevPrice)}`}>
+            ${formatPrice(prices.eth.price)}
+          </div>
+        </div>
+
+        {/* SOL */}
+        <div className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-teal-400 flex items-center justify-center text-white font-bold text-sm">
+              S
+            </div>
+            <div>
+              <div className="font-semibold">Solana</div>
+              <div className="text-xs text-neutral-500">SOL/USDT</div>
+            </div>
+          </div>
+          <div className={`text-right font-mono text-xl font-bold transition-colors ${getPriceColor(prices.sol.price, prices.sol.prevPrice)}`}>
+            ${formatPrice(prices.sol.price)}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 flex items-center justify-between text-xs text-neutral-500">
+        <span>WebSocket: Binance</span>
+        <span>{updateCount.toLocaleString()} updates</span>
+      </div>
     </Card>
   );
 }
@@ -1061,7 +1089,7 @@ export default function PulseBoardPage() {
         <EarthquakeWidget />
         <GithubTrendingWidget />
         <HackerNewsWidget />
-        <ISSTrackerWidget />
+        <LiveCryptoTickerWidget />
       </div>
 
       <div className="mt-8 text-center text-sm text-neutral-500">
