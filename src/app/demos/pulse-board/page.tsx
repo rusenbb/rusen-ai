@@ -66,6 +66,7 @@ const CITIES = [
 const CLOCKS: Clock[] = [
   { city: "New York", timezone: "America/New_York", flag: "US" },
   { city: "London", timezone: "Europe/London", flag: "GB" },
+  { city: "Istanbul", timezone: "Europe/Istanbul", flag: "TR" },
   { city: "Tokyo", timezone: "Asia/Tokyo", flag: "JP" },
   { city: "Sydney", timezone: "Australia/Sydney", flag: "AU" },
 ];
@@ -207,7 +208,7 @@ function WorldClocksWidget() {
         {CLOCKS.map((clock) => (
           <div key={clock.city} className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-sm">{clock.flag === "US" ? "US" : clock.flag === "GB" ? "GB" : clock.flag === "JP" ? "JP" : "AU"}</span>
+              <span className="text-sm">{clock.flag}</span>
               <span className="text-sm text-neutral-600 dark:text-neutral-400">{clock.city}</span>
             </div>
             <div className="text-right">

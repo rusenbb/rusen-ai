@@ -30,6 +30,7 @@ export interface Column {
 export interface Table {
   id: string;
   name: string;
+  definition: string;
   columns: Column[];
   rowCount: number;
 }
@@ -143,6 +144,7 @@ export function createDefaultTable(): Table {
   return {
     id: tableId,
     name: `table_${tableId.substring(0, 4)}`,
+    definition: "",
     columns: [
       {
         id: generateId(),
@@ -181,6 +183,7 @@ export const PRESET_SCHEMAS: { name: string; schema: Schema }[] = [
         {
           id: "users",
           name: "users",
+          definition: "Registered customers of an online electronics store",
           columns: [
             { id: "u1", name: "id", type: "uuid", nullable: false, isPrimaryKey: true },
             { id: "u2", name: "name", type: "string", nullable: false, isPrimaryKey: false },
@@ -192,6 +195,7 @@ export const PRESET_SCHEMAS: { name: string; schema: Schema }[] = [
         {
           id: "products",
           name: "products",
+          definition: "Electronics and gadgets available for purchase",
           columns: [
             { id: "p1", name: "id", type: "uuid", nullable: false, isPrimaryKey: true },
             { id: "p2", name: "name", type: "string", nullable: false, isPrimaryKey: false },
@@ -203,6 +207,7 @@ export const PRESET_SCHEMAS: { name: string; schema: Schema }[] = [
         {
           id: "orders",
           name: "orders",
+          definition: "Customer purchases with order totals and dates",
           columns: [
             { id: "o1", name: "id", type: "uuid", nullable: false, isPrimaryKey: true },
             { id: "o2", name: "user_id", type: "uuid", nullable: false, isPrimaryKey: false },
@@ -230,6 +235,7 @@ export const PRESET_SCHEMAS: { name: string; schema: Schema }[] = [
         {
           id: "authors",
           name: "authors",
+          definition: "Tech blog writers and content creators",
           columns: [
             { id: "a1", name: "id", type: "uuid", nullable: false, isPrimaryKey: true },
             { id: "a2", name: "name", type: "string", nullable: false, isPrimaryKey: false },
@@ -241,6 +247,7 @@ export const PRESET_SCHEMAS: { name: string; schema: Schema }[] = [
         {
           id: "posts",
           name: "posts",
+          definition: "Programming tutorials and tech articles",
           columns: [
             { id: "p1", name: "id", type: "uuid", nullable: false, isPrimaryKey: true },
             { id: "p2", name: "author_id", type: "uuid", nullable: false, isPrimaryKey: false },
@@ -254,6 +261,7 @@ export const PRESET_SCHEMAS: { name: string; schema: Schema }[] = [
         {
           id: "comments",
           name: "comments",
+          definition: "Reader comments and feedback on blog posts",
           columns: [
             { id: "c1", name: "id", type: "uuid", nullable: false, isPrimaryKey: true },
             { id: "c2", name: "post_id", type: "uuid", nullable: false, isPrimaryKey: false },
