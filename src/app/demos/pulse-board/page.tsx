@@ -1319,19 +1319,16 @@ function InternetPulseWidget() {
   );
 }
 
-// SpaceX Launches Widget
-function SpaceXWidget() {
-  const [nextLaunch, setNextLaunch] = useState<{
-    name: string;
-    date: Date;
-    rocket: string;
-    launchpad: string;
-  } | null>(null);
-  const [recentLaunches, setRecentLaunches] = useState<Array<{
+// Rocket Launches Widget - Using Launch Library 2 API (TheSpaceDevs)
+function RocketLaunchesWidget() {
+  const [launches, setLaunches] = useState<Array<{
     id: string;
     name: string;
-    date: Date;
-    success: boolean | null;
+    net: string;
+    provider: string;
+    rocket: string;
+    pad: string;
+    status: string;
   }>>([]);
   const [countdown, setCountdown] = useState<string>("");
   const [loading, setLoading] = useState(true);
@@ -1339,36 +1336,35 @@ function SpaceXWidget() {
 
   const fetchLaunches = useCallback(async () => {
     try {
-      const [nextRes, pastRes] = await Promise.all([
-        fetch("https://api.spacexdata.com/v5/launches/next"),
-        fetch("https://api.spacexdata.com/v5/launches/past?limit=5&sort=date_utc&order=desc"),
-      ]);
+      const res = await fetch(
+        "https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=5&mode=list"
+      );
 
-      if (nextRes.ok) {
-        const next = await nextRes.json();
-        setNextLaunch({
-          name: next.name,
-          date: new Date(next.date_utc),
-          rocket: next.rocket,
-          launchpad: next.launchpad,
-        });
-      }
+      if (!res.ok) throw new Error("API error");
 
-      if (pastRes.ok) {
-        const past = await pastRes.json();
-        setRecentLaunches(
-          past.map((l: { id: string; name: string; date_utc: string; success: boolean | null }) => ({
-            id: l.id,
-            name: l.name,
-            date: new Date(l.date_utc),
-            success: l.success,
-          }))
-        );
-      }
+      const data = await res.json();
+      const upcoming = data.results.map((l: {
+        id: string;
+        name: string;
+        net: string;
+        launch_service_provider?: { name: string };
+        rocket?: { configuration?: { name: string } };
+        pad?: { name: string };
+        status?: { abbrev: string };
+      }) => ({
+        id: l.id,
+        name: l.name,
+        net: l.net,
+        provider: l.launch_service_provider?.name || "Unknown",
+        rocket: l.rocket?.configuration?.name || "Unknown",
+        pad: l.pad?.name || "Unknown",
+        status: l.status?.abbrev || "TBD",
+      }));
 
+      setLaunches(upcoming);
       setError(null);
     } catch (err) {
-      setError("Failed to fetch SpaceX data");
+      setError("Failed to fetch launch data");
     } finally {
       setLoading(false);
     }
@@ -1380,16 +1376,17 @@ function SpaceXWidget() {
     return () => clearInterval(interval);
   }, [fetchLaunches]);
 
-  // Countdown timer
+  // Countdown timer for next launch
   useEffect(() => {
-    if (!nextLaunch) return;
+    if (launches.length === 0) return;
 
     const updateCountdown = () => {
       const now = new Date();
-      const diff = nextLaunch.date.getTime() - now.getTime();
+      const launchDate = new Date(launches[0].net);
+      const diff = launchDate.getTime() - now.getTime();
 
       if (diff <= 0) {
-        setCountdown("LAUNCHING!");
+        setCountdown("LIFTOFF!");
         return;
       }
 
@@ -1408,16 +1405,27 @@ function SpaceXWidget() {
     updateCountdown();
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
-  }, [nextLaunch]);
+  }, [launches]);
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  };
+
+  const getProviderShort = (provider: string) => {
+    if (provider.includes("SpaceX")) return "SpaceX";
+    if (provider.includes("Rocket Lab")) return "RocketLab";
+    if (provider.includes("United Launch")) return "ULA";
+    if (provider.includes("ISRO")) return "ISRO";
+    if (provider.includes("CNSA") || provider.includes("China")) return "CNSA";
+    if (provider.includes("Roscosmos")) return "Russia";
+    if (provider.includes("Blue Origin")) return "BlueOrigin";
+    return provider.slice(0, 10);
   };
 
   return (
     <Card>
       <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-        <span className="text-xl">&#128640;</span> SpaceX Launches
+        <span className="text-xl">&#128640;</span> Rocket Launches
       </h2>
 
       {loading ? (
@@ -1427,40 +1435,43 @@ function SpaceXWidget() {
         </div>
       ) : error ? (
         <p className="text-red-500 text-sm">{error}</p>
-      ) : (
+      ) : launches.length > 0 ? (
         <>
-          {nextLaunch && (
-            <div className="mb-4 p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
-              <div className="text-xs text-neutral-500 mb-1">NEXT LAUNCH</div>
-              <div className="font-semibold mb-1">{nextLaunch.name}</div>
-              <div className="text-2xl font-mono font-bold text-blue-600 dark:text-blue-400">
-                {countdown}
-              </div>
-              <div className="text-xs text-neutral-500 mt-1">{formatDate(nextLaunch.date)}</div>
+          <div className="mb-4 p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
+            <div className="text-xs text-neutral-500 mb-1">NEXT LAUNCH</div>
+            <div className="font-semibold mb-1 text-sm">{launches[0].name}</div>
+            <div className="text-2xl font-mono font-bold text-blue-600 dark:text-blue-400">
+              {countdown}
             </div>
-          )}
+            <div className="text-xs text-neutral-500 mt-1">
+              {getProviderShort(launches[0].provider)} • {formatDate(launches[0].net)}
+            </div>
+          </div>
 
-          <div className="text-xs text-neutral-500 mb-2">RECENT LAUNCHES</div>
+          <div className="text-xs text-neutral-500 mb-2">UPCOMING</div>
           <div className="space-y-2">
-            {recentLaunches.slice(0, 4).map((launch) => (
+            {launches.slice(1, 5).map((launch) => (
               <div key={launch.id} className="flex items-center justify-between text-sm">
-                <span className="truncate flex-1">{launch.name}</span>
-                <span className={`ml-2 ${launch.success ? "text-green-500" : launch.success === false ? "text-red-500" : "text-neutral-400"}`}>
-                  {launch.success ? "✓" : launch.success === false ? "✗" : "?"}
-                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="truncate text-xs">{launch.name}</div>
+                  <div className="text-xs text-neutral-400">{getProviderShort(launch.provider)}</div>
+                </div>
+                <span className="text-xs text-neutral-500 ml-2">{formatDate(launch.net)}</span>
               </div>
             ))}
           </div>
         </>
+      ) : (
+        <p className="text-neutral-500 text-sm">No upcoming launches</p>
       )}
 
       <a
-        href="https://www.spacex.com/launches/"
+        href="https://www.spacelaunchnow.me/"
         target="_blank"
         rel="noopener noreferrer"
         className="text-xs text-neutral-500 hover:underline mt-3 inline-block"
       >
-        SpaceX Launches &#8594;
+        Space Launch Now &#8594;
       </a>
     </Card>
   );
@@ -1622,7 +1633,7 @@ export default function PulseBoardPage() {
         <CryptoHubWidget />
         <CertstreamWidget />
         <WikipediaLiveWidget />
-        <SpaceXWidget />
+        <RocketLaunchesWidget />
         <WorldClocksWidget />
         <WeatherWidget />
         <AviationWidget />
