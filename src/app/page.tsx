@@ -34,16 +34,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Data Philosophy */}
-      <section className="mb-20 text-center">
-        <div className="max-w-3xl mx-auto p-8 border border-neutral-200 dark:border-neutral-800 rounded-lg bg-neutral-50 dark:bg-neutral-900">
-          <p className="text-lg text-neutral-600 dark:text-neutral-400 italic">
-            &ldquo;In God we trust. All others must bring data.&rdquo;
-          </p>
-          <p className="text-sm text-neutral-500 mt-2">— W. Edwards Deming</p>
-        </div>
-      </section>
-
       {/* Featured Demos */}
       <section className="mb-20">
         <h2 className="text-2xl font-bold mb-2">Featured Demos</h2>

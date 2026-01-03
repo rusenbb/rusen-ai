@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --background: #fafafa;
   --foreground: #171717;
 }
 
@@ -14,7 +14,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --background: #0c0c0f;
     --foreground: #ededed;
   }
 }
@@ -23,4 +23,23 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Data grid background pattern */
+@media (prefers-color-scheme: dark) {
+  body {
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.03) 1px, transparent 0);
+    background-size: 24px 24px;
+    background-position: 0 0;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  body {
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(0, 0, 0, 0.04) 1px, transparent 0);
+    background-size: 24px 24px;
+    background-position: 0 0;
+  }
 }

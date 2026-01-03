@@ -1,0 +1,16 @@
+{
+  "name": "rusenizer-wasm",
+  "type": "module",
+  "description": "Turkish-optimized BPE tokenizer for the browser",
+  "version": "0.1.0",
+  "files": [
+    "rusenizer_wasm_bg.wasm",
+    "rusenizer_wasm.js",
+    "rusenizer_wasm.d.ts"
+  ],
+  "main": "rusenizer_wasm.js",
+  "types": "rusenizer_wasm.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
