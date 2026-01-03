@@ -111,21 +111,30 @@ export function useWebLLM(): UseWebLLMReturn {
       throw new Error("Model not loaded");
     }
 
-    // Add /no_think to disable Qwen3's thinking mode
+    const systemMessage = "You are a JSON data generator. Output ONLY valid JSON arrays, nothing else. No explanations, no markdown, no thinking. /no_think";
+    const userMessage = prompt + "\n\n/no_think";
+
+    // Log exactly what we're sending
+    console.log("[Data Forge] === SENDING TO LLM ===");
+    console.log("[Data Forge] System:", systemMessage);
+    console.log("[Data Forge] User:", userMessage);
+    console.log("[Data Forge] =====================");
+
     const response = await engineRef.current.chat.completions.create({
       messages: [
-        {
-          role: "system",
-          content: "You are a JSON data generator. Output ONLY valid JSON arrays, nothing else. No explanations, no markdown, no thinking. /no_think",
-        },
-        { role: "user", content: prompt + "\n\n/no_think" },
+        { role: "system", content: systemMessage },
+        { role: "user", content: userMessage },
       ],
-      temperature: 0.3, // Lower temperature for more consistent structured output
+      temperature: 0.3,
       max_tokens: 4096,
       response_format: { type: "json_object" },
     });
 
     let content = response.choices[0].message.content || "{}";
+
+    console.log("[Data Forge] === RAW LLM RESPONSE ===");
+    console.log("[Data Forge]", content);
+    console.log("[Data Forge] =========================");
 
     // Strip any <think>...</think> tags that Qwen3 might still output
     content = content.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
