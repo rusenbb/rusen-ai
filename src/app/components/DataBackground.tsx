@@ -7,17 +7,16 @@ import { useEffect, useRef, useState } from "react";
 // Using blocky, 90-degree angle designs for clarity with dot grid
 
 function isInsideD(x: number, y: number): boolean {
-  // Blocky D shape:
-  // - Left vertical bar (0-25, full height)
-  // - Top horizontal bar (0-75, 0-25)
-  // - Bottom horizontal bar (0-75, 75-100)
-  // - Right vertical bar (75-100, 25-75)
-  // - Inner hole (25-75, 25-75)
+  // Blocky D shape using 10-90 range to avoid edge issues:
+  // - Left vertical bar (10-30, full height)
+  // - Top horizontal bar (10-70, 10-30)
+  // - Bottom horizontal bar (10-70, 70-90)
+  // - Right vertical bar (70-90, 30-70)
   
-  const leftBar = x >= 0 && x <= 25 && y >= 0 && y <= 100;
-  const topBar = x >= 0 && x <= 75 && y >= 0 && y <= 25;
-  const bottomBar = x >= 0 && x <= 75 && y >= 75 && y <= 100;
-  const rightBar = x >= 75 && x <= 100 && y >= 25 && y <= 75;
+  const leftBar = x >= 10 && x <= 30 && y >= 10 && y <= 90;
+  const topBar = x >= 10 && x <= 70 && y >= 10 && y <= 30;
+  const bottomBar = x >= 10 && x <= 70 && y >= 70 && y <= 90;
+  const rightBar = x >= 70 && x <= 90 && y >= 30 && y <= 70;
   
   const inOuter = leftBar || topBar || bottomBar || rightBar;
   
@@ -25,27 +24,27 @@ function isInsideD(x: number, y: number): boolean {
 }
 
 function isInsideA(x: number, y: number): boolean {
-  // Blocky A shape with 90-degree angles:
-  // - Left vertical bar (0-25, 25-100)
-  // - Right vertical bar (75-100, 25-100)
-  // - Top horizontal bar (0-100, 0-25)
-  // - Middle crossbar (25-75, 45-60) - only connects the two bars, doesn't extend beyond
+  // Blocky A shape using 10-90 range:
+  // - Left vertical bar (10-30, 30-90)
+  // - Right vertical bar (70-90, 30-90) 
+  // - Top horizontal bar (10-90, 10-30)
+  // - Middle crossbar (10-90, 45-60)
   
-  const leftBar = x >= 0 && x <= 25 && y >= 25 && y <= 100;
-  const rightBar = x >= 75 && x <= 100 && y >= 25 && y <= 100;
-  const topBar = x >= 0 && x <= 100 && y >= 0 && y <= 25;
-  const middleBar = x >= 25 && x <= 75 && y >= 45 && y <= 60;
+  const leftBar = x >= 10 && x <= 30 && y >= 30 && y <= 90;
+  const rightBar = x >= 70 && x <= 90 && y >= 30 && y <= 90;
+  const topBar = x >= 10 && x <= 90 && y >= 10 && y <= 30;
+  const middleBar = x >= 10 && x <= 90 && y >= 45 && y <= 60;
   
   return leftBar || rightBar || topBar || middleBar;
 }
 
 function isInsideT(x: number, y: number): boolean {
-  // Blocky T shape:
-  // - Top horizontal bar (0-100, 0-25) - use < 101 to include boundary dots
-  // - Center vertical stem (35-65, 0-100) - slightly wider for symmetry
+  // Blocky T shape using 10-90 range:
+  // - Top horizontal bar (10-90, 10-30)
+  // - Center vertical stem (40-60, 10-90)
   
-  const topBar = x >= 0 && x < 101 && y >= 0 && y <= 25;
-  const stem = x >= 35 && x <= 65 && y >= 0 && y <= 100;
+  const topBar = x >= 10 && x <= 90 && y >= 10 && y <= 30;
+  const stem = x >= 40 && x <= 60 && y >= 10 && y <= 90;
   
   return topBar || stem;
 }
