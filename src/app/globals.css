@@ -25,21 +25,42 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Data grid background pattern */
+/* Data grid background pattern with pulse animation */
+@keyframes dotPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.15; }
+}
+
 @media (prefers-color-scheme: dark) {
-  body {
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background-image:
-      radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.03) 1px, transparent 0);
-    background-size: 24px 24px;
-    background-position: 0 0;
+      radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.15) 1px, transparent 0);
+    background-size: 32px 32px;
+    pointer-events: none;
+    z-index: -1;
+    animation: dotPulse 4s ease-in-out infinite;
   }
 }
 
 @media (prefers-color-scheme: light) {
-  body {
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background-image:
-      radial-gradient(circle at 1px 1px, rgba(0, 0, 0, 0.04) 1px, transparent 0);
-    background-size: 24px 24px;
-    background-position: 0 0;
+      radial-gradient(circle at 1px 1px, rgba(0, 0, 0, 0.08) 1px, transparent 0);
+    background-size: 32px 32px;
+    pointer-events: none;
+    z-index: -1;
+    animation: dotPulse 4s ease-in-out infinite;
   }
 }

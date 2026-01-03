@@ -34,7 +34,7 @@ export default function AboutPage() {
         <h2 className="text-2xl font-bold mb-4">Connect</h2>
         <div className="flex gap-4">
           <a
-            href="https://github.com/rusenbirben"
+            href="https://github.com/rusenbb"
             target="_blank"
             rel="noopener noreferrer"
             className="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition"
