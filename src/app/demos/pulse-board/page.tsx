@@ -884,7 +884,7 @@ function GithubTrendingWidget() {
   );
 }
 
-// Wikipedia Live Edits Widget - Real-time WebSocket stream
+// Wikipedia Live Edits Widget - Real-time SSE stream
 function WikipediaLiveWidget() {
   const [edits, setEdits] = useState<Array<{
     id: string;
@@ -896,16 +896,15 @@ function WikipediaLiveWidget() {
   }>>([]);
   const [connected, setConnected] = useState(false);
   const [editCount, setEditCount] = useState(0);
-  const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    const ws = new WebSocket("wss://stream.wikimedia.org/v2/stream/recentchange");
+    // Wikimedia uses Server-Sent Events (SSE), not WebSocket
+    const eventSource = new EventSource("https://stream.wikimedia.org/v2/stream/recentchange");
 
-    ws.onopen = () => setConnected(true);
-    ws.onclose = () => setConnected(false);
-    ws.onerror = () => setConnected(false);
+    eventSource.onopen = () => setConnected(true);
+    eventSource.onerror = () => setConnected(false);
 
-    ws.onmessage = (event) => {
+    eventSource.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
         // Filter for article edits only (not talk pages, user pages, etc.)
@@ -926,8 +925,7 @@ function WikipediaLiveWidget() {
       }
     };
 
-    wsRef.current = ws;
-    return () => ws.close();
+    return () => eventSource.close();
   }, []);
 
   const getWikiFlag = (wiki: string) => {
