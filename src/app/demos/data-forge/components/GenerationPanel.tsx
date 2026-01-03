@@ -1,6 +1,7 @@
 "use client";
 
 import type { Schema, GenerationProgress } from "../types";
+import { MODEL_OPTIONS, DEFAULT_MODEL_ID } from "../types";
 
 interface GenerationPanelProps {
   schema: Schema;
@@ -8,6 +9,9 @@ interface GenerationPanelProps {
   isModelReady: boolean;
   isModelLoading: boolean;
   modelLoadProgress: number;
+  loadedModelId: string | null;
+  selectedModelId: string;
+  onModelSelect: (modelId: string) => void;
   onGenerate: () => void;
   onLoadModel: () => void;
 }
@@ -18,21 +22,59 @@ export default function GenerationPanel({
   isModelReady,
   isModelLoading,
   modelLoadProgress,
+  loadedModelId,
+  selectedModelId,
+  onModelSelect,
   onGenerate,
   onLoadModel,
 }: GenerationPanelProps) {
   const canGenerate = schema.tables.length > 0 && isModelReady && progress.status !== "generating";
   const isGenerating = progress.status === "generating";
   const totalRows = schema.tables.reduce((sum, t) => sum + t.rowCount, 0);
+  const selectedModel = MODEL_OPTIONS.find((m) => m.id === selectedModelId);
+  const loadedModel = MODEL_OPTIONS.find((m) => m.id === loadedModelId);
 
   return (
     <div className="mb-8 p-6 border border-neutral-200 dark:border-neutral-800 rounded-lg">
+      {/* Model Selection */}
+      <div className="mb-6">
+        <label className="block text-sm font-medium mb-3">Select AI Model</label>
+        <div className="grid md:grid-cols-3 gap-3">
+          {MODEL_OPTIONS.map((model) => (
+            <button
+              key={model.id}
+              onClick={() => onModelSelect(model.id)}
+              disabled={isModelLoading || isGenerating}
+              className={`p-4 rounded-lg border text-left transition ${
+                selectedModelId === model.id
+                  ? "border-green-500 bg-green-50 dark:bg-green-900/20"
+                  : "border-neutral-200 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-500"
+              } ${(isModelLoading || isGenerating) ? "opacity-50 cursor-not-allowed" : ""}`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-medium">{model.name}</span>
+                {loadedModelId === model.id && (
+                  <span className="text-xs px-2 py-0.5 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded">
+                    Loaded
+                  </span>
+                )}
+              </div>
+              <div className="text-xs text-neutral-500 space-y-0.5">
+                <div>{model.size} download</div>
+                <div>{model.vramRequired} VRAM required</div>
+                <div className="text-neutral-400">{model.description}</div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Model status */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <div
             className={`w-2.5 h-2.5 rounded-full ${
-              isModelReady
+              isModelReady && loadedModelId === selectedModelId
                 ? "bg-green-500"
                 : isModelLoading
                 ? "bg-yellow-500 animate-pulse"
@@ -40,20 +82,24 @@ export default function GenerationPanel({
             }`}
           />
           <span className="text-sm">
-            {isModelReady
-              ? "Model ready"
+            {isModelReady && loadedModelId === selectedModelId
+              ? `${loadedModel?.name} ready`
               : isModelLoading
-              ? "Loading model..."
-              : "Model not loaded"}
+              ? `Loading ${selectedModel?.name}...`
+              : loadedModelId && loadedModelId !== selectedModelId
+              ? `${loadedModel?.name} loaded (switch to ${selectedModel?.name}?)`
+              : "No model loaded"}
           </span>
         </div>
 
-        {!isModelReady && !isModelLoading && (
+        {!isModelLoading && (!isModelReady || loadedModelId !== selectedModelId) && (
           <button
             onClick={onLoadModel}
-            className="px-3 py-1.5 text-sm border border-neutral-300 dark:border-neutral-700 rounded-lg hover:border-neutral-500 transition"
+            className="px-3 py-1.5 text-sm bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-lg hover:opacity-80 transition"
           >
-            Load Model
+            {loadedModelId && loadedModelId !== selectedModelId
+              ? `Switch to ${selectedModel?.name}`
+              : `Load ${selectedModel?.name}`}
           </button>
         )}
       </div>
@@ -62,7 +108,7 @@ export default function GenerationPanel({
       {isModelLoading && (
         <div className="mb-4">
           <div className="flex items-center justify-between text-sm text-neutral-500 mb-1">
-            <span>Downloading AI model (~1GB)</span>
+            <span>Downloading {selectedModel?.name} ({selectedModel?.size})</span>
             <span>{Math.round(modelLoadProgress * 100)}%</span>
           </div>
           <div className="w-full h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
@@ -72,7 +118,7 @@ export default function GenerationPanel({
             />
           </div>
           <p className="text-xs text-neutral-400 mt-1">
-            This only needs to be done once. The model is cached locally.
+            This only needs to be done once per model. Models are cached locally.
           </p>
         </div>
       )}
@@ -110,9 +156,9 @@ export default function GenerationPanel({
       <div className="flex items-center gap-4">
         <button
           onClick={onGenerate}
-          disabled={!canGenerate}
+          disabled={!canGenerate || loadedModelId !== selectedModelId}
           className={`px-6 py-2.5 rounded-lg font-medium transition ${
-            canGenerate
+            canGenerate && loadedModelId === selectedModelId
               ? "bg-green-600 hover:bg-green-700 text-white"
               : "bg-neutral-200 dark:bg-neutral-700 text-neutral-400 cursor-not-allowed"
           }`}
@@ -156,7 +202,7 @@ export default function GenerationPanel({
       {/* Help text */}
       {!isModelReady && schema.tables.length > 0 && (
         <p className="mt-3 text-sm text-neutral-500">
-          Load the AI model first to generate data. The model runs entirely in your browser.
+          Select and load an AI model to generate data. All models run entirely in your browser.
         </p>
       )}
     </div>
