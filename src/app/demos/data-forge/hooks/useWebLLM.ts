@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-
-const MODEL_ID = "Qwen2.5-1.5B-Instruct-q4f16_1-MLC";
+import { DEFAULT_MODEL_ID } from "../types";
 
 interface MLCEngine {
   chat: {
@@ -26,7 +25,8 @@ interface UseWebLLMReturn {
   error: string | null;
   isReady: boolean;
   isSupported: boolean | null;
-  loadModel: () => Promise<void>;
+  loadedModelId: string | null;
+  loadModel: (modelId: string) => Promise<void>;
   generate: (prompt: string) => Promise<string>;
   unload: () => Promise<void>;
 }
@@ -37,6 +37,7 @@ export function useWebLLM(): UseWebLLMReturn {
   const [error, setError] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [isSupported, setIsSupported] = useState<boolean | null>(null);
+  const [loadedModelId, setLoadedModelId] = useState<string | null>(null);
   const engineRef = useRef<MLCEngine | null>(null);
 
   const checkWebGPUSupport = useCallback(async (): Promise<boolean> => {
@@ -52,44 +53,58 @@ export function useWebLLM(): UseWebLLMReturn {
     }
   }, []);
 
-  const loadModel = useCallback(async () => {
-    if (engineRef.current) return;
+  const loadModel = useCallback(
+    async (modelId: string = DEFAULT_MODEL_ID) => {
+      // If same model is already loaded, skip
+      if (engineRef.current && loadedModelId === modelId) return;
 
-    setIsLoading(true);
-    setError(null);
-    setLoadProgress(0);
-
-    try {
-      // Check WebGPU support first
-      const supported = await checkWebGPUSupport();
-      setIsSupported(supported);
-
-      if (!supported) {
-        throw new Error(
-          "WebGPU is not supported in your browser. Please use Chrome 113+ or Edge 113+ with WebGPU enabled."
-        );
+      // If a different model is loaded, unload it first
+      if (engineRef.current && loadedModelId !== modelId) {
+        await engineRef.current.unload();
+        engineRef.current = null;
+        setIsReady(false);
+        setLoadedModelId(null);
       }
 
-      // Dynamic import to avoid SSR issues
-      const { CreateMLCEngine } = await import("@mlc-ai/web-llm");
+      setIsLoading(true);
+      setError(null);
+      setLoadProgress(0);
 
-      const engine = await CreateMLCEngine(MODEL_ID, {
-        initProgressCallback: (report) => {
-          setLoadProgress(report.progress);
-        },
-        logLevel: "SILENT",
-      });
+      try {
+        // Check WebGPU support first
+        const supported = await checkWebGPUSupport();
+        setIsSupported(supported);
 
-      engineRef.current = engine as unknown as MLCEngine;
-      setIsReady(true);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to load model";
-      setError(message);
-      setIsReady(false);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [checkWebGPUSupport]);
+        if (!supported) {
+          throw new Error(
+            "WebGPU is not supported in your browser. Please use Chrome 113+ or Edge 113+ with WebGPU enabled."
+          );
+        }
+
+        // Dynamic import to avoid SSR issues
+        const { CreateMLCEngine } = await import("@mlc-ai/web-llm");
+
+        const engine = await CreateMLCEngine(modelId, {
+          initProgressCallback: (report) => {
+            setLoadProgress(report.progress);
+          },
+          logLevel: "SILENT",
+        });
+
+        engineRef.current = engine as unknown as MLCEngine;
+        setLoadedModelId(modelId);
+        setIsReady(true);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Failed to load model";
+        setError(message);
+        setIsReady(false);
+        setLoadedModelId(null);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [checkWebGPUSupport, loadedModelId]
+  );
 
   const generate = useCallback(async (prompt: string): Promise<string> => {
     if (!engineRef.current) {
@@ -101,7 +116,7 @@ export function useWebLLM(): UseWebLLMReturn {
         {
           role: "system",
           content:
-            "You are a data generator. Generate realistic fake data based on the schema provided. Always respond with valid JSON only, no explanation.",
+            "You are a data generator. Generate realistic fake data based on the schema provided. Always respond with valid JSON only, no explanation. Do not use markdown formatting.",
         },
         { role: "user", content: prompt },
       ],
@@ -119,6 +134,7 @@ export function useWebLLM(): UseWebLLMReturn {
       engineRef.current = null;
       setIsReady(false);
       setLoadProgress(0);
+      setLoadedModelId(null);
     }
   }, []);
 
@@ -128,6 +144,7 @@ export function useWebLLM(): UseWebLLMReturn {
     error,
     isReady,
     isSupported,
+    loadedModelId,
     loadModel,
     generate,
     unload,

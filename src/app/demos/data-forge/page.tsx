@@ -1,6 +1,6 @@
 "use client";
 
-import { useReducer, useCallback } from "react";
+import { useReducer, useCallback, useState } from "react";
 import { useWebLLM } from "./hooks/useWebLLM";
 import SchemaBuilder from "./components/SchemaBuilder";
 import GenerationPanel from "./components/GenerationPanel";
@@ -10,6 +10,7 @@ import {
   createDefaultTable,
   createDefaultColumn,
   generateId,
+  DEFAULT_MODEL_ID,
   type DataForgeState,
   type DataForgeAction,
   type GeneratedData,
@@ -189,12 +190,17 @@ function dataForgeReducer(state: DataForgeState, action: DataForgeAction): DataF
 
 export default function DataForgePage() {
   const [state, dispatch] = useReducer(dataForgeReducer, initialState);
-  const { isReady, isLoading, loadProgress, error, isSupported, loadModel, generate } =
+  const [selectedModelId, setSelectedModelId] = useState(DEFAULT_MODEL_ID);
+  const { isReady, isLoading, loadProgress, error, isSupported, loadedModelId, loadModel, generate } =
     useWebLLM();
 
+  const handleLoadModel = useCallback(() => {
+    loadModel(selectedModelId);
+  }, [loadModel, selectedModelId]);
+
   const handleGenerate = useCallback(async () => {
-    if (!isReady) {
-      await loadModel();
+    if (!isReady || loadedModelId !== selectedModelId) {
+      await loadModel(selectedModelId);
     }
 
     dispatch({
@@ -239,7 +245,7 @@ export default function DataForgePage() {
         },
       });
     }
-  }, [isReady, loadModel, generate, state.schema]);
+  }, [isReady, loadedModelId, selectedModelId, loadModel, generate, state.schema]);
 
   // WebGPU not supported error
   if (isSupported === false) {
@@ -292,8 +298,11 @@ export default function DataForgePage() {
         isModelReady={isReady}
         isModelLoading={isLoading}
         modelLoadProgress={loadProgress}
+        loadedModelId={loadedModelId}
+        selectedModelId={selectedModelId}
+        onModelSelect={setSelectedModelId}
         onGenerate={handleGenerate}
-        onLoadModel={loadModel}
+        onLoadModel={handleLoadModel}
       />
 
       {/* Export Panel */}
@@ -307,8 +316,9 @@ export default function DataForgePage() {
           About Data Forge
         </h3>
         <p className="mb-2">
-          Data Forge uses a local AI model (Qwen2.5-1.5B) running entirely in your browser via
-          WebLLM. The model is downloaded once (~1GB) and cached locally for future use.
+          Data Forge uses Qwen3 AI models running entirely in your browser via WebLLM.
+          Choose from three model sizes based on your device capabilities. Models are
+          downloaded once and cached locally for future use.
         </p>
         <p>
           Define tables with columns and types, set up foreign key relationships, and generate
