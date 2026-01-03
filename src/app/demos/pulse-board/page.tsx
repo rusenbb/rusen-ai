@@ -1319,6 +1319,283 @@ function InternetPulseWidget() {
   );
 }
 
+// SpaceX Launches Widget
+function SpaceXWidget() {
+  const [nextLaunch, setNextLaunch] = useState<{
+    name: string;
+    date: Date;
+    rocket: string;
+    launchpad: string;
+  } | null>(null);
+  const [recentLaunches, setRecentLaunches] = useState<Array<{
+    id: string;
+    name: string;
+    date: Date;
+    success: boolean | null;
+  }>>([]);
+  const [countdown, setCountdown] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchLaunches = useCallback(async () => {
+    try {
+      const [nextRes, pastRes] = await Promise.all([
+        fetch("https://api.spacexdata.com/v5/launches/next"),
+        fetch("https://api.spacexdata.com/v5/launches/past?limit=5&sort=date_utc&order=desc"),
+      ]);
+
+      if (nextRes.ok) {
+        const next = await nextRes.json();
+        setNextLaunch({
+          name: next.name,
+          date: new Date(next.date_utc),
+          rocket: next.rocket,
+          launchpad: next.launchpad,
+        });
+      }
+
+      if (pastRes.ok) {
+        const past = await pastRes.json();
+        setRecentLaunches(
+          past.map((l: { id: string; name: string; date_utc: string; success: boolean | null }) => ({
+            id: l.id,
+            name: l.name,
+            date: new Date(l.date_utc),
+            success: l.success,
+          }))
+        );
+      }
+
+      setError(null);
+    } catch (err) {
+      setError("Failed to fetch SpaceX data");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchLaunches();
+    const interval = setInterval(fetchLaunches, 300000); // 5 minutes
+    return () => clearInterval(interval);
+  }, [fetchLaunches]);
+
+  // Countdown timer
+  useEffect(() => {
+    if (!nextLaunch) return;
+
+    const updateCountdown = () => {
+      const now = new Date();
+      const diff = nextLaunch.date.getTime() - now.getTime();
+
+      if (diff <= 0) {
+        setCountdown("LAUNCHING!");
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      if (days > 0) {
+        setCountdown(`${days}d ${hours}h ${minutes}m`);
+      } else {
+        setCountdown(`${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`);
+      }
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, [nextLaunch]);
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  };
+
+  return (
+    <Card>
+      <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+        <span className="text-xl">&#128640;</span> SpaceX Launches
+      </h2>
+
+      {loading ? (
+        <div className="space-y-3">
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-4 w-3/4" />
+        </div>
+      ) : error ? (
+        <p className="text-red-500 text-sm">{error}</p>
+      ) : (
+        <>
+          {nextLaunch && (
+            <div className="mb-4 p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
+              <div className="text-xs text-neutral-500 mb-1">NEXT LAUNCH</div>
+              <div className="font-semibold mb-1">{nextLaunch.name}</div>
+              <div className="text-2xl font-mono font-bold text-blue-600 dark:text-blue-400">
+                {countdown}
+              </div>
+              <div className="text-xs text-neutral-500 mt-1">{formatDate(nextLaunch.date)}</div>
+            </div>
+          )}
+
+          <div className="text-xs text-neutral-500 mb-2">RECENT LAUNCHES</div>
+          <div className="space-y-2">
+            {recentLaunches.slice(0, 4).map((launch) => (
+              <div key={launch.id} className="flex items-center justify-between text-sm">
+                <span className="truncate flex-1">{launch.name}</span>
+                <span className={`ml-2 ${launch.success ? "text-green-500" : launch.success === false ? "text-red-500" : "text-neutral-400"}`}>
+                  {launch.success ? "✓" : launch.success === false ? "✗" : "?"}
+                </span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      <a
+        href="https://www.spacex.com/launches/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-xs text-neutral-500 hover:underline mt-3 inline-block"
+      >
+        SpaceX Launches &#8594;
+      </a>
+    </Card>
+  );
+}
+
+// Certstream Widget - Real-time SSL certificates being issued
+function CertstreamWidget() {
+  const [certs, setCerts] = useState<Array<{
+    id: string;
+    domain: string;
+    issuer: string;
+    timestamp: number;
+  }>>([]);
+  const [connected, setConnected] = useState(false);
+  const [certCount, setCertCount] = useState(0);
+  const [certsPerSecond, setCertsPerSecond] = useState(0);
+
+  useEffect(() => {
+    const ws = new WebSocket("wss://certstream.calidog.io/");
+
+    ws.onopen = () => setConnected(true);
+    ws.onclose = () => setConnected(false);
+    ws.onerror = () => setConnected(false);
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.message_type === "certificate_update") {
+          const leafCert = data.data?.leaf_cert;
+          if (leafCert?.subject?.CN) {
+            const domain = leafCert.subject.CN;
+            // Skip wildcard-only domains and very long domains
+            if (domain.length < 50 && !domain.startsWith("*.")) {
+              const cert = {
+                id: `${Date.now()}-${Math.random()}`,
+                domain: domain,
+                issuer: leafCert.issuer?.O || leafCert.issuer?.CN || "Unknown",
+                timestamp: Date.now(),
+              };
+              setCerts((prev) => [cert, ...prev].slice(0, 10));
+              setCertCount((c) => c + 1);
+            }
+          }
+        }
+      } catch (e) {
+        // Skip malformed messages
+      }
+    };
+
+    return () => ws.close();
+  }, []);
+
+  // Calculate certs per second
+  useEffect(() => {
+    const startCount = certCount;
+    const interval = setInterval(() => {
+      setCertsPerSecond(Math.round((certCount - startCount) / 5));
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [certCount]);
+
+  const getIssuerColor = (issuer: string) => {
+    if (issuer.includes("Let's Encrypt")) return "text-blue-500";
+    if (issuer.includes("Cloudflare")) return "text-orange-500";
+    if (issuer.includes("Google")) return "text-green-500";
+    if (issuer.includes("Amazon") || issuer.includes("AWS")) return "text-yellow-500";
+    if (issuer.includes("DigiCert")) return "text-purple-500";
+    return "text-neutral-400";
+  };
+
+  const truncateDomain = (domain: string) => {
+    if (domain.length > 35) return domain.slice(0, 32) + "...";
+    return domain;
+  };
+
+  return (
+    <Card className="col-span-1 md:col-span-2">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold flex items-center gap-2">
+          <span className="text-xl">&#128274;</span> SSL Certificates Live
+        </h2>
+        <div className="flex items-center gap-2">
+          {connected ? (
+            <>
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+              </span>
+              <span className="text-xs text-green-600 dark:text-green-400">LIVE</span>
+            </>
+          ) : (
+            <span className="text-xs text-neutral-500">Connecting...</span>
+          )}
+          <span className="text-xs text-neutral-400">|</span>
+          <span className="text-xs text-neutral-500">{certCount.toLocaleString()} certs</span>
+          {certsPerSecond > 0 && (
+            <span className="text-xs text-neutral-400">({certsPerSecond}/s)</span>
+          )}
+        </div>
+      </div>
+
+      <p className="text-xs text-neutral-500 mb-3">
+        New websites and services being secured right now
+      </p>
+
+      <div className="space-y-1.5">
+        {certs.length === 0 ? (
+          <div className="text-sm text-neutral-500 text-center py-4">Waiting for certificates...</div>
+        ) : (
+          certs.map((cert) => (
+            <div
+              key={cert.id}
+              className="flex items-center gap-2 text-sm py-1 border-b border-neutral-100 dark:border-neutral-800 last:border-0 animate-fade-in"
+            >
+              <span className={`text-xs font-mono ${getIssuerColor(cert.issuer)}`}>
+                {cert.issuer.slice(0, 12)}
+              </span>
+              <span className="flex-1 font-mono text-xs truncate">{truncateDomain(cert.domain)}</span>
+            </div>
+          ))
+        )}
+      </div>
+
+      <a
+        href="https://certstream.calidog.io/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-xs text-neutral-500 hover:underline mt-3 inline-block"
+      >
+        Certstream &#8594;
+      </a>
+    </Card>
+  );
+}
+
 // Main Page Component
 export default function PulseBoardPage() {
   const [lastUpdated, setLastUpdated] = useState<string>("");
@@ -1343,7 +1620,9 @@ export default function PulseBoardPage() {
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         <CryptoHubWidget />
+        <CertstreamWidget />
         <WikipediaLiveWidget />
+        <SpaceXWidget />
         <WorldClocksWidget />
         <WeatherWidget />
         <AviationWidget />
