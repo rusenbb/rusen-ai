@@ -399,6 +399,50 @@ function generateFallbackValue(col: Column, index: number): unknown {
     return `${100 + index * 23} ${["Oak", "Maple", "Pine", "Cedar", "Elm"][index % 5]} Street`;
   }
 
+  // Context-aware text content
+  if (col.type === "text") {
+    if (nameLower.includes("bio")) {
+      const bios = [
+        "Passionate software engineer with 8 years of experience in web development and cloud architecture.",
+        "Full-stack developer specializing in React and Node.js. Open source contributor and tech blogger.",
+        "Senior developer focused on building scalable applications. Previously worked at several startups.",
+        "Creative technologist with a background in computer science. Loves solving complex problems.",
+        "Tech enthusiast and mentor. Enjoys teaching and writing about modern development practices."
+      ];
+      return bios[index % bios.length];
+    }
+    if (nameLower.includes("content") || nameLower.includes("body")) {
+      const contents = [
+        "In this article, we explore the fundamentals of modern web development and discuss best practices for building maintainable applications. We'll cover key concepts that every developer should understand.",
+        "Today we're diving deep into performance optimization techniques. From lazy loading to code splitting, these strategies will help you build faster, more responsive applications.",
+        "Understanding state management is crucial for any frontend developer. Let's examine different approaches and when to use each one in your projects.",
+        "Security should never be an afterthought. This guide covers essential security practices that will help protect your applications and users from common vulnerabilities.",
+        "Testing is a critical part of the development process. We'll explore different testing strategies and how to implement them effectively in your workflow."
+      ];
+      return contents[index % contents.length];
+    }
+    if (nameLower.includes("description")) {
+      const descriptions = [
+        "A comprehensive solution designed for modern workflows. Features intuitive controls and seamless integration.",
+        "Built with quality materials and attention to detail. Perfect for both beginners and professionals.",
+        "Innovative design meets practical functionality. Streamlines your daily tasks with ease.",
+        "Premium quality with exceptional durability. Backed by excellent customer support.",
+        "Versatile and reliable for various use cases. Simple setup and easy to maintain."
+      ];
+      return descriptions[index % descriptions.length];
+    }
+    if (nameLower.includes("comment")) {
+      const comments = [
+        "Great article! This really helped me understand the concept better. Thanks for sharing.",
+        "Very informative post. I've been looking for this kind of explanation for a while.",
+        "Thanks for the detailed breakdown. The examples were particularly helpful.",
+        "Excellent content as always. Looking forward to more articles like this.",
+        "This solved a problem I've been struggling with. Much appreciated!"
+      ];
+      return comments[index % comments.length];
+    }
+  }
+
   // Default by type
   switch (col.type) {
     case "string":
@@ -424,11 +468,11 @@ function generateFallbackValue(col: Column, index: number): unknown {
       return crypto.randomUUID();
     case "text":
       const texts = [
-        "Excellent quality and fast shipping. Highly recommended for anyone looking for reliability.",
-        "Great product that exceeded my expectations. Will definitely purchase again.",
-        "Good value for the price. Works exactly as described in the listing.",
-        "Perfect for my needs. The customer service was also very helpful.",
-        "Solid product with no issues. Arrived on time and well packaged."
+        "This is a detailed entry with relevant information. It provides context and useful details for reference.",
+        "A well-structured piece of content that covers the key points. Clear and informative throughout.",
+        "Comprehensive information presented in an accessible format. Covers all the essential aspects.",
+        "Thoughtfully written content with attention to detail. Addresses the main topics effectively.",
+        "Quality content that delivers value. Well-organized and easy to understand."
       ];
       return texts[index % texts.length];
     default:
