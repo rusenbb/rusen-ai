@@ -512,91 +512,131 @@ function HackerNewsWidget() {
   );
 }
 
-// NASA APOD Widget (replaces Polymarket which doesn't support CORS)
-function NasaApodWidget() {
-  const [apod, setApod] = useState<{
-    title: string;
-    explanation: string;
-    url: string;
-    media_type: string;
-    date: string;
+// ISS Tracker Widget - Real-time International Space Station location
+function ISSTrackerWidget() {
+  const [issData, setIssData] = useState<{
+    latitude: number;
+    longitude: number;
+    timestamp: number;
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchApod = useCallback(async () => {
+  const fetchISS = useCallback(async () => {
     try {
-      // NASA APOD API with DEMO_KEY (free, rate-limited but works)
-      const res = await fetch(
-        "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY"
-      );
+      const res = await fetch("https://api.open-notify.org/iss-now.json");
       if (!res.ok) throw new Error("Failed to fetch");
 
       const data = await res.json();
-      setApod(data);
-      setError(null);
+      if (data.message === "success") {
+        setIssData({
+          latitude: parseFloat(data.iss_position.latitude),
+          longitude: parseFloat(data.iss_position.longitude),
+          timestamp: data.timestamp,
+        });
+        setError(null);
+      }
     } catch (err) {
-      setError("Failed to fetch NASA data");
+      setError("Failed to fetch ISS data");
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchApod();
-    // Refresh every hour
-    const interval = setInterval(fetchApod, 3600000);
+    fetchISS();
+    // Update every 5 seconds for real-time tracking
+    const interval = setInterval(fetchISS, 5000);
     return () => clearInterval(interval);
-  }, [fetchApod]);
+  }, [fetchISS]);
+
+  const getLocationDescription = (lat: number, lon: number) => {
+    const latDir = lat >= 0 ? "N" : "S";
+    const lonDir = lon >= 0 ? "E" : "W";
+    return `${Math.abs(lat).toFixed(2)}° ${latDir}, ${Math.abs(lon).toFixed(2)}° ${lonDir}`;
+  };
+
+  const getRegion = (lat: number, lon: number) => {
+    // Rough region detection
+    if (lat > 66.5) return "Arctic";
+    if (lat < -66.5) return "Antarctic";
+    if (lon >= -180 && lon < -30 && lat > 0) return "North America";
+    if (lon >= -180 && lon < -30 && lat <= 0) return "South America";
+    if (lon >= -30 && lon < 60 && lat > 0) return "Europe/Africa";
+    if (lon >= -30 && lon < 60 && lat <= 0) return "Africa";
+    if (lon >= 60 && lon < 150 && lat > 0) return "Asia";
+    if (lon >= 100 && lon < 180 && lat <= 0) return "Oceania";
+    return "Pacific Ocean";
+  };
 
   return (
     <Card className="col-span-1 md:col-span-2">
       <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-        <span className="text-xl">&#128752;</span> NASA Picture of the Day
+        <span className="text-xl">&#128752;</span> ISS Live Tracker
       </h2>
       {loading ? (
-        <div className="flex gap-4">
-          <Skeleton className="w-32 h-24 rounded" />
-          <div className="flex-1">
-            <Skeleton className="h-5 w-3/4 mb-2" />
-            <Skeleton className="h-4 w-full mb-1" />
-            <Skeleton className="h-4 w-2/3" />
-          </div>
+        <div className="space-y-3">
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-32 w-full rounded" />
         </div>
       ) : error ? (
         <p className="text-red-500 text-sm">{error}</p>
-      ) : apod ? (
-        <div className="flex gap-4">
-          {apod.media_type === "image" ? (
-            <img
-              src={apod.url}
-              alt={apod.title}
-              className="w-32 h-24 object-cover rounded"
-            />
-          ) : (
-            <div className="w-32 h-24 bg-neutral-100 dark:bg-neutral-800 rounded flex items-center justify-center text-neutral-400">
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      ) : issData ? (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+            </span>
+            <span className="text-sm font-medium">Live - Updates every 5s</span>
+          </div>
+
+          <div className="relative bg-neutral-100 dark:bg-neutral-800 rounded-lg h-32 overflow-hidden mb-3">
+            {/* Simple world map representation */}
+            <div className="absolute inset-0 opacity-20">
+              <svg viewBox="0 0 360 180" className="w-full h-full" preserveAspectRatio="none">
+                <rect fill="currentColor" x="0" y="0" width="360" height="180" opacity="0.1"/>
+                {/* Simplified continents */}
+                <ellipse cx="90" cy="70" rx="40" ry="30" fill="currentColor" opacity="0.3"/>
+                <ellipse cx="90" cy="120" rx="25" ry="35" fill="currentColor" opacity="0.3"/>
+                <ellipse cx="180" cy="60" rx="50" ry="25" fill="currentColor" opacity="0.3"/>
+                <ellipse cx="170" cy="110" rx="30" ry="25" fill="currentColor" opacity="0.3"/>
+                <ellipse cx="260" cy="70" rx="45" ry="35" fill="currentColor" opacity="0.3"/>
+                <ellipse cx="300" cy="130" rx="25" ry="20" fill="currentColor" opacity="0.3"/>
               </svg>
             </div>
-          )}
-          <div className="flex-1 min-w-0">
-            <h3 className="font-medium text-sm mb-1 line-clamp-1">{apod.title}</h3>
-            <p className="text-xs text-neutral-600 dark:text-neutral-400 line-clamp-3">
-              {apod.explanation}
-            </p>
-            <p className="text-xs text-neutral-400 mt-1">{apod.date}</p>
+            {/* ISS Position marker */}
+            <div
+              className="absolute w-4 h-4 transform -translate-x-1/2 -translate-y-1/2 transition-all duration-1000"
+              style={{
+                left: `${((issData.longitude + 180) / 360) * 100}%`,
+                top: `${((90 - issData.latitude) / 180) * 100}%`,
+              }}
+            >
+              <span className="absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75 animate-ping"></span>
+              <span className="relative inline-flex rounded-full h-4 w-4 bg-red-600 border-2 border-white dark:border-neutral-900"></span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <div className="text-neutral-500 text-xs">Coordinates</div>
+              <div className="font-mono font-medium">{getLocationDescription(issData.latitude, issData.longitude)}</div>
+            </div>
+            <div>
+              <div className="text-neutral-500 text-xs">Flying Over</div>
+              <div className="font-medium">{getRegion(issData.latitude, issData.longitude)}</div>
+            </div>
           </div>
         </div>
       ) : null}
       <a
-        href="https://apod.nasa.gov"
+        href="https://spotthestation.nasa.gov/tracking_map.cfm"
         target="_blank"
         rel="noopener noreferrer"
         className="text-xs text-neutral-500 hover:underline mt-3 inline-block"
       >
-        View on NASA APOD &#8594;
+        NASA Spot The Station &#8594;
       </a>
     </Card>
   );
@@ -1021,7 +1061,7 @@ export default function PulseBoardPage() {
         <EarthquakeWidget />
         <GithubTrendingWidget />
         <HackerNewsWidget />
-        <NasaApodWidget />
+        <ISSTrackerWidget />
       </div>
 
       <div className="mt-8 text-center text-sm text-neutral-500">
