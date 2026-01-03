@@ -4,67 +4,50 @@ import { useEffect, useRef, useState } from "react";
 
 // Letter definitions as point-test functions (for checking if a point is inside the letter)
 // Each letter is defined in a 0-100 coordinate system
+// Using blocky, 90-degree angle designs for clarity with dot grid
 
 function isInsideD(x: number, y: number): boolean {
-  // Outer bounds: rectangle with curved right side
-  // Simple approximation: rectangle 0-70 for main body, curved right
-  const outerLeft = x >= 0 && x <= 20 && y >= 0 && y <= 100;
-  const outerTop = x >= 0 && x <= 60 && y >= 0 && y <= 20;
-  const outerBottom = x >= 0 && x <= 60 && y >= 80 && y <= 100;
+  // Blocky D shape:
+  // - Left vertical bar (0-25, full height)
+  // - Top horizontal bar (0-75, 0-25)
+  // - Bottom horizontal bar (0-75, 75-100)
+  // - Right vertical bar (75-100, 25-75)
+  // - Inner hole (25-75, 25-75)
   
-  // Curved right part (approximated as ellipse check)
-  const centerY = 50;
-  const radiusX = 50;
-  const radiusY = 50;
-  const dx = (x - 50) / radiusX;
-  const dy = (y - centerY) / radiusY;
-  const inCurve = dx * dx + dy * dy <= 1 && x >= 50;
+  const leftBar = x >= 0 && x <= 25 && y >= 0 && y <= 100;
+  const topBar = x >= 0 && x <= 75 && y >= 0 && y <= 25;
+  const bottomBar = x >= 0 && x <= 75 && y >= 75 && y <= 100;
+  const rightBar = x >= 75 && x <= 100 && y >= 25 && y <= 75;
   
-  const inOuter = outerLeft || outerTop || outerBottom || inCurve;
+  const inOuter = leftBar || topBar || bottomBar || rightBar;
   
-  // Inner hole (smaller version)
-  const innerCenterY = 50;
-  const innerRadiusX = 30;
-  const innerRadiusY = 30;
-  const innerDx = (x - 50) / innerRadiusX;
-  const innerDy = (y - innerCenterY) / innerRadiusY;
-  const inInnerCurve = innerDx * innerDx + innerDy * innerDy <= 1 && x >= 35;
-  const inInnerRect = x >= 20 && x <= 35 && y >= 20 && y <= 80;
-  const inInner = inInnerCurve || inInnerRect;
-  
-  return inOuter && !inInner;
+  return inOuter;
 }
 
 function isInsideA(x: number, y: number): boolean {
-  // Triangle with hole
-  // Outer triangle: apex at (50, 0), base from (0, 100) to (100, 100)
-  // Left edge: from (50,0) to (0,100) -> y = 2x or x = y/2 at x=0 side, actually: x >= 50 - y/2
-  // Right edge: from (50,0) to (100,100) -> x <= 50 + y/2
+  // Blocky A shape with 90-degree angles:
+  // - Left vertical bar (0-25, 25-100)
+  // - Right vertical bar (75-100, 25-100)
+  // - Top horizontal bar (0-100, 0-25)
+  // - Middle crossbar (0-100, 50-65)
   
-  const leftEdge = x >= 50 - y / 2;
-  const rightEdge = x <= 50 + y / 2;
-  const inOuter = leftEdge && rightEdge && y >= 0 && y <= 100;
+  const leftBar = x >= 0 && x <= 25 && y >= 25 && y <= 100;
+  const rightBar = x >= 75 && x <= 100 && y >= 25 && y <= 100;
+  const topBar = x >= 0 && x <= 100 && y >= 0 && y <= 25;
+  const middleBar = x >= 0 && x <= 100 && y >= 45 && y <= 60;
   
-  // Inner triangle hole (smaller, higher up)
-  const holeTop = 35;
-  const holeBottom = 70;
-  const holeLeftEdge = x >= 50 - (y - holeTop) / 2.5;
-  const holeRightEdge = x <= 50 + (y - holeTop) / 2.5;
-  const inHole = holeLeftEdge && holeRightEdge && y >= holeTop && y <= holeBottom;
-  
-  // Crossbar - we actually want this INSIDE the A, so don't exclude it
-  // The hole is the triangular part above the crossbar
-  
-  return inOuter && !inHole;
+  return leftBar || rightBar || topBar || middleBar;
 }
 
 function isInsideT(x: number, y: number): boolean {
-  // Top bar
-  const inTopBar = x >= 0 && x <= 100 && y >= 0 && y <= 25;
-  // Stem
-  const inStem = x >= 35 && x <= 65 && y >= 0 && y <= 100;
+  // Blocky T shape:
+  // - Top horizontal bar (0-100, 0-25)
+  // - Center vertical stem (37.5-62.5, 0-100)
   
-  return inTopBar || inStem;
+  const topBar = x >= 0 && x <= 100 && y >= 0 && y <= 25;
+  const stem = x >= 37.5 && x <= 62.5 && y >= 0 && y <= 100;
+  
+  return topBar || stem;
 }
 
 function isInsideLetter(letter: string, x: number, y: number): boolean {
