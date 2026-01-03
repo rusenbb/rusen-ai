@@ -29,23 +29,23 @@ function isInsideA(x: number, y: number): boolean {
   // - Left vertical bar (0-25, 25-100)
   // - Right vertical bar (75-100, 25-100)
   // - Top horizontal bar (0-100, 0-25)
-  // - Middle crossbar (0-100, 50-65)
+  // - Middle crossbar (25-75, 45-60) - only connects the two bars, doesn't extend beyond
   
   const leftBar = x >= 0 && x <= 25 && y >= 25 && y <= 100;
   const rightBar = x >= 75 && x <= 100 && y >= 25 && y <= 100;
   const topBar = x >= 0 && x <= 100 && y >= 0 && y <= 25;
-  const middleBar = x >= 0 && x <= 100 && y >= 45 && y <= 60;
+  const middleBar = x >= 25 && x <= 75 && y >= 45 && y <= 60;
   
   return leftBar || rightBar || topBar || middleBar;
 }
 
 function isInsideT(x: number, y: number): boolean {
   // Blocky T shape:
-  // - Top horizontal bar (0-100, 0-25)
-  // - Center vertical stem (37.5-62.5, 0-100)
+  // - Top horizontal bar (0-100, 0-25) - use < 101 to include boundary dots
+  // - Center vertical stem (35-65, 0-100) - slightly wider for symmetry
   
-  const topBar = x >= 0 && x <= 100 && y >= 0 && y <= 25;
-  const stem = x >= 37.5 && x <= 62.5 && y >= 0 && y <= 100;
+  const topBar = x >= 0 && x < 101 && y >= 0 && y <= 25;
+  const stem = x >= 35 && x <= 65 && y >= 0 && y <= 100;
   
   return topBar || stem;
 }
