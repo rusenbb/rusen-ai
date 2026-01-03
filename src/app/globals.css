@@ -32,32 +32,39 @@ body {
   background-size: 28px 28px;
 }
 
-/* Letter-by-letter DATA animation */
-@keyframes letterPulse {
-  0%, 15% { opacity: 0.5; }
-  20%, 100% { opacity: 0.05; }
+/* Denser dot grid for letter shapes */
+.dot-grid-dense {
+  background-image:
+    radial-gradient(circle at 2px 2px, currentColor 2px, transparent 0);
+  background-size: 8px 8px;
 }
 
-.letter-dots {
-  opacity: 0.05;
+/* Letter-by-letter DATA animation - brightening effect */
+@keyframes letterBrighten {
+  0%, 15% { opacity: 0.6; }
+  20%, 100% { opacity: 0; }
+}
+
+.letter-mask {
+  opacity: 0;
 }
 
 .letter-0 {
-  animation: letterPulse 4s ease-in-out infinite;
+  animation: letterBrighten 4s ease-in-out infinite;
   animation-delay: 0s;
 }
 
 .letter-1 {
-  animation: letterPulse 4s ease-in-out infinite;
+  animation: letterBrighten 4s ease-in-out infinite;
   animation-delay: 1s;
 }
 
 .letter-2 {
-  animation: letterPulse 4s ease-in-out infinite;
+  animation: letterBrighten 4s ease-in-out infinite;
   animation-delay: 2s;
 }
 
 .letter-3 {
-  animation: letterPulse 4s ease-in-out infinite;
+  animation: letterBrighten 4s ease-in-out infinite;
   animation-delay: 3s;
 }
