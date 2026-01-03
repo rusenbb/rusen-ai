@@ -28,8 +28,8 @@ body {
 /* Data grid background */
 .dot-grid {
   background-image:
-    radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0);
-  background-size: 24px 24px;
+    radial-gradient(circle at 2px 2px, currentColor 2px, transparent 0);
+  background-size: 28px 28px;
 }
 
 /* Letter-by-letter DATA animation */
