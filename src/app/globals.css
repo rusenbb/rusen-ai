@@ -34,30 +34,30 @@ body {
 
 /* Letter-by-letter DATA animation */
 @keyframes letterPulse {
-  0%, 20% { opacity: 1; }
-  25%, 100% { opacity: 0.1; }
+  0%, 15% { opacity: 0.5; }
+  20%, 100% { opacity: 0.05; }
 }
 
-.data-letter {
-  opacity: 0.1;
+.letter-dots {
+  opacity: 0.05;
 }
 
-.letter-d {
+.letter-0 {
   animation: letterPulse 4s ease-in-out infinite;
   animation-delay: 0s;
 }
 
-.letter-a {
+.letter-1 {
   animation: letterPulse 4s ease-in-out infinite;
   animation-delay: 1s;
 }
 
-.letter-t {
+.letter-2 {
   animation: letterPulse 4s ease-in-out infinite;
   animation-delay: 2s;
 }
 
-.letter-a2 {
+.letter-3 {
   animation: letterPulse 4s ease-in-out infinite;
   animation-delay: 3s;
 }
