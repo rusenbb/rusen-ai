@@ -46,9 +46,9 @@ export default function DemosPage() {
         />
         <DemoCard
           title="Pulse Board"
-          description="Live dashboard showing real-time data: BTC price, weather, Polymarket odds, and more."
+          description="Live dashboard with BTC/ETH prices from Chainlink oracle, weather, earthquakes, GitHub trending, and more."
           href="/demos/pulse-board"
-          tags={["Real-time", "APIs", "Visualization"]}
+          tags={["Real-time", "APIs", "Blockchain"]}
           status="live"
         />
         <DemoCard
