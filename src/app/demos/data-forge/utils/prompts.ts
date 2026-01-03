@@ -100,21 +100,66 @@ export function buildGenerationPrompt(
 
   const contextLine = table.definition ? ` (${table.definition})` : "";
 
+  // Build column specs with table-aware context
+  const columnSpecs = table.columns.map(col => {
+    const colContext = getColumnContext(col, table.name);
+    return `"${col.name}": ${colContext}`;
+  }).join(", ");
+
+  // Limit rows to avoid token overflow - generate in smaller batches
+  const safeRowCount = Math.min(table.rowCount, 15);
+
   // Simplified, more direct prompt for small models
-  const prompt = `Generate ${table.rowCount} JSON objects for "${table.name}"${contextLine}.
+  const prompt = `Generate ${safeRowCount} JSON objects for "${table.name}"${contextLine}.
 
-Required fields for EACH object:
-${table.columns.map(col => `"${col.name}"`).join(", ")}
+Each object needs: {${columnSpecs}}
 
-Output a JSON array with exactly ${table.rowCount} objects like this:
-[
-${JSON.stringify(exampleRow)},
-${JSON.stringify(exampleRow2)}
-]
+Example:
+[${JSON.stringify(exampleRow)}, ${JSON.stringify(exampleRow2)}]
 
-Generate ${table.rowCount} unique realistic entries now:`;
+Output ${safeRowCount} objects as JSON array:`;
 
   return prompt;
+}
+
+function getColumnContext(col: Column, tableName: string): string {
+  const name = col.name.toLowerCase();
+  const table = tableName.toLowerCase();
+
+  // Table-specific context
+  if (table.includes("comment")) {
+    if (name.includes("author") || name.includes("name")) return "commenter's name";
+    if (name.includes("content")) return "short comment text";
+  }
+  if (table.includes("post")) {
+    if (name.includes("title")) return "blog post title";
+    if (name.includes("content")) return "article excerpt (1 sentence)";
+  }
+  if (table.includes("author")) {
+    if (name.includes("name")) return "author full name";
+    if (name.includes("bio")) return "short bio (1 sentence)";
+  }
+  if (table.includes("user")) {
+    if (name.includes("name")) return "person's full name";
+  }
+  if (table.includes("product")) {
+    if (name.includes("name")) return "product name";
+  }
+  if (table.includes("order")) {
+    if (name.includes("total")) return "order total (number)";
+  }
+
+  // Generic type hints
+  switch (col.type) {
+    case "uuid": return "UUID";
+    case "email": return "email";
+    case "date": return "YYYY-MM-DD";
+    case "boolean": return "true/false";
+    case "integer": return "number";
+    case "float": return "decimal";
+    case "text": return "short text";
+    default: return "string";
+  }
 }
 
 function getRealisticHint(type: ColumnType, colName: string): string {
@@ -224,6 +269,43 @@ export interface ParseResult {
   issues: string[];
 }
 
+// Try to repair truncated JSON
+function repairJson(json: string): string {
+  let repaired = json.trim();
+
+  // If it ends mid-string, close the string
+  const lastQuote = repaired.lastIndexOf('"');
+  const afterLastQuote = repaired.substring(lastQuote + 1);
+  if (lastQuote > 0 && !afterLastQuote.includes('"') && afterLastQuote.length < 20) {
+    // Likely truncated mid-string, try to close it
+    repaired = repaired.substring(0, lastQuote + 1);
+  }
+
+  // Count brackets to close
+  let openBraces = 0, openBrackets = 0;
+  let inString = false;
+  for (let i = 0; i < repaired.length; i++) {
+    const char = repaired[i];
+    const prev = i > 0 ? repaired[i - 1] : '';
+    if (char === '"' && prev !== '\\') inString = !inString;
+    if (!inString) {
+      if (char === '{') openBraces++;
+      if (char === '}') openBraces--;
+      if (char === '[') openBrackets++;
+      if (char === ']') openBrackets--;
+    }
+  }
+
+  // Remove trailing comma if present
+  repaired = repaired.replace(/,\s*$/, '');
+
+  // Close unclosed structures
+  while (openBraces > 0) { repaired += '}'; openBraces--; }
+  while (openBrackets > 0) { repaired += ']'; openBrackets--; }
+
+  return repaired;
+}
+
 export function parseGeneratedData(
   jsonString: string,
   table: Table,
@@ -254,21 +336,31 @@ export function parseGeneratedData(
     }
 
     // Try to find JSON in the response if it's wrapped in text
-    const jsonMatch = cleanJson.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+    const jsonMatch = cleanJson.match(/\[[\s\S]*\]|\{[\s\S]*\}/);
     if (jsonMatch) {
       cleanJson = jsonMatch[0];
     }
 
-    const parsed = JSON.parse(cleanJson);
+    // Try to parse, and if it fails, attempt repair
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let parsed: any;
+    try {
+      parsed = JSON.parse(cleanJson);
+    } catch {
+      console.log("[Data Forge] Initial parse failed, attempting repair...");
+      const repaired = repairJson(cleanJson);
+      parsed = JSON.parse(repaired);
+      issues.push("JSON was truncated and repaired");
+    }
 
     // Handle various response formats
     let rows: unknown[] | null = null;
 
     if (Array.isArray(parsed)) {
       rows = parsed;
-    } else if (parsed.rows && Array.isArray(parsed.rows)) {
+    } else if (parsed?.rows && Array.isArray(parsed.rows)) {
       rows = parsed.rows;
-    } else if (parsed.data && Array.isArray(parsed.data)) {
+    } else if (parsed?.data && Array.isArray(parsed.data)) {
       rows = parsed.data;
     } else if (typeof parsed === "object" && parsed !== null) {
       // Check if the object itself contains row-like data
