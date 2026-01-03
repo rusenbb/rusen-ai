@@ -18,10 +18,10 @@ export default function NerdyStuffPage() {
         />
         <DemoCard
           title="Rusenizer"
-          description="My custom tokenizer. See how text gets broken into tokens and explore the vocabulary."
+          description="My Turkish-optimized tokenizer. Compare with GPT-4 and see ~45% token savings on Turkish text."
           href="/nerdy-stuff/rusenizer"
-          tags={["Tokenization", "NLP"]}
-          status="coming-soon"
+          tags={["Tokenization", "NLP", "Turkish"]}
+          status="live"
         />
         <DemoCard
           title="Tokenizer Battle"
