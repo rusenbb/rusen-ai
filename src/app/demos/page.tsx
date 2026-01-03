@@ -21,7 +21,7 @@ export default function DemosPage() {
           description="Define tables and relationships, let AI generate realistic fake data for your testing needs."
           href="/demos/data-forge"
           tags={["LLM", "Data Engineering"]}
-          status="coming-soon"
+          status="live"
         />
         <DemoCard
           title="Query Craft"
@@ -49,7 +49,7 @@ export default function DemosPage() {
           description="Live dashboard showing real-time data: BTC price, weather, Polymarket odds, and more."
           href="/demos/pulse-board"
           tags={["Real-time", "APIs", "Visualization"]}
-          status="coming-soon"
+          status="live"
         />
         <DemoCard
           title="Voice Morph"
