@@ -62,37 +62,66 @@ export function buildGenerationPrompt(
   existingData: GeneratedData
 ): string {
   const references = getReferencedData(table, schema, existingData);
-
-  // Build column descriptions, marking FK columns specially
   const fkColumnNames = new Set(references.map((r) => r.columnName));
 
+  // Build a sample row to show the expected format
+  const sampleRow: Record<string, string> = {};
+  for (const col of table.columns) {
+    if (fkColumnNames.has(col.name)) {
+      const ref = references.find((r) => r.columnName === col.name)!;
+      sampleRow[col.name] = String(ref.values[0] ?? "ref_id");
+    } else {
+      sampleRow[col.name] = getSampleValue(col.type, col.name);
+    }
+  }
+
+  // Build column descriptions
   const columnDescriptions = table.columns
     .map((col) => {
       if (fkColumnNames.has(col.name)) {
         const ref = references.find((r) => r.columnName === col.name)!;
-        // Show ALL valid values for FK columns so model can pick from them
-        const allValues = ref.values.map((v) => JSON.stringify(v)).join(", ");
-        return `- "${col.name}": MUST be exactly one of these values: [${allValues}]`;
+        const validValues = ref.values.slice(0, 10).map((v) => JSON.stringify(v)).join(", ");
+        const suffix = ref.values.length > 10 ? `, ... (${ref.values.length} total)` : "";
+        return `- ${col.name}: pick from [${validValues}${suffix}]`;
       }
-
-      let desc = `- "${col.name}": ${getTypeDescription(col.type)}`;
-      if (col.isPrimaryKey) desc += " (primary key - must be unique)";
-      if (col.nullable) desc += " (can be null)";
-      return desc;
+      return `- ${col.name}: ${getTypeDescription(col.type)}`;
     })
     .join("\n");
 
-  const prompt = `Generate ${table.rowCount} rows for table "${table.name}".
+  const prompt = `Generate ${table.rowCount} fake data rows for "${table.name}" table.
 
 Columns:
 ${columnDescriptions}
 
-IMPORTANT: Return ONLY valid JSON. No markdown, no explanation.
-Format: {"rows": [{"col1": "val1", "col2": "val2"}, ...]}
+Return JSON array only. Example:
+[${JSON.stringify(sampleRow)}]
 
-Generate exactly ${table.rowCount} rows now:`;
+Generate ${table.rowCount} different rows:`;
 
   return prompt;
+}
+
+function getSampleValue(type: ColumnType, colName: string): string {
+  switch (type) {
+    case "string":
+      return `Sample ${colName}`;
+    case "integer":
+      return "42";
+    case "float":
+      return "19.99";
+    case "boolean":
+      return "true";
+    case "date":
+      return "2024-01-15";
+    case "email":
+      return "user@example.com";
+    case "uuid":
+      return "550e8400-e29b-41d4-a716-446655440000";
+    case "text":
+      return "This is sample text content.";
+    default:
+      return "value";
+  }
 }
 
 export function parseGeneratedData(
@@ -114,34 +143,58 @@ export function parseGeneratedData(
   try {
     // Clean the response - remove markdown code blocks if present
     let cleanJson = jsonString.trim();
+
+    // Remove markdown code blocks
     if (cleanJson.startsWith("```")) {
       cleanJson = cleanJson.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
     }
 
+    // Try to find JSON in the response if it's wrapped in text
+    const jsonMatch = cleanJson.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+    if (jsonMatch) {
+      cleanJson = jsonMatch[0];
+    }
+
     const parsed = JSON.parse(cleanJson);
 
-    // Handle both {rows: [...]} and direct array formats
-    const rows = Array.isArray(parsed) ? parsed : parsed.rows;
+    // Handle various response formats
+    let rows: unknown[] | null = null;
 
-    if (!Array.isArray(rows)) {
-      console.error("Invalid response format:", parsed);
+    if (Array.isArray(parsed)) {
+      rows = parsed;
+    } else if (parsed.rows && Array.isArray(parsed.rows)) {
+      rows = parsed.rows;
+    } else if (parsed.data && Array.isArray(parsed.data)) {
+      rows = parsed.data;
+    } else if (typeof parsed === "object" && parsed !== null) {
+      // Check if the object itself contains row-like data
+      const keys = Object.keys(parsed);
+      if (keys.length > 0 && keys.every(k => !isNaN(Number(k)))) {
+        // Object with numeric keys like {"0": {...}, "1": {...}}
+        rows = Object.values(parsed);
+      }
+    }
+
+    if (!rows || rows.length === 0) {
+      console.warn("LLM returned empty or invalid format, using fallback data. Response:", parsed);
       return generateFallbackData(table, references);
     }
 
     // Validate and clean the data, enforcing FK constraints
-    return rows.slice(0, table.rowCount).map((row: Record<string, unknown>, index: number) => {
+    return rows.slice(0, table.rowCount).map((row: unknown, index: number) => {
       const cleanedRow: Record<string, unknown> = {};
+      const rowData = row as Record<string, unknown>;
 
       for (const col of table.columns) {
-        let value = row[col.name];
+        let value = rowData?.[col.name];
 
-        // Enforce FK constraint - if value is invalid, pick a random valid one
+        // Enforce FK constraint - if value is invalid, pick a valid one
         if (fkValueSets.has(col.name)) {
           const validValues = references.find((r) => r.columnName === col.name)!.values;
           const valueStr = JSON.stringify(value);
 
           if (!fkValueSets.get(col.name)!.has(valueStr) || value === undefined) {
-            // Pick a random valid value
+            // Pick a valid value based on index for distribution
             value = validValues[index % validValues.length];
           }
         }
