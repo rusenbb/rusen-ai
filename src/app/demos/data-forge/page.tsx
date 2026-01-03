@@ -230,7 +230,7 @@ export default function DataForgePage() {
 
         const prompt = buildGenerationPrompt(table, state.schema, generatedData);
         const response = await generate(prompt);
-        const rows = parseGeneratedData(response, table);
+        const rows = parseGeneratedData(response, table, state.schema, generatedData);
 
         generatedData[table.name] = rows;
       }

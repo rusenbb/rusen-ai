@@ -27,14 +27,6 @@ interface HNStory {
   url?: string;
 }
 
-interface PolymarketEvent {
-  id: string;
-  title: string;
-  outcomes: string;
-  outcomePrices: string;
-  volume: number;
-}
-
 interface Earthquake {
   id: string;
   magnitude: number;
@@ -520,97 +512,91 @@ function HackerNewsWidget() {
   );
 }
 
-// Polymarket Widget
-function PolymarketWidget() {
-  const [markets, setMarkets] = useState<PolymarketEvent[]>([]);
+// NASA APOD Widget (replaces Polymarket which doesn't support CORS)
+function NasaApodWidget() {
+  const [apod, setApod] = useState<{
+    title: string;
+    explanation: string;
+    url: string;
+    media_type: string;
+    date: string;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchMarkets = useCallback(async () => {
+  const fetchApod = useCallback(async () => {
     try {
+      // NASA APOD API with DEMO_KEY (free, rate-limited but works)
       const res = await fetch(
-        "https://gamma-api.polymarket.com/markets?closed=false&limit=5"
+        "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY"
       );
       if (!res.ok) throw new Error("Failed to fetch");
 
       const data = await res.json();
-      setMarkets(data);
+      setApod(data);
       setError(null);
     } catch (err) {
-      setError("Failed to fetch Polymarket data");
+      setError("Failed to fetch NASA data");
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchMarkets();
-    const interval = setInterval(fetchMarkets, 60000);
+    fetchApod();
+    // Refresh every hour
+    const interval = setInterval(fetchApod, 3600000);
     return () => clearInterval(interval);
-  }, [fetchMarkets]);
-
-  const parseOutcomes = (outcomes: string, prices: string) => {
-    try {
-      const outcomeList = JSON.parse(outcomes);
-      const priceList = JSON.parse(prices);
-      return outcomeList.map((outcome: string, idx: number) => ({
-        name: outcome,
-        price: priceList[idx] ? (parseFloat(priceList[idx]) * 100).toFixed(0) : "0",
-      }));
-    } catch {
-      return [];
-    }
-  };
+  }, [fetchApod]);
 
   return (
     <Card className="col-span-1 md:col-span-2">
       <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-        <span className="text-xl">&#128200;</span> Polymarket Predictions
+        <span className="text-xl">&#128752;</span> NASA Picture of the Day
       </h2>
       {loading ? (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i}>
-              <Skeleton className="h-4 w-full mb-2" />
-              <Skeleton className="h-6 w-32" />
-            </div>
-          ))}
+        <div className="flex gap-4">
+          <Skeleton className="w-32 h-24 rounded" />
+          <div className="flex-1">
+            <Skeleton className="h-5 w-3/4 mb-2" />
+            <Skeleton className="h-4 w-full mb-1" />
+            <Skeleton className="h-4 w-2/3" />
+          </div>
         </div>
       ) : error ? (
         <p className="text-red-500 text-sm">{error}</p>
-      ) : (
-        <div className="space-y-4">
-          {markets.slice(0, 4).map((market) => {
-            const outcomes = parseOutcomes(market.outcomes, market.outcomePrices);
-            return (
-              <div key={market.id} className="pb-3 border-b border-neutral-100 dark:border-neutral-800 last:border-0">
-                <div className="text-sm mb-2 line-clamp-2">{market.title}</div>
-                <div className="flex flex-wrap gap-2">
-                  {outcomes.slice(0, 2).map((outcome: { name: string; price: string }, idx: number) => (
-                    <span
-                      key={idx}
-                      className={`text-xs px-2 py-1 rounded ${
-                        idx === 0
-                          ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-                          : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
-                      }`}
-                    >
-                      {outcome.name}: {outcome.price}%
-                    </span>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
+      ) : apod ? (
+        <div className="flex gap-4">
+          {apod.media_type === "image" ? (
+            <img
+              src={apod.url}
+              alt={apod.title}
+              className="w-32 h-24 object-cover rounded"
+            />
+          ) : (
+            <div className="w-32 h-24 bg-neutral-100 dark:bg-neutral-800 rounded flex items-center justify-center text-neutral-400">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <h3 className="font-medium text-sm mb-1 line-clamp-1">{apod.title}</h3>
+            <p className="text-xs text-neutral-600 dark:text-neutral-400 line-clamp-3">
+              {apod.explanation}
+            </p>
+            <p className="text-xs text-neutral-400 mt-1">{apod.date}</p>
+          </div>
         </div>
-      )}
+      ) : null}
       <a
-        href="https://polymarket.com"
+        href="https://apod.nasa.gov"
         target="_blank"
         rel="noopener noreferrer"
         className="text-xs text-neutral-500 hover:underline mt-3 inline-block"
       >
-        View more on Polymarket &#8594;
+        View on NASA APOD &#8594;
       </a>
     </Card>
   );
@@ -1035,7 +1021,7 @@ export default function PulseBoardPage() {
         <EarthquakeWidget />
         <GithubTrendingWidget />
         <HackerNewsWidget />
-        <PolymarketWidget />
+        <NasaApodWidget />
       </div>
 
       <div className="mt-8 text-center text-sm text-neutral-500">

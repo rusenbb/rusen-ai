@@ -23,12 +23,18 @@ function getTypeDescription(type: ColumnType): string {
   }
 }
 
+interface ForeignKeyReference {
+  columnName: string;
+  targetTable: string;
+  values: unknown[];
+}
+
 function getReferencedData(
   table: Table,
   schema: Schema,
   existingData: GeneratedData
-): { columnName: string; targetTable: string; values: unknown[] }[] {
-  const references: { columnName: string; targetTable: string; values: unknown[] }[] = [];
+): ForeignKeyReference[] {
+  const references: ForeignKeyReference[] = [];
 
   for (const fk of schema.foreignKeys) {
     if (fk.sourceTableId === table.id) {
@@ -57,65 +63,96 @@ export function buildGenerationPrompt(
 ): string {
   const references = getReferencedData(table, schema, existingData);
 
-  let prompt = `Generate exactly ${table.rowCount} rows of realistic fake data for a database table called "${table.name}".
+  // Build column descriptions, marking FK columns specially
+  const fkColumnNames = new Set(references.map((r) => r.columnName));
+
+  const columnDescriptions = table.columns
+    .map((col) => {
+      if (fkColumnNames.has(col.name)) {
+        const ref = references.find((r) => r.columnName === col.name)!;
+        // Show ALL valid values for FK columns so model can pick from them
+        const allValues = ref.values.map((v) => JSON.stringify(v)).join(", ");
+        return `- "${col.name}": MUST be exactly one of these values: [${allValues}]`;
+      }
+
+      let desc = `- "${col.name}": ${getTypeDescription(col.type)}`;
+      if (col.isPrimaryKey) desc += " (primary key - must be unique)";
+      if (col.nullable) desc += " (can be null)";
+      return desc;
+    })
+    .join("\n");
+
+  const prompt = `Generate ${table.rowCount} rows for table "${table.name}".
 
 Columns:
-${table.columns
-  .map((col) => {
-    let desc = `- "${col.name}": ${getTypeDescription(col.type)}`;
-    if (col.isPrimaryKey) desc += " (primary key - must be unique)";
-    if (col.nullable) desc += " (can be null)";
-    return desc;
-  })
-  .join("\n")}
-`;
+${columnDescriptions}
 
-  if (references.length > 0) {
-    prompt += `\nForeign key constraints:
-${references
-  .map((ref) => {
-    const sampleValues = ref.values.slice(0, 5);
-    return `- "${ref.columnName}" must be one of these values from ${ref.targetTable}: [${sampleValues.map((v) => JSON.stringify(v)).join(", ")}${ref.values.length > 5 ? ", ..." : ""}]`;
-  })
-  .join("\n")}
-`;
-  }
+IMPORTANT: Return ONLY valid JSON. No markdown, no explanation.
+Format: {"rows": [{"col1": "val1", "col2": "val2"}, ...]}
 
-  prompt += `
-Respond with a JSON object containing a "rows" array with exactly ${table.rowCount} objects.
-Make the data realistic and contextually appropriate for the column names.
-Example format:
-{"rows": [{"column1": "value1", "column2": "value2"}, ...]}`;
+Generate exactly ${table.rowCount} rows now:`;
 
   return prompt;
 }
 
 export function parseGeneratedData(
   jsonString: string,
-  table: Table
+  table: Table,
+  schema?: Schema,
+  existingData?: GeneratedData
 ): Record<string, unknown>[] {
+  // Get FK references for validation
+  const references = schema && existingData
+    ? getReferencedData(table, schema, existingData)
+    : [];
+
+  const fkValueSets = new Map<string, Set<string>>();
+  for (const ref of references) {
+    fkValueSets.set(ref.columnName, new Set(ref.values.map((v) => JSON.stringify(v))));
+  }
+
   try {
-    const parsed = JSON.parse(jsonString);
+    // Clean the response - remove markdown code blocks if present
+    let cleanJson = jsonString.trim();
+    if (cleanJson.startsWith("```")) {
+      cleanJson = cleanJson.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
+    }
+
+    const parsed = JSON.parse(cleanJson);
 
     // Handle both {rows: [...]} and direct array formats
     const rows = Array.isArray(parsed) ? parsed : parsed.rows;
 
     if (!Array.isArray(rows)) {
       console.error("Invalid response format:", parsed);
-      return generateFallbackData(table);
+      return generateFallbackData(table, references);
     }
 
-    // Validate and clean the data
-    return rows.map((row: Record<string, unknown>) => {
+    // Validate and clean the data, enforcing FK constraints
+    return rows.slice(0, table.rowCount).map((row: Record<string, unknown>, index: number) => {
       const cleanedRow: Record<string, unknown> = {};
+
       for (const col of table.columns) {
-        cleanedRow[col.name] = row[col.name] ?? (col.nullable ? null : getDefaultValue(col.type));
+        let value = row[col.name];
+
+        // Enforce FK constraint - if value is invalid, pick a random valid one
+        if (fkValueSets.has(col.name)) {
+          const validValues = references.find((r) => r.columnName === col.name)!.values;
+          const valueStr = JSON.stringify(value);
+
+          if (!fkValueSets.get(col.name)!.has(valueStr) || value === undefined) {
+            // Pick a random valid value
+            value = validValues[index % validValues.length];
+          }
+        }
+
+        cleanedRow[col.name] = value ?? (col.nullable ? null : getDefaultValue(col.type));
       }
       return cleanedRow;
     });
   } catch (err) {
-    console.error("Failed to parse generated data:", err);
-    return generateFallbackData(table);
+    console.error("Failed to parse generated data:", err, "\nRaw:", jsonString);
+    return generateFallbackData(table, references);
   }
 }
 
@@ -142,12 +179,23 @@ function getDefaultValue(type: ColumnType): unknown {
   }
 }
 
-function generateFallbackData(table: Table): Record<string, unknown>[] {
+function generateFallbackData(
+  table: Table,
+  references: ForeignKeyReference[] = []
+): Record<string, unknown>[] {
   const rows: Record<string, unknown>[] = [];
+
   for (let i = 0; i < table.rowCount; i++) {
     const row: Record<string, unknown> = {};
     for (const col of table.columns) {
-      row[col.name] = generateFallbackValue(col, i);
+      // Check if this column has a FK reference
+      const ref = references.find((r) => r.columnName === col.name);
+      if (ref && ref.values.length > 0) {
+        // Use a value from the referenced table
+        row[col.name] = ref.values[i % ref.values.length];
+      } else {
+        row[col.name] = generateFallbackValue(col, i);
+      }
     }
     rows.push(row);
   }
