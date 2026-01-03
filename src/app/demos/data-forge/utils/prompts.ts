@@ -64,61 +64,137 @@ export function buildGenerationPrompt(
   const references = getReferencedData(table, schema, existingData);
   const fkColumnNames = new Set(references.map((r) => r.columnName));
 
-  // Build a sample row to show the expected format
-  const sampleRow: Record<string, string> = {};
-  for (const col of table.columns) {
-    if (fkColumnNames.has(col.name)) {
-      const ref = references.find((r) => r.columnName === col.name)!;
-      sampleRow[col.name] = String(ref.values[0] ?? "ref_id");
-    } else {
-      sampleRow[col.name] = getSampleValue(col.type, col.name);
-    }
-  }
-
-  // Build column descriptions
+  // Build column descriptions with realistic hints
   const columnDescriptions = table.columns
     .map((col) => {
       if (fkColumnNames.has(col.name)) {
         const ref = references.find((r) => r.columnName === col.name)!;
-        const validValues = ref.values.slice(0, 10).map((v) => JSON.stringify(v)).join(", ");
-        const suffix = ref.values.length > 10 ? `, ... (${ref.values.length} total)` : "";
-        return `- ${col.name}: pick from [${validValues}${suffix}]`;
+        const validValues = ref.values.slice(0, 8).map((v) => JSON.stringify(v)).join(", ");
+        return `- ${col.name}: use one of [${validValues}]`;
       }
-      return `- ${col.name}: ${getTypeDescription(col.type)}`;
+      return `- ${col.name}: ${getRealisticHint(col.type, col.name)}`;
     })
     .join("\n");
 
-  const prompt = `Generate ${table.rowCount} fake data rows for "${table.name}" table.
+  // Build a realistic example row
+  const exampleRow: Record<string, unknown> = {};
+  for (const col of table.columns) {
+    if (fkColumnNames.has(col.name)) {
+      const ref = references.find((r) => r.columnName === col.name)!;
+      exampleRow[col.name] = ref.values[0];
+    } else {
+      exampleRow[col.name] = getRealisticExample(col.type, col.name);
+    }
+  }
 
-Columns:
+  const prompt = `You are generating realistic test data for a database.
+
+Table: "${table.name}"
 ${columnDescriptions}
 
-Return JSON array only. Example:
-[${JSON.stringify(sampleRow)}]
+Generate ${table.rowCount} realistic rows as a JSON array. Use real-sounding names, actual company names, realistic prices, proper dates, etc.
 
-Generate ${table.rowCount} different rows:`;
+Example format:
+[${JSON.stringify(exampleRow)}]
+
+Now generate ${table.rowCount} unique, realistic rows:`;
 
   return prompt;
 }
 
-function getSampleValue(type: ColumnType, colName: string): string {
+function getRealisticHint(type: ColumnType, colName: string): string {
+  const nameLower = colName.toLowerCase();
+
+  // Context-aware hints based on column name
+  if (nameLower.includes("name") && !nameLower.includes("user")) {
+    if (nameLower.includes("first")) return "real first name (e.g., Emma, James, Sofia)";
+    if (nameLower.includes("last")) return "real last name (e.g., Johnson, Garcia, Chen)";
+    if (nameLower.includes("company") || nameLower.includes("business")) return "real company name";
+    if (nameLower.includes("product")) return "realistic product name";
+    return "realistic full name (e.g., Sarah Mitchell, David Park)";
+  }
+  if (nameLower.includes("title")) return "realistic title (e.g., Senior Developer, Marketing Manager)";
+  if (nameLower.includes("description") || nameLower.includes("bio")) return "realistic description (2-3 sentences)";
+  if (nameLower.includes("address")) return "realistic street address";
+  if (nameLower.includes("city")) return "real city name";
+  if (nameLower.includes("country")) return "real country name";
+  if (nameLower.includes("phone")) return "realistic phone number";
+  if (nameLower.includes("price") || nameLower.includes("amount") || nameLower.includes("cost")) return "realistic price (e.g., 29.99, 149.00)";
+  if (nameLower.includes("quantity") || nameLower.includes("count")) return "realistic quantity (1-100)";
+  if (nameLower.includes("rating") || nameLower.includes("score")) return "rating 1-5";
+  if (nameLower.includes("status")) return "status like active, pending, completed";
+  if (nameLower.includes("category") || nameLower.includes("type")) return "realistic category name";
+  if (nameLower.includes("url") || nameLower.includes("website")) return "realistic URL";
+  if (nameLower.includes("image") || nameLower.includes("photo") || nameLower.includes("avatar")) return "image URL path";
+
+  // Default hints by type
   switch (type) {
     case "string":
-      return `Sample ${colName}`;
+      return "short realistic text";
     case "integer":
-      return "42";
+      return "realistic number";
     case "float":
-      return "19.99";
+      return "realistic decimal number";
     case "boolean":
-      return "true";
+      return "true or false";
     case "date":
-      return "2024-01-15";
+      return "recent date (YYYY-MM-DD format, years 2023-2024)";
     case "email":
-      return "user@example.com";
+      return "realistic email (e.g., john.doe@gmail.com)";
     case "uuid":
-      return "550e8400-e29b-41d4-a716-446655440000";
+      return "valid UUID";
     case "text":
-      return "This is sample text content.";
+      return "realistic paragraph of text";
+    default:
+      return "appropriate value";
+  }
+}
+
+function getRealisticExample(type: ColumnType, colName: string): unknown {
+  const nameLower = colName.toLowerCase();
+
+  // Context-aware examples
+  if (nameLower.includes("name")) {
+    if (nameLower.includes("first")) return "Emma";
+    if (nameLower.includes("last")) return "Thompson";
+    if (nameLower.includes("company")) return "Acme Technologies";
+    if (nameLower.includes("product")) return "Premium Wireless Headphones";
+    return "Sarah Mitchell";
+  }
+  if (nameLower.includes("title")) return "Senior Software Engineer";
+  if (nameLower.includes("description")) return "High-quality product with excellent features and durability.";
+  if (nameLower.includes("bio")) return "Passionate developer with 5 years of experience in web technologies.";
+  if (nameLower.includes("address")) return "123 Oak Street, Suite 400";
+  if (nameLower.includes("city")) return "San Francisco";
+  if (nameLower.includes("country")) return "United States";
+  if (nameLower.includes("phone")) return "+1-555-123-4567";
+  if (nameLower.includes("price") || nameLower.includes("amount")) return 49.99;
+  if (nameLower.includes("total")) return 159.97;
+  if (nameLower.includes("quantity")) return 3;
+  if (nameLower.includes("rating")) return 4.5;
+  if (nameLower.includes("status")) return "active";
+  if (nameLower.includes("category")) return "Electronics";
+  if (nameLower.includes("url") || nameLower.includes("website")) return "https://example.com/page";
+  if (nameLower.includes("image") || nameLower.includes("avatar")) return "/images/user-1.jpg";
+
+  // Default examples by type
+  switch (type) {
+    case "string":
+      return "Example value";
+    case "integer":
+      return 42;
+    case "float":
+      return 29.99;
+    case "boolean":
+      return true;
+    case "date":
+      return "2024-03-15";
+    case "email":
+      return "sarah.mitchell@gmail.com";
+    case "uuid":
+      return crypto.randomUUID();
+    case "text":
+      return "This is a detailed description with multiple sentences. It provides context and information about the item.";
     default:
       return "value";
   }
@@ -255,12 +331,72 @@ function generateFallbackData(
   return rows;
 }
 
+// Realistic fallback data pools
+const FIRST_NAMES = ["Emma", "Liam", "Olivia", "Noah", "Ava", "James", "Sophia", "William", "Isabella", "Oliver", "Mia", "Benjamin", "Charlotte", "Elijah", "Amelia", "Lucas", "Harper", "Mason", "Evelyn", "Logan"];
+const LAST_NAMES = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Anderson", "Taylor", "Thomas", "Moore", "Jackson", "Martin", "Lee", "Thompson", "White", "Harris"];
+const COMPANIES = ["Acme Corp", "TechFlow Inc", "Global Solutions", "Innovate Labs", "Digital Dynamics", "Cloud Nine Systems", "Peak Performance", "Bright Future Co", "Swift Solutions", "Prime Industries"];
+const PRODUCTS = ["Premium Headphones", "Wireless Keyboard", "Smart Watch Pro", "Fitness Tracker", "Portable Charger", "Bluetooth Speaker", "Gaming Mouse", "LED Desk Lamp", "USB Hub", "Webcam HD"];
+const CITIES = ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "San Francisco", "Seattle", "Denver", "Boston", "Austin"];
+const STATUSES = ["active", "pending", "completed", "processing", "cancelled"];
+const CATEGORIES = ["Electronics", "Clothing", "Home & Garden", "Sports", "Books", "Toys", "Health", "Automotive", "Food", "Office"];
+
 function generateFallbackValue(col: Column, index: number): unknown {
   if (col.nullable && Math.random() < 0.1) return null;
 
+  const nameLower = col.name.toLowerCase();
+
+  // Context-aware realistic fallback
+  if (nameLower.includes("first") && nameLower.includes("name")) {
+    return FIRST_NAMES[index % FIRST_NAMES.length];
+  }
+  if (nameLower.includes("last") && nameLower.includes("name")) {
+    return LAST_NAMES[index % LAST_NAMES.length];
+  }
+  if (nameLower.includes("name") && !nameLower.includes("user")) {
+    if (nameLower.includes("company") || nameLower.includes("business")) {
+      return COMPANIES[index % COMPANIES.length];
+    }
+    if (nameLower.includes("product")) {
+      return PRODUCTS[index % PRODUCTS.length];
+    }
+    return `${FIRST_NAMES[index % FIRST_NAMES.length]} ${LAST_NAMES[(index + 7) % LAST_NAMES.length]}`;
+  }
+  if (nameLower.includes("city")) {
+    return CITIES[index % CITIES.length];
+  }
+  if (nameLower.includes("status")) {
+    return STATUSES[index % STATUSES.length];
+  }
+  if (nameLower.includes("category") || nameLower.includes("type")) {
+    return CATEGORIES[index % CATEGORIES.length];
+  }
+  if (nameLower.includes("price") || nameLower.includes("amount") || nameLower.includes("cost")) {
+    return Math.round((19.99 + index * 15.5) * 100) / 100;
+  }
+  if (nameLower.includes("total")) {
+    return Math.round((49.99 + index * 25) * 100) / 100;
+  }
+  if (nameLower.includes("quantity") || nameLower.includes("count")) {
+    return (index % 10) + 1;
+  }
+  if (nameLower.includes("rating") || nameLower.includes("score")) {
+    return Math.round((3 + (index % 5) * 0.5) * 10) / 10;
+  }
+  if (nameLower.includes("title")) {
+    const titles = ["Software Engineer", "Product Manager", "Designer", "Data Analyst", "Marketing Lead"];
+    return titles[index % titles.length];
+  }
+  if (nameLower.includes("phone")) {
+    return `+1-555-${String(100 + index).padStart(3, "0")}-${String(1000 + index * 11).slice(-4)}`;
+  }
+  if (nameLower.includes("address")) {
+    return `${100 + index * 23} ${["Oak", "Maple", "Pine", "Cedar", "Elm"][index % 5]} Street`;
+  }
+
+  // Default by type
   switch (col.type) {
     case "string":
-      return `${col.name}_${index + 1}`;
+      return `${col.name} ${index + 1}`;
     case "integer":
       return index + 1;
     case "float":
@@ -268,16 +404,27 @@ function generateFallbackValue(col: Column, index: number): unknown {
     case "boolean":
       return index % 2 === 0;
     case "date": {
-      const date = new Date();
-      date.setDate(date.getDate() - index);
+      const date = new Date(2024, 0, 1);
+      date.setDate(date.getDate() + index * 3);
       return date.toISOString().split("T")[0];
     }
-    case "email":
-      return `user${index + 1}@example.com`;
+    case "email": {
+      const first = FIRST_NAMES[index % FIRST_NAMES.length].toLowerCase();
+      const last = LAST_NAMES[(index + 5) % LAST_NAMES.length].toLowerCase();
+      const domains = ["gmail.com", "yahoo.com", "outlook.com", "email.com"];
+      return `${first}.${last}@${domains[index % domains.length]}`;
+    }
     case "uuid":
       return crypto.randomUUID();
     case "text":
-      return `This is sample text for row ${index + 1}.`;
+      const texts = [
+        "Excellent quality and fast shipping. Highly recommended for anyone looking for reliability.",
+        "Great product that exceeded my expectations. Will definitely purchase again.",
+        "Good value for the price. Works exactly as described in the listing.",
+        "Perfect for my needs. The customer service was also very helpful.",
+        "Solid product with no issues. Arrived on time and well packaged."
+      ];
+      return texts[index % texts.length];
     default:
       return null;
   }
