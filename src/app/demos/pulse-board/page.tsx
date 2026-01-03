@@ -221,14 +221,65 @@ function WorldClocksWidget() {
   );
 }
 
-// Crypto Widget
-function CryptoWidget() {
-  const [crypto, setCrypto] = useState<CryptoData | null>(null);
-  const [fearGreed, setFearGreed] = useState<FearGreedData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+// Unified Crypto Hub - Real-time prices, 24h change, Fear & Greed, Chainlink oracle, Gas
+function CryptoHubWidget() {
+  // WebSocket real-time prices
+  const [prices, setPrices] = useState<{
+    btc: { price: number; prevPrice: number };
+    eth: { price: number; prevPrice: number };
+    sol: { price: number; prevPrice: number };
+  }>({
+    btc: { price: 0, prevPrice: 0 },
+    eth: { price: 0, prevPrice: 0 },
+    sol: { price: 0, prevPrice: 0 },
+  });
+  const [wsConnected, setWsConnected] = useState(false);
+  const [updateCount, setUpdateCount] = useState(0);
+  const wsRef = useRef<WebSocket | null>(null);
 
-  const fetchData = useCallback(async () => {
+  // CoinGecko 24h change data
+  const [changes, setChanges] = useState<{ btc: number; eth: number } | null>(null);
+
+  // Fear & Greed
+  const [fearGreed, setFearGreed] = useState<FearGreedData | null>(null);
+
+  // Chainlink on-chain prices + Gas
+  const [chainlink, setChainlink] = useState<{ btc: number; eth: number; gas: number } | null>(null);
+
+  // WebSocket connection for real-time prices
+  useEffect(() => {
+    const ws = new WebSocket(
+      "wss://stream.binance.com:9443/stream?streams=btcusdt@trade/ethusdt@trade/solusdt@trade"
+    );
+
+    ws.onopen = () => setWsConnected(true);
+    ws.onclose = () => setWsConnected(false);
+    ws.onerror = () => setWsConnected(false);
+
+    ws.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+      const { stream, data } = message;
+      const price = parseFloat(data.p);
+
+      setPrices((prev) => {
+        if (stream === "btcusdt@trade") {
+          return { ...prev, btc: { price, prevPrice: prev.btc.price || price } };
+        } else if (stream === "ethusdt@trade") {
+          return { ...prev, eth: { price, prevPrice: prev.eth.price || price } };
+        } else if (stream === "solusdt@trade") {
+          return { ...prev, sol: { price, prevPrice: prev.sol.price || price } };
+        }
+        return prev;
+      });
+      setUpdateCount((c) => c + 1);
+    };
+
+    wsRef.current = ws;
+    return () => ws.close();
+  }, []);
+
+  // Fetch 24h change + Fear & Greed (every 60s)
+  const fetchMarketData = useCallback(async () => {
     try {
       const [cryptoRes, fgRes] = await Promise.all([
         fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true"),
@@ -236,43 +287,88 @@ function CryptoWidget() {
       ]);
 
       if (cryptoRes.ok) {
-        const cryptoData = await cryptoRes.json();
-        setCrypto(cryptoData);
+        const data = await cryptoRes.json();
+        setChanges({
+          btc: data.bitcoin.usd_24h_change,
+          eth: data.ethereum.usd_24h_change,
+        });
       }
 
       if (fgRes.ok) {
         const fgData = await fgRes.json();
-        if (fgData.data && fgData.data[0]) {
+        if (fgData.data?.[0]) {
           setFearGreed(fgData.data[0]);
         }
       }
-
-      setError(null);
     } catch (err) {
-      setError("Failed to fetch crypto data");
-    } finally {
-      setLoading(false);
+      console.error("Failed to fetch market data");
+    }
+  }, []);
+
+  // Fetch Chainlink on-chain data (every 30s)
+  const fetchChainlink = useCallback(async () => {
+    try {
+      const rpcUrl = "https://eth.llamarpc.com";
+      const BTC_FEED = "0xF4030086522a5bEEa4988F8cA5B36dbC97BeE88c";
+      const ETH_FEED = "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419";
+      const LATEST_ROUND = "0xfeaf968c";
+
+      const [btcRes, ethRes, gasRes] = await Promise.all([
+        fetch(rpcUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ jsonrpc: "2.0", method: "eth_call", params: [{ to: BTC_FEED, data: LATEST_ROUND }, "latest"], id: 1 }),
+        }),
+        fetch(rpcUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ jsonrpc: "2.0", method: "eth_call", params: [{ to: ETH_FEED, data: LATEST_ROUND }, "latest"], id: 2 }),
+        }),
+        fetch(rpcUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ jsonrpc: "2.0", method: "eth_gasPrice", params: [], id: 3 }),
+        }),
+      ]);
+
+      const btcData = await btcRes.json();
+      const ethData = await ethRes.json();
+      const gasData = await gasRes.json();
+
+      const btcPrice = btcData.result ? Number(BigInt("0x" + btcData.result.slice(66, 130))) / 1e8 : 0;
+      const ethPrice = ethData.result ? Number(BigInt("0x" + ethData.result.slice(66, 130))) / 1e8 : 0;
+      const gasPrice = gasData.result ? Number(BigInt(gasData.result)) / 1e9 : 0;
+
+      setChainlink({ btc: btcPrice, eth: ethPrice, gas: gasPrice });
+    } catch (err) {
+      console.error("Failed to fetch Chainlink data");
     }
   }, []);
 
   useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 60000);
-    return () => clearInterval(interval);
-  }, [fetchData]);
+    fetchMarketData();
+    fetchChainlink();
+    const marketInterval = setInterval(fetchMarketData, 60000);
+    const chainlinkInterval = setInterval(fetchChainlink, 30000);
+    return () => {
+      clearInterval(marketInterval);
+      clearInterval(chainlinkInterval);
+    };
+  }, [fetchMarketData, fetchChainlink]);
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(price);
+    if (price === 0) return "--";
+    return price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
   const formatChange = (change: number) => {
     const sign = change >= 0 ? "+" : "";
     return `${sign}${change.toFixed(2)}%`;
+  };
+
+  const getPriceColor = (current: number, prev: number) => {
+    if (current === prev || prev === 0) return "";
+    return current > prev ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400";
   };
 
   const getFearGreedColor = (value: number) => {
@@ -283,75 +379,125 @@ function CryptoWidget() {
     return "text-green-600 dark:text-green-400";
   };
 
-  if (loading) {
-    return (
-      <Card className="col-span-1 md:col-span-2">
-        <h2 className="text-lg font-semibold mb-4">Crypto Markets</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i}>
-              <Skeleton className="h-4 w-16 mb-2" />
-              <Skeleton className="h-8 w-24 mb-1" />
-              <Skeleton className="h-4 w-12" />
-            </div>
-          ))}
-        </div>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card className="col-span-1 md:col-span-2">
-        <h2 className="text-lg font-semibold mb-4">Crypto Markets</h2>
-        <p className="text-red-500 text-sm">{error}</p>
-      </Card>
-    );
-  }
-
   return (
-    <Card className="col-span-1 md:col-span-2">
-      <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-        <span className="text-xl">&#8383;</span> Crypto Markets
-      </h2>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div>
-          <div className="text-sm text-neutral-500 mb-1">Bitcoin</div>
-          <div className="text-2xl font-bold">{crypto ? formatPrice(crypto.bitcoin.usd) : "--"}</div>
-          {crypto && (
-            <div className={crypto.bitcoin.usd_24h_change >= 0 ? "text-green-600 dark:text-green-400 text-sm" : "text-red-600 dark:text-red-400 text-sm"}>
-              {formatChange(crypto.bitcoin.usd_24h_change)}
+    <Card className="col-span-1 md:col-span-2 lg:col-span-3">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold flex items-center gap-2">
+          <span className="text-xl">&#9889;</span> Crypto Hub
+        </h2>
+        <div className="flex items-center gap-2">
+          {wsConnected ? (
+            <>
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+              </span>
+              <span className="text-xs text-green-600 dark:text-green-400">LIVE</span>
+            </>
+          ) : (
+            <span className="text-xs text-neutral-500">Connecting...</span>
+          )}
+          <span className="text-xs text-neutral-400">|</span>
+          <span className="text-xs text-neutral-500">{updateCount.toLocaleString()} updates</span>
+        </div>
+      </div>
+
+      {/* Real-time prices */}
+      <div className="grid grid-cols-3 gap-4 mb-4">
+        {/* BTC */}
+        <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold text-xs">₿</div>
+            <span className="text-sm font-medium">Bitcoin</span>
+          </div>
+          <div className={`font-mono text-xl font-bold ${getPriceColor(prices.btc.price, prices.btc.prevPrice)}`}>
+            ${formatPrice(prices.btc.price)}
+          </div>
+          {changes && (
+            <div className={`text-xs ${changes.btc >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+              {formatChange(changes.btc)} <span className="text-neutral-400">24h</span>
             </div>
           )}
         </div>
-        <div>
-          <div className="text-sm text-neutral-500 mb-1">Ethereum</div>
-          <div className="text-2xl font-bold">{crypto ? formatPrice(crypto.ethereum.usd) : "--"}</div>
-          {crypto && (
-            <div className={crypto.ethereum.usd_24h_change >= 0 ? "text-green-600 dark:text-green-400 text-sm" : "text-red-600 dark:text-red-400 text-sm"}>
-              {formatChange(crypto.ethereum.usd_24h_change)}
+
+        {/* ETH */}
+        <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xs">Ξ</div>
+            <span className="text-sm font-medium">Ethereum</span>
+          </div>
+          <div className={`font-mono text-xl font-bold ${getPriceColor(prices.eth.price, prices.eth.prevPrice)}`}>
+            ${formatPrice(prices.eth.price)}
+          </div>
+          {changes && (
+            <div className={`text-xs ${changes.eth >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+              {formatChange(changes.eth)} <span className="text-neutral-400">24h</span>
             </div>
           )}
         </div>
-        <div className="col-span-2">
-          <div className="text-sm text-neutral-500 mb-1">Fear & Greed Index</div>
-          <div className="flex items-baseline gap-2">
-            <span className={`text-3xl font-bold ${fearGreed ? getFearGreedColor(parseInt(fearGreed.value)) : ""}`}>
+
+        {/* SOL */}
+        <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-teal-400 flex items-center justify-center text-white font-bold text-xs">S</div>
+            <span className="text-sm font-medium">Solana</span>
+          </div>
+          <div className={`font-mono text-xl font-bold ${getPriceColor(prices.sol.price, prices.sol.prevPrice)}`}>
+            ${formatPrice(prices.sol.price)}
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom row: Fear & Greed + Chainlink Oracle + Gas */}
+      <div className="grid grid-cols-3 gap-4 pt-4 border-t border-neutral-200 dark:border-neutral-700">
+        {/* Fear & Greed */}
+        <div>
+          <div className="text-xs text-neutral-500 mb-1">Fear & Greed Index</div>
+          <div className="flex items-baseline gap-1">
+            <span className={`text-2xl font-bold ${fearGreed ? getFearGreedColor(parseInt(fearGreed.value)) : ""}`}>
               {fearGreed?.value || "--"}
             </span>
-            <span className="text-sm text-neutral-500">/100</span>
+            <span className="text-xs text-neutral-400">/100</span>
           </div>
-          <div className="text-sm text-neutral-600 dark:text-neutral-400">
-            {fearGreed?.value_classification || "--"}
-          </div>
+          <div className="text-xs text-neutral-500">{fearGreed?.value_classification || "--"}</div>
           {fearGreed && (
-            <div className="mt-2 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500"
-                style={{ width: `${fearGreed.value}%` }}
-              />
+            <div className="mt-1 h-1.5 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500" style={{ width: `${fearGreed.value}%` }} />
             </div>
           )}
+        </div>
+
+        {/* Chainlink Oracle */}
+        <div>
+          <div className="text-xs text-neutral-500 mb-1 flex items-center gap-1">
+            <svg className="w-3 h-3" viewBox="0 0 32 32" fill="none">
+              <path d="M16 0L6.5 5.5v10.9L16 32l9.5-15.6V5.5L16 0z" fill="#375BD2"/>
+            </svg>
+            Chainlink Oracle
+          </div>
+          {chainlink ? (
+            <div className="space-y-0.5">
+              <div className="flex justify-between text-xs">
+                <span className="text-neutral-500">BTC</span>
+                <span className="font-mono">${chainlink.btc.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-neutral-500">ETH</span>
+                <span className="font-mono">${chainlink.eth.toLocaleString()}</span>
+              </div>
+            </div>
+          ) : (
+            <Skeleton className="h-8 w-full" />
+          )}
+        </div>
+
+        {/* Gas Price */}
+        <div>
+          <div className="text-xs text-neutral-500 mb-1">Ethereum Gas</div>
+          <div className="text-2xl font-bold text-purple-600 dark:text-purple-400 font-mono">
+            {chainlink ? `${chainlink.gas.toFixed(1)}` : "--"}
+          </div>
+          <div className="text-xs text-neutral-500">gwei</div>
         </div>
       </div>
     </Card>
@@ -508,328 +654,6 @@ function HackerNewsWidget() {
           ))}
         </div>
       )}
-    </Card>
-  );
-}
-
-// Live Crypto Ticker - Real-time WebSocket prices from Binance
-function LiveCryptoTickerWidget() {
-  const [prices, setPrices] = useState<{
-    btc: { price: number; prevPrice: number };
-    eth: { price: number; prevPrice: number };
-    sol: { price: number; prevPrice: number };
-  }>({
-    btc: { price: 0, prevPrice: 0 },
-    eth: { price: 0, prevPrice: 0 },
-    sol: { price: 0, prevPrice: 0 },
-  });
-  const [connected, setConnected] = useState(false);
-  const [updateCount, setUpdateCount] = useState(0);
-  const wsRef = useRef<WebSocket | null>(null);
-
-  useEffect(() => {
-    // Binance WebSocket streams for BTC, ETH, SOL
-    const ws = new WebSocket(
-      "wss://stream.binance.com:9443/stream?streams=btcusdt@trade/ethusdt@trade/solusdt@trade"
-    );
-
-    ws.onopen = () => {
-      setConnected(true);
-    };
-
-    ws.onmessage = (event) => {
-      const message = JSON.parse(event.data);
-      const { stream, data } = message;
-      const price = parseFloat(data.p);
-
-      setPrices((prev) => {
-        if (stream === "btcusdt@trade") {
-          return { ...prev, btc: { price, prevPrice: prev.btc.price || price } };
-        } else if (stream === "ethusdt@trade") {
-          return { ...prev, eth: { price, prevPrice: prev.eth.price || price } };
-        } else if (stream === "solusdt@trade") {
-          return { ...prev, sol: { price, prevPrice: prev.sol.price || price } };
-        }
-        return prev;
-      });
-      setUpdateCount((c) => c + 1);
-    };
-
-    ws.onerror = () => {
-      setConnected(false);
-    };
-
-    ws.onclose = () => {
-      setConnected(false);
-    };
-
-    wsRef.current = ws;
-
-    return () => {
-      ws.close();
-    };
-  }, []);
-
-  const formatPrice = (price: number, decimals: number = 2) => {
-    if (price === 0) return "--";
-    return price.toLocaleString("en-US", {
-      minimumFractionDigits: decimals,
-      maximumFractionDigits: decimals,
-    });
-  };
-
-  const getPriceColor = (current: number, prev: number) => {
-    if (current === prev || prev === 0) return "";
-    return current > prev
-      ? "text-green-600 dark:text-green-400"
-      : "text-red-600 dark:text-red-400";
-  };
-
-  const getFlashClass = (current: number, prev: number) => {
-    if (current === prev || prev === 0) return "";
-    return current > prev ? "animate-flash-green" : "animate-flash-red";
-  };
-
-  return (
-    <Card className="col-span-1 md:col-span-2">
-      <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-        <span className="text-xl">&#9889;</span> Live Crypto Ticker
-        <span className="ml-auto flex items-center gap-2">
-          {connected ? (
-            <>
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-              </span>
-              <span className="text-xs text-green-600 dark:text-green-400 font-normal">LIVE</span>
-            </>
-          ) : (
-            <>
-              <span className="h-2 w-2 rounded-full bg-red-500"></span>
-              <span className="text-xs text-red-500 font-normal">Connecting...</span>
-            </>
-          )}
-        </span>
-      </h2>
-
-      <div className="space-y-4">
-        {/* BTC */}
-        <div className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold text-sm">
-              ₿
-            </div>
-            <div>
-              <div className="font-semibold">Bitcoin</div>
-              <div className="text-xs text-neutral-500">BTC/USDT</div>
-            </div>
-          </div>
-          <div className={`text-right font-mono text-xl font-bold transition-colors ${getPriceColor(prices.btc.price, prices.btc.prevPrice)}`}>
-            ${formatPrice(prices.btc.price)}
-          </div>
-        </div>
-
-        {/* ETH */}
-        <div className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-sm">
-              Ξ
-            </div>
-            <div>
-              <div className="font-semibold">Ethereum</div>
-              <div className="text-xs text-neutral-500">ETH/USDT</div>
-            </div>
-          </div>
-          <div className={`text-right font-mono text-xl font-bold transition-colors ${getPriceColor(prices.eth.price, prices.eth.prevPrice)}`}>
-            ${formatPrice(prices.eth.price)}
-          </div>
-        </div>
-
-        {/* SOL */}
-        <div className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-teal-400 flex items-center justify-center text-white font-bold text-sm">
-              S
-            </div>
-            <div>
-              <div className="font-semibold">Solana</div>
-              <div className="text-xs text-neutral-500">SOL/USDT</div>
-            </div>
-          </div>
-          <div className={`text-right font-mono text-xl font-bold transition-colors ${getPriceColor(prices.sol.price, prices.sol.prevPrice)}`}>
-            ${formatPrice(prices.sol.price)}
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-4 flex items-center justify-between text-xs text-neutral-500">
-        <span>WebSocket: Binance</span>
-        <span>{updateCount.toLocaleString()} updates</span>
-      </div>
-    </Card>
-  );
-}
-
-// Chainlink On-Chain Price Widget
-function ChainlinkWidget() {
-  const [btcPrice, setBtcPrice] = useState<number | null>(null);
-  const [ethPrice, setEthPrice] = useState<number | null>(null);
-  const [gasPrice, setGasPrice] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Chainlink Price Feed addresses on Ethereum mainnet
-  const BTC_USD_FEED = "0xF4030086522a5bEEa4988F8cA5B36dbC97BeE88c";
-  const ETH_USD_FEED = "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419";
-
-  // ABI encoded function selector for latestRoundData()
-  const LATEST_ROUND_DATA = "0xfeaf968c";
-
-  const fetchChainlinkData = useCallback(async () => {
-    try {
-      // Use public Ethereum RPC endpoints
-      const rpcEndpoints = [
-        "https://eth.llamarpc.com",
-        "https://rpc.ankr.com/eth",
-        "https://ethereum.publicnode.com",
-      ];
-
-      let rpcUrl = rpcEndpoints[0];
-
-      // Fetch BTC/USD price
-      const btcCall = {
-        jsonrpc: "2.0",
-        method: "eth_call",
-        params: [{ to: BTC_USD_FEED, data: LATEST_ROUND_DATA }, "latest"],
-        id: 1,
-      };
-
-      // Fetch ETH/USD price
-      const ethCall = {
-        jsonrpc: "2.0",
-        method: "eth_call",
-        params: [{ to: ETH_USD_FEED, data: LATEST_ROUND_DATA }, "latest"],
-        id: 2,
-      };
-
-      // Fetch gas price
-      const gasCall = {
-        jsonrpc: "2.0",
-        method: "eth_gasPrice",
-        params: [],
-        id: 3,
-      };
-
-      const [btcRes, ethRes, gasRes] = await Promise.all([
-        fetch(rpcUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(btcCall),
-        }),
-        fetch(rpcUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(ethCall),
-        }),
-        fetch(rpcUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(gasCall),
-        }),
-      ]);
-
-      const btcData = await btcRes.json();
-      const ethData = await ethRes.json();
-      const gasData = await gasRes.json();
-
-      // Parse Chainlink response (latestRoundData returns multiple values, price is at offset 32 bytes)
-      if (btcData.result) {
-        // The answer is at bytes 32-64 (second 32-byte word)
-        const priceHex = "0x" + btcData.result.slice(66, 130);
-        const priceRaw = BigInt(priceHex);
-        // Chainlink BTC/USD has 8 decimals
-        setBtcPrice(Number(priceRaw) / 1e8);
-      }
-
-      if (ethData.result) {
-        const priceHex = "0x" + ethData.result.slice(66, 130);
-        const priceRaw = BigInt(priceHex);
-        // Chainlink ETH/USD has 8 decimals
-        setEthPrice(Number(priceRaw) / 1e8);
-      }
-
-      if (gasData.result) {
-        // Convert wei to gwei
-        const gasWei = BigInt(gasData.result);
-        setGasPrice(Number(gasWei) / 1e9);
-      }
-
-      setError(null);
-    } catch (err) {
-      setError("Failed to fetch on-chain data");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchChainlinkData();
-    const interval = setInterval(fetchChainlinkData, 30000); // 30 seconds
-    return () => clearInterval(interval);
-  }, [fetchChainlinkData]);
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(price);
-  };
-
-  return (
-    <Card>
-      <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-        <svg className="w-5 h-5" viewBox="0 0 32 32" fill="none">
-          <path d="M16 0L6.5 5.5v10.9L16 32l9.5-15.6V5.5L16 0z" fill="#375BD2"/>
-          <path d="M16 6l-5.7 3.3v6.5L16 26l5.7-10.2V9.3L16 6z" fill="white"/>
-        </svg>
-        Chainlink Oracle
-      </h2>
-      {loading ? (
-        <div className="space-y-3">
-          <Skeleton className="h-6 w-32" />
-          <Skeleton className="h-6 w-28" />
-          <Skeleton className="h-6 w-24" />
-        </div>
-      ) : error ? (
-        <p className="text-red-500 text-sm">{error}</p>
-      ) : (
-        <div className="space-y-3">
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-neutral-500">BTC/USD</span>
-            <span className="font-mono font-semibold">{btcPrice ? formatPrice(btcPrice) : "--"}</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-neutral-500">ETH/USD</span>
-            <span className="font-mono font-semibold">{ethPrice ? formatPrice(ethPrice) : "--"}</span>
-          </div>
-          <div className="flex justify-between items-center pt-2 border-t border-neutral-100 dark:border-neutral-800">
-            <span className="text-sm text-neutral-500">Gas Price</span>
-            <span className="font-mono font-semibold text-purple-600 dark:text-purple-400">
-              {gasPrice ? `${gasPrice.toFixed(1)} gwei` : "--"}
-            </span>
-          </div>
-        </div>
-      )}
-      <a
-        href="https://data.chain.link"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-xs text-neutral-500 hover:underline mt-3 inline-block"
-      >
-        Powered by Chainlink &#8594;
-      </a>
     </Card>
   );
 }
@@ -1082,14 +906,12 @@ export default function PulseBoardPage() {
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <CryptoWidget />
-        <ChainlinkWidget />
+        <CryptoHubWidget />
         <WorldClocksWidget />
         <WeatherWidget />
         <EarthquakeWidget />
         <GithubTrendingWidget />
         <HackerNewsWidget />
-        <LiveCryptoTickerWidget />
       </div>
 
       <div className="mt-8 text-center text-sm text-neutral-500">
