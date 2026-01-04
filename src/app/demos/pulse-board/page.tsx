@@ -1477,131 +1477,132 @@ function RocketLaunchesWidget() {
   );
 }
 
-// Certstream Widget - Real-time SSL certificates being issued
-function CertstreamWidget() {
-  const [certs, setCerts] = useState<Array<{
+// GitHub Activity Widget - Real-time public events on GitHub
+function GitHubActivityWidget() {
+  const [events, setEvents] = useState<Array<{
     id: string;
-    domain: string;
-    issuer: string;
+    type: string;
+    actor: string;
+    repo: string;
     timestamp: number;
   }>>([]);
-  const [connected, setConnected] = useState(false);
-  const [certCount, setCertCount] = useState(0);
-  const [certsPerSecond, setCertsPerSecond] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [eventCount, setEventCount] = useState(0);
 
-  useEffect(() => {
-    const ws = new WebSocket("wss://certstream.calidog.io/");
+  const fetchEvents = useCallback(async () => {
+    try {
+      const res = await fetch("https://api.github.com/events?per_page=30");
+      if (!res.ok) throw new Error("API error");
 
-    ws.onopen = () => setConnected(true);
-    ws.onclose = () => setConnected(false);
-    ws.onerror = () => setConnected(false);
+      const data = await res.json();
+      const newEvents = data
+        .filter((e: { type: string }) =>
+          ["PushEvent", "CreateEvent", "PullRequestEvent", "IssuesEvent", "WatchEvent", "ForkEvent"].includes(e.type)
+        )
+        .slice(0, 10)
+        .map((e: { id: string; type: string; actor: { login: string }; repo: { name: string }; created_at: string }) => ({
+          id: e.id,
+          type: e.type,
+          actor: e.actor.login,
+          repo: e.repo.name,
+          timestamp: new Date(e.created_at).getTime(),
+        }));
 
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.message_type === "certificate_update") {
-          const leafCert = data.data?.leaf_cert;
-          if (leafCert?.subject?.CN) {
-            const domain = leafCert.subject.CN;
-            // Skip wildcard-only domains and very long domains
-            if (domain.length < 50 && !domain.startsWith("*.")) {
-              const cert = {
-                id: `${Date.now()}-${Math.random()}`,
-                domain: domain,
-                issuer: leafCert.issuer?.O || leafCert.issuer?.CN || "Unknown",
-                timestamp: Date.now(),
-              };
-              setCerts((prev) => [cert, ...prev].slice(0, 10));
-              setCertCount((c) => c + 1);
-            }
-          }
-        }
-      } catch (e) {
-        // Skip malformed messages
-      }
-    };
-
-    return () => ws.close();
+      setEvents(newEvents);
+      setEventCount((c) => c + newEvents.length);
+    } catch (err) {
+      // Silent fail, keep existing data
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  // Calculate certs per second
   useEffect(() => {
-    const startCount = certCount;
-    const interval = setInterval(() => {
-      setCertsPerSecond(Math.round((certCount - startCount) / 5));
-    }, 5000);
+    fetchEvents();
+    const interval = setInterval(fetchEvents, 10000); // 10 seconds
     return () => clearInterval(interval);
-  }, [certCount]);
+  }, [fetchEvents]);
 
-  const getIssuerColor = (issuer: string) => {
-    if (issuer.includes("Let's Encrypt")) return "text-blue-500";
-    if (issuer.includes("Cloudflare")) return "text-orange-500";
-    if (issuer.includes("Google")) return "text-green-500";
-    if (issuer.includes("Amazon") || issuer.includes("AWS")) return "text-yellow-500";
-    if (issuer.includes("DigiCert")) return "text-purple-500";
-    return "text-neutral-400";
+  const getEventIcon = (type: string) => {
+    switch (type) {
+      case "PushEvent": return { icon: "↑", color: "text-green-500", label: "push" };
+      case "PullRequestEvent": return { icon: "⇄", color: "text-purple-500", label: "PR" };
+      case "IssuesEvent": return { icon: "●", color: "text-red-500", label: "issue" };
+      case "CreateEvent": return { icon: "+", color: "text-blue-500", label: "create" };
+      case "WatchEvent": return { icon: "★", color: "text-yellow-500", label: "star" };
+      case "ForkEvent": return { icon: "⑂", color: "text-cyan-500", label: "fork" };
+      default: return { icon: "•", color: "text-neutral-400", label: type };
+    }
   };
 
-  const truncateDomain = (domain: string) => {
-    if (domain.length > 35) return domain.slice(0, 32) + "...";
-    return domain;
+  const timeAgo = (timestamp: number) => {
+    const seconds = Math.floor((Date.now() - timestamp) / 1000);
+    if (seconds < 60) return `${seconds}s`;
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
+    return `${Math.floor(seconds / 3600)}h`;
+  };
+
+  const truncateRepo = (repo: string) => {
+    if (repo.length > 30) return repo.slice(0, 27) + "...";
+    return repo;
   };
 
   return (
     <Card className="col-span-1 md:col-span-2">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold flex items-center gap-2">
-          <span className="text-xl">&#128274;</span> SSL Certificates Live
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+          GitHub Activity
         </h2>
         <div className="flex items-center gap-2">
-          {connected ? (
-            <>
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-              </span>
-              <span className="text-xs text-green-600 dark:text-green-400">LIVE</span>
-            </>
-          ) : (
-            <span className="text-xs text-neutral-500">Connecting...</span>
-          )}
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+          </span>
+          <span className="text-xs text-green-600 dark:text-green-400">LIVE</span>
           <span className="text-xs text-neutral-400">|</span>
-          <span className="text-xs text-neutral-500">{certCount.toLocaleString()} certs</span>
-          {certsPerSecond > 0 && (
-            <span className="text-xs text-neutral-400">({certsPerSecond}/s)</span>
-          )}
+          <span className="text-xs text-neutral-500">{eventCount.toLocaleString()} events</span>
         </div>
       </div>
 
       <p className="text-xs text-neutral-500 mb-3">
-        New websites and services being secured right now
+        Developers shipping code around the world right now
       </p>
 
-      <div className="space-y-1.5">
-        {certs.length === 0 ? (
-          <div className="text-sm text-neutral-500 text-center py-4">Waiting for certificates...</div>
-        ) : (
-          certs.map((cert) => (
-            <div
-              key={cert.id}
-              className="flex items-center gap-2 text-sm py-1 border-b border-neutral-100 dark:border-neutral-800 last:border-0 animate-fade-in"
-            >
-              <span className={`text-xs font-mono ${getIssuerColor(cert.issuer)}`}>
-                {cert.issuer.slice(0, 12)}
-              </span>
-              <span className="flex-1 font-mono text-xs truncate">{truncateDomain(cert.domain)}</span>
-            </div>
-          ))
-        )}
-      </div>
+      {loading ? (
+        <div className="space-y-2">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Skeleton key={i} className="h-5 w-full" />
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-1.5">
+          {events.map((event) => {
+            const { icon, color, label } = getEventIcon(event.type);
+            return (
+              <div
+                key={event.id}
+                className="flex items-center gap-2 text-sm py-1 border-b border-neutral-100 dark:border-neutral-800 last:border-0"
+              >
+                <span className={`text-sm ${color}`} title={label}>{icon}</span>
+                <span className="text-xs text-neutral-500 w-16 truncate">{event.actor}</span>
+                <span className="flex-1 font-mono text-xs truncate">{truncateRepo(event.repo)}</span>
+                <span className="text-xs text-neutral-400">{timeAgo(event.timestamp)}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       <a
-        href="https://certstream.calidog.io/"
+        href="https://github.com/explore"
         target="_blank"
         rel="noopener noreferrer"
         className="text-xs text-neutral-500 hover:underline mt-3 inline-block"
       >
-        Certstream &#8594;
+        Explore GitHub &#8594;
       </a>
     </Card>
   );
@@ -1631,7 +1632,7 @@ export default function PulseBoardPage() {
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         <CryptoHubWidget />
-        <CertstreamWidget />
+        <GitHubActivityWidget />
         <WikipediaLiveWidget />
         <RocketLaunchesWidget />
         <WorldClocksWidget />
