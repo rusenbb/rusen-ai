@@ -16,7 +16,7 @@ import {
   type GeneratedData,
   type TableQuality,
 } from "./types";
-import { buildGenerationPrompt, parseGeneratedData, getTableGenerationOrder } from "./utils/prompts";
+import { buildGenerationPrompt, parseGeneratedData, getTableGenerationOrder, buildJsonSchema } from "./utils/prompts";
 
 function dataForgeReducer(state: DataForgeState, action: DataForgeAction): DataForgeState {
   switch (action.type) {
@@ -231,7 +231,8 @@ export default function DataForgePage() {
         });
 
         const prompt = buildGenerationPrompt(table, state.schema, generatedData);
-        const response = await generate(prompt);
+        const jsonSchema = buildJsonSchema(table);
+        const response = await generate(prompt, jsonSchema);
         const result = parseGeneratedData(response, table, state.schema, generatedData);
 
         generatedData[table.name] = result.rows;

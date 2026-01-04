@@ -10,7 +10,7 @@ interface MLCEngine {
         messages: { role: string; content: string }[];
         temperature?: number;
         max_tokens?: number;
-        response_format?: { type: string };
+        response_format?: { type: string; schema?: string };
       }) => Promise<{
         choices: { message: { content: string | null } }[];
       }>;
@@ -27,7 +27,7 @@ interface UseWebLLMReturn {
   isSupported: boolean | null;
   loadedModelId: string | null;
   loadModel: (modelId: string) => Promise<void>;
-  generate: (prompt: string) => Promise<string>;
+  generate: (prompt: string, schema?: string) => Promise<string>;
   unload: () => Promise<void>;
 }
 
@@ -106,18 +106,21 @@ export function useWebLLM(): UseWebLLMReturn {
     [checkWebGPUSupport, loadedModelId]
   );
 
-  const generate = useCallback(async (prompt: string): Promise<string> => {
+  const generate = useCallback(async (prompt: string, schema?: string): Promise<string> => {
     if (!engineRef.current) {
       throw new Error("Model not loaded");
     }
 
-    const systemMessage = "You are a JSON data generator. Output ONLY valid JSON arrays, nothing else. No explanations, no markdown, no thinking. /no_think";
+    const systemMessage = "You are a JSON data generator. Output ONLY valid JSON objects, nothing else. No explanations, no markdown, no thinking. /no_think";
     const userMessage = prompt + "\n\n/no_think";
 
     // Log exactly what we're sending
     console.log("[Data Forge] === SENDING TO LLM ===");
     console.log("[Data Forge] System:", systemMessage);
     console.log("[Data Forge] User:", userMessage);
+    if (schema) {
+      console.log("[Data Forge] Schema:", schema.substring(0, 200) + "...");
+    }
     console.log("[Data Forge] =====================");
 
     const response = await engineRef.current.chat.completions.create({
@@ -127,7 +130,9 @@ export function useWebLLM(): UseWebLLMReturn {
       ],
       temperature: 0.3,
       max_tokens: 4096,
-      response_format: { type: "json_object" },
+      response_format: schema
+        ? { type: "json_object", schema }
+        : { type: "json_object" },
     });
 
     let content = response.choices[0].message.content || "{}";
