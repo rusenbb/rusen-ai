@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // Letter patterns: 5 columns x 7 rows where 1 = dot part of letter, 0 = empty
 const letterPatterns: Record<string, number[][]> = {
@@ -112,28 +112,24 @@ export default function DataBackground() {
   const startTimeRef = useRef<number>(0);
   const ripplesRef = useRef<Ripple[]>([]);
 
-  const handleCanvasClick = useCallback(
-    (e: React.MouseEvent<HTMLCanvasElement>) => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
+  // Listen for clicks on document (canvas is behind other elements)
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
       // Limit concurrent ripples
       if (ripplesRef.current.length >= MAX_RIPPLES) {
         ripplesRef.current.shift();
       }
 
       ripplesRef.current.push({
-        x,
-        y,
+        x: e.clientX,
+        y: e.clientY,
         startTime: performance.now(),
       });
-    },
-    []
-  );
+    };
+
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
+  }, []);
 
   useEffect(() => {
     const calculateDots = () => {
@@ -279,8 +275,7 @@ export default function DataBackground() {
   return (
     <canvas
       ref={canvasRef}
-      onClick={handleCanvasClick}
-      className="fixed inset-0 -z-10"
+      className="fixed inset-0 -z-10 pointer-events-none"
       style={{ width: "100%", height: "100%" }}
     />
   );
