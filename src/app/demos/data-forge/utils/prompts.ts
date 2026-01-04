@@ -1,28 +1,5 @@
 import type { Table, Schema, GeneratedData, Column, ColumnType } from "../types";
 
-function getTypeDescription(type: ColumnType): string {
-  switch (type) {
-    case "string":
-      return "a short text string (1-50 chars)";
-    case "integer":
-      return "a whole number";
-    case "float":
-      return "a decimal number";
-    case "boolean":
-      return "true or false";
-    case "date":
-      return "a date in YYYY-MM-DD format";
-    case "email":
-      return "a valid email address";
-    case "uuid":
-      return "a UUID like 550e8400-e29b-41d4-a716-446655440000";
-    case "text":
-      return "a longer text (1-3 sentences)";
-    default:
-      return "a value";
-  }
-}
-
 interface ForeignKeyReference {
   columnName: string;
   targetTable: string;
