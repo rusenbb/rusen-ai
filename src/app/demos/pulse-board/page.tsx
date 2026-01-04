@@ -1487,11 +1487,17 @@ function GitHubActivityWidget() {
     timestamp: number;
   }>>([]);
   const [loading, setLoading] = useState(true);
-  const [eventCount, setEventCount] = useState(0);
+  const [lastFetch, setLastFetch] = useState<Date | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const seenIdsRef = useRef<Set<string>>(new Set());
 
   const fetchEvents = useCallback(async () => {
     try {
       const res = await fetch("https://api.github.com/events?per_page=30");
+      if (res.status === 403) {
+        setError("Rate limited");
+        return;
+      }
       if (!res.ok) throw new Error("API error");
 
       const data = await res.json();
@@ -1508,10 +1514,14 @@ function GitHubActivityWidget() {
           timestamp: new Date(e.created_at).getTime(),
         }));
 
+      // Track new events
+      newEvents.forEach((e: { id: string }) => seenIdsRef.current.add(e.id));
+
       setEvents(newEvents);
-      setEventCount((c) => c + newEvents.length);
+      setLastFetch(new Date());
+      setError(null);
     } catch (err) {
-      // Silent fail, keep existing data
+      setError("Failed to fetch");
     } finally {
       setLoading(false);
     }
@@ -1519,7 +1529,7 @@ function GitHubActivityWidget() {
 
   useEffect(() => {
     fetchEvents();
-    const interval = setInterval(fetchEvents, 10000); // 10 seconds
+    const interval = setInterval(fetchEvents, 60000); // 60 seconds to avoid rate limits
     return () => clearInterval(interval);
   }, [fetchEvents]);
 
@@ -1547,6 +1557,20 @@ function GitHubActivityWidget() {
     return repo;
   };
 
+  const formatLastFetch = () => {
+    if (!lastFetch) return "";
+    const seconds = Math.floor((Date.now() - lastFetch.getTime()) / 1000);
+    if (seconds < 60) return `${seconds}s ago`;
+    return `${Math.floor(seconds / 60)}m ago`;
+  };
+
+  // Update the "ago" display every second
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => setTick((t) => t + 1), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <Card className="col-span-1 md:col-span-2">
       <div className="flex items-center justify-between mb-4">
@@ -1557,18 +1581,22 @@ function GitHubActivityWidget() {
           GitHub Activity
         </h2>
         <div className="flex items-center gap-2">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-          </span>
-          <span className="text-xs text-green-600 dark:text-green-400">LIVE</span>
-          <span className="text-xs text-neutral-400">|</span>
-          <span className="text-xs text-neutral-500">{eventCount.toLocaleString()} events</span>
+          {error ? (
+            <span className="text-xs text-amber-500">{error}</span>
+          ) : (
+            <>
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+              </span>
+              <span className="text-xs text-neutral-500">{formatLastFetch()}</span>
+            </>
+          )}
         </div>
       </div>
 
       <p className="text-xs text-neutral-500 mb-3">
-        Developers shipping code around the world right now
+        Developers shipping code around the world
       </p>
 
       {loading ? (
