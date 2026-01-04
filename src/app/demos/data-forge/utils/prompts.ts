@@ -110,14 +110,15 @@ export function buildGenerationPrompt(
   const safeRowCount = Math.min(table.rowCount, 15);
 
   // Simplified, more direct prompt for small models
+  // Use {"data": [...]} format to align with JSON Schema enforcement
   const prompt = `Generate ${safeRowCount} JSON objects for "${table.name}"${contextLine}.
 
 Each object needs: {${columnSpecs}}
 
 Example:
-[${JSON.stringify(exampleRow)}, ${JSON.stringify(exampleRow2)}]
+{"data": [${JSON.stringify(exampleRow)}, ${JSON.stringify(exampleRow2)}]}
 
-Output ${safeRowCount} objects as JSON array:`;
+Output as {"data": [...]} with ${safeRowCount} objects:`;
 
   return prompt;
 }
@@ -363,10 +364,16 @@ export function parseGeneratedData(
     } else if (parsed?.data && Array.isArray(parsed.data)) {
       rows = parsed.data;
     } else if (typeof parsed === "object" && parsed !== null) {
-      // Check if the object itself contains row-like data
       const keys = Object.keys(parsed);
-      if (keys.length > 0 && keys.every(k => !isNaN(Number(k)))) {
-        // Object with numeric keys like {"0": {...}, "1": {...}}
+      // Check if any key contains an array (handles {"authors": [...]} etc.)
+      for (const key of keys) {
+        if (Array.isArray(parsed[key])) {
+          rows = parsed[key];
+          break;
+        }
+      }
+      // Fallback: Object with numeric keys like {"0": {...}, "1": {...}}
+      if (!rows && keys.length > 0 && keys.every(k => !isNaN(Number(k)))) {
         rows = Object.values(parsed);
       }
     }
@@ -618,6 +625,51 @@ function generateFallbackValue(col: Column, index: number): unknown {
     default:
       return null;
   }
+}
+
+// Build JSON Schema for structured output enforcement
+function getJsonSchemaType(colType: ColumnType): object {
+  switch (colType) {
+    case "string":
+    case "text":
+    case "email":
+    case "uuid":
+    case "date":
+      return { type: "string" };
+    case "integer":
+      return { type: "integer" };
+    case "float":
+      return { type: "number" };
+    case "boolean":
+      return { type: "boolean" };
+    default:
+      return { type: "string" };
+  }
+}
+
+export function buildJsonSchema(table: Table): string {
+  const properties: Record<string, object> = {};
+
+  for (const col of table.columns) {
+    properties[col.name] = getJsonSchemaType(col.type);
+  }
+
+  const schema = {
+    type: "object",
+    properties: {
+      data: {
+        type: "array",
+        items: {
+          type: "object",
+          properties,
+          required: table.columns.filter(c => !c.nullable).map(c => c.name)
+        }
+      }
+    },
+    required: ["data"]
+  };
+
+  return JSON.stringify(schema);
 }
 
 // Topological sort for table dependencies
