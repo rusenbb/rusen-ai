@@ -1633,11 +1633,11 @@ export default function PulseBoardPage() {
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         <CryptoHubWidget />
         <GitHubActivityWidget />
-        <WikipediaLiveWidget />
         <RocketLaunchesWidget />
+        <WikipediaLiveWidget />
+        <AviationWidget />
         <WorldClocksWidget />
         <WeatherWidget />
-        <AviationWidget />
         <ISSTrackerWidget />
         <EarthquakeWidget />
         <InternetPulseWidget />
