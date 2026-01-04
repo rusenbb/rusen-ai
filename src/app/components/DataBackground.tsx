@@ -74,7 +74,7 @@ function calculateRippleOpacity(
   if (distance > maxRingRadius) return 0;
 
   let totalOpacityBoost = 0;
-  const ringStrengths = [0.5, 0.35, 0.2]; // Inner ring strongest (momentum effect)
+  const ringStrengths = [0.3, 0.2, 0.12]; // Inner ring strongest (momentum effect)
 
   for (let ringIndex = 0; ringIndex < 3; ringIndex++) {
     // Each ring starts slightly delayed
