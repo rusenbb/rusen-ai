@@ -22,7 +22,8 @@ async function initPdfJs(): Promise<typeof import("pdfjs-dist")> {
   }
 
   pdfJsLib = await import("pdfjs-dist");
-  pdfJsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfJsLib.version}/pdf.worker.min.js`;
+  // Use jsDelivr CDN (cdnjs doesn't have newer versions, and uses .mjs extension)
+  pdfJsLib.GlobalWorkerOptions.workerSrc = `//cdn.jsdelivr.net/npm/pdfjs-dist@${pdfJsLib.version}/build/pdf.worker.min.mjs`;
   pdfJsInitialized = true;
 
   return pdfJsLib;
@@ -452,8 +453,10 @@ export async function fetchFromArxiv(arxivId: string): Promise<{
   sourceInfo: ContentSourceInfo;
 } | null> {
   try {
+    // arXiv API doesn't support CORS, so we route through a proxy
+    const arxivUrl = `https://export.arxiv.org/api/query?id_list=${encodeURIComponent(arxivId)}`;
     const response = await fetch(
-      `https://export.arxiv.org/api/query?id_list=${encodeURIComponent(arxivId)}`,
+      `https://corsproxy.io/?${encodeURIComponent(arxivUrl)}`,
       { headers: { Accept: "application/xml" } }
     );
 
