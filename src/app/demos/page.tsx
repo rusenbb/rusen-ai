@@ -13,8 +13,8 @@ export default function DemosPage() {
           title="Paper Pilot"
           description="Enter a DOI, get article summaries and explanations. Perfect for engineers and medical students."
           href="/demos/paper-pilot"
-          tags={["NLP", "RAG", "Gradio"]}
-          status="coming-soon"
+          tags={["LLM", "WebLLM", "Qwen"]}
+          status="live"
         />
         <DemoCard
           title="Data Forge"
