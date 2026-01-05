@@ -22,17 +22,24 @@ interface UseWebLLMReturn {
   unload: () => Promise<void>;
 }
 
-// Strip <think>...</think> tags and any incomplete opening <think> tags
+// Strip <think>...</think> tags safely without destroying content
 function stripThinkTags(content: string): string {
-  // First, remove complete <think>...</think> blocks
+  // Only remove COMPLETE <think>...</think> blocks (non-greedy)
   let result = content.replace(/<think>[\s\S]*?<\/think>/g, "");
 
-  // Then, remove any incomplete <think> tag at the end (no closing tag)
-  // This handles cases where generation was cut off mid-thought
-  result = result.replace(/<think>[\s\S]*$/g, "");
+  // For unclosed <think> tags, keep content before it (don't destroy everything)
+  const unclosedIndex = result.indexOf("<think>");
+  if (unclosedIndex !== -1) {
+    const beforeThink = result.substring(0, unclosedIndex).trim();
+    // Only use content before <think> if it exists, otherwise keep everything
+    // (model might have actual content after unclosed thinking)
+    result = beforeThink || result.substring(unclosedIndex);
+  }
 
-  // Also remove any standalone </think> at the start (edge case)
-  result = result.replace(/^[\s\S]*?<\/think>/g, "");
+  // Only strip orphan </think> at the very beginning (streaming edge case)
+  if (result.startsWith("</think>")) {
+    result = result.substring(8);
+  }
 
   return result.trim();
 }
@@ -160,8 +167,8 @@ export function useWebLLM(): UseWebLLMReturn {
         throw new Error("Model not loaded");
       }
 
-      // Add /no_think to suppress Qwen3 thinking tags
-      const systemMessage = systemPrompt + " /no_think";
+      // Add /no_think to user message only to suppress Qwen3 thinking tags
+      const systemMessage = systemPrompt;
       const userMessage = userPrompt + "\n\n/no_think";
 
       let fullContent = "";
@@ -173,7 +180,7 @@ export function useWebLLM(): UseWebLLMReturn {
           { role: "user", content: userMessage },
         ],
         temperature: 0.5,
-        max_tokens: 4096, // Reasonable output limit (context is shared with input)
+        max_tokens: 32768, // Qwen3 supports 32k context
         stream: true,
       });
 
