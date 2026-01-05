@@ -158,7 +158,7 @@ export function useWebLLM(): UseWebLLMReturn {
         { role: "user", content: userMessage },
       ],
       temperature: 0.5,
-      max_tokens: 2048,
+      max_tokens: 32768, // Qwen3 models support 32k context
     });
 
     let content = response.choices[0].message.content || "";
