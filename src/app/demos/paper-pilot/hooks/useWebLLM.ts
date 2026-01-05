@@ -3,20 +3,8 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { DEFAULT_MODEL_ID } from "../types";
 
-interface MLCEngine {
-  chat: {
-    completions: {
-      create: (params: {
-        messages: { role: string; content: string }[];
-        temperature?: number;
-        max_tokens?: number;
-      }) => Promise<{
-        choices: { message: { content: string | null } }[];
-      }>;
-    };
-  };
-  unload: () => Promise<void>;
-}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type MLCEngine = any;
 
 interface UseWebLLMReturn {
   isLoading: boolean;
@@ -26,8 +14,27 @@ interface UseWebLLMReturn {
   isSupported: boolean | null;
   loadedModelId: string | null;
   loadModel: (modelId: string) => Promise<void>;
-  generate: (systemPrompt: string, userPrompt: string) => Promise<string>;
+  generate: (
+    systemPrompt: string,
+    userPrompt: string,
+    onStream?: (text: string) => void
+  ) => Promise<string>;
   unload: () => Promise<void>;
+}
+
+// Strip <think>...</think> tags and any incomplete opening <think> tags
+function stripThinkTags(content: string): string {
+  // First, remove complete <think>...</think> blocks
+  let result = content.replace(/<think>[\s\S]*?<\/think>/g, "");
+
+  // Then, remove any incomplete <think> tag at the end (no closing tag)
+  // This handles cases where generation was cut off mid-thought
+  result = result.replace(/<think>[\s\S]*$/g, "");
+
+  // Also remove any standalone </think> at the start (edge case)
+  result = result.replace(/^[\s\S]*?<\/think>/g, "");
+
+  return result.trim();
 }
 
 export function useWebLLM(): UseWebLLMReturn {
@@ -39,7 +46,7 @@ export function useWebLLM(): UseWebLLMReturn {
   const [loadedModelId, setLoadedModelId] = useState<string | null>(null);
   const engineRef = useRef<MLCEngine | null>(null);
 
-  // Fix: Track if component is mounted to prevent state updates after unmount
+  // Track if component is mounted to prevent state updates after unmount
   const isMountedRef = useRef(true);
   useEffect(() => {
     isMountedRef.current = true;
@@ -48,7 +55,7 @@ export function useWebLLM(): UseWebLLMReturn {
     };
   }, []);
 
-  // Fix: Loading lock to prevent race conditions
+  // Loading lock to prevent race conditions
   const loadingPromiseRef = useRef<Promise<void> | null>(null);
 
   const checkWebGPUSupport = useCallback(async (): Promise<boolean> => {
@@ -66,7 +73,7 @@ export function useWebLLM(): UseWebLLMReturn {
 
   const loadModel = useCallback(
     async (modelId: string = DEFAULT_MODEL_ID) => {
-      // Fix: Wait for any in-progress loading to complete first
+      // Wait for any in-progress loading to complete first
       if (loadingPromiseRef.current) {
         await loadingPromiseRef.current;
       }
@@ -109,7 +116,7 @@ export function useWebLLM(): UseWebLLMReturn {
           const { CreateMLCEngine } = await import("@mlc-ai/web-llm");
 
           const engine = await CreateMLCEngine(modelId, {
-            initProgressCallback: (report) => {
+            initProgressCallback: (report: { progress: number }) => {
               if (isMountedRef.current) {
                 setLoadProgress(report.progress);
               }
@@ -117,7 +124,7 @@ export function useWebLLM(): UseWebLLMReturn {
             logLevel: "SILENT",
           });
 
-          engineRef.current = engine as unknown as MLCEngine;
+          engineRef.current = engine;
           if (isMountedRef.current) {
             setLoadedModelId(modelId);
             setIsReady(true);
@@ -143,31 +150,49 @@ export function useWebLLM(): UseWebLLMReturn {
     [checkWebGPUSupport, loadedModelId]
   );
 
-  const generate = useCallback(async (systemPrompt: string, userPrompt: string): Promise<string> => {
-    if (!engineRef.current) {
-      throw new Error("Model not loaded");
-    }
+  const generate = useCallback(
+    async (
+      systemPrompt: string,
+      userPrompt: string,
+      onStream?: (text: string) => void
+    ): Promise<string> => {
+      if (!engineRef.current) {
+        throw new Error("Model not loaded");
+      }
 
-    // Add /no_think to suppress Qwen3 thinking tags
-    const systemMessage = systemPrompt + " /no_think";
-    const userMessage = userPrompt + "\n\n/no_think";
+      // Add /no_think to suppress Qwen3 thinking tags
+      const systemMessage = systemPrompt + " /no_think";
+      const userMessage = userPrompt + "\n\n/no_think";
 
-    const response = await engineRef.current.chat.completions.create({
-      messages: [
-        { role: "system", content: systemMessage },
-        { role: "user", content: userMessage },
-      ],
-      temperature: 0.5,
-      max_tokens: 32768, // Qwen3 models support 32k context
-    });
+      let fullContent = "";
 
-    let content = response.choices[0].message.content || "";
+      // Use streaming for better UX - prevents UI freezing
+      const stream = await engineRef.current.chat.completions.create({
+        messages: [
+          { role: "system", content: systemMessage },
+          { role: "user", content: userMessage },
+        ],
+        temperature: 0.5,
+        max_tokens: 4096, // Reasonable output limit (context is shared with input)
+        stream: true,
+      });
 
-    // Strip any <think>...</think> tags that Qwen3 might still output
-    content = content.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+      // Process the stream
+      for await (const chunk of stream) {
+        const delta = chunk.choices[0]?.delta?.content || "";
+        fullContent += delta;
 
-    return content;
-  }, []);
+        // Call the stream callback with cleaned content (strips think tags progressively)
+        if (onStream) {
+          onStream(stripThinkTags(fullContent));
+        }
+      }
+
+      // Final cleanup of think tags
+      return stripThinkTags(fullContent);
+    },
+    []
+  );
 
   const unload = useCallback(async () => {
     if (engineRef.current) {

@@ -9,6 +9,7 @@ interface SummaryPanelProps {
   isModelReady: boolean;
   isGenerating: boolean;
   progress: GenerationProgress;
+  streamingContent: string;
   onGenerateSummary: (type: SummaryType) => Promise<void>;
 }
 
@@ -19,6 +20,7 @@ export default function SummaryPanel({
   isModelReady,
   isGenerating,
   progress,
+  streamingContent,
   onGenerateSummary,
 }: SummaryPanelProps) {
   const [generatingType, setGeneratingType] = useState<SummaryType | null>(null);
@@ -68,7 +70,7 @@ export default function SummaryPanel({
                   <h4 className="font-medium">{label.label}</h4>
                   <p className="text-xs text-neutral-500">{label.description}</p>
                 </div>
-                {!summary && (
+                {!summary && !isThisGenerating && (
                   <button
                     onClick={() => handleGenerate(type)}
                     disabled={!isModelReady || isGenerating}
@@ -78,37 +80,71 @@ export default function SummaryPanel({
                         : "bg-neutral-200 dark:bg-neutral-700 text-neutral-400 cursor-not-allowed"
                     }`}
                   >
-                    {isThisGenerating ? (
-                      <span className="flex items-center gap-2">
-                        <svg
-                          className="w-4 h-4 animate-spin"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          />
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          />
-                        </svg>
-                        Generating
-                      </span>
-                    ) : (
-                      "Generate"
-                    )}
+                    Generate
                   </button>
                 )}
               </div>
 
-              {summary ? (
+              {/* Show streaming content while generating */}
+              {isThisGenerating && streamingContent && (
+                <div className="mt-3">
+                  <div className="text-sm text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap leading-relaxed">
+                    {streamingContent}
+                    <span className="inline-block w-2 h-4 bg-blue-500 animate-pulse ml-1" />
+                  </div>
+                  <p className="text-xs text-blue-500 mt-2 flex items-center gap-1">
+                    <svg
+                      className="w-3 h-3 animate-spin"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    Generating...
+                  </p>
+                </div>
+              )}
+
+              {/* Show generating placeholder if no streaming content yet */}
+              {isThisGenerating && !streamingContent && (
+                <div className="mt-3 flex items-center gap-2 text-sm text-neutral-500">
+                  <svg
+                    className="w-4 h-4 animate-spin"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                  Starting generation...
+                </div>
+              )}
+
+              {/* Show completed summary */}
+              {summary && !isThisGenerating && (
                 <div className="mt-3">
                   <div className="text-sm text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap leading-relaxed">
                     {summary.content}
@@ -117,7 +153,10 @@ export default function SummaryPanel({
                     Generated at {summary.generatedAt.toLocaleTimeString()}
                   </p>
                 </div>
-              ) : (
+              )}
+
+              {/* Not generated yet placeholder */}
+              {!summary && !isThisGenerating && (
                 <div className="mt-3 text-sm text-neutral-400 italic">
                   Not generated yet
                 </div>
