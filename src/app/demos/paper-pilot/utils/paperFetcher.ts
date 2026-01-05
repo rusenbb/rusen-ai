@@ -324,11 +324,11 @@ export async function fetchFromSemanticScholar(
   try {
     const idPrefix = type === "doi" ? "DOI:" : "ARXIV:";
     const fields = "paperId,title,abstract,authors,year,venue,openAccessPdf,externalIds,fieldsOfStudy";
+    const ssUrl = `https://api.semanticscholar.org/graph/v1/paper/${idPrefix}${encodeURIComponent(identifier)}?fields=${fields}`;
 
-    const response = await fetch(
-      `https://api.semanticscholar.org/graph/v1/paper/${idPrefix}${encodeURIComponent(identifier)}?fields=${fields}`,
-      { headers: { Accept: "application/json" } }
-    );
+    const response = await fetch(proxyUrl(ssUrl), {
+      headers: { Accept: "application/json" },
+    });
 
     if (!response.ok) return null;
 
