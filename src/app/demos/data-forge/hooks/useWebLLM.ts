@@ -129,7 +129,7 @@ export function useWebLLM(): UseWebLLMReturn {
         { role: "user", content: userMessage },
       ],
       temperature: 0.3,
-      max_tokens: 8192,
+      max_tokens: 32768,
       response_format: schema
         ? { type: "json_object", schema }
         : { type: "json_object" },
