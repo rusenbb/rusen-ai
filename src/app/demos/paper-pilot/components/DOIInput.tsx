@@ -8,12 +8,12 @@ interface DOIInputProps {
   fetchProgress: FetchProgress;
 }
 
-// Example papers for quick testing
+// Example papers for quick testing (mix of arXiv and DOI)
 const EXAMPLE_PAPERS = [
-  { id: "10.1038/nature14539", label: "Deep Learning (Nature)" },
-  { id: "2312.00752", label: "Mamba (arXiv)" },
-  { id: "10.1001/jama.2020.1585", label: "COVID-19 (JAMA)" },
   { id: "1706.03762", label: "Attention Is All You Need" },
+  { id: "2312.00752", label: "Mamba (arXiv)" },
+  { id: "2005.14165", label: "GPT-3 (arXiv)" },
+  { id: "10.1001/jama.2020.1585", label: "COVID-19 (JAMA)" },
 ];
 
 export default function DOIInput({ onSubmit, fetchProgress }: DOIInputProps) {

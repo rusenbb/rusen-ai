@@ -232,6 +232,67 @@ export async function fetchFromUnpaywall(doi: string): Promise<ContentSourceInfo
 }
 
 // ============================================================================
+// OPENALEX API (better abstract coverage than CrossRef)
+// ============================================================================
+
+interface OpenAlexWork {
+  id: string;
+  title: string;
+  abstract_inverted_index?: Record<string, number[]>;
+  authorships?: Array<{ author: { display_name: string } }>;
+  publication_year?: number;
+  primary_location?: { source?: { display_name: string } };
+  open_access?: { oa_url?: string };
+  concepts?: Array<{ display_name: string }>;
+}
+
+// OpenAlex returns abstracts as inverted index - convert to text
+function reconstructAbstract(invertedIndex: Record<string, number[]> | undefined): string | null {
+  if (!invertedIndex) return null;
+
+  const words: [string, number][] = [];
+  for (const [word, positions] of Object.entries(invertedIndex)) {
+    for (const pos of positions) {
+      words.push([word, pos]);
+    }
+  }
+
+  words.sort((a, b) => a[1] - b[1]);
+  const abstract = words.map(([word]) => word).join(" ");
+  return abstract || null;
+}
+
+export async function fetchFromOpenAlex(doi: string): Promise<Partial<PaperMetadata> | null> {
+  try {
+    const response = await fetch(
+      `https://api.openalex.org/works/doi:${encodeURIComponent(doi)}`,
+      {
+        headers: {
+          Accept: "application/json",
+          "User-Agent": API_CONFIG.userAgent,
+        },
+      }
+    );
+
+    if (!response.ok) return null;
+
+    const work: OpenAlexWork = await response.json();
+
+    return {
+      title: work.title,
+      authors: work.authorships?.map((a) => a.author.display_name) || [],
+      abstract: reconstructAbstract(work.abstract_inverted_index),
+      journal: work.primary_location?.source?.display_name || null,
+      publishedDate: work.publication_year ? `${work.publication_year}` : null,
+      subjects: work.concepts?.slice(0, 5).map((c) => c.display_name) || [],
+    };
+  } catch (error) {
+    console.error("[OpenAlex] Error:", error);
+    return null;
+  }
+}
+
+// ============================================================================
 // SEMANTIC SCHOLAR API
 // ============================================================================
 
@@ -312,35 +373,63 @@ interface ArxivEntry {
   doi?: string;
 }
 
+// Atom namespace used by arXiv API
+const ATOM_NS = "http://www.w3.org/2005/Atom";
+
+// Helper to get element text content from namespaced XML
+function getElementText(parent: Element, tagName: string, ns: string = ATOM_NS): string {
+  const el = parent.getElementsByTagNameNS(ns, tagName)[0];
+  return el?.textContent?.replace(/\s+/g, " ").trim() || "";
+}
+
 function parseArxivXML(xml: string): ArxivEntry | null {
   try {
     const parser = new DOMParser();
     const doc = parser.parseFromString(xml, "text/xml");
 
-    const entry = doc.querySelector("entry");
-    if (!entry) return null;
+    // Check for parse errors
+    const parseError = doc.querySelector("parsererror");
+    if (parseError) {
+      console.error("[arXiv] XML parse error:", parseError.textContent);
+      return null;
+    }
 
-    const id = entry.querySelector("id")?.textContent || "";
-    const arxivId = id.replace("http://arxiv.org/abs/", "");
+    // Use namespace-aware method for Atom feed
+    const entries = doc.getElementsByTagNameNS(ATOM_NS, "entry");
+    if (entries.length === 0) return null;
+    const entry = entries[0];
 
-    const title = entry.querySelector("title")?.textContent?.replace(/\s+/g, " ").trim() || "";
-    const summary = entry.querySelector("summary")?.textContent?.replace(/\s+/g, " ").trim() || "";
+    const id = getElementText(entry, "id");
+    const arxivId = id.replace("http://arxiv.org/abs/", "").replace(/v\d+$/, "");
+
+    const title = getElementText(entry, "title");
+    const summary = getElementText(entry, "summary");
 
     const authors: string[] = [];
-    entry.querySelectorAll("author name").forEach((el) => {
-      if (el.textContent) authors.push(el.textContent);
-    });
+    const authorElements = entry.getElementsByTagNameNS(ATOM_NS, "author");
+    for (let i = 0; i < authorElements.length; i++) {
+      const name = getElementText(authorElements[i], "name");
+      if (name) authors.push(name);
+    }
 
-    const published = entry.querySelector("published")?.textContent || "";
+    const published = getElementText(entry, "published");
 
     const categories: string[] = [];
-    entry.querySelectorAll("category").forEach((el) => {
-      const term = el.getAttribute("term");
+    const categoryElements = entry.getElementsByTagNameNS(ATOM_NS, "category");
+    for (let i = 0; i < categoryElements.length; i++) {
+      const term = categoryElements[i].getAttribute("term");
       if (term) categories.push(term);
-    });
+    }
 
-    const doiLink = entry.querySelector('link[title="doi"]');
-    const doi = doiLink?.getAttribute("href")?.replace("http://dx.doi.org/", "");
+    // Look for DOI link
+    let doi: string | undefined;
+    const linkElements = entry.getElementsByTagNameNS(ATOM_NS, "link");
+    for (let i = 0; i < linkElements.length; i++) {
+      if (linkElements[i].getAttribute("title") === "doi") {
+        doi = linkElements[i].getAttribute("href")?.replace("http://dx.doi.org/", "");
+        break;
+      }
+    }
 
     return {
       id: arxivId,
@@ -544,22 +633,24 @@ export async function fetchPaper(
     }
   }
 
-  // Step 2: Fetch from Semantic Scholar and Unpaywall in parallel
+  // Step 2: Fetch from additional sources in parallel
   const identifier = metadata.doi || metadata.arxivId;
   const idType = metadata.doi ? "doi" : "arxiv";
 
   if (identifier) {
     onProgress?.("Checking additional sources...");
 
+    // Fetch from multiple sources in parallel for better coverage
     const parallelResults = await Promise.all([
       fetchFromSemanticScholar(identifier, idType as "doi" | "arxiv"),
       metadata.doi ? fetchFromUnpaywall(metadata.doi) : Promise.resolve(null),
+      metadata.doi ? fetchFromOpenAlex(metadata.doi) : Promise.resolve(null),
     ]);
 
-    const [ssResult, unpaywallInfo] = parallelResults;
+    const [ssResult, unpaywallInfo, openAlexData] = parallelResults;
 
+    // Merge Semantic Scholar data
     if (ssResult) {
-      // Merge metadata (prefer existing values)
       if (!metadata.abstract && ssResult.metadata.abstract) {
         metadata.abstract = ssResult.metadata.abstract;
       }
@@ -570,6 +661,17 @@ export async function fetchPaper(
         metadata.arxivId = ssResult.metadata.arxivId;
       }
       sources.push(ssResult.sourceInfo);
+    }
+
+    // Merge OpenAlex data (has better abstract coverage)
+    if (openAlexData) {
+      if (!metadata.abstract && openAlexData.abstract) {
+        metadata.abstract = openAlexData.abstract;
+      }
+      // Use OpenAlex subjects if we don't have any
+      if (metadata.subjects.length === 0 && openAlexData.subjects) {
+        metadata.subjects = openAlexData.subjects;
+      }
     }
 
     if (unpaywallInfo) {
