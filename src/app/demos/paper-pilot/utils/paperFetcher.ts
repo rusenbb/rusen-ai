@@ -405,7 +405,9 @@ export async function fetchFromArxiv(arxivId: string): Promise<{
 // ============================================================================
 
 export async function extractTextFromPDF(pdfUrl: string): Promise<string | null> {
-  let pdf: Awaited<ReturnType<typeof import("pdfjs-dist").getDocument>> | null = null;
+  // PDFDocumentProxy type - we use 'any' here because pdfjs-dist types are complex
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let pdf: any = null;
 
   try {
     const pdfjsLib = await initPdfJs();
