@@ -92,6 +92,7 @@ function paperPilotReducer(state: PaperPilotState, action: PaperPilotAction): Pa
 export default function PaperPilotPage() {
   const [state, dispatch] = useReducer(paperPilotReducer, initialState);
   const [selectedModelId, setSelectedModelId] = useState(DEFAULT_MODEL_ID);
+  const [streamingContent, setStreamingContent] = useState<string>("");
   const stepsCompletedRef = useRef<string[]>([]);
 
   const {
@@ -164,6 +165,9 @@ export default function PaperPilotPage() {
         await loadModel(selectedModelId);
       }
 
+      // Reset streaming content
+      setStreamingContent("");
+
       dispatch({
         type: "SET_GENERATION_PROGRESS",
         progress: { status: "generating", currentTask: `Generating ${type} summary` },
@@ -171,7 +175,14 @@ export default function PaperPilotPage() {
 
       try {
         const { systemPrompt, userPrompt } = buildSummaryPrompt(state.paper, type);
-        const content = await generate(systemPrompt, userPrompt);
+
+        // Use streaming callback to show real-time output
+        const content = await generate(systemPrompt, userPrompt, (text) => {
+          setStreamingContent(text);
+        });
+
+        // Clear streaming content and add final summary
+        setStreamingContent("");
 
         dispatch({
           type: "ADD_SUMMARY",
@@ -187,6 +198,7 @@ export default function PaperPilotPage() {
           progress: { status: "complete" },
         });
       } catch (err) {
+        setStreamingContent("");
         dispatch({
           type: "SET_GENERATION_PROGRESS",
           progress: {
@@ -208,6 +220,9 @@ export default function PaperPilotPage() {
         await loadModel(selectedModelId);
       }
 
+      // Reset streaming content
+      setStreamingContent("");
+
       dispatch({
         type: "SET_GENERATION_PROGRESS",
         progress: { status: "generating", currentTask: "Answering question" },
@@ -215,7 +230,14 @@ export default function PaperPilotPage() {
 
       try {
         const { systemPrompt, userPrompt } = buildQAPrompt(state.paper, question);
-        const answer = await generate(systemPrompt, userPrompt);
+
+        // Use streaming callback to show real-time output
+        const answer = await generate(systemPrompt, userPrompt, (text) => {
+          setStreamingContent(text);
+        });
+
+        // Clear streaming content and add final answer
+        setStreamingContent("");
 
         dispatch({
           type: "ADD_QA",
@@ -232,6 +254,7 @@ export default function PaperPilotPage() {
           progress: { status: "complete" },
         });
       } catch (err) {
+        setStreamingContent("");
         dispatch({
           type: "SET_GENERATION_PROGRESS",
           progress: {
@@ -319,6 +342,7 @@ export default function PaperPilotPage() {
             isModelReady={isReady && loadedModelId === selectedModelId}
             isGenerating={isGenerating}
             progress={state.generationProgress}
+            streamingContent={streamingContent}
             onGenerateSummary={handleGenerateSummary}
           />
 
@@ -327,6 +351,7 @@ export default function PaperPilotPage() {
             qaHistory={state.qaHistory}
             isModelReady={isReady && loadedModelId === selectedModelId}
             isGenerating={isGenerating}
+            streamingContent={streamingContent}
             onAskQuestion={handleAskQuestion}
           />
         </>

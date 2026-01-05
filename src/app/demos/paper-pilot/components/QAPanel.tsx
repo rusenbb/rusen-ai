@@ -7,6 +7,7 @@ interface QAPanelProps {
   qaHistory: QAExchange[];
   isModelReady: boolean;
   isGenerating: boolean;
+  streamingContent: string;
   onAskQuestion: (question: string) => Promise<void>;
 }
 
@@ -14,21 +15,26 @@ export default function QAPanel({
   qaHistory,
   isModelReady,
   isGenerating,
+  streamingContent,
   onAskQuestion,
 }: QAPanelProps) {
   const [question, setQuestion] = useState("");
+  const [currentQuestion, setCurrentQuestion] = useState("");
   const [isAsking, setIsAsking] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!question.trim() || !isModelReady || isGenerating) return;
 
+    const questionToAsk = question.trim();
+    setCurrentQuestion(questionToAsk);
+    setQuestion("");
     setIsAsking(true);
     try {
-      await onAskQuestion(question.trim());
-      setQuestion("");
+      await onAskQuestion(questionToAsk);
     } finally {
       setIsAsking(false);
+      setCurrentQuestion("");
     }
   };
 
@@ -88,6 +94,52 @@ export default function QAPanel({
           </button>
         </div>
       </form>
+
+      {/* Show streaming response while generating */}
+      {isAsking && currentQuestion && (
+        <div className="mb-4 p-4 border border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-900/20 rounded-lg">
+          <div className="mb-2">
+            <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
+              Question
+            </span>
+            <p className="text-sm font-medium">{currentQuestion}</p>
+          </div>
+          <div>
+            <span className="text-xs font-medium text-green-600 dark:text-green-400">
+              Answer
+            </span>
+            {streamingContent ? (
+              <div className="text-sm text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap">
+                {streamingContent}
+                <span className="inline-block w-2 h-4 bg-blue-500 animate-pulse ml-1" />
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-sm text-neutral-500 mt-1">
+                <svg
+                  className="w-4 h-4 animate-spin"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                Thinking...
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {qaHistory.length > 0 && (
         <div className="space-y-4">
