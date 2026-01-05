@@ -669,7 +669,7 @@ export async function fetchPaper(
         metadata.abstract = openAlexData.abstract;
       }
       // Use OpenAlex subjects if we don't have any
-      if (metadata.subjects.length === 0 && openAlexData.subjects) {
+      if ((!metadata.subjects || metadata.subjects.length === 0) && openAlexData.subjects) {
         metadata.subjects = openAlexData.subjects;
       }
     }
