@@ -92,9 +92,6 @@ export function buildGenerationPrompt(
 
 Each object needs: {${columnSpecs}}
 
-Example:
-{"data": [${JSON.stringify(exampleRow)}, ${JSON.stringify(exampleRow2)}]}
-
 Output as {"data": [...]} with ${safeRowCount} objects:`;
 
   return prompt;
