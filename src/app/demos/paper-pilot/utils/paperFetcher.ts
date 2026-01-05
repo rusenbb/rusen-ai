@@ -404,6 +404,11 @@ export async function fetchFromArxiv(arxivId: string): Promise<{
 // PDF TEXT EXTRACTION
 // ============================================================================
 
+// Type for PDF text content items (covers both TextItem and TextMarkedContent from pdfjs-dist)
+interface PDFTextItem {
+  str?: string;
+}
+
 export async function extractTextFromPDF(pdfUrl: string): Promise<string | null> {
   // PDFDocumentProxy type - we use 'any' here because pdfjs-dist types are complex
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -434,7 +439,7 @@ export async function extractTextFromPDF(pdfUrl: string): Promise<string | null>
         const page = await pdf.getPage(i);
         const textContent = await page.getTextContent();
         const pageText = textContent.items
-          .map((item) => ("str" in item ? item.str : ""))
+          .map((item: PDFTextItem) => item.str || "")
           .join(" ");
         textParts.push(pageText);
       } catch (pageError) {
