@@ -9,6 +9,11 @@ const API_CONFIG = {
   userAgent: "PaperPilot/1.0 (https://rusen.ai)",
 } as const;
 
+// Use our own Cloudflare Pages Function as CORS proxy (more reliable than third-party proxies)
+function proxyUrl(url: string): string {
+  return `/api/proxy?url=${encodeURIComponent(url)}`;
+}
+
 // ============================================================================
 // PDF.JS INITIALIZATION (done once at module level)
 // ============================================================================
@@ -453,12 +458,11 @@ export async function fetchFromArxiv(arxivId: string): Promise<{
   sourceInfo: ContentSourceInfo;
 } | null> {
   try {
-    // arXiv API doesn't support CORS, so we route through a proxy
+    // arXiv API doesn't support CORS, so we route through our Cloudflare proxy
     const arxivUrl = `https://export.arxiv.org/api/query?id_list=${encodeURIComponent(arxivId)}`;
-    const response = await fetch(
-      `https://corsproxy.io/?${encodeURIComponent(arxivUrl)}`,
-      { headers: { Accept: "application/xml" } }
-    );
+    const response = await fetch(proxyUrl(arxivUrl), {
+      headers: { Accept: "application/xml" },
+    });
 
     if (!response.ok) return null;
 
@@ -509,12 +513,8 @@ export async function extractTextFromPDF(pdfUrl: string): Promise<string | null>
   try {
     const pdfjsLib = await initPdfJs();
 
-    // For arXiv PDFs, we can fetch directly
-    // For other sources, we might need a CORS proxy
-    let url = pdfUrl;
-    if (!pdfUrl.includes("arxiv.org")) {
-      url = `https://corsproxy.io/?${encodeURIComponent(pdfUrl)}`;
-    }
+    // Route all PDF fetches through our Cloudflare proxy for CORS
+    const url = proxyUrl(pdfUrl);
 
     const loadingTask = pdfjsLib.getDocument({
       url,
