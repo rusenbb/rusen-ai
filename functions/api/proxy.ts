@@ -18,7 +18,8 @@ const ALLOWED_DOMAINS = [
   "biorxiv.org",
   "www.medrxiv.org",
   "medrxiv.org",
-  // Semantic Scholar PDFs
+  // Semantic Scholar
+  "api.semanticscholar.org",
   "pdfs.semanticscholar.org",
   // PMC (PubMed Central)
   "pmc.ncbi.nlm.nih.gov",
