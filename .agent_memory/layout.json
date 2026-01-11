@@ -1,0 +1,40 @@
+{
+  "version": "1.0",
+  "lastUpdated": "2025-01-11",
+  "memories": {
+    "preferences": {
+      "path": "memories/preferences.md",
+      "description": "User tooling preferences, development environment, interaction style, and personal conventions",
+      "triggers": ["tooling", "setup", "environment", "preferences", "uv", "npm", "how to run"]
+    },
+    "patterns": {
+      "path": "memories/patterns.md",
+      "description": "Reusable code patterns in this project: React hooks, state management, component structure, WebLLM integration",
+      "triggers": ["pattern", "hook", "component", "how to", "implement", "similar to", "like the"]
+    },
+    "decisions": {
+      "path": "memories/decisions.md",
+      "description": "Architectural decisions and their rationale: why WebLLM, why client-side, model choices, API strategies",
+      "triggers": ["why", "decision", "architecture", "chose", "reasoning", "alternative"]
+    },
+    "conventions": {
+      "path": "memories/conventions.md",
+      "description": "Naming conventions, file structure, styling patterns, TypeScript idioms used in this codebase",
+      "triggers": ["naming", "convention", "style", "structure", "where should", "what should I call"]
+    },
+    "learnings": {
+      "path": "memories/learnings.md",
+      "description": "Gotchas, edge cases, bugs encountered, and solutions found during development",
+      "triggers": ["error", "bug", "issue", "problem", "doesn't work", "fix", "broke", "gotcha"]
+    },
+    "context": {
+      "path": "memories/context.md",
+      "description": "Project overview, domain knowledge, feature inventory, and business context",
+      "triggers": ["what is", "overview", "explain", "understand", "context", "background", "project"]
+    }
+  },
+  "projectDocs": {
+    "prd": ".project_docs/prd.md",
+    "spec": ".project_docs/spec.md"
+  }
+}
