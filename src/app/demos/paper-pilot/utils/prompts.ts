@@ -1,7 +1,8 @@
 import type { PaperMetadata, SummaryType } from "../types";
 
 // Maximum tokens to use for content (leaving room for response)
-const MAX_CONTENT_TOKENS = 4000; // ~3000 words
+// Keep this moderate - small models struggle with too much context
+const MAX_CONTENT_TOKENS = 2000; // ~1500 words
 const WORDS_PER_TOKEN = 0.75;
 const MAX_CONTENT_WORDS = Math.floor(MAX_CONTENT_TOKENS * WORDS_PER_TOKEN);
 
