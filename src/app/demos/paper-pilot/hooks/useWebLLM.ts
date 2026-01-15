@@ -170,7 +170,7 @@ export function useWebLLM(): UseWebLLMReturn {
           { role: "user", content: userMessage },
         ],
         temperature: 0.5,
-        max_tokens: 4096, // Plenty of room with 32k context
+        max_tokens: 8192, // 32k context, 24k input, 8k output
         stream: true,
       });
 
