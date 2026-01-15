@@ -2,48 +2,32 @@
 
 ## Qwen3 Think Tags Cause Output Truncation — 2025-01-11 (Updated 2026-01-15)
 
-**Problem**: Qwen3 models emit `<think>...</think>` tags for chain-of-thought reasoning. The model sometimes puts its response INSIDE unclosed `<think>` tags, causing visible tags in output.
+**Problem**: Qwen3 models emit `<think>...</think>` tags for chain-of-thought reasoning. The model behavior is unpredictable - it may put response inside tags, use multiple tags, or leave tags unclosed.
 
 **Bad approaches**:
 ```typescript
-// V1: This destroys content after unclosed <think> tags
+// V1: Destroys content after unclosed <think> tags
 content = content.replace(/<think>[\s\S]*/, "");
 
-// V2: This keeps <think> visible when tag is at the start with no content before
-result = beforeThink || result.substring(unclosedIndex);
+// V2: Complex logic that truncates at second <think> tag
+const unclosedIndex = result.indexOf("<think>");
+result = beforeThink || afterThink; // Misses content after multiple tags
 ```
 
-**Solution** (in `useWebLLM.ts`):
+**Solution** (in `useWebLLM.ts`) - keep it simple:
 ```typescript
 function stripThinkTags(content: string): string {
-  // Only remove COMPLETE <think>...</think> blocks (non-greedy)
+  // Remove complete <think>...</think> blocks (non-greedy)
   let result = content.replace(/<think>[\s\S]*?<\/think>/g, "");
 
-  // Handle unclosed <think> tag
-  const unclosedIndex = result.indexOf("<think>");
-  if (unclosedIndex !== -1) {
-    const beforeThink = result.substring(0, unclosedIndex).trim();
-    const afterThink = result.substring(unclosedIndex + 7).trim(); // 7 = "<think>".length
-
-    // Prefer content before the tag if it exists, otherwise use content after the tag
-    // This handles models that put their response inside unclosed <think> tags
-    if (beforeThink) {
-      result = beforeThink;
-    } else if (afterThink) {
-      result = afterThink;
-    } else {
-      result = "";
-    }
-  }
-
-  // Strip orphan </think> at the beginning (streaming edge case)
-  if (result.startsWith("</think>")) {
-    result = result.substring(8);
-  }
+  // Remove any remaining orphaned <think> or </think> tags
+  result = result.replace(/<\/?think>/g, "");
 
   return result.trim();
 }
 ```
+
+**Why this works**: Only content inside COMPLETE `<think>...</think>` blocks is removed. All other content is preserved, with just the tag text stripped. Handles all edge cases: unclosed tags, multiple tags, streaming.
 
 **Also**: Append `/no_think` to user prompts to suppress thinking mode (but Qwen3 0.6B often ignores this).
 
