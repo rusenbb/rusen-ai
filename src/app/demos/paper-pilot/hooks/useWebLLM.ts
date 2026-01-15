@@ -105,14 +105,21 @@ export function useWebLLM(): UseWebLLMReturn {
           // Dynamic import to avoid SSR issues
           const { CreateMLCEngine } = await import("@mlc-ai/web-llm");
 
-          const engine = await CreateMLCEngine(modelId, {
-            initProgressCallback: (report: { progress: number }) => {
-              if (isMountedRef.current) {
-                setLoadProgress(report.progress);
-              }
+          const engine = await CreateMLCEngine(
+            modelId,
+            {
+              initProgressCallback: (report: { progress: number }) => {
+                if (isMountedRef.current) {
+                  setLoadProgress(report.progress);
+                }
+              },
+              logLevel: "SILENT",
             },
-            logLevel: "SILENT",
-          });
+            {
+              // Override WebLLM's conservative 4096 limit - Qwen3 supports 32k
+              context_window_size: 32768,
+            }
+          );
 
           engineRef.current = engine;
           if (isMountedRef.current) {
@@ -163,7 +170,7 @@ export function useWebLLM(): UseWebLLMReturn {
           { role: "user", content: userMessage },
         ],
         temperature: 0.5,
-        max_tokens: 1500, // WebLLM Qwen3 has 4096 context, reserve ~2500 for input
+        max_tokens: 4096, // Plenty of room with 32k context
         stream: true,
       });
 
