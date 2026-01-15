@@ -1,8 +1,9 @@
 import type { PaperMetadata, SummaryType } from "../types";
 
 // Maximum tokens to use for content (leaving room for response)
-// Keep this moderate - small models struggle with too much context
-const MAX_CONTENT_TOKENS = 2000; // ~1500 words
+// WebLLM Qwen3 models have 4096 context window (input + output)
+// Reserve ~1500 tokens for output, ~100 for prompts = ~2500 for content
+const MAX_CONTENT_TOKENS = 2500;
 const WORDS_PER_TOKEN = 0.75;
 const MAX_CONTENT_WORDS = Math.floor(MAX_CONTENT_TOKENS * WORDS_PER_TOKEN);
 
