@@ -27,16 +27,24 @@ function stripThinkTags(content: string): string {
   // Only remove COMPLETE <think>...</think> blocks (non-greedy)
   let result = content.replace(/<think>[\s\S]*?<\/think>/g, "");
 
-  // For unclosed <think> tags, keep content before it (don't destroy everything)
+  // Handle unclosed <think> tag
   const unclosedIndex = result.indexOf("<think>");
   if (unclosedIndex !== -1) {
     const beforeThink = result.substring(0, unclosedIndex).trim();
-    // Only use content before <think> if it exists, otherwise keep everything
-    // (model might have actual content after unclosed thinking)
-    result = beforeThink || result.substring(unclosedIndex);
+    const afterThink = result.substring(unclosedIndex + 7).trim(); // 7 = "<think>".length
+
+    // Prefer content before the tag if it exists, otherwise use content after the tag
+    // This handles models that put their response inside unclosed <think> tags
+    if (beforeThink) {
+      result = beforeThink;
+    } else if (afterThink) {
+      result = afterThink;
+    } else {
+      result = "";
+    }
   }
 
-  // Only strip orphan </think> at the very beginning (streaming edge case)
+  // Strip orphan </think> at the beginning (streaming edge case)
   if (result.startsWith("</think>")) {
     result = result.substring(8);
   }
