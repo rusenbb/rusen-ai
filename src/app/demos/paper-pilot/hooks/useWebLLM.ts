@@ -22,34 +22,9 @@ interface UseWebLLMReturn {
   unload: () => Promise<void>;
 }
 
-// Strip <think>...</think> tags safely without destroying content
+// Strip <think> and </think> tags but keep all content
 function stripThinkTags(content: string): string {
-  // Only remove COMPLETE <think>...</think> blocks (non-greedy)
-  let result = content.replace(/<think>[\s\S]*?<\/think>/g, "");
-
-  // Handle unclosed <think> tag
-  const unclosedIndex = result.indexOf("<think>");
-  if (unclosedIndex !== -1) {
-    const beforeThink = result.substring(0, unclosedIndex).trim();
-    const afterThink = result.substring(unclosedIndex + 7).trim(); // 7 = "<think>".length
-
-    // Prefer content before the tag if it exists, otherwise use content after the tag
-    // This handles models that put their response inside unclosed <think> tags
-    if (beforeThink) {
-      result = beforeThink;
-    } else if (afterThink) {
-      result = afterThink;
-    } else {
-      result = "";
-    }
-  }
-
-  // Strip orphan </think> at the beginning (streaming edge case)
-  if (result.startsWith("</think>")) {
-    result = result.substring(8);
-  }
-
-  return result.trim();
+  return content.replace(/<\/?think>/g, "").trim();
 }
 
 export function useWebLLM(): UseWebLLMReturn {
