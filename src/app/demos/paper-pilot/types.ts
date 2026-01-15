@@ -33,6 +33,20 @@ export const MODEL_OPTIONS: ModelOption[] = [
 
 export const DEFAULT_MODEL_ID = "Qwen3-0.6B-q4f16_1-MLC";
 
+// AI Mode - browser (WebLLM) or cloud (API)
+export type AIMode = "browser" | "cloud";
+
+export const AI_MODE_INFO: Record<AIMode, { label: string; description: string }> = {
+  browser: {
+    label: "Browser AI",
+    description: "Runs locally, limited context (4k tokens), private",
+  },
+  cloud: {
+    label: "Cloud AI",
+    description: "Full context (128k+ tokens), rate limited",
+  },
+};
+
 // Content sources
 export type ContentSource = "crossref" | "unpaywall" | "semanticscholar" | "arxiv" | "pdf-upload";
 

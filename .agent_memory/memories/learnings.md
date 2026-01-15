@@ -31,6 +31,14 @@ function stripThinkTags(content: string): string {
 
 **Also**: Append `/no_think` to user prompts to suppress thinking mode (but Qwen3 0.6B often ignores this).
 
+## WebLLM Qwen3 Context Limit is Real — 2026-01-15
+
+**Problem**: WebLLM sets `context_window_size: 4096` for Qwen3 models. Attempted to override to 32k since native Qwen3 supports it.
+
+**Result**: Model starts repeating itself when context exceeds 4096. The limit is a real constraint of the WebLLM/MLC compilation, not arbitrary.
+
+**Solution**: Respect the 4096 limit. Allocate ~2500 for input, ~1500 for output.
+
 ## Semantic Scholar CORS Requires Proxy — 2025-01-11
 
 **Problem**: Semantic Scholar API doesn't allow browser CORS requests.
