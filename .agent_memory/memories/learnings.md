@@ -1,13 +1,16 @@
 # Learnings & Gotchas
 
-## Qwen3 Think Tags Cause Output Truncation — 2025-01-11
+## Qwen3 Think Tags Cause Output Truncation — 2025-01-11 (Updated 2026-01-15)
 
-**Problem**: Qwen3 models emit `<think>...</think>` tags for chain-of-thought reasoning. Aggressive stripping was truncating actual content.
+**Problem**: Qwen3 models emit `<think>...</think>` tags for chain-of-thought reasoning. The model sometimes puts its response INSIDE unclosed `<think>` tags, causing visible tags in output.
 
-**Bad approach**:
+**Bad approaches**:
 ```typescript
-// This destroys content after unclosed <think> tags
+// V1: This destroys content after unclosed <think> tags
 content = content.replace(/<think>[\s\S]*/, "");
+
+// V2: This keeps <think> visible when tag is at the start with no content before
+result = beforeThink || result.substring(unclosedIndex);
 ```
 
 **Solution** (in `useWebLLM.ts`):
@@ -16,14 +19,24 @@ function stripThinkTags(content: string): string {
   // Only remove COMPLETE <think>...</think> blocks (non-greedy)
   let result = content.replace(/<think>[\s\S]*?<\/think>/g, "");
 
-  // For unclosed <think> tags, keep content before it
+  // Handle unclosed <think> tag
   const unclosedIndex = result.indexOf("<think>");
   if (unclosedIndex !== -1) {
     const beforeThink = result.substring(0, unclosedIndex).trim();
-    result = beforeThink || result.substring(unclosedIndex);
+    const afterThink = result.substring(unclosedIndex + 7).trim(); // 7 = "<think>".length
+
+    // Prefer content before the tag if it exists, otherwise use content after the tag
+    // This handles models that put their response inside unclosed <think> tags
+    if (beforeThink) {
+      result = beforeThink;
+    } else if (afterThink) {
+      result = afterThink;
+    } else {
+      result = "";
+    }
   }
 
-  // Only strip orphan </think> at the very beginning
+  // Strip orphan </think> at the beginning (streaming edge case)
   if (result.startsWith("</think>")) {
     result = result.substring(8);
   }
@@ -32,7 +45,7 @@ function stripThinkTags(content: string): string {
 }
 ```
 
-**Also**: Append `/no_think` to user prompts to suppress thinking mode.
+**Also**: Append `/no_think` to user prompts to suppress thinking mode (but Qwen3 0.6B often ignores this).
 
 ## Semantic Scholar CORS Requires Proxy — 2025-01-11
 
