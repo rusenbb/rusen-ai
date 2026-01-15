@@ -163,7 +163,7 @@ export function useWebLLM(): UseWebLLMReturn {
           { role: "user", content: userMessage },
         ],
         temperature: 0.5,
-        max_tokens: 32768, // Qwen3 supports 32k context
+        max_tokens: 1024, // Reasonable output limit for summaries
         stream: true,
       });
 
