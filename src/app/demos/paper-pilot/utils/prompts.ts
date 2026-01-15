@@ -1,8 +1,8 @@
 import type { PaperMetadata, SummaryType } from "../types";
 
 // Maximum tokens to use for content
-// Qwen3 supports 32k context - reserve 8k for output, use rest for input
-const MAX_CONTENT_TOKENS = 24000;
+// WebLLM Qwen3 is limited to 4096 context - reserve ~1500 for output
+const MAX_CONTENT_TOKENS = 2500;
 const WORDS_PER_TOKEN = 0.75;
 const MAX_CONTENT_WORDS = Math.floor(MAX_CONTENT_TOKENS * WORDS_PER_TOKEN);
 

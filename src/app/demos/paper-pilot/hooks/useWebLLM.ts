@@ -116,8 +116,8 @@ export function useWebLLM(): UseWebLLMReturn {
               logLevel: "SILENT",
             },
             {
-              // Override WebLLM's conservative 4096 limit - Qwen3 supports 32k
-              context_window_size: 32768,
+              // WebLLM's 4096 limit is correct - model repeats itself beyond this
+              context_window_size: 4096,
             }
           );
 
@@ -170,7 +170,7 @@ export function useWebLLM(): UseWebLLMReturn {
           { role: "user", content: userMessage },
         ],
         temperature: 0.5,
-        max_tokens: 8192, // 32k context, 24k input, 8k output
+        max_tokens: 1500, // 4096 context, ~2500 input, ~1500 output
         stream: true,
       });
 
