@@ -5,7 +5,7 @@ export default function DemosPage() {
     <div className="max-w-6xl mx-auto px-4 py-16">
       <h1 className="text-4xl font-bold mb-4">Demos</h1>
       <p className="text-neutral-600 dark:text-neutral-400 mb-12 max-w-2xl">
-        Interactive AI tools you can try right now. Most run entirely in your browser.
+        Interactive AI tools you can try right now. Powered by cloud AI with rate limiting.
       </p>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -13,7 +13,7 @@ export default function DemosPage() {
           title="Paper Pilot"
           description="Enter a DOI, get article summaries and explanations. Perfect for engineers and medical students."
           href="/demos/paper-pilot"
-          tags={["LLM", "WebLLM", "Qwen"]}
+          tags={["LLM", "Gemini", "Academic"]}
           status="live"
         />
         <DemoCard

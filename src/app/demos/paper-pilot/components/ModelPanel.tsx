@@ -1,169 +1,100 @@
 "use client";
 
-import { MODEL_OPTIONS, AI_MODE_INFO, type AIMode } from "../types";
+import { useState } from "react";
+
+export const AVAILABLE_MODELS = [
+  { id: "auto", name: "Auto (Recommended)", description: "Picks best available model with fallback" },
+  { id: "google/gemini-2.0-flash-exp:free", name: "Gemini 2.0 Flash", description: "1M context, fast responses" },
+  { id: "meta-llama/llama-3.3-70b-instruct:free", name: "Llama 3.3 70B", description: "131K context, reliable" },
+  { id: "google/gemma-3-27b-it:free", name: "Gemma 3 27B", description: "131K context, multimodal" },
+  { id: "deepseek/deepseek-r1-0528:free", name: "DeepSeek R1", description: "164K context, reasoning model" },
+  { id: "qwen/qwen3-coder:free", name: "Qwen3 Coder 480B", description: "262K context, coding optimized" },
+];
 
 interface ModelPanelProps {
-  aiMode: AIMode;
-  selectedModelId: string;
-  loadedModelId: string | null;
-  isModelLoading: boolean;
   isGenerating: boolean;
-  modelLoadProgress: number;
   rateLimitRemaining: number | null;
-  onAIModeChange: (mode: AIMode) => void;
-  onModelSelect: (modelId: string) => void;
-  onLoadModel: () => void;
+  selectedModel: string;
+  onModelChange: (modelId: string) => void;
 }
 
 export default function ModelPanel({
-  aiMode,
-  selectedModelId,
-  loadedModelId,
-  isModelLoading,
   isGenerating,
-  modelLoadProgress,
   rateLimitRemaining,
-  onAIModeChange,
-  onModelSelect,
-  onLoadModel,
+  selectedModel,
+  onModelChange,
 }: ModelPanelProps) {
-  const selectedModel = MODEL_OPTIONS.find((m) => m.id === selectedModelId);
-  const loadedModel = MODEL_OPTIONS.find((m) => m.id === loadedModelId);
-  const isDisabled = isModelLoading || isGenerating;
+  const [isOpen, setIsOpen] = useState(false);
+  const currentModel = AVAILABLE_MODELS.find(m => m.id === selectedModel) || AVAILABLE_MODELS[0];
 
   return (
     <div className="mb-6 p-6 border border-neutral-200 dark:border-neutral-800 rounded-lg">
-      {/* AI Mode Selection */}
-      <h3 className="font-medium mb-4">AI Mode</h3>
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        {(["browser", "cloud"] as const).map((mode) => (
-          <button
-            key={mode}
-            onClick={() => onAIModeChange(mode)}
-            disabled={isDisabled}
-            className={`p-4 rounded-lg border text-left transition ${
-              aiMode === mode
-                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                : "border-neutral-200 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-500"
-            } ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
-          >
-            <div className="font-medium mb-1">{AI_MODE_INFO[mode].label}</div>
-            <div className="text-xs text-neutral-500">
-              {AI_MODE_INFO[mode].description}
-            </div>
-          </button>
-        ))}
-      </div>
+      <h3 className="font-medium mb-4">AI Model</h3>
 
-      {/* Browser Mode - Model Selection */}
-      {aiMode === "browser" && (
-        <>
-          <h4 className="font-medium mb-3 text-sm text-neutral-600 dark:text-neutral-400">
-            Select Browser Model
-          </h4>
-          <div className="grid md:grid-cols-3 gap-3 mb-4">
-            {MODEL_OPTIONS.map((model) => (
+      {/* Model Selector */}
+      <div className="relative mb-4">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          disabled={isGenerating}
+          className={`w-full p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg text-left transition ${
+            isGenerating ? "opacity-50 cursor-not-allowed" : "hover:bg-neutral-100 dark:hover:bg-neutral-800"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`w-2.5 h-2.5 rounded-full ${isGenerating ? "bg-yellow-500 animate-pulse" : "bg-green-500"}`} />
+              <div>
+                <div className="font-medium text-sm">{currentModel.name}</div>
+                <div className="text-xs text-neutral-500">{currentModel.description}</div>
+              </div>
+            </div>
+            <svg
+              className={`w-5 h-5 text-neutral-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </button>
+
+        {/* Dropdown */}
+        {isOpen && !isGenerating && (
+          <div className="absolute z-10 w-full mt-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-lg overflow-hidden">
+            {AVAILABLE_MODELS.map((model) => (
               <button
                 key={model.id}
-                onClick={() => onModelSelect(model.id)}
-                disabled={isDisabled}
-                className={`p-4 rounded-lg border text-left transition ${
-                  selectedModelId === model.id
-                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                    : "border-neutral-200 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-500"
-                } ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                onClick={() => {
+                  onModelChange(model.id);
+                  setIsOpen(false);
+                }}
+                className={`w-full p-3 text-left hover:bg-neutral-50 dark:hover:bg-neutral-800 transition ${
+                  selectedModel === model.id ? "bg-green-50 dark:bg-green-900/20" : ""
+                }`}
               >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-medium">{model.name}</span>
-                  {loadedModelId === model.id && (
-                    <span className="text-xs px-2 py-0.5 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded">
-                      Loaded
-                    </span>
-                  )}
-                </div>
-                <div className="text-xs text-neutral-500 space-y-0.5">
-                  <div>{model.size} download</div>
-                  <div>{model.vramRequired} VRAM required</div>
-                  <div className="text-neutral-400">{model.description}</div>
+                <div className="flex items-center gap-3">
+                  <div className={`w-2 h-2 rounded-full ${
+                    selectedModel === model.id ? "bg-green-500" : "bg-neutral-300 dark:bg-neutral-600"
+                  }`} />
+                  <div>
+                    <div className="font-medium text-sm">{model.name}</div>
+                    <div className="text-xs text-neutral-500">{model.description}</div>
+                  </div>
                 </div>
               </button>
             ))}
           </div>
+        )}
+      </div>
 
-          {/* Model status */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div
-                className={`w-2.5 h-2.5 rounded-full ${
-                  loadedModelId === selectedModelId
-                    ? "bg-green-500"
-                    : isModelLoading
-                    ? "bg-yellow-500 animate-pulse"
-                    : "bg-neutral-300 dark:bg-neutral-600"
-                }`}
-              />
-              <span className="text-sm">
-                {loadedModelId === selectedModelId
-                  ? `${loadedModel?.name} ready`
-                  : isModelLoading
-                  ? `Loading ${selectedModel?.name}...`
-                  : loadedModelId && loadedModelId !== selectedModelId
-                  ? `${loadedModel?.name} loaded (switch to ${selectedModel?.name}?)`
-                  : "No model loaded"}
-              </span>
-            </div>
-
-            {!isModelLoading && loadedModelId !== selectedModelId && (
-              <button
-                onClick={onLoadModel}
-                className="px-3 py-1.5 text-sm bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-lg hover:opacity-80 transition"
-              >
-                {loadedModelId && loadedModelId !== selectedModelId
-                  ? `Switch to ${selectedModel?.name}`
-                  : `Load ${selectedModel?.name}`}
-              </button>
-            )}
-          </div>
-
-          {/* Model loading progress */}
-          {isModelLoading && (
-            <div className="mt-4">
-              <div className="flex items-center justify-between text-sm text-neutral-500 mb-1">
-                <span>Downloading {selectedModel?.name} ({selectedModel?.size})</span>
-                <span>{Math.round(modelLoadProgress * 100)}%</span>
-              </div>
-              <div className="w-full h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-yellow-500 transition-all duration-300"
-                  style={{ width: `${modelLoadProgress * 100}%` }}
-                />
-              </div>
-              <p className="text-xs text-neutral-400 mt-1">
-                This only needs to be done once per model. Models are cached locally.
-              </p>
-            </div>
-          )}
-        </>
-      )}
-
-      {/* Cloud Mode - API Info */}
-      {aiMode === "cloud" && (
-        <div className="p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
-            <span className="text-sm font-medium">Gemini 2.0 Flash (via OpenRouter)</span>
-          </div>
-          <div className="text-xs text-neutral-500 space-y-1">
-            <p>128k context window - can analyze full papers</p>
-            <p>Powered by Google&apos;s Gemini API</p>
-            {rateLimitRemaining !== null && (
-              <p className="text-neutral-400">
-                Rate limit: {rateLimitRemaining} requests remaining this minute
-              </p>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Rate limit info */}
+      <div className="text-xs text-neutral-500">
+        {rateLimitRemaining !== null && (
+          <p>Rate limit: {rateLimitRemaining} requests remaining this minute</p>
+        )}
+        <p className="mt-1">All models are free via OpenRouter</p>
+      </div>
     </div>
   );
 }

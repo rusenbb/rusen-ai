@@ -1,7 +1,7 @@
 "use client";
 
 import { useReducer, useCallback, useState } from "react";
-import { useWebLLM } from "./hooks/useWebLLM";
+import { useAPILLM } from "./hooks/useAPILLM";
 import SchemaBuilder from "./components/SchemaBuilder";
 import GenerationPanel from "./components/GenerationPanel";
 import ExportPanel from "./components/ExportPanel";
@@ -10,13 +10,12 @@ import {
   createDefaultTable,
   createDefaultColumn,
   generateId,
-  DEFAULT_MODEL_ID,
   type DataForgeState,
   type DataForgeAction,
   type GeneratedData,
   type TableQuality,
 } from "./types";
-import { buildGenerationPrompt, parseGeneratedData, getTableGenerationOrder, buildJsonSchema } from "./utils/prompts";
+import { buildGenerationPrompt, parseGeneratedData, getTableGenerationOrder } from "./utils/prompts";
 
 function dataForgeReducer(state: DataForgeState, action: DataForgeAction): DataForgeState {
   switch (action.type) {
@@ -191,19 +190,10 @@ function dataForgeReducer(state: DataForgeState, action: DataForgeAction): DataF
 
 export default function DataForgePage() {
   const [state, dispatch] = useReducer(dataForgeReducer, initialState);
-  const [selectedModelId, setSelectedModelId] = useState(DEFAULT_MODEL_ID);
-  const { isReady, isLoading, loadProgress, error, isSupported, loadedModelId, loadModel, generate } =
-    useWebLLM();
-
-  const handleLoadModel = useCallback(() => {
-    loadModel(selectedModelId);
-  }, [loadModel, selectedModelId]);
+  const [selectedModel, setSelectedModel] = useState<string>("auto");
+  const { isGenerating, error, rateLimitRemaining, generate } = useAPILLM(selectedModel);
 
   const handleGenerate = useCallback(async () => {
-    if (!isReady || loadedModelId !== selectedModelId) {
-      await loadModel(selectedModelId);
-    }
-
     dispatch({
       type: "SET_GENERATION_PROGRESS",
       progress: {
@@ -231,8 +221,7 @@ export default function DataForgePage() {
         });
 
         const prompt = buildGenerationPrompt(table, state.schema, generatedData);
-        const jsonSchema = buildJsonSchema(table);
-        const response = await generate(prompt, jsonSchema);
+        const response = await generate(prompt);
         const result = parseGeneratedData(response, table, state.schema, generatedData);
 
         generatedData[table.name] = result.rows;
@@ -257,32 +246,7 @@ export default function DataForgePage() {
         },
       });
     }
-  }, [isReady, loadedModelId, selectedModelId, loadModel, generate, state.schema]);
-
-  // WebGPU not supported error
-  if (isSupported === false) {
-    return (
-      <div className="max-w-6xl mx-auto px-4 py-16">
-        <h1 className="text-4xl font-bold mb-4">Data Forge</h1>
-        <div className="p-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-          <h2 className="text-lg font-semibold text-red-700 dark:text-red-400 mb-2">
-            WebGPU Not Supported
-          </h2>
-          <p className="text-red-600 dark:text-red-400 mb-4">
-            Data Forge requires WebGPU to run the AI model in your browser.
-          </p>
-          <div className="text-sm text-red-500 dark:text-red-400">
-            <p className="font-medium mb-1">To use Data Forge, try:</p>
-            <ul className="list-disc list-inside space-y-1">
-              <li>Chrome 113+ or Edge 113+ (recommended)</li>
-              <li>Enable WebGPU in browser flags if disabled</li>
-              <li>Make sure your device has a compatible GPU</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  }, [generate, state.schema]);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-16">
@@ -290,7 +254,7 @@ export default function DataForgePage() {
       <h1 className="text-4xl font-bold mb-4">Data Forge</h1>
       <p className="text-neutral-600 dark:text-neutral-400 mb-8 max-w-2xl">
         Define your database schema visually, then let AI generate realistic fake data for
-        testing. Everything runs in your browser &mdash; no data leaves your device.
+        testing. Powered by Gemini 2.0 Flash for intelligent, contextual data generation.
       </p>
 
       {/* Error display */}
@@ -307,14 +271,11 @@ export default function DataForgePage() {
       <GenerationPanel
         schema={state.schema}
         progress={state.generationProgress}
-        isModelReady={isReady}
-        isModelLoading={isLoading}
-        modelLoadProgress={loadProgress}
-        loadedModelId={loadedModelId}
-        selectedModelId={selectedModelId}
-        onModelSelect={setSelectedModelId}
+        isGenerating={isGenerating}
+        rateLimitRemaining={rateLimitRemaining}
+        selectedModel={selectedModel}
+        onModelChange={setSelectedModel}
         onGenerate={handleGenerate}
-        onLoadModel={handleLoadModel}
       />
 
       {/* Quality Warnings */}
@@ -324,7 +285,7 @@ export default function DataForgePage() {
             Data Quality Warning
           </h3>
           <p className="text-sm text-yellow-700 dark:text-yellow-400 mb-3">
-            The model struggled to generate some data. Consider using a larger model (Qwen3 1.7B or 4B) for better results.
+            Some data may have been generated with fallback values due to model response parsing.
           </p>
           <div className="space-y-2">
             {state.generationProgress.qualityReport
@@ -361,14 +322,17 @@ export default function DataForgePage() {
           About Data Forge
         </h3>
         <p className="mb-2">
-          Data Forge uses Qwen3 AI models running entirely in your browser via WebLLM.
-          Choose from three model sizes based on your device capabilities. Models are
-          downloaded once and cached locally for future use.
+          Data Forge uses Gemini 2.0 Flash via API to generate contextually realistic fake data
+          based on your schema definitions. Define tables with columns and types, set up foreign
+          key relationships, and generate data that respects your constraints.
         </p>
         <p>
-          Define tables with columns and types, set up foreign key relationships, and generate
-          contextually realistic data that respects your constraints. Export to SQL, JSON, or
-          CSV for use in your development and testing workflows.
+          Export to SQL, JSON, or CSV for use in your development and testing workflows.
+          {rateLimitRemaining !== null && (
+            <span className="ml-2 text-neutral-400">
+              ({rateLimitRemaining} API requests remaining this minute)
+            </span>
+          )}
         </p>
       </div>
     </div>

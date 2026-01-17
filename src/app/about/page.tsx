@@ -9,9 +9,8 @@ export default function AboutPage() {
           accessible and interactive.
         </p>
         <p className="text-lg text-neutral-600 dark:text-neutral-400 mb-6">
-          This site is my playground for experimenting with browser-based AI. Most demos here
-          run entirely on your device - no data sent to servers, no API costs, just pure
-          client-side machine learning.
+          This site is my playground for experimenting with AI. The demos here use cloud AI
+          (Gemini via OpenRouter) for high-quality results with rate limiting to prevent abuse.
         </p>
         <p className="text-lg text-neutral-600 dark:text-neutral-400">
           I believe the best way to understand AI is to play with it. That&apos;s why every demo
@@ -22,7 +21,7 @@ export default function AboutPage() {
       <section className="mb-12">
         <h2 className="text-2xl font-bold mb-4">Tech Stack</h2>
         <ul className="space-y-2 text-neutral-600 dark:text-neutral-400">
-          <li>WebLLM - Run LLMs directly in the browser via WebGPU</li>
+          <li>Gemini 2.0 Flash - Cloud LLM via OpenRouter API</li>
           <li>Transformers.js - ML models compiled for browser execution</li>
           <li>Gradio / HuggingFace Spaces - For GPU-intensive demos</li>
           <li>Next.js - React framework for the site</li>
