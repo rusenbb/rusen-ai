@@ -1,7 +1,6 @@
 "use client";
 
 import { useReducer, useCallback, useState, useRef } from "react";
-import { useWebLLM } from "./hooks/useWebLLM";
 import { useAPILLM } from "./hooks/useAPILLM";
 import DOIInput from "./components/DOIInput";
 import PaperDisplay from "./components/PaperDisplay";
@@ -13,12 +12,10 @@ import { buildSummaryPrompt, buildQAPrompt } from "./utils/prompts";
 import {
   initialState,
   generateId,
-  DEFAULT_MODEL_ID,
   type PaperPilotState,
   type PaperPilotAction,
   type SummaryType,
   type FetchProgress,
-  type AIMode,
 } from "./types";
 
 function paperPilotReducer(state: PaperPilotState, action: PaperPilotAction): PaperPilotState {
@@ -93,34 +90,17 @@ function paperPilotReducer(state: PaperPilotState, action: PaperPilotAction): Pa
 
 export default function PaperPilotPage() {
   const [state, dispatch] = useReducer(paperPilotReducer, initialState);
-  const [aiMode, setAIMode] = useState<AIMode>("cloud"); // Default to cloud for better UX
-  const [selectedModelId, setSelectedModelId] = useState(DEFAULT_MODEL_ID);
   const [streamingContent, setStreamingContent] = useState<string>("");
+  const [selectedModel, setSelectedModel] = useState<string>("auto");
   const stepsCompletedRef = useRef<string[]>([]);
-
-  // Browser-based LLM (WebLLM)
-  const {
-    isReady: isWebLLMReady,
-    isLoading: isWebLLMLoading,
-    loadProgress,
-    error: webLLMError,
-    isSupported,
-    loadedModelId,
-    loadModel,
-    generate: webLLMGenerate,
-  } = useWebLLM();
 
   // Cloud-based LLM (API)
   const {
-    isGenerating: isAPIGenerating,
-    error: apiError,
+    isGenerating,
+    error,
     rateLimitRemaining,
-    generate: apiGenerate,
-  } = useAPILLM();
-
-  const handleLoadModel = useCallback(() => {
-    loadModel(selectedModelId);
-  }, [loadModel, selectedModelId]);
+    generate,
+  } = useAPILLM(selectedModel);
 
   const handleFetchPaper = useCallback(async (input: string) => {
     stepsCompletedRef.current = [];
@@ -181,25 +161,11 @@ export default function PaperPilotPage() {
       });
 
       try {
-        const useCloudContext = aiMode === "cloud";
-        const { systemPrompt, userPrompt } = buildSummaryPrompt(state.paper, type, useCloudContext);
-        let content: string;
+        const { systemPrompt, userPrompt } = buildSummaryPrompt(state.paper, type);
 
-        if (aiMode === "browser") {
-          // Ensure model is loaded for browser mode
-          if (!isWebLLMReady || loadedModelId !== selectedModelId) {
-            await loadModel(selectedModelId);
-          }
-
-          content = await webLLMGenerate(systemPrompt, userPrompt, (text) => {
-            setStreamingContent(text);
-          });
-        } else {
-          // Cloud mode
-          content = await apiGenerate(systemPrompt, userPrompt, (text) => {
-            setStreamingContent(text);
-          });
-        }
+        const content = await generate(systemPrompt, userPrompt, (text) => {
+          setStreamingContent(text);
+        });
 
         // Clear streaming content and add final summary
         setStreamingContent("");
@@ -228,7 +194,7 @@ export default function PaperPilotPage() {
         });
       }
     },
-    [state.paper, aiMode, isWebLLMReady, loadedModelId, selectedModelId, loadModel, webLLMGenerate, apiGenerate]
+    [state.paper, generate]
   );
 
   const handleAskQuestion = useCallback(
@@ -244,25 +210,11 @@ export default function PaperPilotPage() {
       });
 
       try {
-        const useCloudContext = aiMode === "cloud";
-        const { systemPrompt, userPrompt } = buildQAPrompt(state.paper, question, useCloudContext);
-        let answer: string;
+        const { systemPrompt, userPrompt } = buildQAPrompt(state.paper, question);
 
-        if (aiMode === "browser") {
-          // Ensure model is loaded for browser mode
-          if (!isWebLLMReady || loadedModelId !== selectedModelId) {
-            await loadModel(selectedModelId);
-          }
-
-          answer = await webLLMGenerate(systemPrompt, userPrompt, (text) => {
-            setStreamingContent(text);
-          });
-        } else {
-          // Cloud mode
-          answer = await apiGenerate(systemPrompt, userPrompt, (text) => {
-            setStreamingContent(text);
-          });
-        }
+        const answer = await generate(systemPrompt, userPrompt, (text) => {
+          setStreamingContent(text);
+        });
 
         // Clear streaming content and add final answer
         setStreamingContent("");
@@ -292,19 +244,10 @@ export default function PaperPilotPage() {
         });
       }
     },
-    [state.paper, aiMode, isWebLLMReady, loadedModelId, selectedModelId, loadModel, webLLMGenerate, apiGenerate]
+    [state.paper, generate]
   );
 
-  const isGenerating = state.generationProgress.status === "generating";
-  const currentError = aiMode === "browser" ? webLLMError : apiError;
-
-  // Determine if model is ready based on mode
-  const isModelReady = aiMode === "browser"
-    ? (isWebLLMReady && loadedModelId === selectedModelId)
-    : true; // Cloud mode is always "ready"
-
-  // WebGPU not supported warning for browser mode
-  const showWebGPUWarning = aiMode === "browser" && isSupported === false;
+  const isGeneratingState = state.generationProgress.status === "generating";
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-16">
@@ -312,25 +255,13 @@ export default function PaperPilotPage() {
       <h1 className="text-4xl font-bold mb-4">Paper Pilot</h1>
       <p className="text-neutral-600 dark:text-neutral-400 mb-8 max-w-2xl">
         Enter a DOI or arXiv ID to fetch any academic paper, then let AI summarize and explain it.
-        Choose between <strong>Browser AI</strong> (private, limited context) or{" "}
-        <strong>Cloud AI</strong> (full context, rate limited).
+        Powered by Gemini 2.0 Flash with 128k+ context for analyzing full papers.
       </p>
 
       {/* Error display */}
-      {currentError && (
+      {error && (
         <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400">
-          {currentError}
-        </div>
-      )}
-
-      {/* WebGPU warning */}
-      {showWebGPUWarning && (
-        <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg text-yellow-700 dark:text-yellow-400">
-          <p className="font-medium mb-1">WebGPU not supported</p>
-          <p className="text-sm">
-            Browser AI requires WebGPU (Chrome 113+ or Edge 113+).
-            Switch to Cloud AI mode for full functionality.
-          </p>
+          {error}
         </div>
       )}
 
@@ -349,23 +280,17 @@ export default function PaperPilotPage() {
 
           {/* Model Panel */}
           <ModelPanel
-            aiMode={aiMode}
-            selectedModelId={selectedModelId}
-            loadedModelId={loadedModelId}
-            isModelLoading={isWebLLMLoading}
-            isGenerating={isGenerating || isAPIGenerating}
-            modelLoadProgress={loadProgress}
+            isGenerating={isGeneratingState || isGenerating}
             rateLimitRemaining={rateLimitRemaining}
-            onAIModeChange={setAIMode}
-            onModelSelect={setSelectedModelId}
-            onLoadModel={handleLoadModel}
+            selectedModel={selectedModel}
+            onModelChange={setSelectedModel}
           />
 
           {/* Summary Panel */}
           <SummaryPanel
             summaries={state.summaries}
-            isModelReady={isModelReady}
-            isGenerating={isGenerating || isAPIGenerating}
+            isModelReady={true}
+            isGenerating={isGeneratingState || isGenerating}
             progress={state.generationProgress}
             streamingContent={streamingContent}
             onGenerateSummary={handleGenerateSummary}
@@ -374,8 +299,8 @@ export default function PaperPilotPage() {
           {/* Q&A Panel */}
           <QAPanel
             qaHistory={state.qaHistory}
-            isModelReady={isModelReady}
-            isGenerating={isGenerating || isAPIGenerating}
+            isModelReady={true}
+            isGenerating={isGeneratingState || isGenerating}
             streamingContent={streamingContent}
             onAskQuestion={handleAskQuestion}
           />
@@ -388,12 +313,8 @@ export default function PaperPilotPage() {
           About Paper Pilot
         </h3>
         <p className="mb-2">
-          <strong>Browser AI:</strong> Uses Qwen3 models running entirely in your browser via WebLLM.
-          Private (no data leaves your device) but limited to ~4k token context.
-        </p>
-        <p className="mb-2">
-          <strong>Cloud AI:</strong> Uses Gemini 2.0 Flash via OpenRouter API.
-          128k+ context for analyzing full papers, rate limited to prevent abuse.
+          Uses Gemini 2.0 Flash via OpenRouter API with 128k+ context window,
+          allowing analysis of full papers including methodology, results, and detailed sections.
         </p>
         <p className="mb-2">
           <strong>Data Sources:</strong> Paper metadata is fetched from CrossRef (for DOIs) and

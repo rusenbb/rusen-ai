@@ -1,9 +1,7 @@
 import type { PaperMetadata, SummaryType } from "../types";
 
-// Context limits for different modes
-const BROWSER_MAX_CONTENT_TOKENS = 2500; // WebLLM limited to 4096 total
-const CLOUD_MAX_CONTENT_TOKENS = 100000; // Gemini has 128k+ context
-
+// Context limit - Gemini has 128k+ context
+const MAX_CONTENT_TOKENS = 100000;
 const WORDS_PER_TOKEN = 0.75;
 
 // Truncate text to approximate word limit
@@ -16,9 +14,8 @@ function truncateToWords(text: string, maxWords: number): string {
 }
 
 // Build the paper context string with priority on full text
-export function buildPaperContext(paper: PaperMetadata, useCloudContext = false): string {
-  const maxContentTokens = useCloudContext ? CLOUD_MAX_CONTENT_TOKENS : BROWSER_MAX_CONTENT_TOKENS;
-  const maxContentWords = Math.floor(maxContentTokens * WORDS_PER_TOKEN);
+export function buildPaperContext(paper: PaperMetadata): string {
+  const maxContentWords = Math.floor(MAX_CONTENT_TOKENS * WORDS_PER_TOKEN);
 
   const metadataParts = [
     `Title: ${paper.title}`,
@@ -98,14 +95,13 @@ Rules:
 // Build prompt for summary generation
 export function buildSummaryPrompt(
   paper: PaperMetadata,
-  summaryType: SummaryType,
-  useCloudContext = false
+  summaryType: SummaryType
 ): {
   systemPrompt: string;
   userPrompt: string;
 } {
   const systemPrompt = SYSTEM_PROMPTS[summaryType];
-  const paperContext = buildPaperContext(paper, useCloudContext);
+  const paperContext = buildPaperContext(paper);
 
   const contentNote = paper.hasFullText
     ? "You have access to the full paper content."
@@ -130,8 +126,7 @@ ${paperContext}`;
 // Build prompt for Q&A
 export function buildQAPrompt(
   paper: PaperMetadata,
-  question: string,
-  useCloudContext = false
+  question: string
 ): {
   systemPrompt: string;
   userPrompt: string;
@@ -147,7 +142,7 @@ Rules:
 - If asked about something not covered, suggest what might be relevant
 ${hasFullText ? "- You have access to the full paper text, so you can answer detailed questions about methodology, results, and specific sections." : "- Note: You only have access to the abstract, so some detailed questions may not be answerable."}`;
 
-  const paperContext = buildPaperContext(paper, useCloudContext);
+  const paperContext = buildPaperContext(paper);
 
   const userPrompt = `Paper information:
 ${paperContext}

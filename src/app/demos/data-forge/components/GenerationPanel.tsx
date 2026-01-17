@@ -1,130 +1,115 @@
 "use client";
 
+import { useState } from "react";
 import type { Schema, GenerationProgress } from "../types";
-import { MODEL_OPTIONS, DEFAULT_MODEL_ID } from "../types";
+
+export const AVAILABLE_MODELS = [
+  { id: "auto", name: "Auto (Recommended)", description: "Picks best available model with fallback" },
+  { id: "google/gemini-2.0-flash-exp:free", name: "Gemini 2.0 Flash", description: "1M context, fast JSON generation" },
+  { id: "meta-llama/llama-3.3-70b-instruct:free", name: "Llama 3.3 70B", description: "131K context, reliable JSON" },
+  { id: "google/gemma-3-27b-it:free", name: "Gemma 3 27B", description: "131K context, good fallback" },
+  { id: "deepseek/deepseek-r1-0528:free", name: "DeepSeek R1", description: "164K context, reasoning model" },
+  { id: "qwen/qwen3-coder:free", name: "Qwen3 Coder 480B", description: "262K context, coding optimized" },
+];
 
 interface GenerationPanelProps {
   schema: Schema;
   progress: GenerationProgress;
-  isModelReady: boolean;
-  isModelLoading: boolean;
-  modelLoadProgress: number;
-  loadedModelId: string | null;
-  selectedModelId: string;
-  onModelSelect: (modelId: string) => void;
+  isGenerating: boolean;
+  rateLimitRemaining: number | null;
+  selectedModel: string;
+  onModelChange: (modelId: string) => void;
   onGenerate: () => void;
-  onLoadModel: () => void;
 }
 
 export default function GenerationPanel({
   schema,
   progress,
-  isModelReady,
-  isModelLoading,
-  modelLoadProgress,
-  loadedModelId,
-  selectedModelId,
-  onModelSelect,
+  isGenerating,
+  rateLimitRemaining,
+  selectedModel,
+  onModelChange,
   onGenerate,
-  onLoadModel,
 }: GenerationPanelProps) {
-  const canGenerate = schema.tables.length > 0 && isModelReady && progress.status !== "generating";
-  const isGenerating = progress.status === "generating";
+  const [isOpen, setIsOpen] = useState(false);
+  // Consider both hook state and progress status for generation check
+  const isCurrentlyGenerating = isGenerating || progress.status === "generating";
+  const canGenerate = schema.tables.length > 0 && !isCurrentlyGenerating;
   const totalRows = schema.tables.reduce((sum, t) => sum + t.rowCount, 0);
-  const selectedModel = MODEL_OPTIONS.find((m) => m.id === selectedModelId);
-  const loadedModel = MODEL_OPTIONS.find((m) => m.id === loadedModelId);
+  const currentModel = AVAILABLE_MODELS.find(m => m.id === selectedModel) || AVAILABLE_MODELS[0];
 
   return (
     <div className="mb-8 p-6 border border-neutral-200 dark:border-neutral-800 rounded-lg">
-      {/* Model Selection */}
+      {/* Model Selector */}
       <div className="mb-6">
-        <label className="block text-sm font-medium mb-3">Select AI Model</label>
-        <div className="grid md:grid-cols-3 gap-3">
-          {MODEL_OPTIONS.map((model) => (
-            <button
-              key={model.id}
-              onClick={() => onModelSelect(model.id)}
-              disabled={isModelLoading || isGenerating}
-              className={`p-4 rounded-lg border text-left transition ${
-                selectedModelId === model.id
-                  ? "border-green-500 bg-green-50 dark:bg-green-900/20"
-                  : "border-neutral-200 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-500"
-              } ${(isModelLoading || isGenerating) ? "opacity-50 cursor-not-allowed" : ""}`}
-            >
-              <div className="flex items-center justify-between mb-1">
-                <span className="font-medium">{model.name}</span>
-                {loadedModelId === model.id && (
-                  <span className="text-xs px-2 py-0.5 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded">
-                    Loaded
-                  </span>
-                )}
-              </div>
-              <div className="text-xs text-neutral-500 space-y-0.5">
-                <div>{model.size} download</div>
-                <div>{model.vramRequired} VRAM required</div>
-                <div className="text-neutral-400">{model.description}</div>
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Model status */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div
-            className={`w-2.5 h-2.5 rounded-full ${
-              isModelReady && loadedModelId === selectedModelId
-                ? "bg-green-500"
-                : isModelLoading
-                ? "bg-yellow-500 animate-pulse"
-                : "bg-neutral-300 dark:bg-neutral-600"
-            }`}
-          />
-          <span className="text-sm">
-            {isModelReady && loadedModelId === selectedModelId
-              ? `${loadedModel?.name} ready`
-              : isModelLoading
-              ? `Loading ${selectedModel?.name}...`
-              : loadedModelId && loadedModelId !== selectedModelId
-              ? `${loadedModel?.name} loaded (switch to ${selectedModel?.name}?)`
-              : "No model loaded"}
-          </span>
-        </div>
-
-        {!isModelLoading && (!isModelReady || loadedModelId !== selectedModelId) && (
+        <h3 className="font-medium mb-3">AI Model</h3>
+        <div className="relative">
           <button
-            onClick={onLoadModel}
-            className="px-3 py-1.5 text-sm bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-lg hover:opacity-80 transition"
+            onClick={() => setIsOpen(!isOpen)}
+            disabled={isCurrentlyGenerating}
+            className={`w-full p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg text-left transition ${
+              isCurrentlyGenerating ? "opacity-50 cursor-not-allowed" : "hover:bg-neutral-100 dark:hover:bg-neutral-800"
+            }`}
           >
-            {loadedModelId && loadedModelId !== selectedModelId
-              ? `Switch to ${selectedModel?.name}`
-              : `Load ${selectedModel?.name}`}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className={`w-2.5 h-2.5 rounded-full ${isCurrentlyGenerating ? "bg-yellow-500 animate-pulse" : "bg-green-500"}`} />
+                <div>
+                  <div className="font-medium text-sm">{currentModel.name}</div>
+                  <div className="text-xs text-neutral-500">{currentModel.description}</div>
+                </div>
+              </div>
+              <svg
+                className={`w-5 h-5 text-neutral-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
           </button>
-        )}
-      </div>
 
-      {/* Model loading progress */}
-      {isModelLoading && (
-        <div className="mb-4">
-          <div className="flex items-center justify-between text-sm text-neutral-500 mb-1">
-            <span>Downloading {selectedModel?.name} ({selectedModel?.size})</span>
-            <span>{Math.round(modelLoadProgress * 100)}%</span>
-          </div>
-          <div className="w-full h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-yellow-500 transition-all duration-300"
-              style={{ width: `${modelLoadProgress * 100}%` }}
-            />
-          </div>
-          <p className="text-xs text-neutral-400 mt-1">
-            This only needs to be done once per model. Models are cached locally.
-          </p>
+          {/* Dropdown */}
+          {isOpen && !isCurrentlyGenerating && (
+            <div className="absolute z-10 w-full mt-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-lg overflow-hidden">
+              {AVAILABLE_MODELS.map((model) => (
+                <button
+                  key={model.id}
+                  onClick={() => {
+                    onModelChange(model.id);
+                    setIsOpen(false);
+                  }}
+                  className={`w-full p-3 text-left hover:bg-neutral-50 dark:hover:bg-neutral-800 transition ${
+                    selectedModel === model.id ? "bg-green-50 dark:bg-green-900/20" : ""
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-2 h-2 rounded-full ${
+                      selectedModel === model.id ? "bg-green-500" : "bg-neutral-300 dark:bg-neutral-600"
+                    }`} />
+                    <div>
+                      <div className="font-medium text-sm">{model.name}</div>
+                      <div className="text-xs text-neutral-500">{model.description}</div>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Rate limit info */}
+        <div className="mt-3 text-xs text-neutral-500">
+          {rateLimitRemaining !== null && (
+            <p>Rate limit: {rateLimitRemaining} requests remaining this minute</p>
+          )}
+          <p className="mt-1">All models are free via OpenRouter</p>
+        </div>
+      </div>
 
       {/* Generation progress */}
-      {isGenerating && (
+      {isCurrentlyGenerating && (
         <div className="mb-4">
           <div className="flex items-center justify-between text-sm text-neutral-500 mb-1">
             <span>
@@ -156,14 +141,14 @@ export default function GenerationPanel({
       <div className="flex items-center gap-4">
         <button
           onClick={onGenerate}
-          disabled={!canGenerate || loadedModelId !== selectedModelId}
+          disabled={!canGenerate}
           className={`px-6 py-2.5 rounded-lg font-medium transition ${
-            canGenerate && loadedModelId === selectedModelId
+            canGenerate
               ? "bg-green-600 hover:bg-green-700 text-white"
               : "bg-neutral-200 dark:bg-neutral-700 text-neutral-400 cursor-not-allowed"
           }`}
         >
-          {isGenerating ? (
+          {isCurrentlyGenerating ? (
             <span className="flex items-center gap-2">
               <svg
                 className="w-4 h-4 animate-spin"
@@ -200,9 +185,9 @@ export default function GenerationPanel({
       </div>
 
       {/* Help text */}
-      {!isModelReady && schema.tables.length > 0 && (
+      {schema.tables.length === 0 && (
         <p className="mt-3 text-sm text-neutral-500">
-          Select and load an AI model to generate data. All models run entirely in your browser.
+          Add tables to your schema to start generating data.
         </p>
       )}
     </div>
