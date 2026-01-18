@@ -646,44 +646,62 @@ export function buildJsonSchema(table: Table): string {
   return JSON.stringify(schema);
 }
 
-// Topological sort for table dependencies
-export function getTableGenerationOrder(schema: Schema): Table[] {
+// Get table dependencies (which tables must be generated before this one)
+function getTableDependencies(tableId: string, schema: Schema): string[] {
+  return schema.foreignKeys
+    .filter((fk) => fk.sourceTableId === tableId)
+    .map((fk) => fk.targetTableId);
+}
+
+// Group tables by dependency level for parallel generation
+// Level 0: no dependencies, Level 1: depends only on Level 0, etc.
+export function getTableGenerationLevels(schema: Schema): Table[][] {
   const tables = [...schema.tables];
-  const result: Table[] = [];
-  const visited = new Set<string>();
-  const visiting = new Set<string>();
+  const levels: Table[][] = [];
+  const assignedLevel = new Map<string, number>();
 
-  function getDependencies(tableId: string): string[] {
-    return schema.foreignKeys
-      .filter((fk) => fk.sourceTableId === tableId)
-      .map((fk) => fk.targetTableId);
-  }
-
-  function visit(tableId: string): void {
-    if (visited.has(tableId)) return;
-    if (visiting.has(tableId)) {
-      // Circular dependency - just proceed
-      return;
+  // Calculate level for each table
+  function calculateLevel(tableId: string, visited: Set<string>): number {
+    if (assignedLevel.has(tableId)) {
+      return assignedLevel.get(tableId)!;
     }
 
-    visiting.add(tableId);
-
-    for (const depId of getDependencies(tableId)) {
-      visit(depId);
+    // Circular dependency detection
+    if (visited.has(tableId)) {
+      return 0;
     }
-
-    visiting.delete(tableId);
     visited.add(tableId);
 
-    const table = tables.find((t) => t.id === tableId);
-    if (table) {
-      result.push(table);
+    const deps = getTableDependencies(tableId, schema);
+    if (deps.length === 0) {
+      assignedLevel.set(tableId, 0);
+      return 0;
     }
+
+    const maxDepLevel = Math.max(...deps.map(depId => calculateLevel(depId, visited)));
+    const level = maxDepLevel + 1;
+    assignedLevel.set(tableId, level);
+    return level;
   }
 
+  // Calculate levels for all tables
   for (const table of tables) {
-    visit(table.id);
+    calculateLevel(table.id, new Set());
   }
 
-  return result;
+  // Group tables by level
+  for (const table of tables) {
+    const level = assignedLevel.get(table.id) || 0;
+    while (levels.length <= level) {
+      levels.push([]);
+    }
+    levels[level].push(table);
+  }
+
+  return levels;
+}
+
+// Legacy function for backward compatibility
+export function getTableGenerationOrder(schema: Schema): Table[] {
+  return getTableGenerationLevels(schema).flat();
 }
