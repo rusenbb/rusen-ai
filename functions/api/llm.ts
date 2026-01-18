@@ -135,7 +135,7 @@ async function tryWithFallback(
   stream: boolean,
   wantsJsonMode: boolean
 ): Promise<{ response: Response; model: string }> {
-  let lastError: Error | null = null;
+  const errors: string[] = [];
 
   for (const model of models) {
     try {
@@ -167,6 +167,8 @@ async function tryWithFallback(
 
       // If payment required (402), rate limited (429), or server error (5xx), try next model
       if (response.status === 402 || response.status === 429 || response.status >= 500) {
+        const shortModel = model.split("/").pop() || model;
+        errors.push(`${shortModel}:${response.status}`);
         console.log(`Model ${model} unavailable (${response.status}), trying next...`);
         continue;
       }
@@ -174,14 +176,16 @@ async function tryWithFallback(
       // Other errors, return as-is
       return { response, model };
     } catch (err) {
-      lastError = err instanceof Error ? err : new Error(String(err));
-      console.log(`Model ${model} failed: ${lastError.message}, trying next...`);
+      const shortModel = model.split("/").pop() || model;
+      const errMsg = err instanceof Error ? err.message : String(err);
+      errors.push(`${shortModel}:${errMsg.slice(0, 30)}`);
+      console.log(`Model ${model} failed: ${errMsg}, trying next...`);
       continue;
     }
   }
 
-  // All models failed, throw last error
-  throw lastError || new Error("All models failed");
+  // All models failed, throw with details
+  throw new Error(`All models failed: ${errors.join(", ")}`);
 }
 
 // Handle POST requests for chat completions
