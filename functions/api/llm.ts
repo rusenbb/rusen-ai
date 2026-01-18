@@ -47,6 +47,13 @@ const MODELS = {
 
 type UseCase = keyof typeof MODELS;
 
+// Models that support response_format: { type: "json_object" }
+const JSON_MODE_SUPPORTED = new Set([
+  "google/gemini-2.0-flash-exp:free",
+  "google/gemma-3-27b-it:free",
+  // Note: Llama, DeepSeek, Qwen may not reliably support JSON mode
+]);
+
 // Simple in-memory rate limiting (resets on cold start)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
@@ -110,13 +117,22 @@ async function tryWithFallback(
   apiKey: string,
   requestBody: Record<string, unknown>,
   models: string[],
-  stream: boolean
+  stream: boolean,
+  wantsJsonMode: boolean
 ): Promise<{ response: Response; model: string }> {
   let lastError: Error | null = null;
 
   for (const model of models) {
     try {
       const body = { ...requestBody, model };
+
+      // Only add JSON mode for models that support it
+      if (wantsJsonMode && JSON_MODE_SUPPORTED.has(model)) {
+        body.response_format = { type: "json_object" };
+      } else {
+        // Remove response_format if present (model doesn't support it)
+        delete body.response_format;
+      }
 
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
@@ -215,17 +231,16 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       stream: body.stream ?? false,
     };
 
-    // Add JSON mode if requested
-    if (body.response_format?.type === "json_object") {
-      requestBody.response_format = { type: "json_object" };
-    }
+    // Check if JSON mode is requested
+    const wantsJsonMode = body.response_format?.type === "json_object";
 
-    // Try with fallback models
+    // Try with fallback models (JSON mode is handled per-model inside)
     const { response, model } = await tryWithFallback(
       apiKey,
       requestBody,
       models,
-      body.stream ?? false
+      body.stream ?? false,
+      wantsJsonMode
     );
 
     // Handle streaming response
