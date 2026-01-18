@@ -1,6 +1,6 @@
 "use client";
 
-import { useReducer, useCallback, useRef } from "react";
+import { useReducer, useCallback, useRef, useState } from "react";
 import {
   TemperaturePlaygroundState,
   TemperaturePlaygroundAction,
@@ -11,6 +11,8 @@ import {
   DEFAULT_TEMPERATURES,
 } from "./types";
 import { useAPILLM } from "./hooks/useAPILLM";
+import ProbabilityVisualization from "./components/ProbabilityVisualization";
+import TokenExplorer from "./components/TokenExplorer";
 
 // System prompt for consistent responses
 const SYSTEM_PROMPT = `You are a helpful assistant. Respond concisely to the user's request.
@@ -27,12 +29,15 @@ const TEMP_LABELS: Record<number, { label: string; description: string }> = {
   1.5: { label: "Chaotic", description: "Very high variance" },
 };
 
+type ViewMode = "compare" | "explore";
+
 export default function TemperaturePlaygroundPage() {
   const [state, dispatch] = useReducer(
     temperatureReducer,
     null,
     createInitialState
   );
+  const [viewMode, setViewMode] = useState<ViewMode>("compare");
 
   const { generate, abort } = useAPILLM(state.selectedModel);
   const mountedRef = useRef(true);
@@ -110,6 +115,30 @@ export default function TemperaturePlaygroundPage() {
         </p>
       </div>
 
+      {/* View Mode Tabs */}
+      <div className="mb-8 flex gap-2">
+        <button
+          onClick={() => setViewMode("compare")}
+          className={`px-4 py-2 rounded-lg font-medium transition ${
+            viewMode === "compare"
+              ? "bg-neutral-900 dark:bg-white text-white dark:text-neutral-900"
+              : "bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+          }`}
+        >
+          Compare Outputs
+        </button>
+        <button
+          onClick={() => setViewMode("explore")}
+          className={`px-4 py-2 rounded-lg font-medium transition ${
+            viewMode === "explore"
+              ? "bg-neutral-900 dark:bg-white text-white dark:text-neutral-900"
+              : "bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+          }`}
+        >
+          Token Explorer
+        </button>
+      </div>
+
       {/* Educational Panel */}
       <div className="mb-8 p-4 bg-neutral-100 dark:bg-neutral-800/50 rounded-lg border border-neutral-200 dark:border-neutral-700">
         <h3 className="font-semibold mb-2">What is Temperature?</h3>
@@ -121,8 +150,21 @@ export default function TemperaturePlaygroundPage() {
         </p>
       </div>
 
+      {/* Probability Visualization - always visible for education */}
+      <ProbabilityVisualization temperatures={state.temperatures} />
+
+      {/* Token Explorer Mode */}
+      {viewMode === "explore" && (
+        <div className="mt-8">
+          <TokenExplorer disabled={state.isAnyGenerating} />
+        </div>
+      )}
+
+      {/* Compare Mode - Input Section */}
+      {viewMode === "compare" && (
+        <>
       {/* Input Section */}
-      <div className="mb-8 p-6 border border-neutral-200 dark:border-neutral-800 rounded-lg">
+      <div className="mt-8 mb-8 p-6 border border-neutral-200 dark:border-neutral-800 rounded-lg">
         <div className="flex flex-col md:flex-row gap-4 mb-4">
           {/* Prompt Input */}
           <div className="flex-1">
@@ -294,6 +336,8 @@ export default function TemperaturePlaygroundPage() {
           );
         })}
       </div>
+        </>
+      )}
 
       {/* Visual Temperature Scale */}
       <div className="mt-12 p-6 border border-neutral-200 dark:border-neutral-800 rounded-lg">
