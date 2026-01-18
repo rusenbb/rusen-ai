@@ -28,7 +28,7 @@ export default function DemosPage() {
           description="Describe what you need in plain English, get SQL queries instantly."
           href="/demos/query-craft"
           tags={["Text-to-SQL", "NLP"]}
-          status="coming-soon"
+          status="live"
         />
         <DemoCard
           title="Classify Anything"
