@@ -15,7 +15,7 @@ import {
   type GeneratedData,
   type TableQuality,
 } from "./types";
-import { buildGenerationPrompt, parseGeneratedData, getTableGenerationOrder } from "./utils/prompts";
+import { buildGenerationPrompt, parseGeneratedData, getTableGenerationLevels } from "./utils/prompts";
 
 function dataForgeReducer(state: DataForgeState, action: DataForgeAction): DataForgeState {
   switch (action.type) {
@@ -205,31 +205,47 @@ export default function DataForgePage() {
     });
 
     try {
-      const orderedTables = getTableGenerationOrder(state.schema);
+      // Get tables grouped by dependency level for parallel generation
+      const levels = getTableGenerationLevels(state.schema);
       const generatedData: GeneratedData = {};
       const qualityReport: TableQuality[] = [];
+      let tablesCompleted = 0;
 
-      for (let i = 0; i < orderedTables.length; i++) {
-        const table = orderedTables[i];
-
+      // Process each level - tables within a level can run in parallel
+      for (const levelTables of levels) {
+        // Update progress to show which tables are being generated
+        const tableNames = levelTables.map(t => t.name).join(", ");
         dispatch({
           type: "SET_GENERATION_PROGRESS",
           progress: {
-            currentTable: table.name,
-            tablesCompleted: i,
+            currentTable: levelTables.length > 1 ? `${tableNames} (parallel)` : tableNames,
+            tablesCompleted,
           },
         });
 
-        const prompt = buildGenerationPrompt(table, state.schema, generatedData);
-        const response = await generate(prompt);
-        const result = parseGeneratedData(response, table, state.schema, generatedData);
+        // Generate all tables in this level in parallel
+        const results = await Promise.all(
+          levelTables.map(async (table) => {
+            const prompt = buildGenerationPrompt(table, state.schema, generatedData);
+            const response = await generate(prompt);
+            return {
+              table,
+              result: parseGeneratedData(response, table, state.schema, generatedData),
+            };
+          })
+        );
 
-        generatedData[table.name] = result.rows;
-        qualityReport.push({
-          tableName: table.name,
-          quality: result.quality,
-          issues: result.issues,
-        });
+        // Collect results (order doesn't matter within a level)
+        for (const { table, result } of results) {
+          generatedData[table.name] = result.rows;
+          qualityReport.push({
+            tableName: table.name,
+            quality: result.quality,
+            issues: result.issues,
+          });
+        }
+
+        tablesCompleted += levelTables.length;
       }
 
       dispatch({ type: "SET_GENERATED_DATA", data: generatedData });
