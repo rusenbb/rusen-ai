@@ -2,8 +2,8 @@
 
 import { useReducer, useCallback, useEffect, useRef } from "react";
 import { useEmbeddings, cosineSimilarity } from "./hooks/useEmbeddings";
-import { reduceToTwoDimensions } from "./utils/umap";
-import Visualization from "./components/Visualization";
+import { reduceToThreeDimensions } from "./utils/umap";
+import Visualization3D from "./components/Visualization3D";
 import TextInput from "./components/TextInput";
 import DatasetSelector from "./components/DatasetSelector";
 import SearchPanel from "./components/SearchPanel";
@@ -29,6 +29,7 @@ function reducer(state: EmbeddingExplorerState, action: EmbeddingExplorerAction)
         embedding: null,
         x: null,
         y: null,
+        z: null,
       };
       return {
         ...state,
@@ -47,6 +48,7 @@ function reducer(state: EmbeddingExplorerState, action: EmbeddingExplorerAction)
         embedding: null,
         x: null,
         y: null,
+        z: null,
       }));
       const newCategories = new Set([
         ...state.categories,
@@ -84,7 +86,7 @@ function reducer(state: EmbeddingExplorerState, action: EmbeddingExplorerAction)
     case "SET_PROJECTIONS": {
       const updatedTexts = state.texts.map((t) => {
         const proj = action.projections.get(t.id);
-        return proj ? { ...t, x: proj.x, y: proj.y } : t;
+        return proj ? { ...t, x: proj.x, y: proj.y, z: proj.z } : t;
       });
       return { ...state, texts: updatedTexts };
     }
@@ -133,6 +135,7 @@ function reducer(state: EmbeddingExplorerState, action: EmbeddingExplorerAction)
         embedding: null,
         x: null,
         y: null,
+        z: null,
       }));
 
       const newCategories = new Set([
@@ -212,19 +215,19 @@ export default function EmbeddingExplorerPage() {
         })).filter((t) => t.embedding !== null);
 
         if (allTextsWithEmbeddings.length >= 2) {
-          // Run UMAP
+          // Run UMAP for 3D
           dispatch({ type: "SET_REDUCING", isReducing: true });
 
-          const projections = await reduceToTwoDimensions(
+          const projections = await reduceToThreeDimensions(
             allTextsWithEmbeddings.map((t) => ({
               id: t.id,
               embedding: t.embedding!,
             }))
           );
 
-          const projectionMap = new Map<string, { x: number; y: number }>();
+          const projectionMap = new Map<string, { x: number; y: number; z: number }>();
           projections.forEach((p) => {
-            projectionMap.set(p.id, { x: p.x, y: p.y });
+            projectionMap.set(p.id, { x: p.x, y: p.y, z: p.z });
           });
 
           dispatch({ type: "SET_PROJECTIONS", projections: projectionMap });
@@ -363,15 +366,15 @@ export default function EmbeddingExplorerPage() {
             </div>
             <div className="text-xs text-neutral-500">
               {state.texts.filter((t) => t.embedding !== null).length} embedded,{" "}
-              {state.texts.filter((t) => t.x !== null).length} projected
+              {state.texts.filter((t) => t.x !== null && t.z !== null).length} projected to 3D
             </div>
           </div>
         </div>
 
         {/* Right content - visualization & details */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Visualization */}
-          <Visualization
+          {/* 3D Visualization */}
+          <Visualization3D
             items={state.texts}
             selectedPointId={state.selectedPointId}
             hoveredPointId={state.hoveredPointId}
@@ -414,9 +417,9 @@ export default function EmbeddingExplorerPage() {
           Transformers.js.
         </p>
         <p className="mb-2">
-          <strong>UMAP:</strong> The high-dimensional vectors are reduced to 2D using UMAP
+          <strong>UMAP to 3D:</strong> The high-dimensional vectors are reduced to 3D using UMAP
           (Uniform Manifold Approximation and Projection), which preserves both local
-          neighborhood structure and global topology.
+          neighborhood structure and global topology. The 3D space is rendered using Three.js.
         </p>
         <p>
           <strong>Similarity:</strong> Search uses cosine similarity to find texts with
