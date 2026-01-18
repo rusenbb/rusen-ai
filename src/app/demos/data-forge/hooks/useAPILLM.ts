@@ -6,6 +6,7 @@ interface UseAPILLMReturn {
   isGenerating: boolean;
   error: string | null;
   rateLimitRemaining: number | null;
+  lastModelUsed: string | null;
   generate: (prompt: string) => Promise<string>;
 }
 
@@ -13,6 +14,7 @@ export function useAPILLM(selectedModel: string = "auto"): UseAPILLMReturn {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rateLimitRemaining, setRateLimitRemaining] = useState<number | null>(null);
+  const [lastModelUsed, setLastModelUsed] = useState<string | null>(null);
 
   const generate = useCallback(async (prompt: string): Promise<string> => {
     setIsGenerating(true);
@@ -52,6 +54,12 @@ export function useAPILLM(selectedModel: string = "auto"): UseAPILLMReturn {
         setRateLimitRemaining(parseInt(remaining, 10));
       }
 
+      // Track which model was used
+      const modelUsed = response.headers.get("X-Model-Used");
+      if (modelUsed) {
+        setLastModelUsed(modelUsed);
+      }
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || `API error: ${response.status}`);
@@ -82,6 +90,7 @@ export function useAPILLM(selectedModel: string = "auto"): UseAPILLMReturn {
     isGenerating,
     error,
     rateLimitRemaining,
+    lastModelUsed,
     generate,
   };
 }

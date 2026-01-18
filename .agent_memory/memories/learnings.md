@@ -1,43 +1,75 @@
 # Learnings & Gotchas
 
-## Qwen3 Think Tags Cause Output Truncation — 2025-01-11 (Updated 2026-01-15)
+## SSE Streaming Requires Line Buffering — 2026-01-18
 
-**Problem**: Qwen3 models emit `<think>...</think>` tags for chain-of-thought reasoning. The model behavior is unpredictable - it may put response inside tags, use multiple tags, or leave tags unclosed.
+**Problem**: Server-Sent Events (SSE) data can be split across multiple chunks. Naive parsing truncates responses.
 
-**Bad approaches**:
+**Bad approach**:
 ```typescript
-// V1: Destroys content after unclosed <think> tags
-content = content.replace(/<think>[\s\S]*/, "");
-
-// V2: Complex logic that truncates at second <think> tag
-const unclosedIndex = result.indexOf("<think>");
-result = beforeThink || afterThink; // Misses content after multiple tags
-```
-
-**Solution** (in `useWebLLM.ts`) - keep it simple:
-```typescript
-function stripThinkTags(content: string): string {
-  // Remove complete <think>...</think> blocks (non-greedy)
-  let result = content.replace(/<think>[\s\S]*?<\/think>/g, "");
-
-  // Remove any remaining orphaned <think> or </think> tags
-  result = result.replace(/<\/?think>/g, "");
-
-  return result.trim();
+// Doesn't handle incomplete lines
+const data = decoder.decode(value);
+for (const line of data.split("\n")) {
+  // May miss data split across chunks
 }
 ```
 
-**Why this works**: Only content inside COMPLETE `<think>...</think>` blocks is removed. All other content is preserved, with just the tag text stripped. Handles all edge cases: unclosed tags, multiple tags, streaming.
+**Solution** (in `useAPILLM.ts`):
+```typescript
+let buffer = "";
 
-**Also**: Append `/no_think` to user prompts to suppress thinking mode (but Qwen3 0.6B often ignores this).
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
 
-## WebLLM Qwen3 Context Limit is Real — 2026-01-15
+  buffer += decoder.decode(value, { stream: true });
+  const parts = buffer.split("\n");
+  buffer = parts.pop() || "";  // Keep incomplete line in buffer
 
-**Problem**: WebLLM sets `context_window_size: 4096` for Qwen3 models. Attempted to override to 32k since native Qwen3 supports it.
+  for (const line of parts) {
+    if (line.startsWith("data: ")) {
+      // Process complete line
+    }
+  }
+}
+```
 
-**Result**: Model starts repeating itself when context exceeds 4096. The limit is a real constraint of the WebLLM/MLC compilation, not arbitrary.
+## Model Fallback on Rate Limits — 2026-01-18
 
-**Solution**: Respect the 4096 limit. Allocate ~2500 for input, ~1500 for output.
+**Problem**: Free tier models on OpenRouter hit rate limits (429) or payment required (402) errors.
+
+**Solution**: Automatic fallback chain in `functions/api/llm.ts`:
+```typescript
+for (const model of models) {
+  const response = await fetch(...);
+  if (response.ok) return { response, model };
+  if (response.status === 402 || response.status === 429 || response.status >= 500) {
+    continue;  // Try next model
+  }
+  return { response, model };  // Other errors, return as-is
+}
+```
+
+Users see seamless operation; the proxy silently falls back to available models.
+
+## DeepSeek R1 Reasoning Tokens Truncate Output — 2026-01-18
+
+**Problem**: DeepSeek R1 uses "reasoning tokens" for chain-of-thought. When streaming, this can cause output to appear truncated or incomplete because the model spends tokens on internal reasoning.
+
+**Solution**: Prioritize non-reasoning models (Gemini, Llama, Gemma) for summarization tasks. DeepSeek R1 is later in the fallback chain.
+
+---
+
+## [HISTORICAL] Qwen3 Think Tags — 2025-01-11
+
+> **Context**: This applied to WebLLM browser inference, which was removed in January 2026.
+
+Qwen3 models emit `<think>...</think>` tags for chain-of-thought. Cloud models via OpenRouter may still exhibit this behavior, but it's less of an issue with larger models.
+
+## [HISTORICAL] WebLLM Context Limit — 2026-01-15
+
+> **Context**: This led to the decision to migrate to API-based inference.
+
+WebLLM Qwen3 models were hard-limited to 4096 context tokens. This proved too restrictive for Paper Pilot (academic papers). The migration to OpenRouter resolved this with models supporting 131K-1M context.
 
 ## Semantic Scholar CORS Requires Proxy — 2025-01-11
 

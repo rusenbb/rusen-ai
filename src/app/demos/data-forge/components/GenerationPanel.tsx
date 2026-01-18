@@ -17,6 +17,7 @@ interface GenerationPanelProps {
   progress: GenerationProgress;
   isGenerating: boolean;
   rateLimitRemaining: number | null;
+  lastModelUsed: string | null;
   selectedModel: string;
   onModelChange: (modelId: string) => void;
   onGenerate: () => void;
@@ -27,6 +28,7 @@ export default function GenerationPanel({
   progress,
   isGenerating,
   rateLimitRemaining,
+  lastModelUsed,
   selectedModel,
   onModelChange,
   onGenerate,
@@ -37,6 +39,7 @@ export default function GenerationPanel({
   const canGenerate = schema.tables.length > 0 && !isCurrentlyGenerating;
   const totalRows = schema.tables.reduce((sum, t) => sum + t.rowCount, 0);
   const currentModel = AVAILABLE_MODELS.find(m => m.id === selectedModel) || AVAILABLE_MODELS[0];
+  const usedModel = lastModelUsed ? AVAILABLE_MODELS.find(m => m.id === lastModelUsed) : null;
 
   return (
     <div className="mb-8 p-6 border border-neutral-200 dark:border-neutral-800 rounded-lg">
@@ -99,12 +102,17 @@ export default function GenerationPanel({
           )}
         </div>
 
-        {/* Rate limit info */}
-        <div className="mt-3 text-xs text-neutral-500">
+        {/* Model info */}
+        <div className="mt-3 text-xs text-neutral-500 space-y-1">
+          {usedModel && (
+            <p className="text-green-600 dark:text-green-400">
+              Last used: {usedModel.name}
+            </p>
+          )}
           {rateLimitRemaining !== null && (
             <p>Rate limit: {rateLimitRemaining} requests remaining this minute</p>
           )}
-          <p className="mt-1">All models are free via OpenRouter</p>
+          <p>All models are free via OpenRouter</p>
         </div>
       </div>
 

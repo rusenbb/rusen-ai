@@ -191,7 +191,7 @@ function dataForgeReducer(state: DataForgeState, action: DataForgeAction): DataF
 export default function DataForgePage() {
   const [state, dispatch] = useReducer(dataForgeReducer, initialState);
   const [selectedModel, setSelectedModel] = useState<string>("auto");
-  const { isGenerating, error, rateLimitRemaining, generate } = useAPILLM(selectedModel);
+  const { isGenerating, error, rateLimitRemaining, lastModelUsed, generate } = useAPILLM(selectedModel);
 
   const handleGenerate = useCallback(async () => {
     dispatch({
@@ -273,6 +273,7 @@ export default function DataForgePage() {
         progress={state.generationProgress}
         isGenerating={isGenerating}
         rateLimitRemaining={rateLimitRemaining}
+        lastModelUsed={lastModelUsed}
         selectedModel={selectedModel}
         onModelChange={setSelectedModel}
         onGenerate={handleGenerate}

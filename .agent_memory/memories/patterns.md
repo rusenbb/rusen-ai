@@ -1,42 +1,56 @@
 # Code Patterns
 
-## WebLLM Hook Pattern — 2025-01-11
+## API LLM Hook Pattern — 2026-01-18
 
-The project uses a custom `useWebLLM` hook for browser-based LLM inference. Two variants exist:
+The project uses a custom `useAPILLM` hook for cloud-based LLM inference via OpenRouter.
 
-### Paper Pilot variant (streaming support)
-Location: `src/app/demos/paper-pilot/hooks/useWebLLM.ts`
+### Interface
+Location: `src/app/demos/paper-pilot/hooks/useAPILLM.ts`
 
 ```typescript
-interface UseWebLLMReturn {
-  isLoading: boolean;
-  loadProgress: number;
+interface UseAPILLMReturn {
+  isGenerating: boolean;
   error: string | null;
-  isReady: boolean;
-  isSupported: boolean | null;
-  loadedModelId: string | null;
-  loadModel: (modelId: string) => Promise<void>;
-  generate: (systemPrompt: string, userPrompt: string, onStream?: (text: string) => void) => Promise<string>;
-  unload: () => Promise<void>;
+  rateLimitRemaining: number | null;
+  generate: (
+    systemPrompt: string,
+    userPrompt: string,
+    onStream?: (text: string) => void
+  ) => Promise<string>;
 }
+
+export function useAPILLM(selectedModel: string = "auto"): UseAPILLMReturn;
 ```
 
 Key features:
-- WebGPU support check with fallback messaging
-- Model hot-swapping (unload old model before loading new)
-- Loading progress callback
-- Streaming support via `onStream` callback
-- Qwen3 think-tag stripping (`/no_think` suffix + regex cleanup)
-- Mounted ref to prevent state updates after unmount
-- Loading lock to prevent race conditions
+- SSE streaming with proper line buffering
+- Rate limit tracking via `X-RateLimit-Remaining` header
+- Model selection (pass "auto" or specific model ID)
+- Error handling with user-friendly messages
 
-### Data Forge variant (JSON schema support)
-Location: `src/app/demos/data-forge/hooks/useWebLLM.ts`
+### Usage
+```typescript
+const { isGenerating, error, rateLimitRemaining, generate } = useAPILLM(selectedModel);
 
-Same interface but `generate` uses:
-- `response_format: { type: "json_object", schema }` for structured output
-- Lower temperature (0.3 vs 0.5) for deterministic JSON
-- System prompt optimized for JSON-only output
+const result = await generate(
+  systemPrompt,
+  userPrompt,
+  (text) => setStreamedOutput(text)  // Optional streaming callback
+);
+```
+
+### Data Forge variant
+Location: `src/app/demos/data-forge/hooks/useAPILLM.ts`
+
+Same interface but configured with:
+- `use_case: "data-forge"` for appropriate model fallback order
+- `response_format: { type: "json_object" }` for structured output
+
+---
+
+## [SUPERSEDED] WebLLM Hook Pattern — 2025-01-11
+
+> **Note**: WebLLM was removed in January 2026. The `useWebLLM.ts` hooks no longer exist.
 
 ## Reducer Pattern for Demo State — 2025-01-11
 
@@ -130,6 +144,32 @@ async function fetchPaper(input: string, onProgress?: (step: string) => void): P
   }
 }
 ```
+
+## LLM Proxy Pattern — 2026-01-18
+
+OpenRouter API calls are proxied through a Cloudflare Pages Function for security and reliability.
+
+Location: `functions/api/llm.ts`
+
+```typescript
+// Request body
+interface LLMRequest {
+  messages: Array<{ role: string; content: string }>;
+  model?: string;       // Optional: specific model ID
+  max_tokens?: number;  // Default: 16384
+  temperature?: number; // Default: 0.5
+  stream?: boolean;     // Default: false
+  use_case?: string;    // "paper-pilot" | "data-forge" (for fallback order)
+  response_format?: { type: "json_object" };  // For structured output
+}
+```
+
+Key features:
+- **API key rotation**: Up to 10 keys, round-robin selection
+- **Rate limiting**: 30 req/min per IP (in-memory, resets on cold start)
+- **Model fallback**: If model fails (402/429/5xx), automatically tries next in chain
+- **Use-case routing**: Different model priority for paper-pilot vs data-forge
+- **Response headers**: `X-RateLimit-Remaining`, `X-Model-Used`
 
 ## CORS Proxy Pattern — 2025-01-11
 

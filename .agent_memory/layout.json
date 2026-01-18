@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "lastUpdated": "2025-01-11",
+  "lastUpdated": "2026-01-18",
   "memories": {
     "preferences": {
       "path": "memories/preferences.md",
@@ -9,12 +9,12 @@
     },
     "patterns": {
       "path": "memories/patterns.md",
-      "description": "Reusable code patterns in this project: React hooks, state management, component structure, WebLLM integration",
+      "description": "Reusable code patterns in this project: React hooks, state management, component structure, API LLM integration",
       "triggers": ["pattern", "hook", "component", "how to", "implement", "similar to", "like the"]
     },
     "decisions": {
       "path": "memories/decisions.md",
-      "description": "Architectural decisions and their rationale: why WebLLM, why client-side, model choices, API strategies",
+      "description": "Architectural decisions and their rationale: API-based inference, OpenRouter, model fallback strategies",
       "triggers": ["why", "decision", "architecture", "chose", "reasoning", "alternative"]
     },
     "conventions": {
