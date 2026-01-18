@@ -32,14 +32,14 @@
 - Features: Multi-source paper fetching, PDF text extraction, AI summaries, Q&A
 - Data sources: CrossRef, Semantic Scholar, Unpaywall, OpenAlex, arXiv
 - Summary types: TL;DR, Technical, ELI5, Key Findings
-- Tech: WebLLM (Qwen3), PDF.js, multi-API aggregation
+- Tech: OpenRouter API (Gemini/Llama/Gemma), PDF.js, SSE streaming
 
 **Data Forge** (`/demos/data-forge`)
 - Input: Visual database schema builder
 - Features: Define tables/columns, foreign keys, generate realistic test data
 - Export formats: SQL, JSON, CSV
 - Presets: E-commerce, Blog schemas
-- Tech: WebLLM with JSON schema output
+- Tech: OpenRouter API with JSON mode, parallel generation by dependency level
 
 **Query Craft** (`/demos/query-craft`) — *Planned*
 - Natural language to SQL conversion
