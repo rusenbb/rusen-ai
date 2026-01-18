@@ -1,4 +1,4 @@
-// Text item with embedding and 2D projection
+// Text item with embedding and 3D projection
 export interface TextItem {
   id: string;
   text: string;
@@ -6,6 +6,7 @@ export interface TextItem {
   embedding: number[] | null;
   x: number | null;
   y: number | null;
+  z: number | null;
 }
 
 // Search result with similarity score
@@ -42,7 +43,7 @@ export type EmbeddingExplorerAction =
   | { type: "REMOVE_TEXT"; id: string }
   | { type: "CLEAR_ALL" }
   | { type: "SET_EMBEDDINGS"; embeddings: Map<string, number[]> }
-  | { type: "SET_PROJECTIONS"; projections: Map<string, { x: number; y: number }> }
+  | { type: "SET_PROJECTIONS"; projections: Map<string, { x: number; y: number; z: number }> }
   | { type: "SET_MODEL_PROGRESS"; progress: Partial<ModelProgress> }
   | { type: "SET_EMBEDDING_PROGRESS"; isEmbedding: boolean; progress?: number }
   | { type: "SET_REDUCING"; isReducing: boolean }
