@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef } from "react";
+import { getApiUrl } from "@/lib/api";
 
 interface GenerateOptions {
   systemPrompt: string;
@@ -46,7 +47,7 @@ export function useAPILLM(selectedModel: string = "auto") {
         requestBody.model = selectedModel;
       }
 
-      const response = await fetch("/api/llm", {
+      const response = await fetch(getApiUrl("/api/llm"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
