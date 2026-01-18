@@ -37,6 +37,12 @@ const MODELS = {
     "deepseek/deepseek-r1-0528:free",         // Strong reasoning for complex schemas
     "qwen/qwen3-coder:free",                  // May have payment issues, last resort
   ],
+  // Temperature Playground: Fast responses for comparisons
+  "temperature-playground": [
+    "google/gemini-2.0-flash-exp:free",       // Fast, good for comparisons
+    "meta-llama/llama-3.3-70b-instruct:free", // Reliable fallback
+    "google/gemma-3-27b-it:free",             // Good fallback
+  ],
   // Default fallback chain
   "default": [
     "google/gemini-2.0-flash-exp:free",
