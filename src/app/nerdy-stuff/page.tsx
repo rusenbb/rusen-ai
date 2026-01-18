@@ -49,7 +49,7 @@ export default function NerdyStuffPage() {
           description="Same prompt, different temperatures. See how randomness affects model output."
           href="/nerdy-stuff/temperature-playground"
           tags={["LLM", "Sampling"]}
-          status="coming-soon"
+          status="live"
         />
         <DemoCard
           title="RuseN-Gram"
