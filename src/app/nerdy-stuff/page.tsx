@@ -11,10 +11,10 @@ export default function NerdyStuffPage() {
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         <DemoCard
           title="Embedding Explorer"
-          description="Visualize how words and sentences cluster in vector space. See semantic similarity in action."
+          description="Visualize how texts cluster in vector space using UMAP. See semantic similarity in action."
           href="/nerdy-stuff/embedding-explorer"
-          tags={["Embeddings", "Visualization", "3D"]}
-          status="coming-soon"
+          tags={["Embeddings", "UMAP", "Transformers.js"]}
+          status="live"
         />
         <DemoCard
           title="Rusenizer"
