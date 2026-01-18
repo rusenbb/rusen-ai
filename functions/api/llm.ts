@@ -23,30 +23,39 @@ const MODELS = {
   // Paper Pilot: Long context for full papers, good summarization
   // Prioritize models that don't use reasoning tokens (Gemini, Llama, Gemma)
   "paper-pilot": [
-    "google/gemini-2.0-flash-exp:free",       // 1M context - best for papers, no reasoning overhead
-    "meta-llama/llama-3.3-70b-instruct:free", // 131K context, reliable, direct output
+    "google/gemini-2.0-flash-exp:free",       // 1M context - best for papers
+    "meta-llama/llama-3.3-70b-instruct:free", // 131K context, reliable
+    "meta-llama/llama-3.1-405b-instruct:free", // 405B params, very capable
     "google/gemma-3-27b-it:free",             // 131K context, multimodal
-    "deepseek/deepseek-r1-0528:free",         // Reasoning tokens can truncate
-    "qwen/qwen3-coder:free",                  // May have payment issues, last resort
+    "mistralai/mistral-small-3.1-24b-instruct:free", // Fast fallback
+    "deepseek/deepseek-r1-0528:free",         // Reasoning model
+    "qwen/qwen3-coder:free",                  // Last resort
   ],
   // Data Forge: JSON generation, structured output
   "data-forge": [
     "google/gemini-2.0-flash-exp:free",       // Fast, good JSON
     "meta-llama/llama-3.3-70b-instruct:free", // Reliable JSON
+    "meta-llama/llama-3.1-405b-instruct:free", // Very capable
     "google/gemma-3-27b-it:free",             // Good fallback
-    "deepseek/deepseek-r1-0528:free",         // Strong reasoning for complex schemas
-    "qwen/qwen3-coder:free",                  // May have payment issues, last resort
+    "mistralai/mistral-small-3.1-24b-instruct:free", // Fast
+    "deepseek/deepseek-r1-0528:free",         // Strong reasoning
+    "qwen/qwen3-coder:free",                  // Last resort
   ],
   // Temperature Playground: Fast responses for comparisons
   "temperature-playground": [
     "google/gemini-2.0-flash-exp:free",       // Fast, good for comparisons
     "meta-llama/llama-3.3-70b-instruct:free", // Reliable fallback
+    "meta-llama/llama-3.1-405b-instruct:free", // Very capable
     "google/gemma-3-27b-it:free",             // Good fallback
+    "mistralai/mistral-small-3.1-24b-instruct:free", // Fast
+    "google/gemma-3-12b-it:free",             // Smaller, faster
   ],
   // Default fallback chain
   "default": [
     "google/gemini-2.0-flash-exp:free",
     "meta-llama/llama-3.3-70b-instruct:free",
+    "meta-llama/llama-3.1-405b-instruct:free",
+    "mistralai/mistral-small-3.1-24b-instruct:free",
     "deepseek/deepseek-r1-0528:free",
   ],
 };
