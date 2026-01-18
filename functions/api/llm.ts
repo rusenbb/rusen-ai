@@ -58,12 +58,6 @@ let keyRotationCounter = 0;
 
 function getApiKeys(env: Env): string[] {
   const keys: string[] = [];
-  // Debug: log which env vars are present (not their values)
-  console.log("[LLM] Checking env vars:", {
-    hasKey01: !!env.OPENROUTER_API_KEY_01,
-    hasKey02: !!env.OPENROUTER_API_KEY_02,
-    envKeys: Object.keys(env),
-  });
   if (env.OPENROUTER_API_KEY_01) keys.push(env.OPENROUTER_API_KEY_01);
   if (env.OPENROUTER_API_KEY_02) keys.push(env.OPENROUTER_API_KEY_02);
   if (env.OPENROUTER_API_KEY_03) keys.push(env.OPENROUTER_API_KEY_03);
@@ -74,7 +68,6 @@ function getApiKeys(env: Env): string[] {
   if (env.OPENROUTER_API_KEY_08) keys.push(env.OPENROUTER_API_KEY_08);
   if (env.OPENROUTER_API_KEY_09) keys.push(env.OPENROUTER_API_KEY_09);
   if (env.OPENROUTER_API_KEY_10) keys.push(env.OPENROUTER_API_KEY_10);
-  console.log("[LLM] Found", keys.length, "API keys");
   return keys;
 }
 
