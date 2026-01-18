@@ -99,6 +99,7 @@ export default function PaperPilotPage() {
     isGenerating,
     error,
     rateLimitRemaining,
+    lastModelUsed,
     generate,
   } = useAPILLM(selectedModel);
 
@@ -282,6 +283,7 @@ export default function PaperPilotPage() {
           <ModelPanel
             isGenerating={isGeneratingState || isGenerating}
             rateLimitRemaining={rateLimitRemaining}
+            lastModelUsed={lastModelUsed}
             selectedModel={selectedModel}
             onModelChange={setSelectedModel}
           />

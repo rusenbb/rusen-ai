@@ -14,6 +14,7 @@ export const AVAILABLE_MODELS = [
 interface ModelPanelProps {
   isGenerating: boolean;
   rateLimitRemaining: number | null;
+  lastModelUsed: string | null;
   selectedModel: string;
   onModelChange: (modelId: string) => void;
 }
@@ -21,11 +22,13 @@ interface ModelPanelProps {
 export default function ModelPanel({
   isGenerating,
   rateLimitRemaining,
+  lastModelUsed,
   selectedModel,
   onModelChange,
 }: ModelPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
   const currentModel = AVAILABLE_MODELS.find(m => m.id === selectedModel) || AVAILABLE_MODELS[0];
+  const usedModel = lastModelUsed ? AVAILABLE_MODELS.find(m => m.id === lastModelUsed) : null;
 
   return (
     <div className="mb-6 p-6 border border-neutral-200 dark:border-neutral-800 rounded-lg">
@@ -88,12 +91,17 @@ export default function ModelPanel({
         )}
       </div>
 
-      {/* Rate limit info */}
-      <div className="text-xs text-neutral-500">
+      {/* Model info */}
+      <div className="text-xs text-neutral-500 space-y-1">
+        {usedModel && (
+          <p className="text-green-600 dark:text-green-400">
+            Last used: {usedModel.name}
+          </p>
+        )}
         {rateLimitRemaining !== null && (
           <p>Rate limit: {rateLimitRemaining} requests remaining this minute</p>
         )}
-        <p className="mt-1">All models are free via OpenRouter</p>
+        <p>All models are free via OpenRouter</p>
       </div>
     </div>
   );

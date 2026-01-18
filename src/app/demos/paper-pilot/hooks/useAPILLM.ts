@@ -6,6 +6,7 @@ interface UseAPILLMReturn {
   isGenerating: boolean;
   error: string | null;
   rateLimitRemaining: number | null;
+  lastModelUsed: string | null;
   generate: (
     systemPrompt: string,
     userPrompt: string,
@@ -17,6 +18,7 @@ export function useAPILLM(selectedModel: string = "auto"): UseAPILLMReturn {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rateLimitRemaining, setRateLimitRemaining] = useState<number | null>(null);
+  const [lastModelUsed, setLastModelUsed] = useState<string | null>(null);
 
   const generate = useCallback(
     async (
@@ -57,6 +59,12 @@ export function useAPILLM(selectedModel: string = "auto"): UseAPILLMReturn {
         const remaining = response.headers.get("X-RateLimit-Remaining");
         if (remaining) {
           setRateLimitRemaining(parseInt(remaining, 10));
+        }
+
+        // Track which model was used
+        const modelUsed = response.headers.get("X-Model-Used");
+        if (modelUsed) {
+          setLastModelUsed(modelUsed);
         }
 
         if (!response.ok) {
@@ -149,6 +157,7 @@ export function useAPILLM(selectedModel: string = "auto"): UseAPILLMReturn {
     isGenerating,
     error,
     rateLimitRemaining,
+    lastModelUsed,
     generate,
   };
 }

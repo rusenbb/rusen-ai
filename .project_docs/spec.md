@@ -2,7 +2,7 @@
 
 ## System Architecture
 
-**Last Updated**: 2025-01-11
+**Last Updated**: 2026-01-18
 
 ### High-Level Architecture
 
@@ -11,8 +11,8 @@
 │                         Browser (Client)                         │
 ├─────────────────────────────────────────────────────────────────┤
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │
-│  │  Next.js    │  │  WebLLM     │  │  PDF.js     │              │
-│  │  React App  │  │  (WebGPU)   │  │  (WASM)     │              │
+│  │  Next.js    │  │  useAPILLM  │  │  PDF.js     │              │
+│  │  React App  │  │  (Hook)     │  │  (WASM)     │              │
 │  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘              │
 │         │                │                │                      │
 │         └────────────────┼────────────────┘                      │
@@ -27,27 +27,28 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Cloudflare Pages                              │
 ├─────────────────────────────────────────────────────────────────┤
-│  ┌─────────────────┐  ┌─────────────────┐                       │
-│  │  Static Assets  │  │  Pages Function │                       │
-│  │  (Next.js SSG)  │  │  (CORS Proxy)   │                       │
-│  └─────────────────┘  └────────┬────────┘                       │
-└────────────────────────────────┼────────────────────────────────┘
-                                 │
-                                 ▼
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  │
+│  │  Static Assets  │  │  /api/llm       │  │  /api/proxy     │  │
+│  │  (Next.js SSG)  │  │  (LLM Proxy)    │  │  (CORS Proxy)   │  │
+│  └─────────────────┘  └────────┬────────┘  └────────┬────────┘  │
+└────────────────────────────────┼────────────────────┼───────────┘
+                                 │                    │
+                                 ▼                    ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                      External APIs                               │
-├──────────┬──────────┬──────────┬──────────┬─────────────────────┤
-│ CrossRef │ Semantic │ Unpaywall│ OpenAlex │       arXiv         │
-│   API    │ Scholar  │   API    │   API    │       API           │
-└──────────┴──────────┴──────────┴──────────┴─────────────────────┘
+├──────────┬──────────┬──────────┬──────────┬──────────┬──────────┤
+│OpenRouter│ CrossRef │ Semantic │ Unpaywall│ OpenAlex │  arXiv   │
+│  (LLM)   │   API    │ Scholar  │   API    │   API    │   API    │
+└──────────┴──────────┴──────────┴──────────┴──────────┴──────────┘
 ```
 
 ### Key Design Principles
 
-1. **Client-First**: All AI computation runs in the browser
+1. **API-First**: LLM inference via cloud APIs (OpenRouter)
 2. **Progressive Enhancement**: Basic functionality works, AI enhances it
-3. **Graceful Degradation**: Failures in one data source don't break the app
+3. **Graceful Degradation**: Failures in one model/source don't break the app
 4. **Zero Server State**: No databases, no user sessions
+5. **Model Fallback**: Automatic failover between models for reliability
 
 ---
 
@@ -66,9 +67,11 @@
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| @mlc-ai/web-llm | ^0.2.80 | Browser LLM inference via WebGPU |
+| OpenRouter API | - | Cloud LLM inference (via proxy) |
 | pdfjs-dist | ^5.4.530 | PDF text extraction |
 | tiktoken | ^1.0.22 | GPT-4 tokenizer (for comparison) |
+
+**Note**: WebLLM was removed in January 2026. See decisions.md for rationale.
 
 ### Infrastructure
 
@@ -82,43 +85,52 @@
 
 ## Module Specifications
 
-### WebLLM Integration
+### API LLM Integration
 
-**Location**: `src/app/demos/*/hooks/useWebLLM.ts`
+**Locations**:
+- `src/app/demos/paper-pilot/hooks/useAPILLM.ts`
+- `src/app/demos/data-forge/hooks/useAPILLM.ts`
+- `functions/api/llm.ts` (Cloudflare Function)
 
-**Interface**:
+**Client Hook Interface**:
 ```typescript
-interface UseWebLLMReturn {
-  isLoading: boolean;        // Model currently loading
-  loadProgress: number;      // 0-1 loading progress
-  error: string | null;      // Error message if failed
-  isReady: boolean;          // Model ready for inference
-  isSupported: boolean | null; // WebGPU support status
-  loadedModelId: string | null; // Currently loaded model
-  loadModel: (modelId: string) => Promise<void>;
-  generate: (system: string, user: string, onStream?: (text: string) => void) => Promise<string>;
-  unload: () => Promise<void>;
+interface UseAPILLMReturn {
+  isGenerating: boolean;         // Currently generating
+  error: string | null;          // Error message if failed
+  rateLimitRemaining: number | null;  // Requests remaining this minute
+  generate: (
+    systemPrompt: string,
+    userPrompt: string,
+    onStream?: (text: string) => void
+  ) => Promise<string>;
 }
+
+function useAPILLM(selectedModel: string = "auto"): UseAPILLMReturn;
 ```
 
-**Model Configuration**:
+**Available Models**:
 ```typescript
-const MODEL_OPTIONS = [
-  { id: "Qwen3-0.6B-q4f16_1-MLC", vram: "2GB", size: "~400MB" },
-  { id: "Qwen3-1.7B-q4f16_1-MLC", vram: "3GB", size: "~1GB" },
-  { id: "Qwen3-4B-q4f16_1-MLC", vram: "5GB", size: "~2.5GB" },
+const AVAILABLE_MODELS = [
+  { id: "auto", name: "Auto (Recommended)" },
+  { id: "google/gemini-2.0-flash-exp:free", name: "Gemini 2.0 Flash" },
+  { id: "meta-llama/llama-3.3-70b-instruct:free", name: "Llama 3.3 70B" },
+  { id: "google/gemma-3-27b-it:free", name: "Gemma 3 27B" },
+  { id: "deepseek/deepseek-r1-0528:free", name: "DeepSeek R1" },
+  { id: "qwen/qwen3-coder:free", name: "Qwen3 Coder 480B" },
 ];
 ```
 
-**Inference Parameters**:
-- Temperature: 0.5 (Paper Pilot), 0.3 (Data Forge)
-- Max tokens: 32768
-- Streaming: Enabled for Paper Pilot, disabled for Data Forge
+**API Proxy Features** (`/api/llm`):
+- Rate limiting: 30 req/min per IP
+- API key rotation: Up to 10 keys, round-robin
+- Model fallback: Automatic on 402/429/5xx errors
+- Use-case routing: Different model priority for paper-pilot vs data-forge
+- SSE streaming support
 
-**Qwen3 Think Tag Handling**:
-- Append `/no_think` to user prompts
-- Strip `<think>...</think>` tags from output (non-greedy regex)
-- Preserve content before unclosed think tags
+**Inference Parameters**:
+- Temperature: 0.5
+- Max tokens: 16384
+- Streaming: Enabled for all demos
 
 ---
 
@@ -375,11 +387,11 @@ interface ForeignKey {
 
 | Error Type | Display | Recovery |
 |------------|---------|----------|
-| WebGPU not supported | Full-page message with browser recommendations | None (hard requirement) |
-| Model load failure | Error banner with retry button | Retry or select different model |
+| Rate limit exceeded | Error message with retry time | Wait 1 minute, then retry |
+| All models unavailable | Error message | Retry later (automatic fallback failed) |
 | API fetch failure | Error in fetch progress UI | Partial data shown, try alternate sources |
 | PDF extraction failure | Warning, proceed with abstract | Use abstract-only summarization |
-| Generation failure | Error in progress UI | Retry with same or different model |
+| Generation failure | Error in progress UI | Retry (automatic model fallback) |
 
 ### Error Boundaries
 
@@ -391,7 +403,6 @@ React error boundaries not currently implemented. Errors are caught at the async
 
 ### Bundle Splitting
 
-- WebLLM: Dynamically imported on first model load
 - PDF.js: Dynamically imported when PDF extraction needed
 - tiktoken: Dynamically imported in Rusenizer page only
 - WASM: Loaded via fetch, not bundled
@@ -400,7 +411,6 @@ React error boundaries not currently implemented. Errors are caught at the async
 
 | Asset | Cache Strategy |
 |-------|----------------|
-| WebLLM models | Browser Cache API (persistent) |
 | Static assets | Cloudflare CDN (immutable) |
 | API responses | None (always fresh) |
 | PDF.js worker | CDN with version in URL |
@@ -408,12 +418,18 @@ React error boundaries not currently implemented. Errors are caught at the async
 ### Memory Management
 
 - PDF documents destroyed after text extraction
-- WebLLM engine unloaded when switching models
 - Mounted ref prevents state updates after unmount
 
 ---
 
 ## Security Considerations
+
+### API Key Security
+
+- OpenRouter API keys stored as Cloudflare secrets
+- Keys never exposed to client-side code
+- Multiple keys with rotation for rate limit distribution
+- Keys accessed only in Cloudflare Pages Function
 
 ### CORS Proxy
 
@@ -421,10 +437,16 @@ React error boundaries not currently implemented. Errors are caught at the async
 - Should validate target URLs against allowlist
 - No authentication forwarding
 
+### LLM Proxy
+
+- Rate limiting: 30 req/min per IP
+- Only proxies to OpenRouter (no arbitrary URLs)
+- User content sent to OpenRouter (privacy consideration)
+
 ### User Data
 
 - No data persisted server-side
-- All AI processing is local
+- User prompts sent to OpenRouter for inference
 - API requests only fetch public paper metadata
 
 ### Dependencies
@@ -451,7 +473,20 @@ npm run build  # Next.js static export
 
 ### Environment Variables
 
-None required. All configuration is static.
+**Cloudflare Secrets** (required for LLM functionality):
+```
+OPENROUTER_API_KEY_01  # Primary key
+OPENROUTER_API_KEY_02  # Optional additional keys
+...
+OPENROUTER_API_KEY_10  # Up to 10 keys for rotation
+```
+
+**Local Development** (`.dev.vars`):
+```
+OPENROUTER_API_KEY_01=sk-or-v1-...
+```
+
+**Note**: `.env` and `.dev.vars` are in `.gitignore` for security.
 
 ---
 
