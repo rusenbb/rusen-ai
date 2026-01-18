@@ -243,7 +243,28 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     }
 
     // Handle non-streaming response
-    const data = await response.json();
+    const data = await response.json() as Record<string, unknown>;
+
+    // Normalize error responses from OpenRouter
+    // OpenRouter returns { error: { message, type, code } } but we want { error: "string" }
+    if (!response.ok && data.error && typeof data.error === "object") {
+      const errObj = data.error as { message?: string; type?: string; code?: string };
+      return new Response(
+        JSON.stringify({
+          error: errObj.message || errObj.type || "API error",
+          code: errObj.code,
+        }),
+        {
+          status: response.status,
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+            "X-RateLimit-Remaining": String(remaining),
+            "X-Model-Used": model,
+          },
+        }
+      );
+    }
 
     return new Response(JSON.stringify(data), {
       status: response.status,

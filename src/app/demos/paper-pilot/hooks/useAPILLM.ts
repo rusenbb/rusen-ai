@@ -69,7 +69,13 @@ export function useAPILLM(selectedModel: string = "auto"): UseAPILLMReturn {
 
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(errorData.error || `API error: ${response.status}`);
+          // Handle both string errors and nested error objects
+          const errorMessage = typeof errorData.error === "string"
+            ? errorData.error
+            : typeof errorData.error === "object" && errorData.error?.message
+              ? errorData.error.message
+              : errorData.message || `API error: ${response.status}`;
+          throw new Error(errorMessage);
         }
 
         if (!response.body) {
