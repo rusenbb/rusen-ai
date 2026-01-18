@@ -9,13 +9,12 @@ interface DemoCardProps {
 }
 
 export default function DemoCard({ title, description, href, tags = [], status = "coming-soon" }: DemoCardProps) {
-  return (
-    <Link
-      href={href}
-      className="block p-6 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:border-neutral-400 dark:hover:border-neutral-600 transition group"
-    >
+  const isLive = status === "live";
+
+  const content = (
+    <>
       <div className="flex items-start justify-between mb-2">
-        <h3 className="font-semibold text-lg group-hover:opacity-80 transition">{title}</h3>
+        <h3 className={`font-semibold text-lg ${isLive ? "group-hover:opacity-80" : ""} transition`}>{title}</h3>
         {status === "coming-soon" && (
           <span className="text-xs px-2 py-1 bg-neutral-100 dark:bg-neutral-800 rounded">Soon</span>
         )}
@@ -33,6 +32,24 @@ export default function DemoCard({ title, description, href, tags = [], status =
           ))}
         </div>
       )}
+    </>
+  );
+
+  // Don't make coming-soon items clickable - prevents 404 prefetch errors
+  if (!isLive) {
+    return (
+      <div className="block p-6 border border-neutral-200 dark:border-neutral-800 rounded-lg opacity-60 cursor-not-allowed">
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <Link
+      href={href}
+      className="block p-6 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:border-neutral-400 dark:hover:border-neutral-600 transition group"
+    >
+      {content}
     </Link>
   );
 }
