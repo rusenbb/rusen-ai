@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { getApiUrl } from "@/lib/api";
 
 interface UseAPILLMReturn {
   isGenerating: boolean;
@@ -47,7 +48,7 @@ export function useAPILLM(selectedModel: string = "auto"): UseAPILLMReturn {
           requestBody.model = selectedModel;
         }
 
-        const response = await fetch("/api/llm", {
+        const response = await fetch(getApiUrl("/api/llm"), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
