@@ -507,7 +507,16 @@ function CryptoHubWidget() {
 
 // Weather Widget
 function WeatherWidget() {
-  const [selectedCity, setSelectedCity] = useState(CITIES[0]);
+  const [selectedCity, setSelectedCity] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("pulse-weather-city");
+      if (saved) {
+        const found = CITIES.find(c => c.name === saved);
+        if (found) return found;
+      }
+    }
+    return CITIES[0];
+  });
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -549,7 +558,10 @@ function WeatherWidget() {
         value={selectedCity.name}
         onChange={(e) => {
           const city = CITIES.find((c) => c.name === e.target.value);
-          if (city) setSelectedCity(city);
+          if (city) {
+            setSelectedCity(city);
+            localStorage.setItem("pulse-weather-city", city.name);
+          }
         }}
         className="w-full mb-4 p-2 border border-neutral-200 dark:border-neutral-700 rounded bg-white dark:bg-neutral-900 text-sm"
       >
@@ -1021,7 +1033,15 @@ function AviationWidget() {
   }>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [region, setRegion] = useState<"nyc" | "london" | "tokyo">("nyc");
+  const [region, setRegion] = useState<"nyc" | "london" | "tokyo">(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("pulse-aviation-region");
+      if (saved && ["nyc", "london", "tokyo"].includes(saved)) {
+        return saved as "nyc" | "london" | "tokyo";
+      }
+    }
+    return "nyc";
+  });
 
   const regions = {
     nyc: { name: "New York", bbox: { lamin: 40.4, lomin: -74.5, lamax: 41.0, lomax: -73.5 } },
@@ -1079,7 +1099,9 @@ function AviationWidget() {
       <select
         value={region}
         onChange={(e) => {
-          setRegion(e.target.value as "nyc" | "london" | "tokyo");
+          const newRegion = e.target.value as "nyc" | "london" | "tokyo";
+          setRegion(newRegion);
+          localStorage.setItem("pulse-aviation-region", newRegion);
           setLoading(true);
         }}
         className="w-full mb-4 p-2 border border-neutral-200 dark:border-neutral-700 rounded bg-white dark:bg-neutral-900 text-sm"
