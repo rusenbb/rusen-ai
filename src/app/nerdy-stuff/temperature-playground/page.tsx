@@ -8,7 +8,7 @@ import {
   type GeneratedToken,
 } from "./types";
 import { useLocalLLM } from "./hooks/useLocalLLM";
-import SamplingWheel from "./components/SamplingWheel";
+import ProbabilityTable from "./components/ProbabilityTable";
 import TokenStream from "./components/TokenStream";
 
 // Temperature labels for display
@@ -326,37 +326,33 @@ export default function TemperaturePlaygroundPage() {
                   <p className="text-red-500 dark:text-red-400">{output.error}</p>
                 ) : output?.tokens && output.tokens.length > 0 ? (
                   <div className="flex flex-col lg:flex-row gap-6">
-                    {/* Wheel - shows selected token's distribution */}
-                    <div className="flex-shrink-0 w-full lg:w-72">
-                      <div className="h-72 flex items-center justify-center border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-900/50">
-                        {selectedToken ? (
-                          <SamplingWheel
-                            probabilities={selectedToken.topProbabilities}
-                            selectedTokenId={selectedToken.tokenId}
-                            animationDuration={0}
-                            onAnimationComplete={() => {}}
-                            isSpinning={false}
-                          />
-                        ) : (
-                          <div className="text-center text-neutral-400 p-4">
-                            <p className="text-sm">Click a token to see its</p>
-                            <p className="text-sm">probability distribution</p>
-                          </div>
-                        )}
-                      </div>
+                    {/* Probability Table - shows selected token's distribution */}
+                    <div className="flex-shrink-0 w-full lg:w-80">
                       {selectedToken && (
-                        <div className="mt-2 text-center">
+                        <div className="mb-2 p-2 bg-neutral-100 dark:bg-neutral-800 rounded-lg">
                           <span className="text-xs text-neutral-500">
                             Token {selectedIndex + 1}:
                           </span>
                           <span className="ml-1 font-mono text-sm font-bold">
-                            "{selectedToken.token.trim() || "\\n"}"
+                            &quot;{selectedToken.token.trim() || "\\n"}&quot;
                           </span>
                           <span className="ml-1 text-xs text-neutral-500">
                             ({(selectedToken.selectedProbability * 100).toFixed(1)}%)
                           </span>
                         </div>
                       )}
+                      <div className="h-[360px] border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-900/50 p-3">
+                        {selectedToken ? (
+                          <ProbabilityTable
+                            probabilities={selectedToken.topProbabilities}
+                            selectedTokenId={selectedToken.tokenId}
+                          />
+                        ) : (
+                          <div className="h-full flex items-center justify-center text-neutral-400 text-sm">
+                            Click a token to see probabilities
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     {/* Token Stream - clickable tokens */}
