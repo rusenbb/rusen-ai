@@ -214,22 +214,44 @@ export function useLocalLLM(): UseLocalLLMReturn {
           // EOS token ID for stopping
           const eosTokenId = tokenizer.eos_token_id ?? 50256; // GPT-2's EOS
 
+          // Import Tensor once
+          const { Tensor } = await import("@huggingface/transformers");
+
           // Generate tokens one by one
           for (let i = 0; i < maxTokens; i++) {
             if (abortController.signal.aborted) {
               break;
             }
 
-            // Prepare input tensor
-            const { Tensor } = await import("@huggingface/transformers");
+            const seqLength = currentIds.length;
+
+            // Prepare input tensors
             const inputTensor = new Tensor(
               "int64",
               BigInt64Array.from(currentIds.map(BigInt)),
-              [1, currentIds.length]
+              [1, seqLength]
+            );
+
+            // Attention mask: all 1s (attend to all tokens)
+            const attentionMask = new Tensor(
+              "int64",
+              BigInt64Array.from(Array(seqLength).fill(BigInt(1))),
+              [1, seqLength]
+            );
+
+            // Position IDs: 0, 1, 2, ..., seqLength-1
+            const positionIds = new Tensor(
+              "int64",
+              BigInt64Array.from(Array.from({ length: seqLength }, (_, i) => BigInt(i))),
+              [1, seqLength]
             );
 
             // Forward pass to get logits
-            const output = await model.forward({ input_ids: inputTensor });
+            const output = await model.forward({
+              input_ids: inputTensor,
+              attention_mask: attentionMask,
+              position_ids: positionIds,
+            });
 
             // Get logits for the last token position
             // Shape is [batch, seq_len, vocab_size]
