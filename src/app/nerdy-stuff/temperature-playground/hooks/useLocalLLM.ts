@@ -3,8 +3,8 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import type { TokenProbability, GeneratedToken } from "../types";
 
-// Model to use - DistilGPT-2 is small (~82MB ONNX) and good for demonstration
-const MODEL_NAME = "Xenova/distilgpt2";
+// Model to use - SmolLM is small (~270MB) but modern and produces better text
+const MODEL_NAME = "HuggingFaceTB/SmolLM-135M-Instruct";
 const TOP_K = 10; // Number of top tokens to show in visualization
 
 export interface GenerationCallbacks {
