@@ -75,6 +75,7 @@ export type QueryCraftAction =
   | { type: "CLEAR_GENERATED_SQL" }
   | { type: "SET_GENERATION_PROGRESS"; progress: Partial<GenerationProgress> }
   | { type: "ADD_TO_HISTORY"; entry: QueryHistory }
+  | { type: "CLEAR_HISTORY" }
   | { type: "LOAD_PRESET"; schema: Schema }
   | { type: "RESET" };
 
