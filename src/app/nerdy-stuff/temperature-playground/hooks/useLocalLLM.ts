@@ -5,7 +5,7 @@ import type { TokenProbability, GeneratedToken } from "../types";
 
 // Model to use - SmolLM is small (~270MB) but modern and produces better text
 const MODEL_NAME = "HuggingFaceTB/SmolLM-135M-Instruct";
-const TOP_K = 10; // Number of top tokens to show in visualization
+const TOP_K = 100; // Number of top tokens to show in visualization
 
 export interface GenerationCallbacks {
   onToken: (token: GeneratedToken) => Promise<void> | void;
@@ -294,6 +294,9 @@ export function useLocalLLM(): UseLocalLLMReturn {
 
             // Call the callback
             await callbacks.onToken(generatedToken);
+
+            // Yield to browser to prevent UI freezing
+            await new Promise((resolve) => setTimeout(resolve, 0));
 
             // Check for EOS
             if (nextTokenId === eosTokenId) {
