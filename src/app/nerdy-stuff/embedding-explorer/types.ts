@@ -22,8 +22,61 @@ export interface ModelProgress {
   message: string;
 }
 
+// --- Semantic Axes Types ---
+
+// Projection mode: semantic axes (interpretable) or UMAP (auto-layout)
+export type ProjectionMode = "semantic-axes" | "umap";
+
+// A semantic axis defined by contrastive word groups
+export interface SemanticAxis {
+  id: string;
+  name: string; // User-friendly name (e.g., "Gender")
+  positiveWords: string[]; // e.g., ["woman", "girl", "mother"]
+  negativeWords: string[]; // e.g., ["man", "boy", "father"]
+  positiveEmbedding: number[] | null; // Centroid of positive group
+  negativeEmbedding: number[] | null; // Centroid of negative group
+  axisVector: number[] | null; // normalized(positive - negative)
+}
+
+// Active axes assignment for X/Y/Z visualization
+export interface AxisAssignment {
+  x: string | null; // axis ID for X dimension
+  y: string | null; // axis ID for Y dimension
+  z: string | null; // axis ID for Z dimension
+}
+
+// Vocabulary word (smaller visual points for exploration)
+export interface VocabWord {
+  id: string;
+  text: string;
+  embedding: number[] | null;
+  x: number | null;
+  y: number | null;
+  z: number | null;
+}
+
+// Vector arithmetic operation and result
+export interface VectorArithmetic {
+  operandA: string; // text for A
+  operandB: string; // text for B
+  operandC: string; // text for C
+  embeddingA: number[] | null;
+  embeddingB: number[] | null;
+  embeddingC: number[] | null;
+  resultEmbedding: number[] | null; // A - B + C
+  resultProjection: { x: number; y: number; z: number } | null;
+  nearestNeighbors: { text: string; similarity: number }[];
+}
+
+// Neighbor result for arithmetic
+export interface ArithmeticNeighbor {
+  text: string;
+  similarity: number;
+}
+
 // State
 export interface EmbeddingExplorerState {
+  // Existing fields
   texts: TextItem[];
   categories: string[];
   modelProgress: ModelProgress;
@@ -34,10 +87,29 @@ export interface EmbeddingExplorerState {
   hoveredPointId: string | null;
   searchQuery: string;
   searchResults: SearchResult[];
+
+  // Projection mode (semantic-axes is default)
+  projectionMode: ProjectionMode;
+
+  // Semantic axes
+  semanticAxes: SemanticAxis[];
+  activeAxes: AxisAssignment;
+  isComputingAxes: boolean;
+
+  // Vocabulary (common words for exploration)
+  vocabulary: VocabWord[];
+  isLoadingVocabulary: boolean;
+  vocabularyLoaded: boolean;
+  vocabularyProgress: number; // 0-100
+
+  // Vector arithmetic
+  vectorArithmetic: VectorArithmetic | null;
+  isComputingArithmetic: boolean;
 }
 
 // Actions
 export type EmbeddingExplorerAction =
+  // Existing actions
   | { type: "ADD_TEXT"; text: string; category: string }
   | { type: "ADD_TEXTS"; texts: { text: string; category: string }[] }
   | { type: "REMOVE_TEXT"; id: string }
@@ -52,10 +124,48 @@ export type EmbeddingExplorerAction =
   | { type: "SET_SEARCH_QUERY"; query: string }
   | { type: "SET_SEARCH_RESULTS"; results: SearchResult[] }
   | { type: "ADD_CATEGORY"; category: string }
-  | { type: "LOAD_DATASET"; name: string };
+  | { type: "LOAD_DATASET"; name: string }
+  // Projection mode
+  | { type: "SET_PROJECTION_MODE"; mode: ProjectionMode }
+  // Semantic axes
+  | {
+      type: "ADD_SEMANTIC_AXIS";
+      axis: { name: string; positiveWords: string[]; negativeWords: string[] };
+    }
+  | { type: "UPDATE_SEMANTIC_AXIS"; id: string; updates: Partial<SemanticAxis> }
+  | { type: "REMOVE_SEMANTIC_AXIS"; id: string }
+  | {
+      type: "SET_AXIS_EMBEDDINGS";
+      axisId: string;
+      positive: number[];
+      negative: number[];
+      axis: number[];
+    }
+  | { type: "SET_ACTIVE_AXES"; assignment: Partial<AxisAssignment> }
+  | { type: "SET_COMPUTING_AXES"; isComputing: boolean }
+  // Vocabulary
+  | { type: "LOAD_VOCABULARY"; words: string[] }
+  | { type: "SET_VOCABULARY_EMBEDDINGS"; embeddings: Map<string, number[]> }
+  | {
+      type: "SET_VOCABULARY_PROJECTIONS";
+      projections: Map<string, { x: number; y: number; z: number }>;
+    }
+  | { type: "CLEAR_VOCABULARY" }
+  | { type: "SET_LOADING_VOCABULARY"; isLoading: boolean; progress?: number }
+  // Vector arithmetic
+  | { type: "SET_VECTOR_ARITHMETIC"; arithmetic: Partial<VectorArithmetic> }
+  | {
+      type: "SET_ARITHMETIC_RESULT";
+      result: number[];
+      projection: { x: number; y: number; z: number } | null;
+      neighbors: ArithmeticNeighbor[];
+    }
+  | { type: "CLEAR_VECTOR_ARITHMETIC" }
+  | { type: "SET_COMPUTING_ARITHMETIC"; isComputing: boolean };
 
 // Initial state
 export const initialState: EmbeddingExplorerState = {
+  // Existing fields
   texts: [],
   categories: ["default"],
   modelProgress: {
@@ -70,7 +180,65 @@ export const initialState: EmbeddingExplorerState = {
   hoveredPointId: null,
   searchQuery: "",
   searchResults: [],
+
+  // New: Projection mode (semantic-axes is default)
+  projectionMode: "semantic-axes",
+
+  // New: Semantic axes (start empty, user adds or loads presets)
+  semanticAxes: [],
+  activeAxes: { x: null, y: null, z: null },
+  isComputingAxes: false,
+
+  // New: Vocabulary
+  vocabulary: [],
+  isLoadingVocabulary: false,
+  vocabularyLoaded: false,
+  vocabularyProgress: 0,
+
+  // New: Vector arithmetic
+  vectorArithmetic: null,
+  isComputingArithmetic: false,
 };
+
+// Preset semantic axes for quick exploration
+export type PresetAxis = {
+  name: string;
+  positiveWords: string[];
+  negativeWords: string[];
+};
+
+export const PRESET_AXES: PresetAxis[] = [
+  {
+    name: "Gender",
+    positiveWords: ["woman", "girl", "mother", "daughter", "sister", "she", "her", "female"],
+    negativeWords: ["man", "boy", "father", "son", "brother", "he", "him", "male"],
+  },
+  {
+    name: "Sentiment",
+    positiveWords: ["good", "great", "excellent", "wonderful", "happy", "love", "amazing", "fantastic"],
+    negativeWords: ["bad", "terrible", "awful", "horrible", "sad", "hate", "disgusting", "dreadful"],
+  },
+  {
+    name: "Size",
+    positiveWords: ["big", "large", "huge", "giant", "enormous", "massive", "vast", "immense"],
+    negativeWords: ["small", "tiny", "little", "mini", "microscopic", "minuscule", "petite", "compact"],
+  },
+  {
+    name: "Time",
+    positiveWords: ["future", "tomorrow", "later", "upcoming", "next", "forward", "ahead", "soon"],
+    negativeWords: ["past", "yesterday", "before", "previous", "ago", "earlier", "former", "once"],
+  },
+  {
+    name: "Formality",
+    positiveWords: ["formal", "professional", "official", "proper", "sophisticated", "refined", "elegant"],
+    negativeWords: ["casual", "informal", "relaxed", "colloquial", "slang", "everyday", "simple"],
+  },
+  {
+    name: "Speed",
+    positiveWords: ["fast", "quick", "rapid", "swift", "speedy", "hasty", "brisk", "instant"],
+    negativeWords: ["slow", "sluggish", "gradual", "leisurely", "unhurried", "plodding", "lazy"],
+  },
+];
 
 // Category colors (for visualization)
 export const CATEGORY_COLORS: Record<string, string> = {
