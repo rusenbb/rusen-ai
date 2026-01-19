@@ -1,6 +1,6 @@
 "use client";
 
-import { useReducer, useCallback, useState, useRef } from "react";
+import { useReducer, useCallback, useState, useRef, useEffect } from "react";
 import { useAPILLM } from "./hooks/useAPILLM";
 import DOIInput from "./components/DOIInput";
 import PaperDisplay from "./components/PaperDisplay";
@@ -9,6 +9,7 @@ import SummaryPanel from "./components/SummaryPanel";
 import QAPanel from "./components/QAPanel";
 import { fetchPaper } from "./utils/paperFetcher";
 import { buildSummaryPrompt, buildQAPrompt } from "./utils/prompts";
+import { getSelectedModel, saveSelectedModel } from "./utils/storage";
 import {
   initialState,
   generateId,
@@ -94,6 +95,20 @@ export default function PaperPilotPage() {
   const [selectedModel, setSelectedModel] = useState<string>("auto");
   const stepsCompletedRef = useRef<string[]>([]);
 
+  // Load saved model preference on mount
+  useEffect(() => {
+    const saved = getSelectedModel();
+    if (saved) {
+      setSelectedModel(saved);
+    }
+  }, []);
+
+  // Save model preference when changed
+  const handleModelChange = useCallback((modelId: string) => {
+    setSelectedModel(modelId);
+    saveSelectedModel(modelId);
+  }, []);
+
   // Cloud-based LLM (API)
   const {
     isGenerating,
@@ -148,6 +163,67 @@ export default function PaperPilotPage() {
   const handleClearPaper = useCallback(() => {
     dispatch({ type: "CLEAR_PAPER" });
   }, []);
+
+  const handleClearSummaries = useCallback(() => {
+    dispatch({ type: "CLEAR_SUMMARIES" });
+  }, []);
+
+  const handleClearQA = useCallback(() => {
+    dispatch({ type: "CLEAR_QA" });
+  }, []);
+
+  const [generateAllProgress, setGenerateAllProgress] = useState<{ current: number; total: number } | null>(null);
+
+  const handleGenerateAll = useCallback(async () => {
+    if (!state.paper) return;
+
+    const types: SummaryType[] = ["tldr", "technical", "eli5", "keyFindings"];
+    const missingTypes = types.filter(type => !state.summaries.find(s => s.type === type));
+
+    if (missingTypes.length === 0) return;
+
+    setGenerateAllProgress({ current: 0, total: missingTypes.length });
+
+    for (let i = 0; i < missingTypes.length; i++) {
+      setGenerateAllProgress({ current: i + 1, total: missingTypes.length });
+
+      setStreamingContent("");
+      dispatch({
+        type: "SET_GENERATION_PROGRESS",
+        progress: { status: "generating", currentTask: `Generating ${missingTypes[i]} summary (${i + 1}/${missingTypes.length})` },
+      });
+
+      try {
+        const { systemPrompt, userPrompt } = buildSummaryPrompt(state.paper, missingTypes[i]);
+        const content = await generate(systemPrompt, userPrompt, (text) => {
+          setStreamingContent(text);
+        });
+
+        setStreamingContent("");
+        dispatch({
+          type: "ADD_SUMMARY",
+          summary: { type: missingTypes[i], content, generatedAt: new Date() },
+        });
+      } catch (err) {
+        setStreamingContent("");
+        dispatch({
+          type: "SET_GENERATION_PROGRESS",
+          progress: {
+            status: "error",
+            error: err instanceof Error ? err.message : "Generation failed",
+          },
+        });
+        setGenerateAllProgress(null);
+        return;
+      }
+    }
+
+    dispatch({
+      type: "SET_GENERATION_PROGRESS",
+      progress: { status: "complete" },
+    });
+    setGenerateAllProgress(null);
+  }, [state.paper, state.summaries, generate]);
 
   const handleGenerateSummary = useCallback(
     async (type: SummaryType) => {
@@ -250,6 +326,41 @@ export default function PaperPilotPage() {
 
   const isGeneratingState = state.generationProgress.status === "generating";
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle when paper is loaded and not generating
+      if (!state.paper || isGeneratingState || isGenerating) return;
+
+      // Cmd/Ctrl + number for summaries
+      if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey) {
+        const summaryTypes: SummaryType[] = ["tldr", "technical", "eli5", "keyFindings"];
+        const keyNum = parseInt(e.key);
+
+        if (keyNum >= 1 && keyNum <= 4) {
+          e.preventDefault();
+          const type = summaryTypes[keyNum - 1];
+          // Only generate if not already generated
+          if (!state.summaries.find(s => s.type === type)) {
+            handleGenerateSummary(type);
+          }
+        }
+
+        // Cmd/Ctrl + G for Generate All
+        if (e.key === "g" || e.key === "G") {
+          e.preventDefault();
+          const missingTypes = summaryTypes.filter(t => !state.summaries.find(s => s.type === t));
+          if (missingTypes.length > 0) {
+            handleGenerateAll();
+          }
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [state.paper, state.summaries, isGeneratingState, isGenerating, handleGenerateSummary, handleGenerateAll]);
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-16">
       {/* Header */}
@@ -285,7 +396,9 @@ export default function PaperPilotPage() {
             rateLimitRemaining={rateLimitRemaining}
             lastModelUsed={lastModelUsed}
             selectedModel={selectedModel}
-            onModelChange={setSelectedModel}
+            onModelChange={handleModelChange}
+            paperTitle={state.paper?.title}
+            paperSubjects={state.paper?.subjects}
           />
 
           {/* Summary Panel */}
@@ -296,6 +409,12 @@ export default function PaperPilotPage() {
             progress={state.generationProgress}
             streamingContent={streamingContent}
             onGenerateSummary={handleGenerateSummary}
+            onClearSummaries={handleClearSummaries}
+            lastModelUsed={lastModelUsed}
+            onGenerateAll={handleGenerateAll}
+            generateAllProgress={generateAllProgress}
+            hasFullText={state.paper?.hasFullText}
+            wordCount={state.paper?.wordCount}
           />
 
           {/* Q&A Panel */}
@@ -305,6 +424,7 @@ export default function PaperPilotPage() {
             isGenerating={isGeneratingState || isGenerating}
             streamingContent={streamingContent}
             onAskQuestion={handleAskQuestion}
+            onClearQA={handleClearQA}
           />
         </>
       )}
