@@ -1,24 +1,49 @@
 "use client";
 
+import { useState } from "react";
 import type { Schema, QueryCraftAction, Table, Column, SQLDialect } from "../types";
 import { PRESET_SCHEMAS, SQL_DIALECTS, COLUMN_TYPES, createDefaultColumn } from "../types";
+import { buildSchemaContext } from "../utils/prompts";
 
 interface SchemaBuilderProps {
   schema: Schema;
   dispatch: React.Dispatch<QueryCraftAction>;
+  onPresetLoad?: () => void;
 }
 
-export default function SchemaBuilder({ schema, dispatch }: SchemaBuilderProps) {
+export default function SchemaBuilder({ schema, dispatch, onPresetLoad }: SchemaBuilderProps) {
+  const [ddlCopied, setDdlCopied] = useState(false);
+
   const addTable = () => {
     dispatch({ type: "ADD_TABLE" });
   };
 
   const loadPreset = (presetSchema: Schema) => {
     dispatch({ type: "LOAD_PRESET", schema: presetSchema });
+    onPresetLoad?.();
   };
 
   const setDialect = (dialect: SQLDialect) => {
     dispatch({ type: "SET_DIALECT", dialect });
+  };
+
+  const copyDDL = async () => {
+    const ddl = buildSchemaContext(schema);
+    try {
+      await navigator.clipboard.writeText(ddl);
+      setDdlCopied(true);
+      setTimeout(() => setDdlCopied(false), 2000);
+    } catch {
+      // Fallback for older browsers
+      const textarea = document.createElement("textarea");
+      textarea.value = ddl;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      setDdlCopied(true);
+      setTimeout(() => setDdlCopied(false), 2000);
+    }
   };
 
   return (
@@ -45,6 +70,28 @@ export default function SchemaBuilder({ schema, dispatch }: SchemaBuilderProps) 
               </option>
             ))}
           </select>
+          {schema.tables.length > 0 && (
+            <button
+              onClick={copyDDL}
+              className="px-3 py-2 text-sm border border-neutral-300 dark:border-neutral-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition flex items-center gap-1.5"
+            >
+              {ddlCopied ? (
+                <>
+                  <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Copied!
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  Copy DDL
+                </>
+              )}
+            </button>
+          )}
           <button
             onClick={addTable}
             className="px-4 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-lg hover:opacity-80 transition text-sm font-medium"
