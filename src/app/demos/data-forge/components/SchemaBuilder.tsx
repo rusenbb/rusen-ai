@@ -8,9 +8,18 @@ import RelationshipPanel from "./RelationshipPanel";
 interface SchemaBuilderProps {
   schema: Schema;
   dispatch: React.Dispatch<DataForgeAction>;
+  onShare?: () => void;
+  shareStatus?: "idle" | "copied" | "error";
+  shareError?: string | null;
 }
 
-export default function SchemaBuilder({ schema, dispatch }: SchemaBuilderProps) {
+export default function SchemaBuilder({
+  schema,
+  dispatch,
+  onShare,
+  shareStatus = "idle",
+  shareError,
+}: SchemaBuilderProps) {
   const addTable = () => {
     dispatch({ type: "ADD_TABLE" });
   };
@@ -34,12 +43,80 @@ export default function SchemaBuilder({ schema, dispatch }: SchemaBuilderProps) 
             </p>
           )}
         </div>
-        <button
-          onClick={addTable}
-          className="px-4 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-lg hover:opacity-80 transition text-sm font-medium"
-        >
-          + Add Table
-        </button>
+        <div className="flex items-center gap-2">
+          {schema.tables.length > 0 && onShare && (
+            <button
+              onClick={onShare}
+              className={`px-4 py-2 border rounded-lg hover:border-neutral-500 transition text-sm font-medium flex items-center gap-2 ${
+                shareStatus === "error"
+                  ? "border-red-300 dark:border-red-700 text-red-600 dark:text-red-400"
+                  : shareStatus === "copied"
+                  ? "border-green-300 dark:border-green-700 text-green-600 dark:text-green-400"
+                  : "border-neutral-300 dark:border-neutral-700"
+              }`}
+              title={shareError || "Copy shareable URL to clipboard"}
+            >
+              {shareStatus === "copied" ? (
+                <>
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  Copied!
+                </>
+              ) : shareStatus === "error" ? (
+                <>
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  Error
+                </>
+              ) : (
+                <>
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+                    />
+                  </svg>
+                  Share
+                </>
+              )}
+            </button>
+          )}
+          <button
+            onClick={addTable}
+            className="px-4 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-lg hover:opacity-80 transition text-sm font-medium"
+          >
+            + Add Table
+          </button>
+        </div>
       </div>
 
       {/* Presets */}

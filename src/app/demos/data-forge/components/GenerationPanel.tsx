@@ -21,6 +21,7 @@ interface GenerationPanelProps {
   selectedModel: string;
   onModelChange: (modelId: string) => void;
   onGenerate: () => void;
+  onPreview: () => void;
 }
 
 export default function GenerationPanel({
@@ -32,6 +33,7 @@ export default function GenerationPanel({
   selectedModel,
   onModelChange,
   onGenerate,
+  onPreview,
 }: GenerationPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
   // Consider both hook state and progress status for generation check
@@ -121,7 +123,7 @@ export default function GenerationPanel({
         <div className="mb-4">
           <div className="flex items-center justify-between text-sm text-neutral-500 mb-1">
             <span>
-              Generating {progress.currentTable}...
+              {progress.isPreview ? "Previewing" : "Generating"} {progress.currentTable}...
             </span>
             <span>
               {progress.tablesCompleted}/{progress.totalTables} tables
@@ -145,44 +147,59 @@ export default function GenerationPanel({
         </div>
       )}
 
-      {/* Generate button */}
+      {/* Generate buttons */}
       <div className="flex items-center gap-4">
-        <button
-          onClick={onGenerate}
-          disabled={!canGenerate}
-          className={`px-6 py-2.5 rounded-lg font-medium transition ${
-            canGenerate
-              ? "bg-green-600 hover:bg-green-700 text-white"
-              : "bg-neutral-200 dark:bg-neutral-700 text-neutral-400 cursor-not-allowed"
-          }`}
-        >
-          {isCurrentlyGenerating ? (
-            <span className="flex items-center gap-2">
-              <svg
-                className="w-4 h-4 animate-spin"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
-              </svg>
-              Generating...
-            </span>
-          ) : (
-            "Generate Data"
-          )}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onPreview}
+            disabled={!canGenerate}
+            className={`px-4 py-2.5 rounded-lg font-medium transition border ${
+              canGenerate
+                ? "border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
+                : "border-neutral-300 dark:border-neutral-700 text-neutral-400 cursor-not-allowed"
+            }`}
+            title="Generate 3 rows per table for quick preview"
+          >
+            Preview (3 rows)
+          </button>
+
+          <button
+            onClick={onGenerate}
+            disabled={!canGenerate}
+            className={`px-6 py-2.5 rounded-lg font-medium transition ${
+              canGenerate
+                ? "bg-green-600 hover:bg-green-700 text-white"
+                : "bg-neutral-200 dark:bg-neutral-700 text-neutral-400 cursor-not-allowed"
+            }`}
+          >
+            {isCurrentlyGenerating ? (
+              <span className="flex items-center gap-2">
+                <svg
+                  className="w-4 h-4 animate-spin"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                {progress.isPreview ? "Previewing..." : "Generating..."}
+              </span>
+            ) : (
+              "Generate Data"
+            )}
+          </button>
+        </div>
 
         {schema.tables.length > 0 && (
           <span className="text-sm text-neutral-500">
