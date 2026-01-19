@@ -167,6 +167,268 @@ function Skeleton({ className = "" }: { className?: string }) {
   );
 }
 
+// Live badge component for real-time widgets
+function LiveBadge({ connected, updateCount }: { connected: boolean; updateCount?: number }) {
+  if (!connected) {
+    return <span className="text-xs text-neutral-500">Connecting...</span>;
+  }
+  return (
+    <div className="flex items-center gap-2">
+      <span className="relative flex h-2 w-2">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+      </span>
+      <span className="text-xs text-green-600 dark:text-green-400">LIVE</span>
+      {updateCount !== undefined && (
+        <>
+          <span className="text-xs text-neutral-400">|</span>
+          <span className="text-xs text-neutral-500">{updateCount.toLocaleString()} updates</span>
+        </>
+      )}
+    </div>
+  );
+}
+
+// Relative time helper
+function formatTimeAgo(date: Date | null): string {
+  if (!date) return "";
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (seconds < 60) return `${seconds}s ago`;
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+  return `${Math.floor(seconds / 3600)}h ago`;
+}
+
+// Sparkline SVG component for visualizing price trends
+function Sparkline({
+  data,
+  width = 60,
+  height = 24,
+  color = "currentColor",
+  showTrend = true
+}: {
+  data: number[];
+  width?: number;
+  height?: number;
+  color?: string;
+  showTrend?: boolean;
+}) {
+  if (data.length < 2) return null;
+
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+  const padding = 2;
+  const chartHeight = height - padding * 2;
+  const chartWidth = width - padding * 2;
+
+  const points = data.map((value, index) => {
+    const x = padding + (index / (data.length - 1)) * chartWidth;
+    const y = padding + chartHeight - ((value - min) / range) * chartHeight;
+    return `${x},${y}`;
+  }).join(" ");
+
+  // Determine trend color if showTrend is enabled
+  const isUp = data[data.length - 1] > data[0];
+  const trendColor = showTrend
+    ? (isUp ? "#22c55e" : "#ef4444")
+    : color;
+
+  return (
+    <svg
+      width={width}
+      height={height}
+      className="inline-block"
+      style={{ verticalAlign: "middle" }}
+    >
+      <polyline
+        fill="none"
+        stroke={trendColor}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        points={points}
+      />
+      {/* End dot */}
+      <circle
+        cx={padding + chartWidth}
+        cy={padding + chartHeight - ((data[data.length - 1] - min) / range) * chartHeight}
+        r="2"
+        fill={trendColor}
+      />
+    </svg>
+  );
+}
+
+// Widget order for animations and keyboard navigation
+const WIDGET_ORDER = [
+  "crypto-hub",
+  "github-activity",
+  "rocket-launches",
+  "wikipedia-live",
+  "aviation",
+  "world-clocks",
+  "weather",
+  "iss-tracker",
+  "earthquake",
+  "internet-pulse",
+  "github-trending",
+  "hacker-news",
+] as const;
+
+// Theme types and hook
+type Theme = "system" | "light" | "dark";
+
+function useTheme() {
+  const [theme, setTheme] = useState<Theme>("system");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const saved = localStorage.getItem("pulse-theme") as Theme | null;
+    if (saved && ["system", "light", "dark"].includes(saved)) {
+      setTheme(saved);
+      applyTheme(saved);
+    }
+  }, []);
+
+  const applyTheme = (newTheme: Theme) => {
+    const root = document.documentElement;
+    root.classList.remove("light", "dark");
+    if (newTheme !== "system") {
+      root.classList.add(newTheme);
+    }
+  };
+
+  const setAndPersistTheme = (newTheme: Theme) => {
+    setTheme(newTheme);
+    localStorage.setItem("pulse-theme", newTheme);
+    applyTheme(newTheme);
+  };
+
+  return { theme, setTheme: setAndPersistTheme, mounted };
+}
+
+// Theme toggle button component
+function ThemeToggle({ theme, setTheme, mounted }: { theme: Theme; setTheme: (t: Theme) => void; mounted: boolean }) {
+  if (!mounted) return <div className="w-8 h-8" />; // Placeholder to prevent layout shift
+
+  const icons = {
+    system: (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+      </svg>
+    ),
+    light: (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+      </svg>
+    ),
+    dark: (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+      </svg>
+    ),
+  };
+
+  const nextTheme: Record<Theme, Theme> = {
+    system: "light",
+    light: "dark",
+    dark: "system",
+  };
+
+  const labels: Record<Theme, string> = {
+    system: "System",
+    light: "Light",
+    dark: "Dark",
+  };
+
+  return (
+    <button
+      onClick={() => setTheme(nextTheme[theme])}
+      className="flex items-center gap-1.5 px-2 py-1 text-xs border border-neutral-200 dark:border-neutral-700 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
+      title={`Theme: ${labels[theme]} (click to change)`}
+    >
+      {icons[theme]}
+      <span className="hidden sm:inline">{labels[theme]}</span>
+    </button>
+  );
+}
+
+// Keyboard shortcuts modal
+function ShortcutsModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  useEffect(() => {
+    if (isOpen) {
+      const handleEsc = (e: KeyboardEvent) => {
+        if (e.key === "Escape") onClose();
+      };
+      window.addEventListener("keydown", handleEsc);
+      return () => window.removeEventListener("keydown", handleEsc);
+    }
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  const shortcuts = [
+    { key: "?", description: "Show this help" },
+    { key: "R", description: "Refresh page" },
+    { key: "T", description: "Toggle theme" },
+    { key: "1-9", description: "Jump to widget" },
+    { key: "Esc", description: "Close modal" },
+  ];
+
+  const widgetNames = [
+    "Crypto Hub", "GitHub Activity", "Rocket Launches", "Wikipedia Live",
+    "Live Aircraft", "World Clocks", "Weather", "ISS Tracker", "Earthquakes"
+  ];
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white dark:bg-neutral-900 rounded-lg p-6 max-w-md w-full shadow-xl border border-neutral-200 dark:border-neutral-800"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Keyboard Shortcuts</h2>
+          <button
+            onClick={onClose}
+            className="text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="space-y-2 mb-4">
+          {shortcuts.map(({ key, description }) => (
+            <div key={key} className="flex items-center justify-between">
+              <span className="text-sm text-neutral-600 dark:text-neutral-400">{description}</span>
+              <kbd className="px-2 py-1 bg-neutral-100 dark:bg-neutral-800 rounded text-xs font-mono">
+                {key}
+              </kbd>
+            </div>
+          ))}
+        </div>
+
+        <div className="border-t border-neutral-200 dark:border-neutral-700 pt-4">
+          <p className="text-xs text-neutral-500 mb-2">Widget Numbers:</p>
+          <div className="grid grid-cols-2 gap-1 text-xs">
+            {widgetNames.map((name, i) => (
+              <div key={name} className="flex items-center gap-1 text-neutral-500">
+                <kbd className="px-1 bg-neutral-100 dark:bg-neutral-800 rounded font-mono">{i + 1}</kbd>
+                <span className="truncate">{name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // World Clocks Widget
 function WorldClocksWidget() {
   const [times, setTimes] = useState<Record<string, { time: string; date: string }>>({});
@@ -238,6 +500,14 @@ function CryptoHubWidget() {
   const [updateCount, setUpdateCount] = useState(0);
   const wsRef = useRef<WebSocket | null>(null);
 
+  // Price history for sparklines (last 30 prices, sampled)
+  const [priceHistory, setPriceHistory] = useState<{
+    btc: number[];
+    eth: number[];
+    sol: number[];
+  }>({ btc: [], eth: [], sol: [] });
+  const lastHistoryUpdate = useRef<{ btc: number; eth: number; sol: number }>({ btc: 0, eth: 0, sol: 0 });
+
   // CoinGecko 24h change data
   const [changes, setChanges] = useState<{ btc: number; eth: number } | null>(null);
 
@@ -261,6 +531,7 @@ function CryptoHubWidget() {
       const message = JSON.parse(event.data);
       const { stream, data } = message;
       const price = parseFloat(data.p);
+      const now = Date.now();
 
       setPrices((prev) => {
         if (stream === "btcusdt@trade") {
@@ -272,6 +543,17 @@ function CryptoHubWidget() {
         }
         return prev;
       });
+
+      // Sample price history every 2 seconds to avoid too many points
+      const coin = stream === "btcusdt@trade" ? "btc" : stream === "ethusdt@trade" ? "eth" : "sol";
+      if (now - lastHistoryUpdate.current[coin] > 2000) {
+        lastHistoryUpdate.current[coin] = now;
+        setPriceHistory((prev) => ({
+          ...prev,
+          [coin]: [...prev[coin].slice(-29), price], // Keep last 30 points
+        }));
+      }
+
       setUpdateCount((c) => c + 1);
     };
 
@@ -386,30 +668,19 @@ function CryptoHubWidget() {
         <h2 className="text-lg font-semibold flex items-center gap-2">
           <span className="text-xl">&#9889;</span> Crypto Hub
         </h2>
-        <div className="flex items-center gap-2">
-          {wsConnected ? (
-            <>
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-              </span>
-              <span className="text-xs text-green-600 dark:text-green-400">LIVE</span>
-            </>
-          ) : (
-            <span className="text-xs text-neutral-500">Connecting...</span>
-          )}
-          <span className="text-xs text-neutral-400">|</span>
-          <span className="text-xs text-neutral-500">{updateCount.toLocaleString()} updates</span>
-        </div>
+        <LiveBadge connected={wsConnected} updateCount={updateCount} />
       </div>
 
       {/* Real-time prices */}
       <div className="grid grid-cols-3 gap-4 mb-4">
         {/* BTC */}
         <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold text-xs">₿</div>
-            <span className="text-sm font-medium">Bitcoin</span>
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold text-xs">₿</div>
+              <span className="text-sm font-medium">Bitcoin</span>
+            </div>
+            <Sparkline data={priceHistory.btc} width={50} height={20} />
           </div>
           <div className={`font-mono text-xl font-bold ${getPriceColor(prices.btc.price, prices.btc.prevPrice)}`}>
             ${formatPrice(prices.btc.price)}
@@ -423,9 +694,12 @@ function CryptoHubWidget() {
 
         {/* ETH */}
         <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xs">Ξ</div>
-            <span className="text-sm font-medium">Ethereum</span>
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xs">Ξ</div>
+              <span className="text-sm font-medium">Ethereum</span>
+            </div>
+            <Sparkline data={priceHistory.eth} width={50} height={20} />
           </div>
           <div className={`font-mono text-xl font-bold ${getPriceColor(prices.eth.price, prices.eth.prevPrice)}`}>
             ${formatPrice(prices.eth.price)}
@@ -439,9 +713,12 @@ function CryptoHubWidget() {
 
         {/* SOL */}
         <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-teal-400 flex items-center justify-center text-white font-bold text-xs">S</div>
-            <span className="text-sm font-medium">Solana</span>
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-teal-400 flex items-center justify-center text-white font-bold text-xs">S</div>
+              <span className="text-sm font-medium">Solana</span>
+            </div>
+            <Sparkline data={priceHistory.sol} width={50} height={20} />
           </div>
           <div className={`font-mono text-xl font-bold ${getPriceColor(prices.sol.price, prices.sol.prevPrice)}`}>
             ${formatPrice(prices.sol.price)}
@@ -520,6 +797,7 @@ function WeatherWidget() {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastFetched, setLastFetched] = useState<Date | null>(null);
 
   const fetchWeather = useCallback(async () => {
     setLoading(true);
@@ -530,6 +808,7 @@ function WeatherWidget() {
       if (res.ok) {
         const data = await res.json();
         setWeather(data.current_weather);
+        setLastFetched(new Date());
         setError(null);
       } else {
         setError("Failed to fetch weather");
@@ -551,9 +830,14 @@ function WeatherWidget() {
 
   return (
     <Card>
-      <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-        <span className="text-xl">&#9728;&#65039;</span> Weather
-      </h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold flex items-center gap-2">
+          <span className="text-xl">&#9728;&#65039;</span> Weather
+        </h2>
+        {lastFetched && (
+          <span className="text-xs text-neutral-500">{formatTimeAgo(lastFetched)}</span>
+        )}
+      </div>
       <select
         value={selectedCity.name}
         onChange={(e) => {
@@ -973,21 +1257,7 @@ function WikipediaLiveWidget() {
           </svg>
           Wikipedia Live
         </h2>
-        <div className="flex items-center gap-2">
-          {connected ? (
-            <>
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-              </span>
-              <span className="text-xs text-green-600 dark:text-green-400">LIVE</span>
-            </>
-          ) : (
-            <span className="text-xs text-neutral-500">Connecting...</span>
-          )}
-          <span className="text-xs text-neutral-400">|</span>
-          <span className="text-xs text-neutral-500">{editCount.toLocaleString()} edits</span>
-        </div>
+        <LiveBadge connected={connected} updateCount={editCount} />
       </div>
 
       <div className="space-y-2">
@@ -1092,9 +1362,12 @@ function AviationWidget() {
 
   return (
     <Card>
-      <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-        <span className="text-xl">&#9992;</span> Live Aircraft
-      </h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold flex items-center gap-2">
+          <span className="text-xl">&#9992;</span> Live Aircraft
+        </h2>
+        <LiveBadge connected={!loading && !error} />
+      </div>
 
       <select
         value={region}
@@ -1210,15 +1483,12 @@ function ISSTrackerWidget() {
 
   return (
     <Card>
-      <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-        <span className="text-xl">&#128752;</span> ISS Tracker
-        <span className="ml-auto">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-          </span>
-        </span>
-      </h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold flex items-center gap-2">
+          <span className="text-xl">&#128752;</span> ISS Tracker
+        </h2>
+        <LiveBadge connected={!loading && !error} />
+      </div>
 
       {loading ? (
         <div className="space-y-3">
@@ -1606,11 +1876,11 @@ function GitHubActivityWidget() {
           {error ? (
             <span className="text-xs text-amber-500">{error}</span>
           ) : (
+            <LiveBadge connected={!loading && !error} />
+          )}
+          {lastFetch && !error && (
             <>
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-              </span>
+              <span className="text-xs text-neutral-400">|</span>
               <span className="text-xs text-neutral-500">{formatLastFetch()}</span>
             </>
           )}
@@ -1658,9 +1928,24 @@ function GitHubActivityWidget() {
   );
 }
 
+// Animated widget wrapper for staggered entrance
+function AnimatedWidget({ children, index, id }: { children: React.ReactNode; index: number; id: string }) {
+  return (
+    <div
+      id={`widget-${id}`}
+      className="animate-fade-in-up"
+      style={{ animationDelay: `${index * 75}ms` }}
+    >
+      {children}
+    </div>
+  );
+}
+
 // Main Page Component
 export default function PulseBoardPage() {
   const [lastUpdated, setLastUpdated] = useState<string>("");
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const { theme, setTheme, mounted } = useTheme();
 
   useEffect(() => {
     const updateTime = () => {
@@ -1671,28 +1956,105 @@ export default function PulseBoardPage() {
     return () => clearInterval(interval);
   }, []);
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if user is typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) {
+        return;
+      }
+
+      // ? - Show shortcuts
+      if (e.key === "?") {
+        e.preventDefault();
+        setShowShortcuts(true);
+        return;
+      }
+
+      // R - Refresh page
+      if (e.key === "r" || e.key === "R") {
+        e.preventDefault();
+        window.location.reload();
+        return;
+      }
+
+      // T - Toggle theme
+      if (e.key === "t" || e.key === "T") {
+        e.preventDefault();
+        const nextTheme: Record<Theme, Theme> = { system: "light", light: "dark", dark: "system" };
+        setTheme(nextTheme[theme]);
+        return;
+      }
+
+      // 1-9 - Jump to widget
+      if (/^[1-9]$/.test(e.key)) {
+        e.preventDefault();
+        const widgetIndex = parseInt(e.key) - 1;
+        const widgetIds = WIDGET_ORDER;
+        if (widgetIndex < widgetIds.length) {
+          const element = document.getElementById(`widget-${widgetIds[widgetIndex]}`);
+          if (element) {
+            element.scrollIntoView({ behavior: "smooth", block: "center" });
+            // Brief highlight effect
+            element.classList.add("ring-2", "ring-blue-500", "ring-offset-2");
+            setTimeout(() => {
+              element.classList.remove("ring-2", "ring-blue-500", "ring-offset-2");
+            }, 1000);
+          }
+        }
+        return;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [theme, setTheme]);
+
+  // Widget components mapped to their IDs
+  const widgets = [
+    { id: "crypto-hub", component: <CryptoHubWidget /> },
+    { id: "github-activity", component: <GitHubActivityWidget /> },
+    { id: "rocket-launches", component: <RocketLaunchesWidget /> },
+    { id: "wikipedia-live", component: <WikipediaLiveWidget /> },
+    { id: "aviation", component: <AviationWidget /> },
+    { id: "world-clocks", component: <WorldClocksWidget /> },
+    { id: "weather", component: <WeatherWidget /> },
+    { id: "iss-tracker", component: <ISSTrackerWidget /> },
+    { id: "earthquake", component: <EarthquakeWidget /> },
+    { id: "internet-pulse", component: <InternetPulseWidget /> },
+    { id: "github-trending", component: <GithubTrendingWidget /> },
+    { id: "hacker-news", component: <HackerNewsWidget /> },
+  ];
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-16">
+      {/* Keyboard shortcuts modal */}
+      <ShortcutsModal isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
+
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Pulse Board</h1>
-        <p className="text-neutral-600 dark:text-neutral-400">
-          Live dashboard showing real-time data from around the world. All data refreshes automatically.
-        </p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-4xl font-bold mb-2 relative inline-block">
+              <span className="relative z-10">Pulse Board</span>
+              <span className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 blur-xl animate-pulse-glow -z-10 rounded-lg" />
+            </h1>
+            <p className="text-neutral-600 dark:text-neutral-400 mt-2">
+              Live dashboard showing real-time data from around the world. All data refreshes automatically.
+            </p>
+            <p className="text-xs text-neutral-500 mt-1">
+              Press <kbd className="px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded text-[10px] font-mono">?</kbd> for keyboard shortcuts
+            </p>
+          </div>
+          <ThemeToggle theme={theme} setTheme={setTheme} mounted={mounted} />
+        </div>
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <CryptoHubWidget />
-        <GitHubActivityWidget />
-        <RocketLaunchesWidget />
-        <WikipediaLiveWidget />
-        <AviationWidget />
-        <WorldClocksWidget />
-        <WeatherWidget />
-        <ISSTrackerWidget />
-        <EarthquakeWidget />
-        <InternetPulseWidget />
-        <GithubTrendingWidget />
-        <HackerNewsWidget />
+        {widgets.map((widget, index) => (
+          <AnimatedWidget key={widget.id} id={widget.id} index={index}>
+            {widget.component}
+          </AnimatedWidget>
+        ))}
       </div>
 
       <div className="mt-8 text-center text-sm text-neutral-500">
