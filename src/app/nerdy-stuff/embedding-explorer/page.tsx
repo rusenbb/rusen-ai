@@ -300,7 +300,7 @@ export default function EmbeddingExplorerPage() {
       }
       return newWords;
     });
-  }, [arithmeticInputs, embeddingCache, embed]);
+  }, [arithmeticInputs, embeddingCache, embed, words]);
 
   // Load example analogy
   const handleLoadExample = useCallback((example: typeof EXAMPLE_ANALOGIES[0]) => {
