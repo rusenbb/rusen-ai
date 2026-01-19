@@ -198,67 +198,6 @@ function formatTimeAgo(date: Date | null): string {
   return `${Math.floor(seconds / 3600)}h ago`;
 }
 
-// Sparkline SVG component for visualizing price trends
-function Sparkline({
-  data,
-  width = 60,
-  height = 24,
-  color = "currentColor",
-  showTrend = true
-}: {
-  data: number[];
-  width?: number;
-  height?: number;
-  color?: string;
-  showTrend?: boolean;
-}) {
-  if (data.length < 2) return null;
-
-  const min = Math.min(...data);
-  const max = Math.max(...data);
-  const range = max - min || 1;
-  const padding = 2;
-  const chartHeight = height - padding * 2;
-  const chartWidth = width - padding * 2;
-
-  const points = data.map((value, index) => {
-    const x = padding + (index / (data.length - 1)) * chartWidth;
-    const y = padding + chartHeight - ((value - min) / range) * chartHeight;
-    return `${x},${y}`;
-  }).join(" ");
-
-  // Determine trend color if showTrend is enabled
-  const isUp = data[data.length - 1] > data[0];
-  const trendColor = showTrend
-    ? (isUp ? "#22c55e" : "#ef4444")
-    : color;
-
-  return (
-    <svg
-      width={width}
-      height={height}
-      className="inline-block"
-      style={{ verticalAlign: "middle" }}
-    >
-      <polyline
-        fill="none"
-        stroke={trendColor}
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        points={points}
-      />
-      {/* End dot */}
-      <circle
-        cx={padding + chartWidth}
-        cy={padding + chartHeight - ((data[data.length - 1] - min) / range) * chartHeight}
-        r="2"
-        fill={trendColor}
-      />
-    </svg>
-  );
-}
-
 // Widget order for animations and keyboard navigation
 const WIDGET_ORDER = [
   "crypto-hub",
@@ -420,14 +359,6 @@ function CryptoHubWidget() {
   const [updateCount, setUpdateCount] = useState(0);
   const wsRef = useRef<WebSocket | null>(null);
 
-  // Price history for sparklines (last 30 prices, sampled)
-  const [priceHistory, setPriceHistory] = useState<{
-    btc: number[];
-    eth: number[];
-    sol: number[];
-  }>({ btc: [], eth: [], sol: [] });
-  const lastHistoryUpdate = useRef<{ btc: number; eth: number; sol: number }>({ btc: 0, eth: 0, sol: 0 });
-
   // CoinGecko 24h change data
   const [changes, setChanges] = useState<{ btc: number; eth: number } | null>(null);
 
@@ -451,7 +382,6 @@ function CryptoHubWidget() {
       const message = JSON.parse(event.data);
       const { stream, data } = message;
       const price = parseFloat(data.p);
-      const now = Date.now();
 
       setPrices((prev) => {
         if (stream === "btcusdt@trade") {
@@ -463,16 +393,6 @@ function CryptoHubWidget() {
         }
         return prev;
       });
-
-      // Sample price history every 2 seconds to avoid too many points
-      const coin = stream === "btcusdt@trade" ? "btc" : stream === "ethusdt@trade" ? "eth" : "sol";
-      if (now - lastHistoryUpdate.current[coin] > 2000) {
-        lastHistoryUpdate.current[coin] = now;
-        setPriceHistory((prev) => ({
-          ...prev,
-          [coin]: [...prev[coin].slice(-29), price], // Keep last 30 points
-        }));
-      }
 
       setUpdateCount((c) => c + 1);
     };
@@ -561,6 +481,10 @@ function CryptoHubWidget() {
 
   const formatPrice = (price: number) => {
     if (price === 0) return "--";
+    // No decimals for prices >= $1000, 2 decimals otherwise
+    if (price >= 1000) {
+      return price.toLocaleString("en-US", { maximumFractionDigits: 0 });
+    }
     return price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
@@ -594,16 +518,13 @@ function CryptoHubWidget() {
       {/* Real-time prices */}
       <div className="grid grid-cols-3 gap-4 mb-4">
         {/* BTC */}
-        <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
+        <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg overflow-hidden">
           <div className="flex items-center gap-2 mb-1">
-            <div className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold text-xs">₿</div>
-            <span className="text-sm font-medium">Bitcoin</span>
+            <div className="w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold text-[10px]">₿</div>
+            <span className="text-xs font-medium">Bitcoin</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className={`font-mono text-lg font-bold ${getPriceColor(prices.btc.price, prices.btc.prevPrice)}`}>
-              ${formatPrice(prices.btc.price)}
-            </div>
-            <Sparkline data={priceHistory.btc} width={40} height={16} />
+          <div className={`font-mono text-base font-bold truncate ${getPriceColor(prices.btc.price, prices.btc.prevPrice)}`}>
+            ${formatPrice(prices.btc.price)}
           </div>
           {changes && (
             <div className={`text-xs ${changes.btc >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
@@ -613,16 +534,13 @@ function CryptoHubWidget() {
         </div>
 
         {/* ETH */}
-        <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
+        <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg overflow-hidden">
           <div className="flex items-center gap-2 mb-1">
-            <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xs">Ξ</div>
-            <span className="text-sm font-medium">Ethereum</span>
+            <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-[10px]">Ξ</div>
+            <span className="text-xs font-medium">Ethereum</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className={`font-mono text-lg font-bold ${getPriceColor(prices.eth.price, prices.eth.prevPrice)}`}>
-              ${formatPrice(prices.eth.price)}
-            </div>
-            <Sparkline data={priceHistory.eth} width={40} height={16} />
+          <div className={`font-mono text-base font-bold truncate ${getPriceColor(prices.eth.price, prices.eth.prevPrice)}`}>
+            ${formatPrice(prices.eth.price)}
           </div>
           {changes && (
             <div className={`text-xs ${changes.eth >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
@@ -632,16 +550,13 @@ function CryptoHubWidget() {
         </div>
 
         {/* SOL */}
-        <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
+        <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg overflow-hidden">
           <div className="flex items-center gap-2 mb-1">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-teal-400 flex items-center justify-center text-white font-bold text-xs">S</div>
-            <span className="text-sm font-medium">Solana</span>
+            <div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-500 to-teal-400 flex items-center justify-center text-white font-bold text-[10px]">S</div>
+            <span className="text-xs font-medium">Solana</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className={`font-mono text-lg font-bold ${getPriceColor(prices.sol.price, prices.sol.prevPrice)}`}>
-              ${formatPrice(prices.sol.price)}
-            </div>
-            <Sparkline data={priceHistory.sol} width={40} height={16} />
+          <div className={`font-mono text-base font-bold truncate ${getPriceColor(prices.sol.price, prices.sol.prevPrice)}`}>
+            ${formatPrice(prices.sol.price)}
           </div>
         </div>
       </div>
