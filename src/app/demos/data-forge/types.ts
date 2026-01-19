@@ -68,7 +68,68 @@ export interface GenerationProgress {
   modelLoadProgress: number;
   error?: string;
   qualityReport?: TableQuality[];
+  isPreview?: boolean;
 }
+
+// Column template for quick-adding common column patterns
+export interface ColumnTemplate {
+  id: string;
+  name: string;
+  description: string;
+  columns: Omit<Column, "id">[];
+}
+
+export const COLUMN_TEMPLATES: ColumnTemplate[] = [
+  {
+    id: "timestamps",
+    name: "Timestamps",
+    description: "created_at, updated_at",
+    columns: [
+      { name: "created_at", type: "date", nullable: false, isPrimaryKey: false },
+      { name: "updated_at", type: "date", nullable: false, isPrimaryKey: false },
+    ],
+  },
+  {
+    id: "soft-delete",
+    name: "Soft Delete",
+    description: "deleted_at, is_deleted",
+    columns: [
+      { name: "deleted_at", type: "date", nullable: true, isPrimaryKey: false },
+      { name: "is_deleted", type: "boolean", nullable: false, isPrimaryKey: false },
+    ],
+  },
+  {
+    id: "audit",
+    name: "Audit Fields",
+    description: "created_by, updated_by, version",
+    columns: [
+      { name: "created_by", type: "uuid", nullable: false, isPrimaryKey: false },
+      { name: "updated_by", type: "uuid", nullable: true, isPrimaryKey: false },
+      { name: "version", type: "integer", nullable: false, isPrimaryKey: false },
+    ],
+  },
+  {
+    id: "address",
+    name: "Address",
+    description: "street, city, state, postal_code, country",
+    columns: [
+      { name: "street", type: "string", nullable: false, isPrimaryKey: false },
+      { name: "city", type: "string", nullable: false, isPrimaryKey: false },
+      { name: "state", type: "string", nullable: true, isPrimaryKey: false },
+      { name: "postal_code", type: "string", nullable: false, isPrimaryKey: false },
+      { name: "country", type: "string", nullable: false, isPrimaryKey: false },
+    ],
+  },
+  {
+    id: "metadata",
+    name: "Metadata",
+    description: "tags, notes",
+    columns: [
+      { name: "tags", type: "string", nullable: true, isPrimaryKey: false },
+      { name: "notes", type: "text", nullable: true, isPrimaryKey: false },
+    ],
+  },
+];
 
 // Reducer types
 export type DataForgeAction =
@@ -76,6 +137,7 @@ export type DataForgeAction =
   | { type: "UPDATE_TABLE"; tableId: string; updates: Partial<Table> }
   | { type: "DELETE_TABLE"; tableId: string }
   | { type: "ADD_COLUMN"; tableId: string }
+  | { type: "ADD_COLUMNS_FROM_TEMPLATE"; tableId: string; columns: Omit<Column, "id">[] }
   | { type: "UPDATE_COLUMN"; tableId: string; columnId: string; updates: Partial<Column> }
   | { type: "DELETE_COLUMN"; tableId: string; columnId: string }
   | { type: "ADD_FOREIGN_KEY"; foreignKey: Omit<ForeignKey, "id"> }
