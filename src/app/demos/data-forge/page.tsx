@@ -231,7 +231,7 @@ export default function DataForgePage() {
   }, []);
 
   // Share handler
-  const handleShare = useCallback(() => {
+  const handleShare = useCallback(async () => {
     if (state.schema.tables.length === 0) {
       setShareError("Add tables before sharing");
       setShareStatus("error");
@@ -242,27 +242,38 @@ export default function DataForgePage() {
       return;
     }
 
-    const encoded = encodeSchemaToUrl(state.schema);
+    try {
+      const encoded = encodeSchemaToUrl(state.schema);
 
-    if (!isSchemaUrlSafe(encoded)) {
-      setShareError("Schema too large to share via URL");
+      if (!isSchemaUrlSafe(encoded)) {
+        setShareError("Schema too large to share via URL");
+        setShareStatus("error");
+        setTimeout(() => {
+          setShareStatus("idle");
+          setShareError(null);
+        }, 3000);
+        return;
+      }
+
+      const url = `${window.location.origin}${window.location.pathname}#schema=${encoded}`;
+
+      // Update URL without reload
+      window.history.replaceState(null, "", `#schema=${encoded}`);
+
+      // Copy to clipboard
+      await navigator.clipboard.writeText(url);
+
+      setShareStatus("copied");
+      setShareError(null);
+      setTimeout(() => setShareStatus("idle"), 2000);
+    } catch (err) {
+      setShareError(err instanceof Error ? err.message : "Failed to share");
       setShareStatus("error");
       setTimeout(() => {
         setShareStatus("idle");
         setShareError(null);
       }, 3000);
-      return;
     }
-
-    const url = `${window.location.origin}${window.location.pathname}#schema=${encoded}`;
-    navigator.clipboard.writeText(url);
-
-    // Update URL without reload
-    window.history.replaceState(null, "", `#schema=${encoded}`);
-
-    setShareStatus("copied");
-    setShareError(null);
-    setTimeout(() => setShareStatus("idle"), 2000);
   }, [state.schema]);
 
   const handleGenerate = useCallback(async (previewMode: boolean = false) => {
