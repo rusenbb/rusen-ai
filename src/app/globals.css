@@ -12,24 +12,11 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* System preference dark mode (default) */
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0c0c0f;
     --foreground: #ededed;
   }
-}
-
-/* Manual override: force dark mode */
-:root.dark {
-  --background: #0c0c0f;
-  --foreground: #ededed;
-}
-
-/* Manual override: force light mode */
-:root.light {
-  --background: #fafafa;
-  --foreground: #171717;
 }
 
 body {
