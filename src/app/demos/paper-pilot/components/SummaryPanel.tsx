@@ -17,6 +17,7 @@ interface SummaryPanelProps {
   generateAllProgress?: { current: number; total: number } | null;
   hasFullText?: boolean;
   wordCount?: number;
+  currentGeneratingType?: SummaryType | null;
 }
 
 const SUMMARY_TYPES: SummaryType[] = ["tldr", "technical", "eli5", "keyFindings"];
@@ -34,14 +35,14 @@ export default function SummaryPanel({
   generateAllProgress,
   hasFullText,
   wordCount,
+  currentGeneratingType,
 }: SummaryPanelProps) {
-  const [generatingType, setGeneratingType] = useState<SummaryType | null>(null);
   const [copiedType, setCopiedType] = useState<SummaryType | null>(null);
   const [waitingStage, setWaitingStage] = useState<"connecting" | "waiting" | null>(null);
 
   // Track generation stages for better feedback
   useEffect(() => {
-    if (generatingType && !streamingContent) {
+    if (currentGeneratingType && !streamingContent) {
       setWaitingStage("connecting");
       const timer = setTimeout(() => {
         setWaitingStage("waiting");
@@ -50,7 +51,7 @@ export default function SummaryPanel({
     } else {
       setWaitingStage(null);
     }
-  }, [generatingType, streamingContent]);
+  }, [currentGeneratingType, streamingContent]);
 
   const handleCopy = async (type: SummaryType, content: string) => {
     await navigator.clipboard.writeText(content);
@@ -59,12 +60,8 @@ export default function SummaryPanel({
   };
 
   const handleGenerate = async (type: SummaryType) => {
-    setGeneratingType(type);
-    try {
-      await onGenerateSummary(type);
-    } finally {
-      setGeneratingType(null);
-    }
+    // Parent component (page.tsx) manages currentGeneratingType state
+    await onGenerateSummary(type);
   };
 
   const getSummary = (type: SummaryType): Summary | undefined => {
@@ -148,7 +145,7 @@ export default function SummaryPanel({
         {SUMMARY_TYPES.map((type) => {
           const summary = getSummary(type);
           const label = SUMMARY_LABELS[type];
-          const isThisGenerating = generatingType === type;
+          const isThisGenerating = currentGeneratingType === type;
 
           return (
             <div
