@@ -53,6 +53,33 @@ export function exportAsJSON(data: GeneratedData): string {
   return JSON.stringify(data, null, 2);
 }
 
+// Single-table exports
+export function exportTableAsSQL(data: GeneratedData, schema: Schema, tableName: string): string {
+  const table = schema.tables.find((t) => t.name === tableName);
+  if (!table) return "";
+
+  const rows = data[tableName] || [];
+  if (rows.length === 0) return "";
+
+  const columns = table.columns.map((c) => c.name);
+  let sql = `-- Table: ${tableName}\n`;
+
+  for (const row of rows) {
+    const values = columns.map((colName) => {
+      const col = table.columns.find((c) => c.name === colName)!;
+      return formatSQLValue(row[colName], col.type);
+    });
+    sql += `INSERT INTO ${tableName} (${columns.join(", ")}) VALUES (${values.join(", ")});\n`;
+  }
+
+  return sql;
+}
+
+export function exportTableAsJSON(data: GeneratedData, tableName: string): string {
+  const rows = data[tableName] || [];
+  return JSON.stringify(rows, null, 2);
+}
+
 function escapeCSV(value: unknown): string {
   if (value === null || value === undefined) {
     return "";
