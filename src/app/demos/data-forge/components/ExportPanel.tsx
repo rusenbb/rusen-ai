@@ -6,6 +6,9 @@ import {
   exportAsSQL,
   exportAsJSON,
   exportAllAsCSV,
+  exportTableAsSQL,
+  exportTableAsJSON,
+  exportAsCSV,
   downloadFile,
   copyToClipboard,
 } from "../utils/exporters";
@@ -13,11 +16,13 @@ import {
 interface ExportPanelProps {
   data: GeneratedData;
   schema: Schema;
+  isPreview?: boolean;
 }
 
-export default function ExportPanel({ data, schema }: ExportPanelProps) {
+export default function ExportPanel({ data, schema, isPreview }: ExportPanelProps) {
   const [format, setFormat] = useState<ExportFormat>("sql");
   const [copied, setCopied] = useState(false);
+  const [copiedTable, setCopiedTable] = useState<string | null>(null);
   const [previewTable, setPreviewTable] = useState<string | null>(
     Object.keys(data)[0] || null
   );
@@ -51,6 +56,25 @@ export default function ExportPanel({ data, schema }: ExportPanelProps) {
     await copyToClipboard(getExportContent());
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const getTableExportContent = (tableName: string) => {
+    switch (format) {
+      case "sql":
+        return exportTableAsSQL(data, schema, tableName);
+      case "json":
+        return exportTableAsJSON(data, tableName);
+      case "csv":
+        return exportAsCSV(data, tableName);
+      default:
+        return "";
+    }
+  };
+
+  const handleCopyTable = async (tableName: string) => {
+    await copyToClipboard(getTableExportContent(tableName));
+    setCopiedTable(tableName);
+    setTimeout(() => setCopiedTable(null), 2000);
   };
 
   const tableNames = Object.keys(data);
@@ -142,21 +166,67 @@ export default function ExportPanel({ data, schema }: ExportPanelProps) {
 
       {/* Data preview */}
       <div className="p-4">
+        {/* Preview mode indicator */}
+        {isPreview && (
+          <div className="mb-3 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded text-sm text-blue-700 dark:text-blue-300 flex items-center gap-2">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Preview mode: Showing up to 3 rows per table. Generate full data for complete export.
+          </div>
+        )}
+
         <div className="flex items-center gap-2 mb-3">
           <span className="text-sm text-neutral-500">Preview:</span>
-          <div className="flex gap-1">
+          <div className="flex gap-1 flex-wrap">
             {tableNames.map((name) => (
-              <button
-                key={name}
-                onClick={() => setPreviewTable(name)}
-                className={`px-2 py-1 text-xs font-mono rounded transition ${
-                  previewTable === name
-                    ? "bg-neutral-200 dark:bg-neutral-700"
-                    : "text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                }`}
-              >
-                {name} ({data[name]?.length || 0})
-              </button>
+              <div key={name} className="flex items-center">
+                <button
+                  onClick={() => setPreviewTable(name)}
+                  className={`px-2 py-1 text-xs font-mono rounded-l transition ${
+                    previewTable === name
+                      ? "bg-neutral-200 dark:bg-neutral-700"
+                      : "text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                  }`}
+                >
+                  {name} ({data[name]?.length || 0})
+                </button>
+                <button
+                  onClick={() => handleCopyTable(name)}
+                  className="px-1.5 py-1 text-xs border-l border-neutral-300 dark:border-neutral-600 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-r transition"
+                  title={`Copy ${name} as ${format.toUpperCase()}`}
+                >
+                  {copiedTable === name ? (
+                    <svg
+                      className="w-3 h-3 text-green-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      className="w-3 h-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                      />
+                    </svg>
+                  )}
+                </button>
+              </div>
             ))}
           </div>
         </div>
