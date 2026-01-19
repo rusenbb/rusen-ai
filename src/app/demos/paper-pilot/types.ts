@@ -34,6 +34,10 @@ export interface PaperMetadata {
   // Content stats
   wordCount: number;
   hasFullText: boolean;
+
+  // PDF extraction info
+  totalPages: number | null;
+  pagesExtracted: number | null;
 }
 
 // Summary types

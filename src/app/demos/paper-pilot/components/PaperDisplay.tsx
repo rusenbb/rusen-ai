@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import type { PaperMetadata, ContentSource } from "../types";
+import { generateBibTeX } from "../utils/citations";
 
 interface PaperDisplayProps {
   paper: PaperMetadata;
@@ -16,16 +18,44 @@ const SOURCE_LABELS: Record<ContentSource, { name: string; color: string }> = {
 };
 
 export default function PaperDisplay({ paper, onClear }: PaperDisplayProps) {
+  const [copiedBibtex, setCopiedBibtex] = useState(false);
+
+  const handleCopyBibTeX = async () => {
+    const bibtex = generateBibTeX(paper);
+    await navigator.clipboard.writeText(bibtex);
+    setCopiedBibtex(true);
+    setTimeout(() => setCopiedBibtex(false), 2000);
+  };
+
   return (
     <div className="mb-8 p-6 border border-neutral-200 dark:border-neutral-800 rounded-lg bg-white dark:bg-neutral-900">
       <div className="flex items-start justify-between gap-4 mb-4">
         <h2 className="text-xl font-semibold leading-tight">{paper.title}</h2>
-        <button
-          onClick={onClear}
-          className="flex-shrink-0 px-3 py-1 text-sm text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 border border-neutral-300 dark:border-neutral-700 rounded-lg hover:border-neutral-400 transition"
-        >
-          Clear
-        </button>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Copy BibTeX button */}
+          <button
+            onClick={handleCopyBibTeX}
+            className="p-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 border border-neutral-300 dark:border-neutral-700 rounded-lg hover:border-neutral-400 transition"
+            title={copiedBibtex ? "Copied!" : "Copy BibTeX"}
+          >
+            {copiedBibtex ? (
+              <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            ) : (
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            )}
+          </button>
+          {/* Clear button */}
+          <button
+            onClick={onClear}
+            className="px-3 py-1 text-sm text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 border border-neutral-300 dark:border-neutral-700 rounded-lg hover:border-neutral-400 transition"
+          >
+            Clear
+          </button>
+        </div>
       </div>
 
       {/* Sources badges */}
@@ -138,6 +168,12 @@ export default function PaperDisplay({ paper, onClear }: PaperDisplayProps) {
             <strong>Full text extracted</strong> from {SOURCE_LABELS[paper.fullTextSource].name} PDF.
             AI can analyze the complete paper content.
           </p>
+          {/* PDF extraction warning */}
+          {paper.totalPages && paper.pagesExtracted && paper.totalPages > paper.pagesExtracted && (
+            <p className="mt-2 text-sm text-amber-600 dark:text-amber-400">
+              Note: First {paper.pagesExtracted} of {paper.totalPages} pages extracted. Some content may be missing.
+            </p>
+          )}
         </div>
       )}
 
