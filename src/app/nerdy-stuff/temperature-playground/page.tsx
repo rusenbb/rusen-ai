@@ -1,35 +1,29 @@
 "use client";
 
-import { useReducer, useCallback, useRef, useState } from "react";
+import { useReducer, useCallback, useRef, useEffect, useState } from "react";
 import {
-  TemperaturePlaygroundState,
-  TemperaturePlaygroundAction,
   createInitialState,
   temperatureReducer,
-  AVAILABLE_MODELS,
   EXAMPLE_PROMPTS,
-  DEFAULT_TEMPERATURES,
+  getAnimationDuration,
+  type AnimationSpeed,
+  type GeneratedToken,
 } from "./types";
-import { useAPILLM } from "./hooks/useAPILLM";
-import ProbabilityVisualization from "./components/ProbabilityVisualization";
-import TokenExplorer from "./components/TokenExplorer";
-
-// System prompt for consistent responses
-const SYSTEM_PROMPT = `You are a helpful assistant. Respond concisely to the user's request.
-Keep your response under 200 words unless more detail is specifically requested.
-Be creative and varied in your responses based on your temperature setting.`;
+import { useLocalLLM } from "./hooks/useLocalLLM";
+import SamplingWheel from "./components/SamplingWheel";
+import TokenStream from "./components/TokenStream";
 
 // Temperature labels for display
 const TEMP_LABELS: Record<number, { label: string; description: string }> = {
-  0.0: { label: "Precise", description: "Deterministic, most likely tokens" },
-  0.3: { label: "Balanced", description: "Slight variation, mostly focused" },
-  0.5: { label: "Moderate", description: "Good balance of variety" },
-  0.7: { label: "Creative", description: "More diverse outputs" },
-  1.0: { label: "Wild", description: "High randomness, unexpected results" },
-  1.5: { label: "Chaotic", description: "Very high variance" },
+  0.0: { label: "Precise", description: "Deterministic, always picks the most likely token" },
+  0.3: { label: "Focused", description: "Slight variation, mostly predictable" },
+  0.5: { label: "Balanced", description: "Good balance of variety" },
+  0.7: { label: "Creative", description: "More diverse, interesting outputs" },
+  1.0: { label: "Wild", description: "High randomness, unexpected tokens" },
+  1.5: { label: "Chaotic", description: "Very high variance, surprising results" },
 };
 
-type ViewMode = "compare" | "explore";
+const MAX_TOKENS = 30; // Keep it short for visualization
 
 export default function TemperaturePlaygroundPage() {
   const [state, dispatch] = useReducer(
@@ -37,55 +31,116 @@ export default function TemperaturePlaygroundPage() {
     null,
     createInitialState
   );
-  const [viewMode, setViewMode] = useState<ViewMode>("compare");
 
-  const { generate, abort } = useAPILLM(state.selectedModel);
+  const {
+    isModelLoading,
+    modelProgress,
+    modelError,
+    isReady,
+    generateTokenByToken,
+  } = useLocalLLM();
+
+  // Track which temperature is currently animating its wheel
+  const [spinningTemp, setSpinningTemp] = useState<number | null>(null);
+
+  // Abort controllers for each temperature
+  const abortControllersRef = useRef<Map<number, AbortController>>(new Map());
   const mountedRef = useRef(true);
 
+  // Sync model state with reducer
+  useEffect(() => {
+    dispatch({
+      type: "SET_MODEL_LOADING",
+      isLoading: isModelLoading,
+      progress: modelProgress,
+    });
+  }, [isModelLoading, modelProgress]);
+
+  useEffect(() => {
+    if (modelError) {
+      dispatch({ type: "SET_MODEL_ERROR", error: modelError });
+    }
+  }, [modelError]);
+
+  useEffect(() => {
+    if (isReady) {
+      dispatch({ type: "SET_MODEL_READY" });
+    }
+  }, [isReady]);
+
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+      // Abort all generations on unmount
+      abortControllersRef.current.forEach((controller) => controller.abort());
+    };
+  }, []);
+
+  // Generate for all temperatures sequentially (so we can see each wheel)
   const handleGenerate = useCallback(async () => {
     if (!state.prompt.trim()) return;
 
     dispatch({ type: "START_GENERATION" });
 
-    // Generate for all temperatures in parallel
-    const promises = state.temperatures.map(async (temp) => {
-      try {
-        const result = await generate({
-          systemPrompt: SYSTEM_PROMPT,
-          userPrompt: state.prompt,
-          temperature: temp,
-          onStream: (content) => {
-            if (mountedRef.current) {
-              dispatch({ type: "UPDATE_OUTPUT", temperature: temp, content });
-            }
-          },
-        });
+    // Generate for each temperature sequentially
+    for (const temp of state.temperatures) {
+      if (!mountedRef.current) break;
 
-        if (mountedRef.current) {
-          dispatch({
-            type: "FINISH_GENERATION",
-            temperature: temp,
-            modelUsed: result.modelUsed,
-          });
-          if (result.rateLimitRemaining !== null) {
-            dispatch({ type: "SET_RATE_LIMIT", remaining: result.rateLimitRemaining });
+      const animDuration = getAnimationDuration(state.animationSpeed);
+
+      // Create a promise that resolves when this temperature's generation is complete
+      await new Promise<void>((resolve) => {
+        const abortController = generateTokenByToken(
+          state.prompt,
+          { temperature: temp, maxTokens: MAX_TOKENS, topK: 10 },
+          {
+            onToken: async (token: GeneratedToken) => {
+              if (!mountedRef.current) return;
+
+              // Add the token to state
+              dispatch({ type: "ADD_TOKEN", temperature: temp, token });
+
+              // Start wheel spinning animation
+              setSpinningTemp(temp);
+
+              // Wait for animation to complete
+              await new Promise<void>((animResolve) => {
+                setTimeout(() => {
+                  if (mountedRef.current) {
+                    dispatch({ type: "ADVANCE_TOKEN_INDEX", temperature: temp });
+                  }
+                  setSpinningTemp(null);
+                  animResolve();
+                }, animDuration);
+              });
+            },
+            onComplete: () => {
+              if (mountedRef.current) {
+                dispatch({ type: "FINISH_GENERATION", temperature: temp });
+              }
+              resolve();
+            },
+            onError: (error) => {
+              if (mountedRef.current) {
+                dispatch({ type: "SET_ERROR", temperature: temp, error: error.message });
+              }
+              resolve();
+            },
           }
-        }
-      } catch (err) {
-        if (mountedRef.current) {
-          const message = err instanceof Error ? err.message : "Generation failed";
-          dispatch({ type: "SET_ERROR", temperature: temp, error: message });
-        }
-      }
-    });
+        );
 
-    await Promise.allSettled(promises);
-  }, [state.prompt, state.temperatures, generate]);
+        abortControllersRef.current.set(temp, abortController);
+      });
+    }
+  }, [state.prompt, state.temperatures, state.animationSpeed, generateTokenByToken]);
 
   const handleClear = useCallback(() => {
-    abort();
+    // Abort all ongoing generations
+    abortControllersRef.current.forEach((controller) => controller.abort());
+    abortControllersRef.current.clear();
+    setSpinningTemp(null);
     dispatch({ type: "CLEAR_OUTPUTS" });
-  }, [abort]);
+  }, []);
 
   const handleExampleClick = useCallback((prompt: string) => {
     dispatch({ type: "SET_PROMPT", prompt });
@@ -97,10 +152,14 @@ export default function TemperaturePlaygroundPage() {
       : [...state.temperatures, temp].sort((a, b) => a - b);
 
     // Ensure at least one temperature is selected
-    if (newTemps.length > 0) {
+    if (newTemps.length > 0 && newTemps.length <= 3) {
       dispatch({ type: "SET_TEMPERATURES", temperatures: newTemps });
     }
   }, [state.temperatures]);
+
+  const handleSpeedChange = useCallback((speed: AnimationSpeed) => {
+    dispatch({ type: "SET_ANIMATION_SPEED", speed });
+  }, []);
 
   const availableTemps = [0.0, 0.3, 0.5, 0.7, 1.0, 1.5];
 
@@ -110,94 +169,92 @@ export default function TemperaturePlaygroundPage() {
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-4">Temperature Playground</h1>
         <p className="text-neutral-600 dark:text-neutral-400 max-w-2xl">
-          See how temperature affects LLM output. Same prompt, different temperatures—watch
-          as responses range from deterministic to creative to chaotic.
+          Watch how temperature affects token selection in real-time. The spinning wheel shows the
+          probability distribution—at low temperatures, the model always picks the most likely token.
+          At high temperatures, anything can happen!
         </p>
       </div>
 
-      {/* View Mode Tabs */}
-      <div className="mb-8 flex gap-2">
-        <button
-          onClick={() => setViewMode("compare")}
-          className={`px-4 py-2 rounded-lg font-medium transition ${
-            viewMode === "compare"
-              ? "bg-neutral-900 dark:bg-white text-white dark:text-neutral-900"
-              : "bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700"
-          }`}
-        >
-          Compare Outputs
-        </button>
-        <button
-          onClick={() => setViewMode("explore")}
-          className={`px-4 py-2 rounded-lg font-medium transition ${
-            viewMode === "explore"
-              ? "bg-neutral-900 dark:bg-white text-white dark:text-neutral-900"
-              : "bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700"
-          }`}
-        >
-          Token Explorer
-        </button>
-      </div>
-
-      {/* Educational Panel */}
-      <div className="mb-8 p-4 bg-neutral-100 dark:bg-neutral-800/50 rounded-lg border border-neutral-200 dark:border-neutral-700">
-        <h3 className="font-semibold mb-2">What is Temperature?</h3>
-        <p className="text-sm text-neutral-600 dark:text-neutral-400">
-          Temperature controls the randomness in token selection. At <strong>0.0</strong>, the model
-          always picks the most likely next token (greedy decoding). At higher values like <strong>1.0+</strong>,
-          lower-probability tokens have a better chance of being selected, creating more varied and
-          sometimes surprising outputs. Think of it as a creativity dial.
-        </p>
-      </div>
-
-      {/* Probability Visualization - always visible for education */}
-      <ProbabilityVisualization temperatures={state.temperatures} />
-
-      {/* Token Explorer Mode */}
-      {viewMode === "explore" && (
-        <div className="mt-8">
-          <TokenExplorer disabled={state.isAnyGenerating} />
+      {/* Model Loading State */}
+      {state.isModelLoading && (
+        <div className="mb-8 p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg bg-neutral-50 dark:bg-neutral-900/50">
+          <div className="flex justify-between items-center mb-2">
+            <span className="font-medium">Loading DistilGPT-2 model...</span>
+            <span className="text-sm text-neutral-500">{state.modelProgress}%</span>
+          </div>
+          <div className="h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
+              style={{ width: `${state.modelProgress}%` }}
+            />
+          </div>
+          <p className="text-xs text-neutral-500 mt-2">
+            First load downloads ~82MB (cached in browser for future visits)
+          </p>
         </div>
       )}
 
-      {/* Compare Mode - Input Section */}
-      {viewMode === "compare" && (
-        <>
+      {/* Model Error */}
+      {state.modelError && (
+        <div className="mb-8 p-4 border border-red-300 dark:border-red-700 rounded-lg bg-red-50 dark:bg-red-900/20">
+          <p className="text-red-600 dark:text-red-400">{state.modelError}</p>
+        </div>
+      )}
+
+      {/* Model Ready Indicator */}
+      {state.isModelReady && !state.isModelLoading && (
+        <div className="mb-8 p-3 border border-green-300 dark:border-green-700 rounded-lg bg-green-50 dark:bg-green-900/20 flex items-center gap-2">
+          <span className="text-green-500">✓</span>
+          <span className="text-sm text-green-700 dark:text-green-300">
+            DistilGPT-2 model loaded and ready
+          </span>
+        </div>
+      )}
+
+      {/* Educational Panel */}
+      <div className="mb-8 p-4 bg-neutral-100 dark:bg-neutral-800/50 rounded-lg border border-neutral-200 dark:border-neutral-700">
+        <h3 className="font-semibold mb-2">How Temperature Works</h3>
+        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+          At each step, the model assigns probabilities to all possible next tokens. The{" "}
+          <strong>wheel size</strong> of each slice represents that probability. Temperature
+          controls how "peaked" this distribution is:
+        </p>
+        <ul className="text-sm text-neutral-600 dark:text-neutral-400 mt-2 space-y-1 list-disc list-inside">
+          <li><strong>T=0:</strong> Always picks the largest slice (deterministic)</li>
+          <li><strong>T=0.7:</strong> Usually picks likely tokens, occasionally surprises</li>
+          <li><strong>T=1.5:</strong> Small slices have a real chance of being picked</li>
+        </ul>
+      </div>
+
       {/* Input Section */}
-      <div className="mt-8 mb-8 p-6 border border-neutral-200 dark:border-neutral-800 rounded-lg">
+      <div className="mb-8 p-6 border border-neutral-200 dark:border-neutral-800 rounded-lg">
         <div className="flex flex-col md:flex-row gap-4 mb-4">
           {/* Prompt Input */}
           <div className="flex-1">
             <label className="block text-sm font-medium mb-2">Prompt</label>
-            <textarea
+            <input
+              type="text"
               value={state.prompt}
               onChange={(e) => dispatch({ type: "SET_PROMPT", prompt: e.target.value })}
-              placeholder="Enter your prompt here..."
-              className="w-full h-24 px-4 py-3 border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-900 focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:outline-none resize-none"
+              placeholder="Enter a starting text..."
+              className="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-900 focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:outline-none"
               disabled={state.isAnyGenerating}
             />
           </div>
 
-          {/* Model Selector */}
-          <div className="md:w-48">
-            <label className="block text-sm font-medium mb-2">Model</label>
+          {/* Animation Speed */}
+          <div className="md:w-40">
+            <label className="block text-sm font-medium mb-2">Animation Speed</label>
             <select
-              value={state.selectedModel}
-              onChange={(e) => dispatch({ type: "SET_MODEL", model: e.target.value })}
+              value={state.animationSpeed}
+              onChange={(e) => handleSpeedChange(e.target.value as AnimationSpeed)}
               className="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-900 focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:outline-none"
               disabled={state.isAnyGenerating}
             >
-              {AVAILABLE_MODELS.map((model) => (
-                <option key={model.id} value={model.id}>
-                  {model.name}
-                </option>
-              ))}
+              <option value="slow">Slow (2s)</option>
+              <option value="normal">Normal (1s)</option>
+              <option value="fast">Fast (0.5s)</option>
             </select>
-            {state.rateLimitRemaining !== null && (
-              <p className="mt-1 text-xs text-neutral-500">
-                {state.rateLimitRemaining} requests remaining
-              </p>
-            )}
           </div>
         </div>
 
@@ -221,21 +278,24 @@ export default function TemperaturePlaygroundPage() {
         {/* Temperature Selection */}
         <div className="mb-4">
           <label className="block text-sm font-medium mb-2">
-            Temperatures to compare ({state.temperatures.length} selected):
+            Compare temperatures (select 1-3):
           </label>
           <div className="flex flex-wrap gap-2">
             {availableTemps.map((temp) => {
               const isSelected = state.temperatures.includes(temp);
               const info = TEMP_LABELS[temp];
+              const canSelect = isSelected || state.temperatures.length < 3;
               return (
                 <button
                   key={temp}
-                  onClick={() => handleTemperatureToggle(temp)}
-                  disabled={state.isAnyGenerating}
+                  onClick={() => canSelect && handleTemperatureToggle(temp)}
+                  disabled={state.isAnyGenerating || !canSelect}
                   className={`px-4 py-2 rounded-lg border transition ${
                     isSelected
                       ? "border-neutral-900 dark:border-white bg-neutral-900 dark:bg-white text-white dark:text-neutral-900"
-                      : "border-neutral-300 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-600"
+                      : canSelect
+                      ? "border-neutral-300 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-600"
+                      : "border-neutral-200 dark:border-neutral-800 opacity-40 cursor-not-allowed"
                   } disabled:opacity-50`}
                   title={info?.description}
                 >
@@ -251,14 +311,13 @@ export default function TemperaturePlaygroundPage() {
         <div className="flex gap-3">
           <button
             onClick={handleGenerate}
-            disabled={!state.prompt.trim() || state.isAnyGenerating || state.temperatures.length === 0}
+            disabled={!state.prompt.trim() || state.isAnyGenerating || state.temperatures.length === 0 || !state.isModelReady}
             className="px-6 py-3 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-lg font-medium hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {state.isAnyGenerating ? "Generating..." : "Generate All"}
+            {state.isAnyGenerating ? "Generating..." : state.isModelReady ? "Generate" : "Loading Model..."}
           </button>
           <button
             onClick={handleClear}
-            disabled={state.isAnyGenerating && false} // Allow clearing during generation
             className="px-6 py-3 border border-neutral-300 dark:border-neutral-700 rounded-lg font-medium hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
           >
             Clear
@@ -266,16 +325,13 @@ export default function TemperaturePlaygroundPage() {
         </div>
       </div>
 
-      {/* Outputs Grid */}
-      <div className={`grid gap-4 ${
-        state.temperatures.length === 1 ? "grid-cols-1" :
-        state.temperatures.length === 2 ? "grid-cols-1 md:grid-cols-2" :
-        state.temperatures.length === 3 ? "grid-cols-1 md:grid-cols-3" :
-        "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-      }`}>
+      {/* Output Grid with Wheels and Token Streams */}
+      <div className="space-y-6">
         {state.temperatures.map((temp) => {
           const output = state.outputs.get(temp);
           const info = TEMP_LABELS[temp] || { label: "Custom", description: "" };
+          const currentToken = output?.tokens[output.tokens.length - 1];
+          const isCurrentlySpinning = spinningTemp === temp;
 
           return (
             <div
@@ -286,62 +342,64 @@ export default function TemperaturePlaygroundPage() {
               <div className="px-4 py-3 bg-neutral-50 dark:bg-neutral-800/50 border-b border-neutral-200 dark:border-neutral-700">
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="font-mono text-lg font-bold">{temp.toFixed(1)}</span>
-                    <span className="ml-2 text-sm text-neutral-500">{info.label}</span>
+                    <span className="font-mono text-2xl font-bold">T = {temp.toFixed(1)}</span>
+                    <span className="ml-3 text-neutral-500">{info.label}</span>
                   </div>
                   {output?.isGenerating && (
-                    <span className="flex items-center gap-1 text-xs text-neutral-500">
-                      <span className="animate-pulse">●</span> Generating
-                    </span>
-                  )}
-                  {output?.modelUsed && !output?.isGenerating && (
-                    <span className="text-xs text-neutral-400 truncate max-w-[120px]" title={output.modelUsed}>
-                      {output.modelUsed.split("/").pop()?.replace(":free", "")}
+                    <span className="flex items-center gap-2 text-sm text-neutral-500">
+                      <span className="animate-pulse text-blue-500">●</span>
+                      Token {output.tokens.length} / {MAX_TOKENS}
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-neutral-500 mt-0.5">{info.description}</p>
+                <p className="text-sm text-neutral-500 mt-1">{info.description}</p>
               </div>
 
-              {/* Output Content */}
-              <div className="p-4 min-h-[200px] max-h-[400px] overflow-y-auto">
+              {/* Wheel + Token Stream */}
+              <div className="p-4">
                 {output?.error ? (
                   <p className="text-red-500 dark:text-red-400">{output.error}</p>
-                ) : output?.content ? (
-                  <p className="whitespace-pre-wrap text-sm leading-relaxed">{output.content}</p>
+                ) : output?.tokens && output.tokens.length > 0 ? (
+                  <div className="flex flex-col lg:flex-row gap-6">
+                    {/* Wheel */}
+                    <div className="flex-shrink-0 w-full lg:w-64 h-64 flex items-center justify-center">
+                      <SamplingWheel
+                        probabilities={currentToken?.topProbabilities || []}
+                        selectedTokenId={currentToken?.tokenId || 0}
+                        animationDuration={getAnimationDuration(state.animationSpeed)}
+                        onAnimationComplete={() => {}}
+                        isSpinning={isCurrentlySpinning}
+                      />
+                    </div>
+
+                    {/* Token Stream */}
+                    <div className="flex-1 min-w-0">
+                      <TokenStream
+                        tokens={output.tokens}
+                        currentIndex={output.currentTokenIndex}
+                        showProbabilities={true}
+                      />
+                    </div>
+                  </div>
                 ) : output?.isGenerating ? (
-                  <div className="flex items-center gap-2 text-neutral-400">
-                    <span className="animate-spin">⟳</span>
-                    <span>Generating...</span>
+                  <div className="flex items-center justify-center h-48 text-neutral-400">
+                    <span className="animate-spin mr-2">⟳</span>
+                    Preparing generation...
                   </div>
                 ) : (
-                  <p className="text-neutral-400 italic">
+                  <div className="flex items-center justify-center h-48 text-neutral-400 italic">
                     Output will appear here after generation
-                  </p>
+                  </div>
                 )}
               </div>
-
-              {/* Copy Button */}
-              {output?.content && !output?.isGenerating && (
-                <div className="px-4 py-2 border-t border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50">
-                  <button
-                    onClick={() => navigator.clipboard.writeText(output.content)}
-                    className="text-xs text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 transition"
-                  >
-                    Copy to clipboard
-                  </button>
-                </div>
-              )}
             </div>
           );
         })}
       </div>
-        </>
-      )}
 
       {/* Visual Temperature Scale */}
       <div className="mt-12 p-6 border border-neutral-200 dark:border-neutral-800 rounded-lg">
-        <h3 className="font-semibold mb-4">Understanding the Temperature Scale</h3>
+        <h3 className="font-semibold mb-4">Temperature Scale Reference</h3>
         <div className="relative h-12 bg-gradient-to-r from-blue-500 via-purple-500 to-red-500 rounded-lg">
           {/* Scale markers */}
           <div className="absolute inset-0 flex justify-between px-2 items-end pb-1">
