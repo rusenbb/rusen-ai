@@ -1,971 +1,607 @@
 "use client";
 
-import { useReducer, useCallback, useEffect, useRef } from "react";
-import { useEmbeddings, cosineSimilarity } from "./hooks/useEmbeddings";
-import { reduceToThreeDimensions } from "./utils/umap";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import Visualization from "./components/Visualization";
+import type { EmbeddingCache, Point, Axis, ArithmeticResult } from "./types";
+import { useEmbedding } from "./hooks/useEmbedding";
 import {
-  computeAxisVector,
-  projectToSemanticAxes,
-  vectorArithmetic as computeVectorArithmetic,
-  findNearestNeighbors,
-  computeNormalizationParams,
-  projectSingleToSemanticAxes,
-} from "./utils/vectorMath";
-import Visualization3D from "./components/Visualization3D";
-import TextInput from "./components/TextInput";
-import DatasetSelector from "./components/DatasetSelector";
-import SearchPanel from "./components/SearchPanel";
-import PointDetails from "./components/PointDetails";
-import LoadingProgress from "./components/LoadingProgress";
-import SemanticAxisEditor from "./components/SemanticAxisEditor";
-import AxisSelector from "./components/AxisSelector";
-import ProjectionModeToggle from "./components/ProjectionModeToggle";
-import VectorArithmeticPanel from "./components/VectorArithmeticPanel";
-import VocabularyPanel from "./components/VocabularyPanel";
-import {
-  initialState,
-  generateId,
-  DATASETS,
-  type EmbeddingExplorerState,
-  type EmbeddingExplorerAction,
-  type TextItem,
-  type SearchResult,
-  type SemanticAxis,
-  type VocabWord,
-  type ProjectionMode,
-} from "./types";
+  computeAxis,
+  projectTo2D,
+  normalizePoints,
+  arithmetic,
+  findNearest,
+  subtract,
+  normalize,
+} from "./utils/vectors";
 
-function reducer(state: EmbeddingExplorerState, action: EmbeddingExplorerAction): EmbeddingExplorerState {
-  switch (action.type) {
-    case "ADD_TEXT": {
-      const newItem: TextItem = {
-        id: generateId(),
-        text: action.text,
-        category: action.category,
-        embedding: null,
-        x: null,
-        y: null,
-        z: null,
-      };
-      return {
-        ...state,
-        texts: [...state.texts, newItem],
-        categories: state.categories.includes(action.category)
-          ? state.categories
-          : [...state.categories, action.category],
-      };
-    }
+// Default words to show in visualization
+const DEFAULT_WORDS = [
+  "king",
+  "queen",
+  "man",
+  "woman",
+  "boy",
+  "girl",
+  "prince",
+  "princess",
+  "father",
+  "mother",
+  "brother",
+  "sister",
+  "uncle",
+  "aunt",
+  "husband",
+  "wife",
+  "actor",
+  "actress",
+  "waiter",
+  "waitress",
+  "doctor",
+  "nurse",
+  "hero",
+  "heroine",
+];
 
-    case "ADD_TEXTS": {
-      const newItems: TextItem[] = action.texts.map((t) => ({
-        id: generateId(),
-        text: t.text,
-        category: t.category,
-        embedding: null,
-        x: null,
-        y: null,
-        z: null,
-      }));
-      const newCategories = new Set([
-        ...state.categories,
-        ...action.texts.map((t) => t.category),
-      ]);
-      return {
-        ...state,
-        texts: [...state.texts, ...newItems],
-        categories: Array.from(newCategories),
-      };
-    }
 
-    case "REMOVE_TEXT":
-      return {
-        ...state,
-        texts: state.texts.filter((t) => t.id !== action.id),
-        selectedPointId: state.selectedPointId === action.id ? null : state.selectedPointId,
-        searchResults: state.searchResults.filter((r) => r.item.id !== action.id),
-      };
-
-    case "CLEAR_ALL":
-      return {
-        ...initialState,
-        modelProgress: state.modelProgress,
-      };
-
-    case "SET_EMBEDDINGS": {
-      const updatedTexts = state.texts.map((t) => ({
-        ...t,
-        embedding: action.embeddings.get(t.id) ?? t.embedding,
-      }));
-      return { ...state, texts: updatedTexts };
-    }
-
-    case "SET_PROJECTIONS": {
-      const updatedTexts = state.texts.map((t) => {
-        const proj = action.projections.get(t.id);
-        return proj ? { ...t, x: proj.x, y: proj.y, z: proj.z } : t;
-      });
-      return { ...state, texts: updatedTexts };
-    }
-
-    case "SET_MODEL_PROGRESS":
-      return {
-        ...state,
-        modelProgress: { ...state.modelProgress, ...action.progress },
-      };
-
-    case "SET_EMBEDDING_PROGRESS":
-      return {
-        ...state,
-        isEmbedding: action.isEmbedding,
-        embeddingProgress: action.progress ?? state.embeddingProgress,
-      };
-
-    case "SET_REDUCING":
-      return { ...state, isReducing: action.isReducing };
-
-    case "SELECT_POINT":
-      return { ...state, selectedPointId: action.id };
-
-    case "HOVER_POINT":
-      return { ...state, hoveredPointId: action.id };
-
-    case "SET_SEARCH_QUERY":
-      return { ...state, searchQuery: action.query };
-
-    case "SET_SEARCH_RESULTS":
-      return { ...state, searchResults: action.results };
-
-    case "ADD_CATEGORY":
-      return state.categories.includes(action.category)
-        ? state
-        : { ...state, categories: [...state.categories, action.category] };
-
-    case "LOAD_DATASET": {
-      const dataset = DATASETS.find((d) => d.name === action.name);
-      if (!dataset) return state;
-
-      const newItems: TextItem[] = dataset.items.map((item) => ({
-        id: generateId(),
-        text: item.text,
-        category: item.category,
-        embedding: null,
-        x: null,
-        y: null,
-        z: null,
-      }));
-
-      const newCategories = new Set([
-        ...state.categories,
-        ...dataset.items.map((i) => i.category),
-      ]);
-
-      return {
-        ...state,
-        texts: newItems,
-        categories: Array.from(newCategories),
-        selectedPointId: null,
-        searchResults: [],
-      };
-    }
-
-    // === Projection Mode ===
-    case "SET_PROJECTION_MODE":
-      return {
-        ...state,
-        projectionMode: action.mode,
-        // Clear projections when mode changes - they'll be recomputed
-        texts: state.texts.map((t) => ({ ...t, x: null, y: null, z: null })),
-        vocabulary: state.vocabulary.map((v) => ({ ...v, x: null, y: null, z: null })),
-      };
-
-    // === Semantic Axes ===
-    case "ADD_SEMANTIC_AXIS": {
-      const newAxis: SemanticAxis = {
-        id: generateId(),
-        name: action.axis.name,
-        positiveWords: action.axis.positiveWords,
-        negativeWords: action.axis.negativeWords,
-        positiveEmbedding: null,
-        negativeEmbedding: null,
-        axisVector: null,
-      };
-      return {
-        ...state,
-        semanticAxes: [...state.semanticAxes, newAxis],
-      };
-    }
-
-    case "UPDATE_SEMANTIC_AXIS":
-      return {
-        ...state,
-        semanticAxes: state.semanticAxes.map((axis) =>
-          axis.id === action.id ? { ...axis, ...action.updates } : axis
-        ),
-      };
-
-    case "REMOVE_SEMANTIC_AXIS": {
-      // Also clear active axes if removed axis was assigned
-      const newActiveAxes = { ...state.activeAxes };
-      if (newActiveAxes.x === action.id) newActiveAxes.x = null;
-      if (newActiveAxes.y === action.id) newActiveAxes.y = null;
-      if (newActiveAxes.z === action.id) newActiveAxes.z = null;
-
-      return {
-        ...state,
-        semanticAxes: state.semanticAxes.filter((a) => a.id !== action.id),
-        activeAxes: newActiveAxes,
-      };
-    }
-
-    case "SET_AXIS_EMBEDDINGS":
-      return {
-        ...state,
-        semanticAxes: state.semanticAxes.map((axis) =>
-          axis.id === action.axisId
-            ? {
-                ...axis,
-                positiveEmbedding: action.positive,
-                negativeEmbedding: action.negative,
-                axisVector: action.axis,
-              }
-            : axis
-        ),
-      };
-
-    case "SET_ACTIVE_AXES":
-      return {
-        ...state,
-        activeAxes: { ...state.activeAxes, ...action.assignment },
-        // Clear projections - they'll be recomputed
-        texts: state.texts.map((t) => ({ ...t, x: null, y: null, z: null })),
-        vocabulary: state.vocabulary.map((v) => ({ ...v, x: null, y: null, z: null })),
-      };
-
-    case "SET_COMPUTING_AXES":
-      return { ...state, isComputingAxes: action.isComputing };
-
-    // === Vocabulary ===
-    case "LOAD_VOCABULARY": {
-      const vocabItems: VocabWord[] = action.words.map((word) => ({
-        id: generateId(),
-        text: word,
-        embedding: null,
-        x: null,
-        y: null,
-        z: null,
-      }));
-      return {
-        ...state,
-        vocabulary: vocabItems,
-        vocabularyLoaded: true,
-        isLoadingVocabulary: true,
-        vocabularyProgress: 0,
-      };
-    }
-
-    case "SET_VOCABULARY_EMBEDDINGS": {
-      const updatedVocab = state.vocabulary.map((v) => ({
-        ...v,
-        embedding: action.embeddings.get(v.id) ?? v.embedding,
-      }));
-      return { ...state, vocabulary: updatedVocab };
-    }
-
-    case "SET_VOCABULARY_PROJECTIONS": {
-      const updatedVocab = state.vocabulary.map((v) => {
-        const proj = action.projections.get(v.id);
-        return proj ? { ...v, x: proj.x, y: proj.y, z: proj.z } : v;
-      });
-      return { ...state, vocabulary: updatedVocab };
-    }
-
-    case "CLEAR_VOCABULARY":
-      return {
-        ...state,
-        vocabulary: [],
-        vocabularyLoaded: false,
-        isLoadingVocabulary: false,
-        vocabularyProgress: 0,
-      };
-
-    case "SET_LOADING_VOCABULARY":
-      return {
-        ...state,
-        isLoadingVocabulary: action.isLoading,
-        vocabularyProgress: action.progress ?? state.vocabularyProgress,
-      };
-
-    // === Vector Arithmetic ===
-    case "SET_VECTOR_ARITHMETIC":
-      return {
-        ...state,
-        vectorArithmetic: state.vectorArithmetic
-          ? { ...state.vectorArithmetic, ...action.arithmetic }
-          : {
-              operandA: action.arithmetic.operandA ?? "",
-              operandB: action.arithmetic.operandB ?? "",
-              operandC: action.arithmetic.operandC ?? "",
-              embeddingA: action.arithmetic.embeddingA ?? null,
-              embeddingB: action.arithmetic.embeddingB ?? null,
-              embeddingC: action.arithmetic.embeddingC ?? null,
-              resultEmbedding: action.arithmetic.resultEmbedding ?? null,
-              resultProjection: action.arithmetic.resultProjection ?? null,
-              nearestNeighbors: action.arithmetic.nearestNeighbors ?? [],
-            },
-      };
-
-    case "SET_ARITHMETIC_RESULT":
-      return {
-        ...state,
-        vectorArithmetic: state.vectorArithmetic
-          ? {
-              ...state.vectorArithmetic,
-              resultEmbedding: action.result,
-              resultProjection: action.projection,
-              nearestNeighbors: action.neighbors,
-            }
-          : null,
-      };
-
-    case "CLEAR_VECTOR_ARITHMETIC":
-      return { ...state, vectorArithmetic: null };
-
-    case "SET_COMPUTING_ARITHMETIC":
-      return { ...state, isComputingArithmetic: action.isComputing };
-
-    default:
-      return state;
-  }
-}
+// Classic analogies to try
+const EXAMPLE_ANALOGIES = [
+  { a: "king", b: "man", c: "woman", label: "king - man + woman" },
+  { a: "paris", b: "france", c: "germany", label: "paris - france + germany" },
+  { a: "walking", b: "walked", c: "swimming", label: "walking - walked + swimming" },
+  { a: "good", b: "better", c: "bad", label: "good - better + bad" },
+];
 
 export default function EmbeddingExplorerPage() {
-  const [state, dispatch] = useReducer(reducer, initialState);
+  // Embedding hook - handles model loading and embedding computation
   const {
-    isModelLoading,
-    modelProgress,
-    modelError,
-    isReady,
+    isLoading: isModelLoading,
+    isModelReady,
+    loadProgress,
+    error: modelError,
+    backend,
     embed,
-    embedSingle,
-  } = useEmbeddings();
+    embedBatch,
+    getCached,
+    cacheSize,
+  } = useEmbedding();
 
-  const processingRef = useRef(false);
+  // Local embedding cache for visualization
+  const [embeddingCache, setEmbeddingCache] = useState<EmbeddingCache>(new Map());
+  const [isEmbedding, setIsEmbedding] = useState(false);
+  const [embeddingProgress, setEmbeddingProgress] = useState(0);
 
-  // Update model progress in state
+  // Axes state (simple word difference)
+  const [xAxis, setXAxis] = useState<Axis>({ positive: "woman", negative: "man", vector: null });
+  const [yAxis, setYAxis] = useState<Axis>({ positive: "good", negative: "bad", vector: null });
+
+  // Words to display
+  const [words, setWords] = useState<string[]>(DEFAULT_WORDS);
+  const [newWord, setNewWord] = useState("");
+
+  // Selection state
+  const [selectedWord, setSelectedWord] = useState<string | null>(null);
+  const [hoveredWord, setHoveredWord] = useState<string | null>(null);
+
+  // Arithmetic state
+  const [arithmeticInputs, setArithmeticInputs] = useState({ a: "", b: "", c: "" });
+  const [arithmeticResult, setArithmeticResult] = useState<ArithmeticResult | null>(null);
+
+  // Track if initial embedding is done
+  const hasInitializedRef = useRef(false);
+
+  // Embed all words that don't have embeddings yet
+  const embedWords = useCallback(async (wordsToEmbed: string[]) => {
+    if (!isModelReady) return;
+
+    const uncachedWords = wordsToEmbed.filter(w => !embeddingCache.has(w.toLowerCase()));
+    if (uncachedWords.length === 0) return;
+
+    setIsEmbedding(true);
+    setEmbeddingProgress(0);
+
+    const newCache = new Map(embeddingCache);
+    let completed = 0;
+
+    for (const word of uncachedWords) {
+      const embedding = await embed(word);
+      if (embedding) {
+        newCache.set(word.toLowerCase(), embedding);
+      }
+      completed++;
+      setEmbeddingProgress(Math.round((completed / uncachedWords.length) * 100));
+    }
+
+    setEmbeddingCache(newCache);
+    setIsEmbedding(false);
+  }, [isModelReady, embed, embeddingCache]);
+
+  // Initialize default words when model is ready
   useEffect(() => {
-    dispatch({
-      type: "SET_MODEL_PROGRESS",
-      progress: {
-        status: isModelLoading ? "loading" : isReady ? "ready" : modelError ? "error" : "idle",
-        progress: modelProgress,
-        message: modelError || (isReady ? "Ready" : isModelLoading ? "Loading..." : "Not loaded"),
-      },
+    if (isModelReady && !hasInitializedRef.current) {
+      hasInitializedRef.current = true;
+
+      // Embed default display words + axis words
+      const allWords = [
+        ...DEFAULT_WORDS,
+        xAxis.positive, xAxis.negative,
+        yAxis.positive, yAxis.negative,
+      ];
+      embedWords([...new Set(allWords)]);
+    }
+  }, [isModelReady, embedWords, xAxis.positive, xAxis.negative, yAxis.positive, yAxis.negative]);
+
+  // Update axis vectors when cache or axis words change
+  useEffect(() => {
+    if (embeddingCache.size === 0) return;
+
+    const xVector = computeAxis(embeddingCache, xAxis.positive, xAxis.negative);
+    const yVector = computeAxis(embeddingCache, yAxis.positive, yAxis.negative);
+
+    // Only update if we computed a valid vector
+    if (xVector) {
+      setXAxis((prev) => ({ ...prev, vector: xVector }));
+    }
+    if (yVector) {
+      setYAxis((prev) => ({ ...prev, vector: yVector }));
+    }
+  }, [embeddingCache, xAxis.positive, xAxis.negative, yAxis.positive, yAxis.negative]);
+
+  // Embed axis words when they change
+  const handleAxisChange = useCallback(async (
+    axis: "x" | "y",
+    field: "positive" | "negative",
+    value: string
+  ) => {
+    const word = value.toLowerCase().trim();
+
+    if (axis === "x") {
+      setXAxis(prev => ({ ...prev, [field]: value, vector: null }));
+    } else {
+      setYAxis(prev => ({ ...prev, [field]: value, vector: null }));
+    }
+
+    // Embed the new word if it's not empty
+    if (word && !embeddingCache.has(word)) {
+      const embedding = await embed(word);
+      if (embedding) {
+        setEmbeddingCache(prev => new Map(prev).set(word, embedding));
+      }
+    }
+  }, [embed, embeddingCache]);
+
+  // Compute points for visualization
+  const points = useMemo((): Point[] => {
+    if (!xAxis.vector || !yAxis.vector || embeddingCache.size === 0) return [];
+
+    // Filter words that have embeddings
+    const validWords = words.filter((w) => embeddingCache.has(w.toLowerCase()));
+    const projected = projectTo2D(validWords, embeddingCache, xAxis.vector, yAxis.vector);
+    const normalized = normalizePoints(projected);
+
+    // Add arithmetic result if exists
+    const allPoints: Point[] = normalized.map((p) => ({
+      word: p.word,
+      x: p.x,
+      y: p.y,
+      isHighlighted: arithmeticResult?.nearest.some((n) => n.word === p.word.toLowerCase()),
+    }));
+
+    // Add arithmetic result point if it exists
+    if (arithmeticResult) {
+      const resultProjected = projectTo2D(
+        [arithmeticResult.nearest[0]?.word || "result"],
+        embeddingCache,
+        xAxis.vector,
+        yAxis.vector
+      );
+      if (resultProjected.length > 0) {
+        // Normalize against existing points
+        const allForNorm = [...projected, ...resultProjected];
+        const allNormalized = normalizePoints(allForNorm);
+        const resultPoint = allNormalized[allNormalized.length - 1];
+        if (resultPoint && !allPoints.find((p) => p.word === resultPoint.word)) {
+          allPoints.push({
+            word: `=${resultPoint.word}`,
+            x: resultPoint.x,
+            y: resultPoint.y,
+            isArithmeticResult: true,
+          });
+        }
+      }
+    }
+
+    return allPoints;
+  }, [words, embeddingCache, xAxis.vector, yAxis.vector, arithmeticResult]);
+
+  // Handle adding a word
+  const handleAddWord = useCallback(async () => {
+    const word = newWord.trim().toLowerCase();
+    if (!word) return;
+
+    // Embed the word if not cached
+    if (!embeddingCache.has(word)) {
+      const embedding = await embed(word);
+      if (!embedding) {
+        alert(`Could not embed "${word}"`);
+        return;
+      }
+      setEmbeddingCache(prev => new Map(prev).set(word, embedding));
+    }
+
+    if (!words.includes(word)) {
+      setWords((prev) => [...prev, word]);
+    }
+    setNewWord("");
+  }, [newWord, embeddingCache, embed, words]);
+
+  // Handle removing a word
+  const handleRemoveWord = useCallback((word: string) => {
+    setWords((prev) => prev.filter((w) => w !== word));
+  }, []);
+
+  // Handle vector arithmetic
+  const handleCompute = useCallback(async () => {
+    const { a, b, c } = arithmeticInputs;
+    if (!a || !b || !c) return;
+
+    setIsEmbedding(true);
+
+    // Embed words directly and collect results
+    const newCache = new Map(embeddingCache);
+    const wordsToProcess = [a, b, c];
+
+    for (const word of wordsToProcess) {
+      const key = word.toLowerCase();
+      if (!newCache.has(key)) {
+        const embedding = await embed(word);
+        if (embedding) {
+          newCache.set(key, embedding);
+        }
+      }
+    }
+
+    // Update the cache state
+    setEmbeddingCache(newCache);
+    setIsEmbedding(false);
+
+    // Now get vectors from the new cache
+    const vecA = newCache.get(a.toLowerCase());
+    const vecB = newCache.get(b.toLowerCase());
+    const vecC = newCache.get(c.toLowerCase());
+
+    if (!vecA || !vecB || !vecC) {
+      alert("Could not embed one or more words");
+      return;
+    }
+
+    const result = arithmetic(vecA, vecB, vecC);
+
+    // Filter cache to only include words in the display list
+    const searchCache = new Map<string, number[]>();
+    for (const word of words) {
+      const vec = newCache.get(word.toLowerCase());
+      if (vec) {
+        searchCache.set(word.toLowerCase(), vec);
+      }
+    }
+
+    const nearest = findNearest(result, searchCache, 5, new Set([a.toLowerCase(), b.toLowerCase(), c.toLowerCase()]));
+
+    setArithmeticResult({ a, b, c, result, nearest });
+
+    // Add result words to the visualization
+    const topResults = nearest.slice(0, 3).map((n) => n.word);
+    setWords((prev) => {
+      const newWords = [...prev];
+      for (const word of topResults) {
+        if (!newWords.includes(word)) {
+          newWords.push(word);
+        }
+      }
+      return newWords;
     });
-  }, [isModelLoading, modelProgress, modelError, isReady]);
+  }, [arithmeticInputs, embeddingCache, embed]);
 
-  const axisProcessingRef = useRef(false);
-  const vocabProcessingRef = useRef(false);
+  // Load example analogy
+  const handleLoadExample = useCallback((example: typeof EXAMPLE_ANALOGIES[0]) => {
+    setArithmeticInputs({ a: example.a, b: example.b, c: example.c });
+  }, []);
 
-  // Process texts: compute embeddings only (projection handled separately)
-  useEffect(() => {
-    const textsWithoutEmbeddings = state.texts.filter((t) => t.embedding === null);
+  // Axis labels for visualization
+  const xAxisLabel = xAxis.vector ? `${xAxis.positive}` : null;
+  const yAxisLabel = yAxis.vector ? `${yAxis.positive}` : null;
 
-    if (textsWithoutEmbeddings.length === 0 || processingRef.current) {
-      return;
-    }
+  // Loading state
+  if (!isModelReady) {
+    return (
+      <div className="max-w-5xl mx-auto px-4 py-16">
+        <h1 className="text-4xl font-bold mb-4">Embedding Explorer</h1>
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 text-neutral-500">
+            <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+            <span>
+              {isModelLoading
+                ? `Loading embedding model... ${loadProgress}%`
+                : "Initializing..."}
+            </span>
+          </div>
 
-    const processTexts = async () => {
-      processingRef.current = true;
+          {/* Progress bar */}
+          <div className="w-full max-w-md h-2 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-indigo-500 transition-all duration-300"
+              style={{ width: `${loadProgress}%` }}
+            />
+          </div>
 
-      try {
-        dispatch({ type: "SET_EMBEDDING_PROGRESS", isEmbedding: true, progress: 0 });
+          <p className="text-sm text-neutral-400">
+            Loading mxbai-embed-xsmall-v1 (24M parameters)
+            {backend && ` using ${backend.toUpperCase()}`}
+          </p>
 
-        const textStrings = textsWithoutEmbeddings.map((t) => t.text);
-        const embeddings = await embed(textStrings);
-
-        const embeddingMap = new Map<string, number[]>();
-        textsWithoutEmbeddings.forEach((t, i) => {
-          embeddingMap.set(t.id, embeddings[i]);
-        });
-
-        dispatch({ type: "SET_EMBEDDINGS", embeddings: embeddingMap });
-        dispatch({ type: "SET_EMBEDDING_PROGRESS", isEmbedding: false, progress: 100 });
-      } catch (error) {
-        console.error("Error computing embeddings:", error);
-        dispatch({ type: "SET_EMBEDDING_PROGRESS", isEmbedding: false });
-      } finally {
-        processingRef.current = false;
-      }
-    };
-
-    processTexts();
-  }, [state.texts, embed]);
-
-  // Project texts based on current mode (UMAP or semantic axes)
-  useEffect(() => {
-    const textsWithEmbeddings = state.texts.filter((t) => t.embedding !== null);
-    const textsNeedingProjection = textsWithEmbeddings.filter((t) => t.x === null);
-
-    // Only proceed if we have texts needing projection
-    if (textsNeedingProjection.length === 0 || state.isEmbedding) {
-      return;
-    }
-
-    const projectTexts = async () => {
-      dispatch({ type: "SET_REDUCING", isReducing: true });
-
-      try {
-        if (state.projectionMode === "umap") {
-          // UMAP mode
-          if (textsWithEmbeddings.length >= 2) {
-            const projections = await reduceToThreeDimensions(
-              textsWithEmbeddings.map((t) => ({
-                id: t.id,
-                embedding: t.embedding!,
-              }))
-            );
-
-            const projectionMap = new Map<string, { x: number; y: number; z: number }>();
-            projections.forEach((p) => {
-              projectionMap.set(p.id, { x: p.x, y: p.y, z: p.z });
-            });
-
-            dispatch({ type: "SET_PROJECTIONS", projections: projectionMap });
-          }
-        } else {
-          // Semantic axes mode
-          const { x: xAxisId, y: yAxisId, z: zAxisId } = state.activeAxes;
-          const xAxis = state.semanticAxes.find((a) => a.id === xAxisId)?.axisVector ?? null;
-          const yAxis = state.semanticAxes.find((a) => a.id === yAxisId)?.axisVector ?? null;
-          const zAxis = state.semanticAxes.find((a) => a.id === zAxisId)?.axisVector ?? null;
-
-          // Only project if at least one axis is defined
-          if (xAxis || yAxis || zAxis) {
-            const projectionMap = projectToSemanticAxes(
-              textsWithEmbeddings.map((t) => ({ id: t.id, embedding: t.embedding! })),
-              xAxis,
-              yAxis,
-              zAxis
-            );
-
-            dispatch({ type: "SET_PROJECTIONS", projections: projectionMap });
-          }
-        }
-      } catch (error) {
-        console.error("Error projecting texts:", error);
-      } finally {
-        dispatch({ type: "SET_REDUCING", isReducing: false });
-      }
-    };
-
-    projectTexts();
-  }, [
-    state.texts,
-    state.projectionMode,
-    state.activeAxes,
-    state.semanticAxes,
-    state.isEmbedding,
-  ]);
-
-  // Compute axis embeddings when axes are added or modified
-  useEffect(() => {
-    const axesNeedingEmbeddings = state.semanticAxes.filter((a) => a.axisVector === null);
-
-    if (axesNeedingEmbeddings.length === 0 || axisProcessingRef.current || !isReady) {
-      return;
-    }
-
-    const computeAxes = async () => {
-      axisProcessingRef.current = true;
-      dispatch({ type: "SET_COMPUTING_AXES", isComputing: true });
-
-      try {
-        for (const axis of axesNeedingEmbeddings) {
-          // Embed positive and negative words
-          const positiveEmbeddings = await embed(axis.positiveWords);
-          const negativeEmbeddings = await embed(axis.negativeWords);
-
-          // Compute axis vector
-          const { positiveCentroid, negativeCentroid, axisVector } = computeAxisVector(
-            positiveEmbeddings,
-            negativeEmbeddings
-          );
-
-          dispatch({
-            type: "SET_AXIS_EMBEDDINGS",
-            axisId: axis.id,
-            positive: positiveCentroid,
-            negative: negativeCentroid,
-            axis: axisVector,
-          });
-        }
-      } catch (error) {
-        console.error("Error computing axis embeddings:", error);
-      } finally {
-        axisProcessingRef.current = false;
-        dispatch({ type: "SET_COMPUTING_AXES", isComputing: false });
-      }
-    };
-
-    computeAxes();
-  }, [state.semanticAxes, embed, isReady]);
-
-  // Process vocabulary embeddings
-  useEffect(() => {
-    const vocabWithoutEmbeddings = state.vocabulary.filter((v) => v.embedding === null);
-
-    if (vocabWithoutEmbeddings.length === 0 || vocabProcessingRef.current || !isReady) {
-      return;
-    }
-
-    const processVocab = async () => {
-      vocabProcessingRef.current = true;
-
-      try {
-        // Process in batches of 50
-        const batchSize = 50;
-        const batches = [];
-        for (let i = 0; i < vocabWithoutEmbeddings.length; i += batchSize) {
-          batches.push(vocabWithoutEmbeddings.slice(i, i + batchSize));
-        }
-
-        for (let i = 0; i < batches.length; i++) {
-          const batch = batches[i];
-          const embeddings = await embed(batch.map((v) => v.text));
-
-          const embeddingMap = new Map<string, number[]>();
-          batch.forEach((v, j) => {
-            embeddingMap.set(v.id, embeddings[j]);
-          });
-
-          dispatch({ type: "SET_VOCABULARY_EMBEDDINGS", embeddings: embeddingMap });
-          dispatch({
-            type: "SET_LOADING_VOCABULARY",
-            isLoading: true,
-            progress: Math.round(((i + 1) / batches.length) * 100),
-          });
-        }
-
-        dispatch({ type: "SET_LOADING_VOCABULARY", isLoading: false, progress: 100 });
-      } catch (error) {
-        console.error("Error embedding vocabulary:", error);
-        dispatch({ type: "SET_LOADING_VOCABULARY", isLoading: false });
-      } finally {
-        vocabProcessingRef.current = false;
-      }
-    };
-
-    processVocab();
-  }, [state.vocabulary, embed, isReady]);
-
-  // Project vocabulary when embeddings are ready and axes are set
-  useEffect(() => {
-    const vocabWithEmbeddings = state.vocabulary.filter((v) => v.embedding !== null);
-    const vocabNeedingProjection = vocabWithEmbeddings.filter((v) => v.x === null);
-
-    if (
-      vocabNeedingProjection.length === 0 ||
-      state.isLoadingVocabulary ||
-      state.projectionMode !== "semantic-axes"
-    ) {
-      return;
-    }
-
-    const { x: xAxisId, y: yAxisId, z: zAxisId } = state.activeAxes;
-    const xAxis = state.semanticAxes.find((a) => a.id === xAxisId)?.axisVector ?? null;
-    const yAxis = state.semanticAxes.find((a) => a.id === yAxisId)?.axisVector ?? null;
-    const zAxis = state.semanticAxes.find((a) => a.id === zAxisId)?.axisVector ?? null;
-
-    if (!xAxis && !yAxis && !zAxis) {
-      return;
-    }
-
-    const projectionMap = projectToSemanticAxes(
-      vocabWithEmbeddings.map((v) => ({ id: v.id, embedding: v.embedding! })),
-      xAxis,
-      yAxis,
-      zAxis
+          {modelError && (
+            <div className="p-4 bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-400 rounded-lg">
+              {modelError}
+            </div>
+          )}
+        </div>
+      </div>
     );
-
-    dispatch({ type: "SET_VOCABULARY_PROJECTIONS", projections: projectionMap });
-  }, [
-    state.vocabulary,
-    state.projectionMode,
-    state.activeAxes,
-    state.semanticAxes,
-    state.isLoadingVocabulary,
-  ]);
-
-  // Handlers
-  const handleAddText = useCallback((text: string, category: string) => {
-    dispatch({ type: "ADD_TEXT", text, category });
-  }, []);
-
-  const handleAddCategory = useCallback((category: string) => {
-    dispatch({ type: "ADD_CATEGORY", category });
-  }, []);
-
-  const handleLoadDataset = useCallback((name: string) => {
-    dispatch({ type: "LOAD_DATASET", name });
-  }, []);
-
-  const handleSelectPoint = useCallback((id: string | null) => {
-    dispatch({ type: "SELECT_POINT", id });
-  }, []);
-
-  const handleHoverPoint = useCallback((id: string | null) => {
-    dispatch({ type: "HOVER_POINT", id });
-  }, []);
-
-  const handleDeleteText = useCallback((id: string) => {
-    dispatch({ type: "REMOVE_TEXT", id });
-    dispatch({ type: "SELECT_POINT", id: null });
-  }, []);
-
-  const handleClearAll = useCallback(() => {
-    dispatch({ type: "CLEAR_ALL" });
-  }, []);
-
-  const handleSearch = useCallback(
-    async (query: string) => {
-      dispatch({ type: "SET_SEARCH_QUERY", query });
-
-      try {
-        // Get query embedding
-        const queryEmbedding = await embedSingle(query);
-
-        // Find similar texts
-        const textsWithEmbeddings = state.texts.filter((t) => t.embedding !== null);
-        const results: SearchResult[] = textsWithEmbeddings
-          .map((item) => ({
-            item,
-            similarity: cosineSimilarity(queryEmbedding, item.embedding!),
-          }))
-          .sort((a, b) => b.similarity - a.similarity)
-          .slice(0, 5);
-
-        dispatch({ type: "SET_SEARCH_RESULTS", results });
-      } catch (error) {
-        console.error("Search error:", error);
-      }
-    },
-    [state.texts, embedSingle]
-  );
-
-  const handleClearSearch = useCallback(() => {
-    dispatch({ type: "SET_SEARCH_QUERY", query: "" });
-    dispatch({ type: "SET_SEARCH_RESULTS", results: [] });
-  }, []);
-
-  // === New handlers for semantic axes ===
-  const handleSetProjectionMode = useCallback((mode: ProjectionMode) => {
-    dispatch({ type: "SET_PROJECTION_MODE", mode });
-  }, []);
-
-  const handleAddAxis = useCallback(
-    (name: string, positiveWords: string[], negativeWords: string[]) => {
-      dispatch({ type: "ADD_SEMANTIC_AXIS", axis: { name, positiveWords, negativeWords } });
-    },
-    []
-  );
-
-  const handleRemoveAxis = useCallback((id: string) => {
-    dispatch({ type: "REMOVE_SEMANTIC_AXIS", id });
-  }, []);
-
-  const handleSetActiveAxes = useCallback(
-    (assignment: { x?: string | null; y?: string | null; z?: string | null }) => {
-      dispatch({ type: "SET_ACTIVE_AXES", assignment });
-    },
-    []
-  );
-
-  // === Vocabulary handlers ===
-  const handleLoadVocabulary = useCallback(async () => {
-    const { loadCommonWords } = await import("./utils/vocabulary");
-    const words = loadCommonWords();
-    dispatch({ type: "LOAD_VOCABULARY", words });
-  }, []);
-
-  const handleClearVocabulary = useCallback(() => {
-    dispatch({ type: "CLEAR_VOCABULARY" });
-  }, []);
-
-  // === Vector arithmetic handlers ===
-  const handleComputeArithmetic = useCallback(
-    async (a: string, b: string, c: string) => {
-      dispatch({ type: "SET_COMPUTING_ARITHMETIC", isComputing: true });
-      dispatch({
-        type: "SET_VECTOR_ARITHMETIC",
-        arithmetic: { operandA: a, operandB: b, operandC: c },
-      });
-
-      try {
-        // Embed all three operands
-        const embeddings = await embed([a, b, c]);
-        const [embA, embB, embC] = embeddings;
-
-        // Compute A - B + C
-        const result = computeVectorArithmetic(embA, embB, embC);
-
-        // Find nearest neighbors from texts and vocabulary
-        const allCandidates = [
-          ...state.texts
-            .filter((t) => t.embedding !== null)
-            .map((t) => ({ text: t.text, embedding: t.embedding! })),
-          ...state.vocabulary
-            .filter((v) => v.embedding !== null)
-            .map((v) => ({ text: v.text, embedding: v.embedding! })),
-        ];
-
-        const neighbors = findNearestNeighbors(result, allCandidates, 10);
-
-        // Project result if in semantic axes mode
-        let projection: { x: number; y: number; z: number } | null = null;
-        if (state.projectionMode === "semantic-axes") {
-          const { x: xAxisId, y: yAxisId, z: zAxisId } = state.activeAxes;
-          const xAxis = state.semanticAxes.find((ax) => ax.id === xAxisId)?.axisVector ?? null;
-          const yAxis = state.semanticAxes.find((ax) => ax.id === yAxisId)?.axisVector ?? null;
-          const zAxis = state.semanticAxes.find((ax) => ax.id === zAxisId)?.axisVector ?? null;
-
-          if (xAxis || yAxis || zAxis) {
-            // Get normalization from existing texts
-            const textsWithEmbeddings = state.texts.filter((t) => t.embedding !== null);
-            const normParams = computeNormalizationParams(
-              textsWithEmbeddings.map((t) => ({ embedding: t.embedding! })),
-              xAxis,
-              yAxis,
-              zAxis
-            );
-            projection = projectSingleToSemanticAxes(result, xAxis, yAxis, zAxis, normParams);
-          }
-        }
-
-        dispatch({
-          type: "SET_ARITHMETIC_RESULT",
-          result,
-          projection,
-          neighbors,
-        });
-      } catch (error) {
-        console.error("Error computing arithmetic:", error);
-      } finally {
-        dispatch({ type: "SET_COMPUTING_ARITHMETIC", isComputing: false });
-      }
-    },
-    [embed, state.texts, state.vocabulary, state.projectionMode, state.activeAxes, state.semanticAxes]
-  );
-
-  const handleClearArithmetic = useCallback(() => {
-    dispatch({ type: "CLEAR_VECTOR_ARITHMETIC" });
-  }, []);
-
-  const selectedItem = state.selectedPointId
-    ? state.texts.find((t) => t.id === state.selectedPointId) ?? null
-    : null;
-
-  const isProcessing =
-    state.isEmbedding ||
-    state.isReducing ||
-    state.isComputingAxes ||
-    state.isComputingArithmetic ||
-    isModelLoading;
-
-  // Check if semantic axes mode is ready (at least one axis computed and assigned)
-  const hasComputedAxes = state.semanticAxes.some((a) => a.axisVector !== null);
-  const hasAssignedAxes =
-    state.activeAxes.x !== null || state.activeAxes.y !== null || state.activeAxes.z !== null;
-  const semanticAxesReady = hasComputedAxes && hasAssignedAxes;
-
-  // Get axis labels for visualization
-  const axisLabels = {
-    x: state.semanticAxes.find((a) => a.id === state.activeAxes.x)?.name ?? null,
-    y: state.semanticAxes.find((a) => a.id === state.activeAxes.y)?.name ?? null,
-    z: state.semanticAxes.find((a) => a.id === state.activeAxes.z)?.name ?? null,
-  };
+  }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-16">
+    <div className="max-w-5xl mx-auto px-4 py-16">
       {/* Header */}
-      <h1 className="text-4xl font-bold mb-4">Embedding Explorer</h1>
-      <p className="text-neutral-600 dark:text-neutral-400 mb-8 max-w-3xl">
-        Explore the semantic structure of neural network embeddings. Define semantic axes like
-        &quot;gender&quot; or &quot;sentiment&quot;, project texts onto interpretable dimensions, and discover
-        hidden relationships through vector arithmetic. All computation runs in your browser.
+      <h1 className="text-4xl font-bold mb-2">Embedding Explorer</h1>
+      <p className="text-neutral-600 dark:text-neutral-400 mb-8 max-w-2xl">
+        Explore word relationships using a neural embedding model running directly in your browser.
+        Define axes by word differences, see how words cluster, and try the famous &quot;king - man + woman = queen&quot; analogy.
+        <span className="text-neutral-500 text-sm ml-2">
+          (Model: mxbai-embed-xsmall • {backend?.toUpperCase()} • {cacheSize} words cached)
+        </span>
       </p>
 
-      {/* Main content grid - 3 columns on large screens */}
-      <div className="grid lg:grid-cols-4 gap-6">
-        {/* Left sidebar - Semantic Axes & Projection */}
-        <div className="lg:col-span-1 space-y-4">
-          {/* Loading progress */}
-          <LoadingProgress
-            isModelLoading={isModelLoading}
-            modelProgress={modelProgress}
-            modelError={modelError}
-            isEmbedding={state.isEmbedding}
-            embeddingProgress={state.embeddingProgress}
-            isReducing={state.isReducing}
-          />
+      {/* Embedding progress indicator */}
+      {isEmbedding && (
+        <div className="mb-4 p-3 bg-indigo-50 dark:bg-indigo-950 rounded-lg flex items-center gap-3">
+          <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          <span className="text-sm text-indigo-700 dark:text-indigo-300">
+            Embedding words... {embeddingProgress}%
+          </span>
+        </div>
+      )}
 
-          {/* Projection Mode Toggle */}
-          <div className="p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg">
-            <ProjectionModeToggle
-              mode={state.projectionMode}
-              onSetMode={handleSetProjectionMode}
-              semanticAxesReady={semanticAxesReady}
-              disabled={isProcessing}
-            />
-          </div>
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Left: Controls */}
+        <div className="space-y-4">
+          {/* Axis Definition */}
+          <div className="p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg space-y-4 overflow-hidden">
+            <h3 className="font-medium text-sm">Define Axes</h3>
 
-          {/* Semantic Axes Editor */}
-          <div className="p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg">
-            <SemanticAxisEditor
-              axes={state.semanticAxes}
-              onAddAxis={handleAddAxis}
-              onRemoveAxis={handleRemoveAxis}
-              isComputing={state.isComputingAxes}
-              disabled={isProcessing}
-            />
-          </div>
-
-          {/* Axis Selector */}
-          {state.semanticAxes.length > 0 && state.projectionMode === "semantic-axes" && (
-            <div className="p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg">
-              <AxisSelector
-                axes={state.semanticAxes}
-                activeAxes={state.activeAxes}
-                onSetActiveAxes={handleSetActiveAxes}
-                disabled={isProcessing}
-              />
-            </div>
-          )}
-
-          {/* Vocabulary Panel */}
-          <div className="p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg">
-            <VocabularyPanel
-              vocabularyLoaded={state.vocabularyLoaded}
-              vocabularyCount={state.vocabulary.length}
-              isLoading={state.isLoadingVocabulary}
-              progress={state.vocabularyProgress}
-              onLoadVocabulary={handleLoadVocabulary}
-              onClearVocabulary={handleClearVocabulary}
-              disabled={isProcessing || state.projectionMode !== "semantic-axes" || !semanticAxesReady}
-            />
-          </div>
-
-          {/* Text input */}
-          <div className="p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg">
-            <TextInput
-              categories={state.categories}
-              onAddText={handleAddText}
-              onAddCategory={handleAddCategory}
-              disabled={isProcessing}
-            />
-          </div>
-
-          {/* Dataset selector */}
-          <div className="p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg">
-            <DatasetSelector onLoadDataset={handleLoadDataset} disabled={isProcessing} />
-          </div>
-
-          {/* Stats & controls */}
-          <div className="p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium">Points: {state.texts.length}</span>
-              {state.texts.length > 0 && (
-                <button
-                  onClick={handleClearAll}
-                  className="text-xs text-red-600 hover:text-red-700 dark:text-red-400"
-                  disabled={isProcessing}
-                >
-                  Clear all
-                </button>
+            {/* X Axis */}
+            <div className="space-y-1">
+              <label className="text-xs text-neutral-500">X Axis (horizontal)</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={xAxis.positive}
+                  onChange={(e) => handleAxisChange("x", "positive", e.target.value)}
+                  placeholder="woman"
+                  className="flex-1 min-w-0 px-2 py-1.5 text-sm border border-neutral-200 dark:border-neutral-700 rounded bg-transparent"
+                />
+                <span className="text-neutral-400 shrink-0">−</span>
+                <input
+                  type="text"
+                  value={xAxis.negative}
+                  onChange={(e) => handleAxisChange("x", "negative", e.target.value)}
+                  placeholder="man"
+                  className="flex-1 min-w-0 px-2 py-1.5 text-sm border border-neutral-200 dark:border-neutral-700 rounded bg-transparent"
+                />
+              </div>
+              {!xAxis.vector && xAxis.positive && xAxis.negative && embeddingCache.has(xAxis.positive.toLowerCase()) && embeddingCache.has(xAxis.negative.toLowerCase()) && (
+                <p className="text-xs text-yellow-600">Computing axis...</p>
+              )}
+              {xAxis.positive && xAxis.negative && (!embeddingCache.has(xAxis.positive.toLowerCase()) || !embeddingCache.has(xAxis.negative.toLowerCase())) && (
+                <p className="text-xs text-neutral-500">Type to embed word</p>
               )}
             </div>
-            <div className="text-xs text-neutral-500">
-              {state.texts.filter((t) => t.embedding !== null).length} embedded,{" "}
-              {state.texts.filter((t) => t.x !== null).length} projected
+
+            {/* Y Axis */}
+            <div className="space-y-1">
+              <label className="text-xs text-neutral-500">Y Axis (vertical)</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={yAxis.positive}
+                  onChange={(e) => handleAxisChange("y", "positive", e.target.value)}
+                  placeholder="good"
+                  className="flex-1 min-w-0 px-2 py-1.5 text-sm border border-neutral-200 dark:border-neutral-700 rounded bg-transparent"
+                />
+                <span className="text-neutral-400 shrink-0">−</span>
+                <input
+                  type="text"
+                  value={yAxis.negative}
+                  onChange={(e) => handleAxisChange("y", "negative", e.target.value)}
+                  placeholder="bad"
+                  className="flex-1 min-w-0 px-2 py-1.5 text-sm border border-neutral-200 dark:border-neutral-700 rounded bg-transparent"
+                />
+              </div>
+              {yAxis.positive && yAxis.negative && (!embeddingCache.has(yAxis.positive.toLowerCase()) || !embeddingCache.has(yAxis.negative.toLowerCase())) && (
+                <p className="text-xs text-neutral-500">Type to embed word</p>
+              )}
+            </div>
+          </div>
+
+          {/* Vector Arithmetic */}
+          <div className="p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg space-y-3">
+            <h3 className="font-medium text-sm">Vector Arithmetic</h3>
+            <p className="text-xs text-neutral-500">Try: A − B + C = ?</p>
+
+            {/* Examples */}
+            <div className="flex flex-wrap gap-1">
+              {EXAMPLE_ANALOGIES.map((ex) => (
+                <button
+                  key={ex.label}
+                  onClick={() => handleLoadExample(ex)}
+                  className="px-2 py-1 text-xs bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded transition-colors"
+                >
+                  {ex.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Inputs */}
+            <div className="flex items-center gap-1.5">
+              <input
+                type="text"
+                value={arithmeticInputs.a}
+                onChange={(e) => setArithmeticInputs((prev) => ({ ...prev, a: e.target.value }))}
+                placeholder="king"
+                className="w-full px-2 py-1.5 text-sm border border-neutral-200 dark:border-neutral-700 rounded bg-transparent"
+              />
+              <span className="text-neutral-400 shrink-0">−</span>
+              <input
+                type="text"
+                value={arithmeticInputs.b}
+                onChange={(e) => setArithmeticInputs((prev) => ({ ...prev, b: e.target.value }))}
+                placeholder="man"
+                className="w-full px-2 py-1.5 text-sm border border-neutral-200 dark:border-neutral-700 rounded bg-transparent"
+              />
+              <span className="text-neutral-400 shrink-0">+</span>
+              <input
+                type="text"
+                value={arithmeticInputs.c}
+                onChange={(e) => setArithmeticInputs((prev) => ({ ...prev, c: e.target.value }))}
+                placeholder="woman"
+                className="w-full px-2 py-1.5 text-sm border border-neutral-200 dark:border-neutral-700 rounded bg-transparent"
+              />
+            </div>
+
+            <button
+              onClick={handleCompute}
+              disabled={!arithmeticInputs.a || !arithmeticInputs.b || !arithmeticInputs.c || isEmbedding}
+              className="w-full px-3 py-1.5 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isEmbedding ? "Embedding..." : "Compute"}
+            </button>
+
+            {/* Results */}
+            {arithmeticResult && (
+              <div className="pt-2 border-t border-neutral-200 dark:border-neutral-800">
+                <p className="text-xs text-neutral-500 mb-2">
+                  {arithmeticResult.a} − {arithmeticResult.b} + {arithmeticResult.c} ≈
+                </p>
+                <div className="space-y-1">
+                  {arithmeticResult.nearest.map((n, i) => (
+                    <div
+                      key={n.word}
+                      className={`flex justify-between text-sm px-2 py-1 rounded ${
+                        i === 0
+                          ? "bg-indigo-50 dark:bg-indigo-950 font-medium"
+                          : "bg-neutral-50 dark:bg-neutral-900"
+                      }`}
+                    >
+                      <span>{n.word}</span>
+                      <span className="text-neutral-500">{(n.similarity * 100).toFixed(1)}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Add Word */}
+          <div className="p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg space-y-2">
+            <h3 className="font-medium text-sm">Add Words</h3>
+            <p className="text-xs text-neutral-500">You can embed any word or phrase</p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newWord}
+                onChange={(e) => setNewWord(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAddWord()}
+                placeholder="Type any word or phrase..."
+                className="flex-1 px-2 py-1.5 text-sm border border-neutral-200 dark:border-neutral-700 rounded bg-transparent"
+              />
+              <button
+                onClick={handleAddWord}
+                disabled={!newWord.trim() || isEmbedding}
+                className="px-3 py-1.5 text-sm bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded hover:bg-neutral-800 dark:hover:bg-neutral-200 disabled:opacity-50"
+              >
+                Add
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Center - Visualization */}
+        {/* Center + Right: Visualization */}
         <div className="lg:col-span-2 space-y-4">
-          {/* 3D Visualization */}
-          <Visualization3D
-            items={state.texts}
-            vocabulary={state.vocabulary}
-            selectedPointId={state.selectedPointId}
-            hoveredPointId={state.hoveredPointId}
-            searchResults={state.searchResults}
-            axisLabels={axisLabels}
-            projectionMode={state.projectionMode}
-            arithmeticResult={state.vectorArithmetic?.resultProjection ?? null}
-            onSelectPoint={handleSelectPoint}
-            onHoverPoint={handleHoverPoint}
+          <Visualization
+            points={points}
+            xAxisLabel={xAxisLabel}
+            yAxisLabel={yAxisLabel}
+            selectedWord={selectedWord}
+            hoveredWord={hoveredWord}
+            onSelectWord={setSelectedWord}
+            onHoverWord={setHoveredWord}
           />
 
-          {/* Point details */}
-          {selectedItem && (
-            <PointDetails
-              item={selectedItem}
-              onClose={() => handleSelectPoint(null)}
-              onDelete={handleDeleteText}
-            />
-          )}
-        </div>
-
-        {/* Right sidebar - Arithmetic & Search */}
-        <div className="lg:col-span-1 space-y-4">
-          {/* Vector Arithmetic */}
+          {/* Word list */}
           <div className="p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg">
-            <VectorArithmeticPanel
-              arithmetic={state.vectorArithmetic}
-              isComputing={state.isComputingArithmetic}
-              onCompute={handleComputeArithmetic}
-              onClear={handleClearArithmetic}
-              disabled={isProcessing}
-            />
-          </div>
-
-          {/* Search panel */}
-          <div className="p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg">
-            <h3 className="text-sm font-medium mb-3">Similarity Search</h3>
-            <SearchPanel
-              searchResults={state.searchResults}
-              onSearch={handleSearch}
-              onClearSearch={handleClearSearch}
-              onSelectResult={handleSelectPoint}
-              disabled={state.texts.length === 0 || isProcessing}
-            />
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-medium text-sm">Words ({words.length})</h3>
+              <button
+                onClick={() => setWords(DEFAULT_WORDS)}
+                className="text-xs text-neutral-500 hover:text-neutral-700"
+              >
+                Reset
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {words.map((word) => (
+                <span
+                  key={word}
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 text-sm rounded cursor-pointer transition-colors ${
+                    selectedWord === word
+                      ? "bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300"
+                      : hoveredWord === word
+                      ? "bg-neutral-200 dark:bg-neutral-700"
+                      : "bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                  }`}
+                  onClick={() => setSelectedWord(selectedWord === word ? null : word)}
+                  onDoubleClick={() => handleRemoveWord(word)}
+                >
+                  {word}
+                  {!embeddingCache.has(word.toLowerCase()) && (
+                    <span className="text-yellow-500 text-xs">⏳</span>
+                  )}
+                </span>
+              ))}
+            </div>
+            <p className="text-xs text-neutral-500 mt-2">
+              Click to select, double-click to remove
+            </p>
           </div>
         </div>
       </div>
 
-      {/* About section */}
-      <div className="mt-12 text-sm text-neutral-500 max-w-3xl">
-        <h3 className="font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
-          How it works
-        </h3>
-        <p className="mb-2">
-          <strong>Semantic Axes:</strong> Define interpretable dimensions by specifying
-          contrasting word pairs (e.g., &quot;woman&quot; vs &quot;man&quot; for gender). The axis is computed
-          as the direction between the average embeddings of each group.
+      {/* About */}
+      <div className="mt-12 p-6 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
+        <h3 className="font-semibold mb-2">How it works</h3>
+        <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-3">
+          This visualization runs <strong>mxbai-embed-xsmall-v1</strong>, a 24-million parameter neural network,
+          directly in your browser using {backend === "webgpu" ? "WebGPU acceleration" : "WebAssembly"}.
+          Unlike pre-computed embeddings, you can embed <em>any</em> word or phrase in real-time.
         </p>
-        <p className="mb-2">
-          <strong>Vector Arithmetic:</strong> Explore semantic relationships with operations like
-          &quot;king - man + woman = ?&quot; (spoiler: queen). This works because concepts are encoded
-          as linear directions in embedding space.
+        <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-3">
+          <strong>Axes</strong> are defined by the difference between two word embeddings. For example, &quot;woman − man&quot;
+          creates a direction that captures gender semantics. Projecting words onto this axis shows
+          where they fall on that spectrum.
         </p>
-        <p className="mb-2">
-          <strong>Projection Modes:</strong> Semantic mode projects onto your defined axes for
-          interpretable dimensions. UMAP mode uses automatic dimensionality reduction to reveal
-          natural clusters.
-        </p>
-        <p>
-          <strong>All Local:</strong> The all-MiniLM-L6-v2 model runs entirely in your browser
-          via Transformers.js. No data is sent to any server.
+        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+          <strong>Vector arithmetic</strong> works because concepts are encoded as directions. The famous
+          &quot;king − man + woman = queen&quot; demonstrates that the model has learned semantic relationships
+          that can be manipulated algebraically.
         </p>
       </div>
     </div>
