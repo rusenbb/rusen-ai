@@ -85,7 +85,7 @@ export default function TemperaturePlaygroundPage() {
       return new Promise<void>((resolve) => {
         const abortController = generateTokenByToken(
           state.prompt,
-          { temperature: temp, maxTokens: MAX_TOKENS, topK: 10 },
+          { temperature: temp, maxTokens: MAX_TOKENS, topK: 100 },
           {
             onToken: (token: GeneratedToken) => {
               if (!mountedRef.current) return;
