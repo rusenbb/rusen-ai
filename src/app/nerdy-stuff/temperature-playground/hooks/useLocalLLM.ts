@@ -305,6 +305,13 @@ export function useLocalLLM(): UseLocalLLMReturn {
     [loadModel]
   );
 
+  // Auto-load model on mount
+  useEffect(() => {
+    loadModel().catch((err) => {
+      console.error("Failed to load model:", err);
+    });
+  }, [loadModel]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
