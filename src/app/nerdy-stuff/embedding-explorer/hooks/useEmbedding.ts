@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 
 // Type for pipeline function - we use dynamic import
-type Pipeline = (texts: string | string[], options?: { pooling?: string; normalize?: boolean }) => Promise<{ data: Float32Array }>;
+type Pipeline = (texts: string | string[], options?: { pooling?: string; normalize?: boolean }) => Promise<{ data: Float32Array; dims: number[] }>;
 
 export interface UseEmbeddingResult {
   isLoading: boolean;
@@ -19,7 +19,6 @@ export interface UseEmbeddingResult {
 
 // Model configuration
 const MODEL_ID = "mixedbread-ai/mxbai-embed-xsmall-v1";
-const EMBEDDING_DIM = 384;
 
 export function useEmbedding(): UseEmbeddingResult {
   const [isLoading, setIsLoading] = useState(false);
@@ -131,8 +130,13 @@ export function useEmbedding(): UseEmbeddingResult {
         normalize: true,
       });
 
-      // Convert Float32Array to regular array
-      const embedding = Array.from(output.data.slice(0, EMBEDDING_DIM));
+      // Verify output shape - should be [1, hidden_dim] after pooling
+      if (output.dims?.[0] !== 1) {
+        console.warn("Unexpected embedding batch size:", output.dims);
+      }
+
+      // Convert Float32Array to regular array (pooling already reduces to single vector)
+      const embedding = Array.from(output.data);
 
       // Cache the result
       embeddingCache.current.set(normalizedText, embedding);
