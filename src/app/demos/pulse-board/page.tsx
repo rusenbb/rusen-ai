@@ -154,7 +154,7 @@ function WeatherIcon({ code, isDay }: { code: number; isDay: boolean }) {
 // Card wrapper component
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`border border-neutral-200 dark:border-neutral-800 rounded-lg p-6 ${className}`}>
+    <div className={`border border-neutral-200 dark:border-neutral-800 rounded-lg p-6 h-full ${className}`}>
       {children}
     </div>
   );
@@ -275,85 +275,6 @@ const WIDGET_ORDER = [
   "hacker-news",
 ] as const;
 
-// Theme types and hook
-type Theme = "system" | "light" | "dark";
-
-function useTheme() {
-  const [theme, setTheme] = useState<Theme>("system");
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    const saved = localStorage.getItem("pulse-theme") as Theme | null;
-    if (saved && ["system", "light", "dark"].includes(saved)) {
-      setTheme(saved);
-      applyTheme(saved);
-    }
-  }, []);
-
-  const applyTheme = (newTheme: Theme) => {
-    const root = document.documentElement;
-    root.classList.remove("light", "dark");
-    if (newTheme !== "system") {
-      root.classList.add(newTheme);
-    }
-  };
-
-  const setAndPersistTheme = (newTheme: Theme) => {
-    setTheme(newTheme);
-    localStorage.setItem("pulse-theme", newTheme);
-    applyTheme(newTheme);
-  };
-
-  return { theme, setTheme: setAndPersistTheme, mounted };
-}
-
-// Theme toggle button component
-function ThemeToggle({ theme, setTheme, mounted }: { theme: Theme; setTheme: (t: Theme) => void; mounted: boolean }) {
-  if (!mounted) return <div className="w-8 h-8" />; // Placeholder to prevent layout shift
-
-  const icons = {
-    system: (
-      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-      </svg>
-    ),
-    light: (
-      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-      </svg>
-    ),
-    dark: (
-      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-      </svg>
-    ),
-  };
-
-  const nextTheme: Record<Theme, Theme> = {
-    system: "light",
-    light: "dark",
-    dark: "system",
-  };
-
-  const labels: Record<Theme, string> = {
-    system: "System",
-    light: "Light",
-    dark: "Dark",
-  };
-
-  return (
-    <button
-      onClick={() => setTheme(nextTheme[theme])}
-      className="flex items-center gap-1.5 px-2 py-1 text-xs border border-neutral-200 dark:border-neutral-700 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
-      title={`Theme: ${labels[theme]} (click to change)`}
-    >
-      {icons[theme]}
-      <span className="hidden sm:inline">{labels[theme]}</span>
-    </button>
-  );
-}
-
 // Keyboard shortcuts modal
 function ShortcutsModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   useEffect(() => {
@@ -371,7 +292,6 @@ function ShortcutsModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
   const shortcuts = [
     { key: "?", description: "Show this help" },
     { key: "R", description: "Refresh page" },
-    { key: "T", description: "Toggle theme" },
     { key: "1-9", description: "Jump to widget" },
     { key: "Esc", description: "Close modal" },
   ];
@@ -675,15 +595,15 @@ function CryptoHubWidget() {
       <div className="grid grid-cols-3 gap-4 mb-4">
         {/* BTC */}
         <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
-          <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold text-xs">₿</div>
-              <span className="text-sm font-medium">Bitcoin</span>
-            </div>
-            <Sparkline data={priceHistory.btc} width={50} height={20} />
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold text-xs">₿</div>
+            <span className="text-sm font-medium">Bitcoin</span>
           </div>
-          <div className={`font-mono text-xl font-bold ${getPriceColor(prices.btc.price, prices.btc.prevPrice)}`}>
-            ${formatPrice(prices.btc.price)}
+          <div className="flex items-center gap-2">
+            <div className={`font-mono text-lg font-bold ${getPriceColor(prices.btc.price, prices.btc.prevPrice)}`}>
+              ${formatPrice(prices.btc.price)}
+            </div>
+            <Sparkline data={priceHistory.btc} width={40} height={16} />
           </div>
           {changes && (
             <div className={`text-xs ${changes.btc >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
@@ -694,15 +614,15 @@ function CryptoHubWidget() {
 
         {/* ETH */}
         <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
-          <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xs">Ξ</div>
-              <span className="text-sm font-medium">Ethereum</span>
-            </div>
-            <Sparkline data={priceHistory.eth} width={50} height={20} />
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xs">Ξ</div>
+            <span className="text-sm font-medium">Ethereum</span>
           </div>
-          <div className={`font-mono text-xl font-bold ${getPriceColor(prices.eth.price, prices.eth.prevPrice)}`}>
-            ${formatPrice(prices.eth.price)}
+          <div className="flex items-center gap-2">
+            <div className={`font-mono text-lg font-bold ${getPriceColor(prices.eth.price, prices.eth.prevPrice)}`}>
+              ${formatPrice(prices.eth.price)}
+            </div>
+            <Sparkline data={priceHistory.eth} width={40} height={16} />
           </div>
           {changes && (
             <div className={`text-xs ${changes.eth >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
@@ -713,15 +633,15 @@ function CryptoHubWidget() {
 
         {/* SOL */}
         <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
-          <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-teal-400 flex items-center justify-center text-white font-bold text-xs">S</div>
-              <span className="text-sm font-medium">Solana</span>
-            </div>
-            <Sparkline data={priceHistory.sol} width={50} height={20} />
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-teal-400 flex items-center justify-center text-white font-bold text-xs">S</div>
+            <span className="text-sm font-medium">Solana</span>
           </div>
-          <div className={`font-mono text-xl font-bold ${getPriceColor(prices.sol.price, prices.sol.prevPrice)}`}>
-            ${formatPrice(prices.sol.price)}
+          <div className="flex items-center gap-2">
+            <div className={`font-mono text-lg font-bold ${getPriceColor(prices.sol.price, prices.sol.prevPrice)}`}>
+              ${formatPrice(prices.sol.price)}
+            </div>
+            <Sparkline data={priceHistory.sol} width={40} height={16} />
           </div>
         </div>
       </div>
@@ -1933,7 +1853,7 @@ function AnimatedWidget({ children, index, id }: { children: React.ReactNode; in
   return (
     <div
       id={`widget-${id}`}
-      className="animate-fade-in-up"
+      className="animate-fade-in-up h-full"
       style={{ animationDelay: `${index * 75}ms` }}
     >
       {children}
@@ -1945,7 +1865,6 @@ function AnimatedWidget({ children, index, id }: { children: React.ReactNode; in
 export default function PulseBoardPage() {
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [showShortcuts, setShowShortcuts] = useState(false);
-  const { theme, setTheme, mounted } = useTheme();
 
   useEffect(() => {
     const updateTime = () => {
@@ -1978,14 +1897,6 @@ export default function PulseBoardPage() {
         return;
       }
 
-      // T - Toggle theme
-      if (e.key === "t" || e.key === "T") {
-        e.preventDefault();
-        const nextTheme: Record<Theme, Theme> = { system: "light", light: "dark", dark: "system" };
-        setTheme(nextTheme[theme]);
-        return;
-      }
-
       // 1-9 - Jump to widget
       if (/^[1-9]$/.test(e.key)) {
         e.preventDefault();
@@ -2008,7 +1919,7 @@ export default function PulseBoardPage() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [theme, setTheme]);
+  }, []);
 
   // Widget components mapped to their IDs
   const widgets = [
@@ -2032,21 +1943,16 @@ export default function PulseBoardPage() {
       <ShortcutsModal isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
 
       <div className="mb-8">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-4xl font-bold mb-2 relative inline-block">
-              <span className="relative z-10">Pulse Board</span>
-              <span className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 blur-xl animate-pulse-glow -z-10 rounded-lg" />
-            </h1>
-            <p className="text-neutral-600 dark:text-neutral-400 mt-2">
-              Live dashboard showing real-time data from around the world. All data refreshes automatically.
-            </p>
-            <p className="text-xs text-neutral-500 mt-1">
-              Press <kbd className="px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded text-[10px] font-mono">?</kbd> for keyboard shortcuts
-            </p>
-          </div>
-          <ThemeToggle theme={theme} setTheme={setTheme} mounted={mounted} />
-        </div>
+        <h1 className="text-4xl font-bold mb-2 relative inline-block">
+          <span className="relative z-10">Pulse Board</span>
+          <span className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 blur-xl animate-pulse-glow -z-10 rounded-lg" />
+        </h1>
+        <p className="text-neutral-600 dark:text-neutral-400 mt-2">
+          Live dashboard showing real-time data from around the world. All data refreshes automatically.
+        </p>
+        <p className="text-xs text-neutral-500 mt-1">
+          Press <kbd className="px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded text-[10px] font-mono">?</kbd> for keyboard shortcuts
+        </p>
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
