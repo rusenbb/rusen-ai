@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export const AVAILABLE_MODELS = [
   { id: "auto", name: "Auto (Recommended)", description: "Picks best available model with fallback" },
@@ -17,6 +17,30 @@ interface ModelPanelProps {
   lastModelUsed: string | null;
   selectedModel: string;
   onModelChange: (modelId: string) => void;
+  paperSubjects?: string[];
+  paperTitle?: string;
+}
+
+// Simple heuristics for model suggestion
+function suggestModel(title?: string, subjects?: string[]): { modelId: string; reason: string } | null {
+  if (!title && (!subjects || subjects.length === 0)) return null;
+
+  const content = `${title || ""} ${(subjects || []).join(" ")}`.toLowerCase();
+
+  // Check for code/ML/technical papers
+  const codeTerms = ["code", "programming", "software", "algorithm", "implementation", "github", "benchmark"];
+  if (codeTerms.some(term => content.includes(term))) {
+    return { modelId: "qwen/qwen3-coder:free", reason: "Code-related paper detected" };
+  }
+
+  // Check for reasoning/math papers
+  const reasoningTerms = ["proof", "theorem", "mathematical", "logic", "reasoning", "formal"];
+  if (reasoningTerms.some(term => content.includes(term))) {
+    return { modelId: "deepseek/deepseek-r1-0528:free", reason: "Reasoning-heavy paper detected" };
+  }
+
+  // Default to fast model for general papers
+  return null;
 }
 
 export default function ModelPanel({
@@ -25,10 +49,35 @@ export default function ModelPanel({
   lastModelUsed,
   selectedModel,
   onModelChange,
+  paperSubjects,
+  paperTitle,
 }: ModelPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [countdown, setCountdown] = useState<number | null>(null);
   const currentModel = AVAILABLE_MODELS.find(m => m.id === selectedModel) || AVAILABLE_MODELS[0];
   const usedModel = lastModelUsed ? AVAILABLE_MODELS.find(m => m.id === lastModelUsed) : null;
+  const suggestion = suggestModel(paperTitle, paperSubjects);
+  const suggestedModel = suggestion ? AVAILABLE_MODELS.find(m => m.id === suggestion.modelId) : null;
+
+  // Start countdown when rate limit hits 0
+  useEffect(() => {
+    if (rateLimitRemaining === 0 && countdown === null) {
+      setCountdown(60);
+    } else if (rateLimitRemaining !== null && rateLimitRemaining > 0) {
+      setCountdown(null);
+    }
+  }, [rateLimitRemaining, countdown]);
+
+  // Countdown timer
+  useEffect(() => {
+    if (countdown === null || countdown <= 0) return;
+
+    const timer = setInterval(() => {
+      setCountdown(prev => (prev !== null && prev > 0 ? prev - 1 : null));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [countdown]);
 
   return (
     <div className="mb-6 p-6 border border-neutral-200 dark:border-neutral-800 rounded-lg">
@@ -91,6 +140,22 @@ export default function ModelPanel({
         )}
       </div>
 
+      {/* Model suggestion */}
+      {suggestion && suggestedModel && selectedModel === "auto" && (
+        <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+          <p className="text-sm text-blue-700 dark:text-blue-300">
+            <strong>Suggestion:</strong> {suggestion.reason}
+          </p>
+          <button
+            onClick={() => onModelChange(suggestion.modelId)}
+            disabled={isGenerating}
+            className="mt-2 text-sm text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-50"
+          >
+            Switch to {suggestedModel.name} →
+          </button>
+        </div>
+      )}
+
       {/* Model info */}
       <div className="text-xs text-neutral-500 space-y-1">
         {usedModel && (
@@ -98,9 +163,15 @@ export default function ModelPanel({
             Last used: {usedModel.name}
           </p>
         )}
-        {rateLimitRemaining !== null && (
-          <p>Rate limit: {rateLimitRemaining} requests remaining this minute</p>
-        )}
+        {countdown !== null && countdown > 0 ? (
+          <p className="text-amber-600 dark:text-amber-400">
+            Rate limited · Try again in {countdown}s
+          </p>
+        ) : rateLimitRemaining !== null ? (
+          <p className={rateLimitRemaining <= 5 ? "text-amber-600 dark:text-amber-400" : ""}>
+            Rate limit: {rateLimitRemaining} requests remaining this minute
+          </p>
+        ) : null}
         <p>All models are free via OpenRouter</p>
       </div>
     </div>
