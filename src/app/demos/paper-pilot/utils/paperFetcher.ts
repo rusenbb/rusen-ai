@@ -505,7 +505,14 @@ interface PDFTextItem {
   str?: string;
 }
 
-export async function extractTextFromPDF(pdfUrl: string): Promise<string | null> {
+// Result type for PDF extraction
+export interface PDFExtractionResult {
+  text: string | null;
+  totalPages: number;
+  pagesExtracted: number;
+}
+
+export async function extractTextFromPDF(pdfUrl: string): Promise<PDFExtractionResult | null> {
   // PDFDocumentProxy type - we use 'any' here because pdfjs-dist types are complex
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let pdf: any = null;
@@ -524,7 +531,8 @@ export async function extractTextFromPDF(pdfUrl: string): Promise<string | null>
 
     pdf = await loadingTask.promise;
     const textParts: string[] = [];
-    const maxPages = Math.min(pdf.numPages, 50); // Limit to 50 pages
+    const totalPages = pdf.numPages;
+    const maxPages = Math.min(totalPages, 50); // Limit to 50 pages
 
     for (let i = 1; i <= maxPages; i++) {
       try {
@@ -549,7 +557,11 @@ export async function extractTextFromPDF(pdfUrl: string): Promise<string | null>
       .replace(/- /g, "") // Remove hyphenation
       .trim();
 
-    return cleanedText || null;
+    return {
+      text: cleanedText || null,
+      totalPages,
+      pagesExtracted: maxPages,
+    };
   } catch (error) {
     console.error("[PDF Extract] Error:", error);
     return null;
@@ -590,6 +602,8 @@ export async function fetchPaper(
     sources: [],
     wordCount: 0,
     hasFullText: false,
+    totalPages: null,
+    pagesExtracted: null,
   };
 
   const inputType = detectInputType(input);
@@ -687,11 +701,13 @@ export async function fetchPaper(
   if (pdfSource?.pdfUrl) {
     onProgress?.("Extracting text from PDF...");
     try {
-      const fullText = await extractTextFromPDF(pdfSource.pdfUrl);
-      if (fullText && fullText.length > 500) {
-        metadata.fullText = fullText;
+      const extractionResult = await extractTextFromPDF(pdfSource.pdfUrl);
+      if (extractionResult && extractionResult.text && extractionResult.text.length > 500) {
+        metadata.fullText = extractionResult.text;
         metadata.fullTextSource = pdfSource.source;
         metadata.hasFullText = true;
+        metadata.totalPages = extractionResult.totalPages;
+        metadata.pagesExtracted = extractionResult.pagesExtracted;
       }
     } catch (error) {
       console.error("[PDF Extract] Failed:", error);
