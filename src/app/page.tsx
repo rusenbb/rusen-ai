@@ -85,24 +85,6 @@ export default function Home() {
           />
         </div>
       </section>
-
-      {/* Data Stats */}
-      <section className="text-center">
-        <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto">
-          <div>
-            <p className="text-4xl font-bold">67M</p>
-            <p className="text-sm text-neutral-500">tokens trained</p>
-          </div>
-          <div>
-            <p className="text-4xl font-bold">100%</p>
-            <p className="text-sm text-neutral-500">client-side</p>
-          </div>
-          <div>
-            <p className="text-4xl font-bold">0</p>
-            <p className="text-sm text-neutral-500">API costs</p>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }
