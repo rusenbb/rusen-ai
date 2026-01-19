@@ -20,17 +20,6 @@
   }
 }
 
-/* Manual override: force dark mode */
-:root.dark {
-  --background: #0c0c0f;
-  --foreground: #ededed;
-}
-
-/* Manual override: force light mode */
-:root.light {
-  --background: #fafafa;
-  --foreground: #171717;
-}
 
 body {
   background: var(--background);
