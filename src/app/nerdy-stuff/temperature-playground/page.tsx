@@ -5,8 +5,6 @@ import {
   createInitialState,
   temperatureReducer,
   EXAMPLE_PROMPTS,
-  getAnimationDuration,
-  type AnimationSpeed,
   type GeneratedToken,
 } from "./types";
 import { useLocalLLM } from "./hooks/useLocalLLM";
@@ -23,7 +21,7 @@ const TEMP_LABELS: Record<number, { label: string; description: string }> = {
   1.5: { label: "Chaotic", description: "Very high variance, surprising results" },
 };
 
-const MAX_TOKENS = 30; // Keep it short for visualization
+const MAX_TOKENS = 40;
 
 export default function TemperaturePlaygroundPage() {
   const [state, dispatch] = useReducer(
@@ -40,8 +38,8 @@ export default function TemperaturePlaygroundPage() {
     generateTokenByToken,
   } = useLocalLLM();
 
-  // Track which temperature is currently animating its wheel
-  const [spinningTemp, setSpinningTemp] = useState<number | null>(null);
+  // Track which token is selected for viewing in each temperature's wheel
+  const [selectedTokens, setSelectedTokens] = useState<Map<number, number>>(new Map());
 
   // Abort controllers for each temperature
   const abortControllersRef = useRef<Map<number, AbortController>>(new Map());
@@ -71,52 +69,33 @@ export default function TemperaturePlaygroundPage() {
   useEffect(() => {
     return () => {
       mountedRef.current = false;
-      // Abort all generations on unmount
       abortControllersRef.current.forEach((controller) => controller.abort());
     };
   }, []);
 
-  // Generate for all temperatures sequentially (so we can see each wheel)
+  // Generate for all temperatures in parallel - FAST, no animation delays
   const handleGenerate = useCallback(async () => {
     if (!state.prompt.trim()) return;
 
     dispatch({ type: "START_GENERATION" });
+    setSelectedTokens(new Map()); // Reset selections
 
-    // Generate for each temperature sequentially
-    for (const temp of state.temperatures) {
-      if (!mountedRef.current) break;
-
-      const animDuration = getAnimationDuration(state.animationSpeed);
-
-      // Create a promise that resolves when this temperature's generation is complete
-      await new Promise<void>((resolve) => {
+    // Generate for all temperatures in parallel
+    const promises = state.temperatures.map((temp) => {
+      return new Promise<void>((resolve) => {
         const abortController = generateTokenByToken(
           state.prompt,
           { temperature: temp, maxTokens: MAX_TOKENS, topK: 10 },
           {
-            onToken: async (token: GeneratedToken) => {
+            onToken: (token: GeneratedToken) => {
               if (!mountedRef.current) return;
-
-              // Add the token to state
               dispatch({ type: "ADD_TOKEN", temperature: temp, token });
-
-              // Start wheel spinning animation
-              setSpinningTemp(temp);
-
-              // Wait for animation to complete
-              await new Promise<void>((animResolve) => {
-                setTimeout(() => {
-                  if (mountedRef.current) {
-                    dispatch({ type: "ADVANCE_TOKEN_INDEX", temperature: temp });
-                  }
-                  setSpinningTemp(null);
-                  animResolve();
-                }, animDuration);
-              });
             },
             onComplete: () => {
               if (mountedRef.current) {
                 dispatch({ type: "FINISH_GENERATION", temperature: temp });
+                // Auto-select first token when generation completes
+                setSelectedTokens((prev) => new Map(prev).set(temp, 0));
               }
               resolve();
             },
@@ -128,17 +107,17 @@ export default function TemperaturePlaygroundPage() {
             },
           }
         );
-
         abortControllersRef.current.set(temp, abortController);
       });
-    }
-  }, [state.prompt, state.temperatures, state.animationSpeed, generateTokenByToken]);
+    });
+
+    await Promise.allSettled(promises);
+  }, [state.prompt, state.temperatures, generateTokenByToken]);
 
   const handleClear = useCallback(() => {
-    // Abort all ongoing generations
     abortControllersRef.current.forEach((controller) => controller.abort());
     abortControllersRef.current.clear();
-    setSpinningTemp(null);
+    setSelectedTokens(new Map());
     dispatch({ type: "CLEAR_OUTPUTS" });
   }, []);
 
@@ -151,14 +130,14 @@ export default function TemperaturePlaygroundPage() {
       ? state.temperatures.filter((t) => t !== temp)
       : [...state.temperatures, temp].sort((a, b) => a - b);
 
-    // Ensure at least one temperature is selected
     if (newTemps.length > 0 && newTemps.length <= 3) {
       dispatch({ type: "SET_TEMPERATURES", temperatures: newTemps });
     }
   }, [state.temperatures]);
 
-  const handleSpeedChange = useCallback((speed: AnimationSpeed) => {
-    dispatch({ type: "SET_ANIMATION_SPEED", speed });
+  // Handle token selection for a specific temperature
+  const handleTokenSelect = useCallback((temp: number, tokenIndex: number) => {
+    setSelectedTokens((prev) => new Map(prev).set(temp, tokenIndex));
   }, []);
 
   const availableTemps = [0.0, 0.3, 0.5, 0.7, 1.0, 1.5];
@@ -169,9 +148,8 @@ export default function TemperaturePlaygroundPage() {
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-4">Temperature Playground</h1>
         <p className="text-neutral-600 dark:text-neutral-400 max-w-2xl">
-          Watch how temperature affects token selection in real-time. The spinning wheel shows the
-          probability distribution—at low temperatures, the model always picks the most likely token.
-          At high temperatures, anything can happen!
+          See how temperature affects token selection. Generate text, then click on any token
+          to see the probability distribution the model used when choosing it.
         </p>
       </div>
 
@@ -179,7 +157,7 @@ export default function TemperaturePlaygroundPage() {
       {state.isModelLoading && (
         <div className="mb-8 p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg bg-neutral-50 dark:bg-neutral-900/50">
           <div className="flex justify-between items-center mb-2">
-            <span className="font-medium">Loading DistilGPT-2 model...</span>
+            <span className="font-medium">Loading SmolLM-135M model...</span>
             <span className="text-sm text-neutral-500">{state.modelProgress}%</span>
           </div>
           <div className="h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
@@ -189,7 +167,7 @@ export default function TemperaturePlaygroundPage() {
             />
           </div>
           <p className="text-xs text-neutral-500 mt-2">
-            First load downloads ~82MB (cached in browser for future visits)
+            First load downloads ~270MB (cached in browser for future visits)
           </p>
         </div>
       )}
@@ -206,7 +184,7 @@ export default function TemperaturePlaygroundPage() {
         <div className="mb-8 p-3 border border-green-300 dark:border-green-700 rounded-lg bg-green-50 dark:bg-green-900/20 flex items-center gap-2">
           <span className="text-green-500">✓</span>
           <span className="text-sm text-green-700 dark:text-green-300">
-            DistilGPT-2 model loaded and ready
+            SmolLM-135M model loaded and ready
           </span>
         </div>
       )}
@@ -215,47 +193,29 @@ export default function TemperaturePlaygroundPage() {
       <div className="mb-8 p-4 bg-neutral-100 dark:bg-neutral-800/50 rounded-lg border border-neutral-200 dark:border-neutral-700">
         <h3 className="font-semibold mb-2">How Temperature Works</h3>
         <p className="text-sm text-neutral-600 dark:text-neutral-400">
-          At each step, the model assigns probabilities to all possible next tokens. The{" "}
-          <strong>wheel size</strong> of each slice represents that probability. Temperature
-          controls how "peaked" this distribution is:
+          At each step, the model assigns probabilities to possible next tokens. Temperature
+          controls how "peaked" this distribution is. <strong>Click any token</strong> after
+          generation to see what alternatives the model considered.
         </p>
         <ul className="text-sm text-neutral-600 dark:text-neutral-400 mt-2 space-y-1 list-disc list-inside">
-          <li><strong>T=0:</strong> Always picks the largest slice (deterministic)</li>
+          <li><strong>T=0:</strong> Always picks the highest probability token</li>
           <li><strong>T=0.7:</strong> Usually picks likely tokens, occasionally surprises</li>
-          <li><strong>T=1.5:</strong> Small slices have a real chance of being picked</li>
+          <li><strong>T=1.5:</strong> Lower probability tokens have a real chance</li>
         </ul>
       </div>
 
       {/* Input Section */}
       <div className="mb-8 p-6 border border-neutral-200 dark:border-neutral-800 rounded-lg">
-        <div className="flex flex-col md:flex-row gap-4 mb-4">
-          {/* Prompt Input */}
-          <div className="flex-1">
-            <label className="block text-sm font-medium mb-2">Prompt</label>
-            <input
-              type="text"
-              value={state.prompt}
-              onChange={(e) => dispatch({ type: "SET_PROMPT", prompt: e.target.value })}
-              placeholder="Enter a starting text..."
-              className="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-900 focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:outline-none"
-              disabled={state.isAnyGenerating}
-            />
-          </div>
-
-          {/* Animation Speed */}
-          <div className="md:w-40">
-            <label className="block text-sm font-medium mb-2">Animation Speed</label>
-            <select
-              value={state.animationSpeed}
-              onChange={(e) => handleSpeedChange(e.target.value as AnimationSpeed)}
-              className="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-900 focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:outline-none"
-              disabled={state.isAnyGenerating}
-            >
-              <option value="slow">Slow (2s)</option>
-              <option value="normal">Normal (1s)</option>
-              <option value="fast">Fast (0.5s)</option>
-            </select>
-          </div>
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-2">Prompt</label>
+          <input
+            type="text"
+            value={state.prompt}
+            onChange={(e) => dispatch({ type: "SET_PROMPT", prompt: e.target.value })}
+            placeholder="Enter a starting text..."
+            className="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-900 focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:outline-none"
+            disabled={state.isAnyGenerating}
+          />
         </div>
 
         {/* Example Prompts */}
@@ -325,13 +285,13 @@ export default function TemperaturePlaygroundPage() {
         </div>
       </div>
 
-      {/* Output Grid with Wheels and Token Streams */}
+      {/* Output Grid */}
       <div className="space-y-6">
         {state.temperatures.map((temp) => {
           const output = state.outputs.get(temp);
           const info = TEMP_LABELS[temp] || { label: "Custom", description: "" };
-          const currentToken = output?.tokens[output.tokens.length - 1];
-          const isCurrentlySpinning = spinningTemp === temp;
+          const selectedIndex = selectedTokens.get(temp) ?? -1;
+          const selectedToken = selectedIndex >= 0 ? output?.tokens[selectedIndex] : null;
 
           return (
             <div
@@ -348,43 +308,71 @@ export default function TemperaturePlaygroundPage() {
                   {output?.isGenerating && (
                     <span className="flex items-center gap-2 text-sm text-neutral-500">
                       <span className="animate-pulse text-blue-500">●</span>
-                      Token {output.tokens.length} / {MAX_TOKENS}
+                      Generating... ({output.tokens.length} tokens)
+                    </span>
+                  )}
+                  {!output?.isGenerating && output?.tokens && output.tokens.length > 0 && (
+                    <span className="text-sm text-neutral-500">
+                      {output.tokens.length} tokens generated
                     </span>
                   )}
                 </div>
                 <p className="text-sm text-neutral-500 mt-1">{info.description}</p>
               </div>
 
-              {/* Wheel + Token Stream */}
+              {/* Content */}
               <div className="p-4">
                 {output?.error ? (
                   <p className="text-red-500 dark:text-red-400">{output.error}</p>
                 ) : output?.tokens && output.tokens.length > 0 ? (
                   <div className="flex flex-col lg:flex-row gap-6">
-                    {/* Wheel */}
-                    <div className="flex-shrink-0 w-full lg:w-64 h-64 flex items-center justify-center">
-                      <SamplingWheel
-                        probabilities={currentToken?.topProbabilities || []}
-                        selectedTokenId={currentToken?.tokenId || 0}
-                        animationDuration={getAnimationDuration(state.animationSpeed)}
-                        onAnimationComplete={() => {}}
-                        isSpinning={isCurrentlySpinning}
-                      />
+                    {/* Wheel - shows selected token's distribution */}
+                    <div className="flex-shrink-0 w-full lg:w-72">
+                      <div className="h-72 flex items-center justify-center border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-900/50">
+                        {selectedToken ? (
+                          <SamplingWheel
+                            probabilities={selectedToken.topProbabilities}
+                            selectedTokenId={selectedToken.tokenId}
+                            animationDuration={0}
+                            onAnimationComplete={() => {}}
+                            isSpinning={false}
+                          />
+                        ) : (
+                          <div className="text-center text-neutral-400 p-4">
+                            <p className="text-sm">Click a token to see its</p>
+                            <p className="text-sm">probability distribution</p>
+                          </div>
+                        )}
+                      </div>
+                      {selectedToken && (
+                        <div className="mt-2 text-center">
+                          <span className="text-xs text-neutral-500">
+                            Token {selectedIndex + 1}:
+                          </span>
+                          <span className="ml-1 font-mono text-sm font-bold">
+                            "{selectedToken.token.trim() || "\\n"}"
+                          </span>
+                          <span className="ml-1 text-xs text-neutral-500">
+                            ({(selectedToken.selectedProbability * 100).toFixed(1)}%)
+                          </span>
+                        </div>
+                      )}
                     </div>
 
-                    {/* Token Stream */}
+                    {/* Token Stream - clickable tokens */}
                     <div className="flex-1 min-w-0">
                       <TokenStream
                         tokens={output.tokens}
-                        currentIndex={output.currentTokenIndex}
+                        currentIndex={selectedIndex}
                         showProbabilities={true}
+                        onTokenClick={(index) => handleTokenSelect(temp, index)}
                       />
                     </div>
                   </div>
                 ) : output?.isGenerating ? (
                   <div className="flex items-center justify-center h-48 text-neutral-400">
                     <span className="animate-spin mr-2">⟳</span>
-                    Preparing generation...
+                    Generating...
                   </div>
                 ) : (
                   <div className="flex items-center justify-center h-48 text-neutral-400 italic">
@@ -401,7 +389,6 @@ export default function TemperaturePlaygroundPage() {
       <div className="mt-12 p-6 border border-neutral-200 dark:border-neutral-800 rounded-lg">
         <h3 className="font-semibold mb-4">Temperature Scale Reference</h3>
         <div className="relative h-12 bg-gradient-to-r from-blue-500 via-purple-500 to-red-500 rounded-lg">
-          {/* Scale markers */}
           <div className="absolute inset-0 flex justify-between px-2 items-end pb-1">
             {[0, 0.5, 1.0, 1.5, 2.0].map((val) => (
               <div key={val} className="text-center">
