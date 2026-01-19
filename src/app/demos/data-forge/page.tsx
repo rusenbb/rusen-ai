@@ -1,6 +1,6 @@
 "use client";
 
-import { useReducer, useCallback, useState } from "react";
+import { useReducer, useCallback, useState, useEffect } from "react";
 import { useAPILLM } from "./hooks/useAPILLM";
 import SchemaBuilder from "./components/SchemaBuilder";
 import GenerationPanel from "./components/GenerationPanel";
@@ -16,6 +16,7 @@ import {
   type TableQuality,
 } from "./types";
 import { buildGenerationPrompt, parseGeneratedData, getTableGenerationLevels } from "./utils/prompts";
+import { encodeSchemaToUrl, decodeSchemaFromUrl, isSchemaUrlSafe } from "./utils/urlCodec";
 
 function dataForgeReducer(state: DataForgeState, action: DataForgeAction): DataForgeState {
   switch (action.type) {
@@ -64,6 +65,26 @@ function dataForgeReducer(state: DataForgeState, action: DataForgeAction): DataF
           tables: state.schema.tables.map((t) =>
             t.id === action.tableId
               ? { ...t, columns: [...t.columns, createDefaultColumn()] }
+              : t
+          ),
+        },
+        generatedData: null,
+      };
+
+    case "ADD_COLUMNS_FROM_TEMPLATE":
+      return {
+        ...state,
+        schema: {
+          ...state.schema,
+          tables: state.schema.tables.map((t) =>
+            t.id === action.tableId
+              ? {
+                  ...t,
+                  columns: [
+                    ...t.columns,
+                    ...action.columns.map((col) => ({ ...col, id: generateId() })),
+                  ],
+                }
               : t
           ),
         },
@@ -193,7 +214,60 @@ export default function DataForgePage() {
   const [selectedModel, setSelectedModel] = useState<string>("auto");
   const { isGenerating, error, rateLimitRemaining, lastModelUsed, generate } = useAPILLM(selectedModel);
 
-  const handleGenerate = useCallback(async () => {
+  // URL sharing state
+  const [shareStatus, setShareStatus] = useState<"idle" | "copied" | "error">("idle");
+  const [shareError, setShareError] = useState<string | null>(null);
+
+  // Load schema from URL on mount
+  useEffect(() => {
+    const hash = window.location.hash.slice(1); // Remove #
+    if (hash.startsWith("schema=")) {
+      const encoded = hash.slice(7); // Remove "schema="
+      const schema = decodeSchemaFromUrl(encoded);
+      if (schema) {
+        dispatch({ type: "LOAD_PRESET", schema });
+      }
+    }
+  }, []);
+
+  // Share handler
+  const handleShare = useCallback(() => {
+    if (state.schema.tables.length === 0) {
+      setShareError("Add tables before sharing");
+      setShareStatus("error");
+      setTimeout(() => {
+        setShareStatus("idle");
+        setShareError(null);
+      }, 3000);
+      return;
+    }
+
+    const encoded = encodeSchemaToUrl(state.schema);
+
+    if (!isSchemaUrlSafe(encoded)) {
+      setShareError("Schema too large to share via URL");
+      setShareStatus("error");
+      setTimeout(() => {
+        setShareStatus("idle");
+        setShareError(null);
+      }, 3000);
+      return;
+    }
+
+    const url = `${window.location.origin}${window.location.pathname}#schema=${encoded}`;
+    navigator.clipboard.writeText(url);
+
+    // Update URL without reload
+    window.history.replaceState(null, "", `#schema=${encoded}`);
+
+    setShareStatus("copied");
+    setShareError(null);
+    setTimeout(() => setShareStatus("idle"), 2000);
+  }, [state.schema]);
+
+  const handleGenerate = useCallback(async (previewMode: boolean = false) => {
+    const previewRowCount = 3;
+
     dispatch({
       type: "SET_GENERATION_PROGRESS",
       progress: {
@@ -201,6 +275,7 @@ export default function DataForgePage() {
         tablesCompleted: 0,
         totalTables: state.schema.tables.length,
         error: undefined,
+        isPreview: previewMode,
       },
     });
 
@@ -226,11 +301,16 @@ export default function DataForgePage() {
         // Generate all tables in this level in parallel
         const results = await Promise.all(
           levelTables.map(async (table) => {
-            const prompt = buildGenerationPrompt(table, state.schema, generatedData);
+            // Override row count for preview mode
+            const tableForGeneration = previewMode
+              ? { ...table, rowCount: Math.min(table.rowCount, previewRowCount) }
+              : table;
+
+            const prompt = buildGenerationPrompt(tableForGeneration, state.schema, generatedData);
             const response = await generate(prompt);
             return {
               table,
-              result: parseGeneratedData(response, table, state.schema, generatedData),
+              result: parseGeneratedData(response, tableForGeneration, state.schema, generatedData),
             };
           })
         );
@@ -251,7 +331,7 @@ export default function DataForgePage() {
       dispatch({ type: "SET_GENERATED_DATA", data: generatedData });
       dispatch({
         type: "SET_GENERATION_PROGRESS",
-        progress: { qualityReport },
+        progress: { qualityReport, isPreview: previewMode },
       });
     } catch (err) {
       dispatch({
@@ -263,6 +343,9 @@ export default function DataForgePage() {
       });
     }
   }, [generate, state.schema]);
+
+  const handleGenerateFull = useCallback(() => handleGenerate(false), [handleGenerate]);
+  const handleGeneratePreview = useCallback(() => handleGenerate(true), [handleGenerate]);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-16">
@@ -281,7 +364,13 @@ export default function DataForgePage() {
       )}
 
       {/* Schema Builder */}
-      <SchemaBuilder schema={state.schema} dispatch={dispatch} />
+      <SchemaBuilder
+        schema={state.schema}
+        dispatch={dispatch}
+        onShare={handleShare}
+        shareStatus={shareStatus}
+        shareError={shareError}
+      />
 
       {/* Generation Panel */}
       <GenerationPanel
@@ -292,7 +381,8 @@ export default function DataForgePage() {
         lastModelUsed={lastModelUsed}
         selectedModel={selectedModel}
         onModelChange={setSelectedModel}
-        onGenerate={handleGenerate}
+        onGenerate={handleGenerateFull}
+        onPreview={handleGeneratePreview}
       />
 
       {/* Quality Warnings */}
@@ -330,7 +420,11 @@ export default function DataForgePage() {
 
       {/* Export Panel */}
       {state.generatedData && (
-        <ExportPanel data={state.generatedData} schema={state.schema} />
+        <ExportPanel
+          data={state.generatedData}
+          schema={state.schema}
+          isPreview={state.generationProgress.isPreview}
+        />
       )}
 
       {/* About section */}
