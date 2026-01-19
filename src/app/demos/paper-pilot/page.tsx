@@ -40,6 +40,13 @@ function paperPilotReducer(state: PaperPilotState, action: PaperPilotAction): Pa
       };
 
     case "ADD_SUMMARY":
+      // Replace existing summary of the same type (for regeneration)
+      const existingIndex = state.summaries.findIndex(s => s.type === action.summary.type);
+      if (existingIndex >= 0) {
+        const newSummaries = [...state.summaries];
+        newSummaries[existingIndex] = action.summary;
+        return { ...state, summaries: newSummaries };
+      }
       return {
         ...state,
         summaries: [...state.summaries, action.summary],
@@ -173,6 +180,7 @@ export default function PaperPilotPage() {
   }, []);
 
   const [generateAllProgress, setGenerateAllProgress] = useState<{ current: number; total: number } | null>(null);
+  const [currentGeneratingType, setCurrentGeneratingType] = useState<SummaryType | null>(null);
 
   const handleGenerateAll = useCallback(async () => {
     if (!state.paper) return;
@@ -185,16 +193,18 @@ export default function PaperPilotPage() {
     setGenerateAllProgress({ current: 0, total: missingTypes.length });
 
     for (let i = 0; i < missingTypes.length; i++) {
+      const currentType = missingTypes[i];
       setGenerateAllProgress({ current: i + 1, total: missingTypes.length });
+      setCurrentGeneratingType(currentType);
 
       setStreamingContent("");
       dispatch({
         type: "SET_GENERATION_PROGRESS",
-        progress: { status: "generating", currentTask: `Generating ${missingTypes[i]} summary (${i + 1}/${missingTypes.length})` },
+        progress: { status: "generating", currentTask: `Generating ${currentType} summary (${i + 1}/${missingTypes.length})` },
       });
 
       try {
-        const { systemPrompt, userPrompt } = buildSummaryPrompt(state.paper, missingTypes[i]);
+        const { systemPrompt, userPrompt } = buildSummaryPrompt(state.paper, currentType);
         const content = await generate(systemPrompt, userPrompt, (text) => {
           setStreamingContent(text);
         });
@@ -202,10 +212,11 @@ export default function PaperPilotPage() {
         setStreamingContent("");
         dispatch({
           type: "ADD_SUMMARY",
-          summary: { type: missingTypes[i], content, generatedAt: new Date() },
+          summary: { type: currentType, content, generatedAt: new Date() },
         });
       } catch (err) {
         setStreamingContent("");
+        setCurrentGeneratingType(null);
         dispatch({
           type: "SET_GENERATION_PROGRESS",
           progress: {
@@ -218,6 +229,7 @@ export default function PaperPilotPage() {
       }
     }
 
+    setCurrentGeneratingType(null);
     dispatch({
       type: "SET_GENERATION_PROGRESS",
       progress: { status: "complete" },
@@ -229,8 +241,9 @@ export default function PaperPilotPage() {
     async (type: SummaryType) => {
       if (!state.paper) return;
 
-      // Reset streaming content
+      // Reset streaming content and set current type
       setStreamingContent("");
+      setCurrentGeneratingType(type);
 
       dispatch({
         type: "SET_GENERATION_PROGRESS",
@@ -246,6 +259,7 @@ export default function PaperPilotPage() {
 
         // Clear streaming content and add final summary
         setStreamingContent("");
+        setCurrentGeneratingType(null);
 
         dispatch({
           type: "ADD_SUMMARY",
@@ -262,6 +276,7 @@ export default function PaperPilotPage() {
         });
       } catch (err) {
         setStreamingContent("");
+        setCurrentGeneratingType(null);
         dispatch({
           type: "SET_GENERATION_PROGRESS",
           progress: {
@@ -415,6 +430,7 @@ export default function PaperPilotPage() {
             generateAllProgress={generateAllProgress}
             hasFullText={state.paper?.hasFullText}
             wordCount={state.paper?.wordCount}
+            currentGeneratingType={currentGeneratingType}
           />
 
           {/* Q&A Panel */}
