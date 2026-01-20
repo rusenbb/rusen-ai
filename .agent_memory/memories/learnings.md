@@ -1,5 +1,27 @@
 # Learnings & Gotchas
 
+## WebGPU Produces Incorrect Embeddings on Some Hardware — 2026-01-20
+
+**Problem**: Embedding Explorer showed ~50% similarity for all word pairs on some devices, while working correctly on others. The sanity check revealed uniform similarities (variance < 0.01) indicating garbage embeddings.
+
+**Root cause**: WebGPU implementation varies across GPU drivers. Some hardware produces numerically incorrect results without throwing errors — the model loads and runs, but outputs are wrong.
+
+**Symptoms**:
+- All word similarities cluster around 50%
+- Vector arithmetic fails (king - man + woman ≠ queen)
+- Dimensions and magnitude appear correct (384 dims, magnitude ~1.0)
+
+**Solution**: Force WASM backend for transformers.js embedding models. WASM is deterministic across all hardware and fast enough for small models (24M params).
+
+```typescript
+// Always use WASM - WebGPU has inconsistent results across hardware
+const selectedBackend = "wasm";
+```
+
+**Important**: Clearing cookies does NOT clear the model cache. Transformers.js stores models in **IndexedDB**, which must be explicitly cleared to force re-download with a different backend.
+
+---
+
 ## SSE Streaming Requires Line Buffering — 2026-01-18
 
 **Problem**: Server-Sent Events (SSE) data can be split across multiple chunks. Naive parsing truncates responses.
