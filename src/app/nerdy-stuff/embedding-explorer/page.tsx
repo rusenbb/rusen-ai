@@ -63,7 +63,15 @@ export default function EmbeddingExplorerPage() {
     embedBatch,
     getCached,
     cacheSize,
+    stats,
+    clearModelCache,
+    runSanityCheck,
   } = useEmbedding();
+
+  // Sanity check state
+  const [sanityResult, setSanityResult] = useState<{ passed: boolean; details: string } | null>(null);
+  const [isRunningCheck, setIsRunningCheck] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
 
   // Local embedding cache for visualization
   const [embeddingCache, setEmbeddingCache] = useState<EmbeddingCache>(new Map());
@@ -307,6 +315,24 @@ export default function EmbeddingExplorerPage() {
     setArithmeticInputs({ a: example.a, b: example.b, c: example.c });
   }, []);
 
+  // Handle sanity check
+  const handleSanityCheck = useCallback(async () => {
+    setIsRunningCheck(true);
+    const result = await runSanityCheck();
+    setSanityResult(result);
+    setIsRunningCheck(false);
+  }, [runSanityCheck]);
+
+  // Handle cache clear
+  const handleClearCache = useCallback(async () => {
+    if (confirm('This will clear the downloaded model and require re-downloading (~50MB). Continue?')) {
+      await clearModelCache();
+      setSanityResult(null);
+      alert('Cache cleared. Please reload the page.');
+      window.location.reload();
+    }
+  }, [clearModelCache]);
+
   // Axis labels for visualization
   const xAxisLabel = xAxis.vector ? `${xAxis.positive}` : null;
   const yAxisLabel = yAxis.vector ? `${yAxis.positive}` : null;
@@ -531,6 +557,84 @@ export default function EmbeddingExplorerPage() {
                 Add
               </button>
             </div>
+          </div>
+
+          {/* Debug Panel */}
+          <div className="p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg space-y-3">
+            <button
+              onClick={() => setShowDebug(!showDebug)}
+              className="w-full flex items-center justify-between text-sm font-medium text-neutral-600 dark:text-neutral-400"
+            >
+              <span>Diagnostics</span>
+              <span className="text-xs">{showDebug ? '▲' : '▼'}</span>
+            </button>
+
+            {showDebug && (
+              <div className="space-y-3 pt-2 border-t border-neutral-200 dark:border-neutral-800">
+                {/* Backend info */}
+                <div className="text-xs space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-neutral-500">Backend:</span>
+                    <span className={backend === 'webgpu' ? 'text-green-600' : 'text-yellow-600'}>
+                      {backend?.toUpperCase() || 'N/A'}
+                    </span>
+                  </div>
+                  {stats && (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-neutral-500">Dimensions:</span>
+                        <span>{stats.dimensions}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-neutral-500">Magnitude:</span>
+                        <span>{stats.meanMagnitude.toFixed(4)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-neutral-500">king↔queen:</span>
+                        <span>{(stats.sampleSimilarity * 100).toFixed(1)}%</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Sanity check */}
+                <div className="space-y-2">
+                  <button
+                    onClick={handleSanityCheck}
+                    disabled={!isModelReady || isRunningCheck}
+                    className="w-full px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {isRunningCheck ? 'Running...' : 'Run Sanity Check'}
+                  </button>
+
+                  {sanityResult && (
+                    <div className={`p-2 rounded text-xs ${
+                      sanityResult.passed
+                        ? 'bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300'
+                        : 'bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300'
+                    }`}>
+                      <div className="font-medium mb-1">
+                        {sanityResult.passed ? '✓ All checks passed' : '✗ Issues detected'}
+                      </div>
+                      <pre className="whitespace-pre-wrap text-[10px] opacity-80">
+                        {sanityResult.details}
+                      </pre>
+                    </div>
+                  )}
+                </div>
+
+                {/* Cache clear */}
+                <button
+                  onClick={handleClearCache}
+                  className="w-full px-3 py-1.5 text-xs border border-red-300 dark:border-red-800 text-red-600 dark:text-red-400 rounded hover:bg-red-50 dark:hover:bg-red-950"
+                >
+                  Clear Model Cache
+                </button>
+                <p className="text-[10px] text-neutral-500">
+                  If embeddings seem broken, clear the cache and reload. This forces a fresh model download.
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
