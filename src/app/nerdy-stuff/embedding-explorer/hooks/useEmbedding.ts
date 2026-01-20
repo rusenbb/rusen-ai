@@ -83,30 +83,13 @@ export function useEmbedding(): UseEmbeddingResult {
         // Dynamic import to avoid SSR issues
         const { pipeline, env } = await import("@huggingface/transformers");
 
-        // Try WebGPU first, fall back to WASM
-        let selectedBackend: "webgpu" | "wasm" = "wasm";
-
-        // Check WebGPU support
-        if (typeof navigator !== "undefined" && "gpu" in navigator) {
-          try {
-            const adapter = await (navigator.gpu as GPU).requestAdapter();
-            if (adapter) {
-              selectedBackend = "webgpu";
-              // Reduce WASM threads when using WebGPU
-              if (env.backends?.onnx?.wasm) {
-                env.backends.onnx.wasm.numThreads = 1;
-              }
-            }
-          } catch {
-            // WebGPU not available, use WASM
-          }
-        }
-
-        setBackend(selectedBackend);
-
         // Configure environment
         env.allowLocalModels = false;
         env.useBrowserCache = true;
+
+        // Always use WASM - WebGPU has inconsistent results across hardware
+        const selectedBackend = "wasm";
+        setBackend(selectedBackend);
 
         // Create the pipeline with progress tracking
         const extractor = await pipeline("feature-extraction", MODEL_ID, {
