@@ -7,11 +7,8 @@ import { useEmbedding } from "./hooks/useEmbedding";
 import {
   computeAxis,
   projectTo2D,
-  normalizePoints,
   arithmetic,
   findNearest,
-  subtract,
-  normalize,
 } from "./utils/vectors";
 
 // Default words to show in visualization
@@ -184,10 +181,10 @@ export default function EmbeddingExplorerPage() {
     // Filter words that have embeddings
     const validWords = words.filter((w) => embeddingCache.has(w.toLowerCase()));
     const projected = projectTo2D(validWords, embeddingCache, xAxis.vector, yAxis.vector);
-    const normalized = normalizePoints(projected);
 
-    // Add arithmetic result if exists
-    const allPoints: Point[] = normalized.map((p) => ({
+    // Use raw cosine similarity values directly (already in ~[-1, 1] range)
+    // No normalization needed - this keeps coordinates stable when adding words
+    const allPoints: Point[] = projected.map((p) => ({
       word: p.word,
       x: p.x,
       y: p.y,
@@ -203,10 +200,7 @@ export default function EmbeddingExplorerPage() {
         yAxis.vector
       );
       if (resultProjected.length > 0) {
-        // Normalize against existing points
-        const allForNorm = [...projected, ...resultProjected];
-        const allNormalized = normalizePoints(allForNorm);
-        const resultPoint = allNormalized[allNormalized.length - 1];
+        const resultPoint = resultProjected[0];
         if (resultPoint && !allPoints.find((p) => p.word === resultPoint.word)) {
           allPoints.push({
             word: `=${resultPoint.word}`,
