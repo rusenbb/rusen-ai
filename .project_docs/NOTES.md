@@ -16,6 +16,7 @@ Full-stack AI demo platform showcasing LLM integrations, browser-based ML, and i
 | ML/AI | Transformers.js 3.8.1, OpenRouter API |
 | Visualization | Three.js, UMAP-js |
 | PDF | pdfjs-dist 5.4.530 |
+| Testing | Vitest, React Testing Library |
 | Deployment | Cloudflare Pages (static export + functions) |
 
 ---
@@ -34,9 +35,16 @@ src/
 │   │   ├── embedding-explorer/ # Word embedding visualization
 │   │   ├── rusenizer/          # Turkish tokenizer comparison
 │   │   └── temperature-playground/
-│   └── components/             # Shared UI components
+│   └── components/             # Page-specific components
+├── components/
+│   └── ui/                     # Shared UI library (Button, Alert, Card, etc.)
+├── hooks/
+│   ├── useAPI.ts               # Unified LLM API hook (replaces 3 demo-specific)
+│   └── index.ts                # Barrel export
 ├── lib/
-│   └── api.ts                  # API URL management
+│   ├── api.ts                  # API URL management
+│   ├── config.ts               # Centralized config (models, timeouts)
+│   └── design-tokens.ts        # Design system tokens
 functions/
 └── api/
     ├── llm.ts                  # LLM proxy with fallback models
@@ -113,11 +121,15 @@ Client → /api/llm (Cloudflare Function) → OpenRouter API
 
 | File | Purpose |
 |------|---------|
+| `src/hooks/useAPI.ts` | Unified LLM API hook (streaming, rate limits, fallback) |
+| `src/components/ui/` | Shared UI library (Button, Alert, Card, Spinner, etc.) |
+| `src/lib/config.ts` | Centralized config (models, timeouts, API settings) |
 | `functions/api/llm.ts` | LLM proxy, model fallback, rate limiting |
 | `functions/api/proxy.ts` | CORS proxy for academic APIs |
 | `src/app/demos/paper-pilot/utils/paperFetcher.ts` | Multi-source academic data fetching |
 | `src/app/demos/data-forge/utils/generation.ts` | Dependency-aware table generation |
 | `src/app/demos/classify-anything/hooks/useClassifier.ts` | Transformers.js model lifecycle |
+| `src/app/demos/query-craft/reducers.ts` | Query Craft state reducer (tested) |
 
 ---
 
@@ -139,12 +151,24 @@ Client → /api/llm (Cloudflare Function) → OpenRouter API
 3. **Graceful degradation**: Fallback chains for LLMs and APIs
 4. **React Compiler**: Auto-memoization enabled
 5. **Streaming UX**: Real-time token display reduces perceived latency
+6. **Shared UI library**: Consistent components across all demos (Button, Alert, etc.)
+7. **Unified API hook**: Single `useAPI` hook replaces 3 demo-specific implementations
 
 ---
 
 ## Session Log
 
+### 2026-01-27
+- Completed 6-phase codebase quality refactor (commit bfb95c9)
+- Created shared UI library: `src/components/ui/` (Button, Alert, Card, Spinner, etc.)
+- Unified 3 useAPILLM hooks into single `src/hooks/useAPI.ts`
+- Added `src/lib/config.ts` and `src/lib/design-tokens.ts`
+- Deleted redundant demo-specific hooks (3 files)
+- Added accessibility: aria-labels, aria-live regions
+- Added performance: React.memo on list components, debounced streaming
+- Setup vitest + React Testing Library, 20 reducer tests passing
+- Rewrote README.md with proper documentation
+
 ### 2025-01-27
 - Deep codebase exploration completed
 - Documented architecture, demos, patterns
-- No active work in progress
