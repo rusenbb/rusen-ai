@@ -541,12 +541,12 @@ function CryptoHubWidget() {
           <div className="flex items-center gap-2 mb-1">
             <svg className="w-5 h-5" viewBox="0 0 32 32" fill="none">
               <circle cx="16" cy="16" r="16" fill="#627EEA"/>
-              <path d="M16 4v8.87l7.5 3.35L16 4z" fill="white" fillOpacity="0.6"/>
-              <path d="M16 4L8.5 16.22l7.5-3.35V4z" fill="white"/>
-              <path d="M16 21.97v6.03l7.5-10.4-7.5 4.37z" fill="white" fillOpacity="0.6"/>
-              <path d="M16 28v-6.03L8.5 17.6 16 28z" fill="white"/>
-              <path d="M16 20.57l7.5-4.35L16 12.87v7.7z" fill="white" fillOpacity="0.2"/>
-              <path d="M8.5 16.22l7.5 4.35v-7.7l-7.5 3.35z" fill="white" fillOpacity="0.6"/>
+              <path d="M16.5 4v8.9l7.5 3.3-7.5-12.2z" fill="white" fillOpacity="0.6"/>
+              <path d="M16.5 4l-7.5 12.2 7.5-3.3V4z" fill="white"/>
+              <path d="M16.5 22v6l7.5-10.4-7.5 4.4z" fill="white" fillOpacity="0.6"/>
+              <path d="M16.5 28v-6l-7.5-4.4 7.5 10.4z" fill="white"/>
+              <path d="M16.5 20.6l7.5-4.4-7.5-3.3v7.7z" fill="white" fillOpacity="0.2"/>
+              <path d="M9 16.2l7.5 4.4v-7.7L9 16.2z" fill="white" fillOpacity="0.6"/>
             </svg>
             <span className="text-xs font-medium">Ethereum</span>
           </div>
@@ -564,15 +564,19 @@ function CryptoHubWidget() {
         <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg overflow-hidden">
           <div className="flex items-center gap-2 mb-1">
             <svg className="w-5 h-5" viewBox="0 0 32 32" fill="none">
-              <circle cx="16" cy="16" r="16" fill="url(#solana-grad)"/>
               <defs>
-                <linearGradient id="solana-grad" x1="0" y1="32" x2="32" y2="0">
-                  <stop stopColor="#9945FF"/>
-                  <stop offset="0.5" stopColor="#14F195"/>
-                  <stop offset="1" stopColor="#00C2FF"/>
+                <linearGradient id="sol-bg" x1="0" y1="32" x2="32" y2="0">
+                  <stop offset="0%" stopColor="#9945FF"/>
+                  <stop offset="50%" stopColor="#14F195"/>
+                  <stop offset="100%" stopColor="#00C2FF"/>
                 </linearGradient>
               </defs>
-              <path d="M9.5 19.8a.6.6 0 01.4-.2h12.9c.3 0 .4.3.2.5l-2.5 2.5a.6.6 0 01-.4.2H7.2c-.3 0-.4-.3-.2-.5l2.5-2.5zm0-7.6a.6.6 0 01.4-.2h12.9c.3 0 .4.3.2.5l-2.5 2.5a.6.6 0 01-.4.2H7.2c-.3 0-.4-.3-.2-.5l2.5-2.5zm10.6 3.6a.6.6 0 00-.4-.2H6.8c-.3 0-.4.3-.2.5l2.5 2.5a.6.6 0 00.4.2h12.9c.3 0 .4-.3.2-.5l-2.5-2.5z" fill="white"/>
+              <circle cx="16" cy="16" r="16" fill="url(#sol-bg)"/>
+              <g fill="white">
+                <path d="M10.3 20.2c.1-.1.2-.2.4-.2h11.1c.2 0 .3.3.2.4l-1.7 1.7c-.1.1-.2.2-.4.2H8.8c-.2 0-.3-.3-.2-.4l1.7-1.7z"/>
+                <path d="M10.3 10c.1-.1.2-.2.4-.2h11.1c.2 0 .3.3.2.4l-1.7 1.7c-.1.1-.2.2-.4.2H8.8c-.2 0-.3-.3-.2-.4l1.7-1.7z"/>
+                <path d="M21.7 15c-.1-.1-.2-.2-.4-.2H10.2c-.2 0-.3.3-.2.4l1.7 1.7c.1.1.2.2.4.2h11.1c.2 0 .3-.3.2-.4L21.7 15z"/>
+              </g>
             </svg>
             <span className="text-xs font-medium">Solana</span>
           </div>
