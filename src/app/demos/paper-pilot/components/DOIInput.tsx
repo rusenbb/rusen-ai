@@ -20,7 +20,7 @@ const EXAMPLE_PAPERS = [
 // Validation patterns
 const DOI_PATTERN = /^10\.\d{4,}/;
 const ARXIV_PATTERN = /^\d{4}\.\d{4,}/;
-const ARXIV_URL_PATTERN = /arxiv\.org\/abs\/(\d{4}\.\d{4,})/;
+const ARXIV_URL_PATTERN = /(?:arxiv|alphaxiv)\.org\/abs\/(\d{4}\.\d{4,})/;
 
 function validateInput(value: string): { valid: boolean; error?: string } {
   const trimmed = value.trim();
@@ -104,7 +104,7 @@ export default function DOIInput({ onSubmit, fetchProgress }: DOIInputProps) {
             type="text"
             value={input}
             onChange={(e) => handleInputChange(e.target.value)}
-            placeholder="10.1000/xyz123 or 2301.12345 or https://arxiv.org/abs/..."
+            placeholder="10.1000/xyz123 or 2301.12345 or arxiv.org/abs/... or alphaxiv.org/abs/..."
             disabled={isLoading}
             className={`flex-1 px-4 py-3 border rounded-lg bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 disabled:opacity-50 ${
               validationError
