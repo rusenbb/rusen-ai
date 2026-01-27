@@ -81,8 +81,8 @@ export function parseArxivId(input: string): string | null {
     return oldMatch[1];
   }
 
-  // URL format: https://arxiv.org/abs/2301.12345
-  const urlPattern = /arxiv\.org\/(?:abs|pdf)\/(\d{4}\.\d{4,5}(?:v\d+)?|[a-z-]+\/\d{7})/i;
+  // URL format: https://arxiv.org/abs/2301.12345 or https://alphaxiv.org/abs/2301.12345
+  const urlPattern = /(?:arxiv|alphaxiv)\.org\/(?:abs|pdf)\/(\d{4}\.\d{4,5}(?:v\d+)?|[a-z-]+\/\d{7})/i;
   const urlMatch = trimmed.match(urlPattern);
   if (urlMatch) {
     return urlMatch[1];
