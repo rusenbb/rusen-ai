@@ -45,6 +45,9 @@ export default function GenerationPanel({
           <button
             onClick={() => setIsOpen(!isOpen)}
             disabled={isCurrentlyGenerating}
+            aria-expanded={isOpen}
+            aria-haspopup="listbox"
+            aria-label={`Select AI model. Current: ${currentModel.name}`}
             className={`w-full p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg text-left transition ${
               isCurrentlyGenerating ? "opacity-50 cursor-not-allowed" : "hover:bg-neutral-100 dark:hover:bg-neutral-800"
             }`}
@@ -71,7 +74,7 @@ export default function GenerationPanel({
 
           {/* Dropdown */}
           {isOpen && !isCurrentlyGenerating && (
-            <div className="absolute z-10 w-full mt-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-lg overflow-hidden">
+            <div className="absolute z-10 w-full mt-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-lg overflow-hidden" role="listbox">
               {AVAILABLE_MODELS.map((model) => (
                 <button
                   key={model.id}
@@ -79,6 +82,8 @@ export default function GenerationPanel({
                     onModelChange(model.id);
                     setIsOpen(false);
                   }}
+                  role="option"
+                  aria-selected={selectedModel === model.id}
                   className={`w-full p-3 text-left hover:bg-neutral-50 dark:hover:bg-neutral-800 transition ${
                     selectedModel === model.id ? "bg-green-50 dark:bg-green-900/20" : ""
                   }`}
@@ -114,7 +119,7 @@ export default function GenerationPanel({
 
       {/* Generation progress */}
       {isCurrentlyGenerating && (
-        <div className="mb-4">
+        <div className="mb-4" aria-live="polite" aria-busy="true" role="status">
           <div className="flex items-center justify-between text-sm text-neutral-500 mb-1">
             <span>
               {progress.isPreview ? "Previewing" : "Generating"} {progress.currentTable}...

@@ -21,8 +21,8 @@ export default function ResultsPanel({
   // Model loading state
   if (modelStatus === "loading") {
     return (
-      <div className="p-6 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
-        <div className="flex items-center gap-3 mb-4">
+      <div className="p-6 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg" aria-live="polite" aria-busy="true">
+        <div className="flex items-center gap-3 mb-4" role="status">
           <Spinner size="md" color="indigo" />
           <span className="text-sm font-medium">Loading classification model...</span>
         </div>
@@ -51,8 +51,8 @@ export default function ResultsPanel({
   // Classifying state
   if (isClassifying) {
     return (
-      <div className="p-6 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
-        <div className="flex items-center gap-3">
+      <div className="p-6 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg" aria-live="polite" aria-busy="true">
+        <div className="flex items-center gap-3" role="status">
           <Spinner size="md" color="indigo" />
           <span className="text-sm font-medium">Analyzing text...</span>
         </div>
@@ -90,7 +90,7 @@ export default function ResultsPanel({
   const maxScore = topResult?.score || 1;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" aria-live="polite">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium">Classification Results</h3>
         <span className="text-xs text-neutral-500 dark:text-neutral-400">
