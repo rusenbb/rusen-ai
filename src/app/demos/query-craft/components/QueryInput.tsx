@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect } from "react";
+import { AVAILABLE_MODELS } from "@/lib/config";
 import { EXAMPLE_QUERIES } from "../utils/prompts";
 
 interface QueryInputProps {
@@ -19,15 +20,6 @@ interface QueryInputProps {
   includeExplanation?: boolean;
   onIncludeExplanationChange?: (value: boolean) => void;
 }
-
-const AVAILABLE_MODELS = [
-  { id: "auto", name: "Auto (Recommended)" },
-  { id: "google/gemini-2.0-flash-exp:free", name: "Gemini 2.0 Flash" },
-  { id: "meta-llama/llama-3.3-70b-instruct:free", name: "Llama 3.3 70B" },
-  { id: "google/gemma-3-27b-it:free", name: "Gemma 3 27B" },
-  { id: "deepseek/deepseek-r1-0528:free", name: "DeepSeek R1" },
-  { id: "qwen/qwen3-coder:free", name: "Qwen3 Coder" },
-];
 
 export default function QueryInput({
   query,

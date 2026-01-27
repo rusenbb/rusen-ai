@@ -31,10 +31,11 @@ export default function TextInput({
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium mb-2">
+        <label htmlFor="classify-text-input" className="block text-sm font-medium mb-2">
           Text to Classify
         </label>
         <textarea
+          id="classify-text-input"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -70,6 +71,7 @@ export default function TextInput({
               className="w-5 h-5 animate-spin"
               fill="none"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <circle
                 className="opacity-25"

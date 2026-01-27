@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, memo } from "react";
 import { validateSQL } from "../utils/sqlValidator";
 
 interface SQLOutputProps {
@@ -81,7 +81,7 @@ export default function SQLOutput({ sql, explanation, isGenerating, streamingSQL
   }
 
   return (
-    <div className="mb-6">
+    <div className="mb-6" aria-live="polite" aria-busy={isGenerating}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-semibold">Generated SQL</h2>
@@ -127,7 +127,7 @@ export default function SQLOutput({ sql, explanation, isGenerating, streamingSQL
               onClick={onNewQuery}
               className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-neutral-300 dark:border-neutral-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
               New query
@@ -140,14 +140,14 @@ export default function SQLOutput({ sql, explanation, isGenerating, streamingSQL
             >
               {shared ? (
                 <>
-                  <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                   Link copied!
                 </>
               ) : (
                 <>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                   </svg>
                   Share
@@ -162,14 +162,14 @@ export default function SQLOutput({ sql, explanation, isGenerating, streamingSQL
             >
               {copied ? (
                 <>
-                  <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                   Copied!
                 </>
               ) : (
                 <>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                   </svg>
                   Copy
@@ -194,8 +194,8 @@ export default function SQLOutput({ sql, explanation, isGenerating, streamingSQL
           )}
         </pre>
         {justCompleted && (
-          <div className="absolute top-2 right-2 flex items-center gap-1 text-xs text-green-500">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="absolute top-2 right-2 flex items-center gap-1 text-xs text-green-500" role="status">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
             Done
@@ -207,7 +207,7 @@ export default function SQLOutput({ sql, explanation, isGenerating, streamingSQL
       {explanation && !isGenerating && (
         <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
           <div className="flex items-start gap-2">
-            <svg className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <div>
@@ -221,8 +221,8 @@ export default function SQLOutput({ sql, explanation, isGenerating, streamingSQL
   );
 }
 
-// Simple SQL syntax highlighter
-function SQLHighlighted({ sql }: { sql: string }) {
+// Simple SQL syntax highlighter - memoized to prevent re-parsing on every render
+const SQLHighlighted = memo(function SQLHighlighted({ sql }: { sql: string }) {
   if (!sql) return null;
 
   // SQL keywords to highlight
@@ -346,4 +346,4 @@ function SQLHighlighted({ sql }: { sql: string }) {
   }
 
   return <>{tokens}</>;
-}
+});

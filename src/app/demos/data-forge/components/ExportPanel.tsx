@@ -113,6 +113,7 @@ export default function ExportPanel({ data, schema, isPreview }: ExportPanelProp
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
+                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"
@@ -130,6 +131,7 @@ export default function ExportPanel({ data, schema, isPreview }: ExportPanelProp
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
+                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"
@@ -151,6 +153,7 @@ export default function ExportPanel({ data, schema, isPreview }: ExportPanelProp
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
@@ -169,7 +172,7 @@ export default function ExportPanel({ data, schema, isPreview }: ExportPanelProp
         {/* Preview mode indicator */}
         {isPreview && (
           <div className="mb-3 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded text-sm text-blue-700 dark:text-blue-300 flex items-center gap-2">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             Preview mode: Showing up to 3 rows per table. Generate full data for complete export.
@@ -194,7 +197,7 @@ export default function ExportPanel({ data, schema, isPreview }: ExportPanelProp
                 <button
                   onClick={() => handleCopyTable(name)}
                   className="px-1.5 py-1 text-xs border-l border-neutral-300 dark:border-neutral-600 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-r transition"
-                  title={`Copy ${name} as ${format.toUpperCase()}`}
+                  aria-label={copiedTable === name ? `Copied ${name}` : `Copy ${name} as ${format.toUpperCase()}`}
                 >
                   {copiedTable === name ? (
                     <svg
@@ -202,6 +205,7 @@ export default function ExportPanel({ data, schema, isPreview }: ExportPanelProp
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
+                      aria-hidden="true"
                     >
                       <path
                         strokeLinecap="round"
@@ -216,6 +220,7 @@ export default function ExportPanel({ data, schema, isPreview }: ExportPanelProp
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
+                      aria-hidden="true"
                     >
                       <path
                         strokeLinecap="round"

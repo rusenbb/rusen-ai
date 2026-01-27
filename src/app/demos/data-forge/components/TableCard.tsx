@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, memo } from "react";
 import type { Table, DataForgeAction, Column } from "../types";
 import { COLUMN_TEMPLATES } from "../types";
 import ColumnRow from "./ColumnRow";
@@ -10,7 +10,7 @@ interface TableCardProps {
   dispatch: React.Dispatch<DataForgeAction>;
 }
 
-export default function TableCard({ table, dispatch }: TableCardProps) {
+const TableCard = memo(function TableCard({ table, dispatch }: TableCardProps) {
   const [templateDropdownOpen, setTemplateDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -76,18 +76,20 @@ export default function TableCard({ table, dispatch }: TableCardProps) {
             value={table.name}
             onChange={(e) => updateTable({ name: e.target.value })}
             placeholder="table_name"
+            aria-label="Table name"
             className="font-mono font-medium bg-transparent border-none focus:outline-none focus:ring-0 text-lg"
           />
           <button
             onClick={deleteTable}
             className="p-1.5 text-neutral-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition"
-            title="Delete table"
+            aria-label={`Delete table ${table.name}`}
           >
             <svg
               className="w-4 h-4"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
@@ -103,6 +105,7 @@ export default function TableCard({ table, dispatch }: TableCardProps) {
           value={table.definition}
           onChange={(e) => updateTable({ definition: e.target.value })}
           placeholder="Describe this table (e.g., 'Premium SaaS subscribers', 'Product inventory for electronics store')"
+          aria-label="Table description"
           className="w-full text-sm text-neutral-600 dark:text-neutral-400 bg-transparent border-none focus:outline-none focus:ring-0 placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
         />
       </div>
@@ -130,6 +133,7 @@ export default function TableCard({ table, dispatch }: TableCardProps) {
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
@@ -145,6 +149,8 @@ export default function TableCard({ table, dispatch }: TableCardProps) {
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setTemplateDropdownOpen(!templateDropdownOpen)}
+              aria-expanded={templateDropdownOpen}
+              aria-haspopup="true"
               className="flex items-center gap-1 px-2 py-1.5 text-sm text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded transition"
             >
               <svg
@@ -152,6 +158,7 @@ export default function TableCard({ table, dispatch }: TableCardProps) {
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                aria-hidden="true"
               >
                 <path
                   strokeLinecap="round"
@@ -166,6 +173,7 @@ export default function TableCard({ table, dispatch }: TableCardProps) {
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                aria-hidden="true"
               >
                 <path
                   strokeLinecap="round"
@@ -217,4 +225,6 @@ export default function TableCard({ table, dispatch }: TableCardProps) {
       </div>
     </div>
   );
-}
+});
+
+export default TableCard;
