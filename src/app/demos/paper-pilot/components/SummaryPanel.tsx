@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Spinner, Alert } from "@/components/ui";
 import type { Summary, SummaryType, GenerationProgress } from "../types";
 import { SUMMARY_LABELS } from "../types";
 
@@ -89,10 +90,7 @@ export default function SummaryPanel({
             >
               {generateAllProgress ? (
                 <>
-                  <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
+                  <Spinner size="sm" color="white" />
                   {generateAllProgress.current}/{generateAllProgress.total}
                 </>
               ) : (
@@ -136,9 +134,9 @@ export default function SummaryPanel({
       )}
 
       {progress.status === "error" && progress.error && (
-        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-600 dark:text-red-400">
+        <Alert variant="error" className="mb-4">
           {progress.error}
-        </div>
+        </Alert>
       )}
 
       <div className="grid md:grid-cols-2 gap-4">
@@ -180,26 +178,7 @@ export default function SummaryPanel({
                     <span className="inline-block w-2 h-4 bg-blue-500 animate-pulse ml-1" />
                   </div>
                   <p className="text-xs text-blue-500 mt-2 flex items-center gap-1" role="status">
-                    <svg
-                      className="w-3 h-3 animate-spin"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      />
-                    </svg>
+                    <Spinner size="sm" color="blue" />
                     Generating...
                   </p>
                 </div>
@@ -208,26 +187,7 @@ export default function SummaryPanel({
               {/* Show generating placeholder if no streaming content yet */}
               {isThisGenerating && !streamingContent && (
                 <div className="mt-3 flex items-center gap-2 text-sm text-neutral-500" role="status">
-                  <svg
-                    className="w-4 h-4 animate-spin"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
+                  <Spinner size="sm" color="neutral" />
                   {waitingStage === "connecting" ? "Connecting to model..." : "Waiting for response..."}
                 </div>
               )}

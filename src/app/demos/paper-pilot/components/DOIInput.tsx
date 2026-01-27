@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Spinner, Button, Alert } from "@/components/ui";
 import type { FetchProgress } from "../types";
 import { getLastDoi, saveLastDoi } from "../utils/storage";
 
@@ -112,42 +113,15 @@ export default function DOIInput({ onSubmit, fetchProgress }: DOIInputProps) {
                 : "border-neutral-300 dark:border-neutral-700 focus:ring-blue-500"
             }`}
           />
-          <button
+          <Button
             type="submit"
-            disabled={isLoading || !input.trim()}
-            className={`px-6 py-3 rounded-lg font-medium transition ${
-              !isLoading && input.trim()
-                ? "bg-blue-600 hover:bg-blue-700 text-white"
-                : "bg-neutral-200 dark:bg-neutral-700 text-neutral-400 cursor-not-allowed"
-            }`}
+            variant="primary"
+            size="lg"
+            disabled={!input.trim()}
+            loading={isLoading}
           >
-            {isLoading ? (
-              <span className="flex items-center gap-2">
-                <svg
-                  className="w-5 h-5 animate-spin"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-                Fetching
-              </span>
-            ) : (
-              "Fetch Paper"
-            )}
-          </button>
+            {isLoading ? "Fetching" : "Fetch Paper"}
+          </Button>
         </div>
         {/* Validation error */}
         {validationError && (
@@ -159,10 +133,7 @@ export default function DOIInput({ onSubmit, fetchProgress }: DOIInputProps) {
       {isLoading && fetchProgress.currentStep && (
         <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
           <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
-            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-            </svg>
+            <Spinner size="sm" color="blue" />
             <span>{fetchProgress.currentStep}</span>
           </div>
           {fetchProgress.stepsCompleted.length > 0 && (
@@ -175,9 +146,9 @@ export default function DOIInput({ onSubmit, fetchProgress }: DOIInputProps) {
 
       {/* Error */}
       {fetchProgress.status === "error" && fetchProgress.error && (
-        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-600 dark:text-red-400">
+        <Alert variant="error" className="mb-4">
           {fetchProgress.error}
-        </div>
+        </Alert>
       )}
 
       <div className="text-sm text-neutral-500">
