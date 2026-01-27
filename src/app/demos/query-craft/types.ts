@@ -53,6 +53,7 @@ export interface QueryHistory {
   id: string;
   naturalLanguage: string;
   sql: string;
+  explanation?: string;
   timestamp: number;
 }
 
@@ -71,7 +72,7 @@ export type QueryCraftAction =
   | { type: "DELETE_COLUMN"; tableId: string; columnId: string }
   | { type: "SET_DIALECT"; dialect: SQLDialect }
   | { type: "SET_QUERY"; query: string }
-  | { type: "SET_GENERATED_SQL"; sql: string }
+  | { type: "SET_GENERATED_SQL"; sql: string; explanation?: string }
   | { type: "CLEAR_GENERATED_SQL" }
   | { type: "SET_GENERATION_PROGRESS"; progress: Partial<GenerationProgress> }
   | { type: "ADD_TO_HISTORY"; entry: QueryHistory }
@@ -83,6 +84,7 @@ export interface QueryCraftState {
   schema: Schema;
   query: string;
   generatedSQL: string | null;
+  explanation: string | null;
   generationProgress: GenerationProgress;
   history: QueryHistory[];
 }
@@ -130,6 +132,7 @@ export const initialState: QueryCraftState = {
   },
   query: "",
   generatedSQL: null,
+  explanation: null,
   generationProgress: {
     status: "idle",
   },
