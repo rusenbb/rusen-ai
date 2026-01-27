@@ -521,7 +521,7 @@ function CryptoHubWidget() {
         {/* BTC */}
         <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg overflow-hidden">
           <div className="flex items-center gap-2 mb-1">
-            <SiBitcoin className="w-5 h-5 text-[#F7931A]" />
+            <SiBitcoin className="w-5 h-5 shrink-0 text-[#F7931A]" />
             <span className="text-xs font-medium">Bitcoin</span>
           </div>
           <div className={`font-mono text-base font-bold truncate ${getPriceColor(prices.btc.price, prices.btc.prevPrice)}`}>
@@ -537,7 +537,7 @@ function CryptoHubWidget() {
         {/* ETH */}
         <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg overflow-hidden">
           <div className="flex items-center gap-2 mb-1">
-            <SiEthereum className="w-5 h-5 text-[#627EEA]" />
+            <SiEthereum className="w-6 h-6 shrink-0 text-[#627EEA]" />
             <span className="text-xs font-medium">Ethereum</span>
           </div>
           <div className={`font-mono text-base font-bold truncate ${getPriceColor(prices.eth.price, prices.eth.prevPrice)}`}>
@@ -553,7 +553,7 @@ function CryptoHubWidget() {
         {/* SOL */}
         <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg overflow-hidden">
           <div className="flex items-center gap-2 mb-1">
-            <SiSolana className="w-5 h-5 text-[#9945FF]" />
+            <SiSolana className="w-5 h-5 shrink-0 text-[#9945FF]" />
             <span className="text-xs font-medium">Solana</span>
           </div>
           <div className={`font-mono text-base font-bold truncate ${getPriceColor(prices.sol.price, prices.sol.prevPrice)}`}>
@@ -584,7 +584,7 @@ function CryptoHubWidget() {
         {/* Chainlink Oracle */}
         <div>
           <div className="text-xs text-neutral-500 mb-1 flex items-center gap-1">
-            <SiChainlink className="w-3.5 h-3.5 text-[#375BD2]" />
+            <SiChainlink className="w-3.5 h-3.5 shrink-0 text-[#375BD2]" />
             Chainlink Oracle
           </div>
           {chainlink ? (
