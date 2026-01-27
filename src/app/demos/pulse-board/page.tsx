@@ -541,12 +541,14 @@ function CryptoHubWidget() {
           <div className="flex items-center gap-2 mb-1">
             <svg className="w-5 h-5" viewBox="0 0 32 32" fill="none">
               <circle cx="16" cy="16" r="16" fill="#627EEA"/>
-              <path d="M16.5 4v8.9l7.5 3.3-7.5-12.2z" fill="white" fillOpacity="0.6"/>
-              <path d="M16.5 4l-7.5 12.2 7.5-3.3V4z" fill="white"/>
-              <path d="M16.5 22v6l7.5-10.4-7.5 4.4z" fill="white" fillOpacity="0.6"/>
-              <path d="M16.5 28v-6l-7.5-4.4 7.5 10.4z" fill="white"/>
-              <path d="M16.5 20.6l7.5-4.4-7.5-3.3v7.7z" fill="white" fillOpacity="0.2"/>
-              <path d="M9 16.2l7.5 4.4v-7.7L9 16.2z" fill="white" fillOpacity="0.6"/>
+              {/* Upper left face */}
+              <path d="M16 6 L9 17 L16 14 Z" fill="white"/>
+              {/* Upper right face */}
+              <path d="M16 6 L16 14 L23 17 Z" fill="white" fillOpacity="0.6"/>
+              {/* Lower left face */}
+              <path d="M9 17 L16 26 L16 19 Z" fill="white"/>
+              {/* Lower right face */}
+              <path d="M16 19 L16 26 L23 17 Z" fill="white" fillOpacity="0.6"/>
             </svg>
             <span className="text-xs font-medium">Ethereum</span>
           </div>
