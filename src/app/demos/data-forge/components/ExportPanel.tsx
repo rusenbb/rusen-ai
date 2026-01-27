@@ -85,11 +85,14 @@ export default function ExportPanel({ data, schema, isPreview }: ExportPanelProp
     <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden">
       {/* Header with format tabs */}
       <div className="flex items-center justify-between px-4 py-3 bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800">
-        <div className="flex gap-1">
+        <div className="flex gap-1" role="tablist" aria-label="Export format">
           {(["sql", "json", "csv"] as ExportFormat[]).map((f) => (
             <button
               key={f}
               onClick={() => setFormat(f)}
+              role="tab"
+              aria-selected={format === f}
+              aria-controls="export-preview"
               className={`px-3 py-1.5 text-sm font-medium rounded transition ${
                 format === f
                   ? "bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900"
@@ -294,7 +297,7 @@ export default function ExportPanel({ data, schema, isPreview }: ExportPanelProp
         )}
 
         {/* Export preview */}
-        <div className="mt-4">
+        <div className="mt-4" id="export-preview" role="tabpanel">
           <div className="text-sm text-neutral-500 mb-2">Export preview:</div>
           <pre className="p-4 bg-neutral-900 dark:bg-neutral-950 text-neutral-100 rounded-lg overflow-x-auto text-xs font-mono max-h-48">
             {getExportContent().slice(0, 1000)}

@@ -97,12 +97,14 @@ export default function RelationshipPanel({ schema, dispatch }: RelationshipPane
               <button
                 onClick={() => deleteForeignKey(fk.id)}
                 className="p-1 text-neutral-400 hover:text-red-500 transition"
+                aria-label={`Delete relationship from ${getTableName(fk.sourceTableId)} to ${getTableName(fk.targetTableId)}`}
               >
                 <svg
                   className="w-4 h-4"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
+                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"
@@ -123,13 +125,15 @@ export default function RelationshipPanel({ schema, dispatch }: RelationshipPane
           <div className="grid grid-cols-2 gap-4 mb-4">
             {/* Source */}
             <div>
-              <label className="block text-xs text-neutral-500 mb-1">From (source)</label>
+              <label className="block text-xs text-neutral-500 mb-1" id="source-label">From (source)</label>
               <select
                 value={sourceTableId}
                 onChange={(e) => {
                   setSourceTableId(e.target.value);
                   setSourceColumnId("");
                 }}
+                aria-labelledby="source-label"
+                aria-label="Source table"
                 className="w-full px-2 py-1.5 text-sm bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded"
               >
                 <option value="">Select table...</option>
@@ -143,6 +147,7 @@ export default function RelationshipPanel({ schema, dispatch }: RelationshipPane
                 <select
                   value={sourceColumnId}
                   onChange={(e) => setSourceColumnId(e.target.value)}
+                  aria-label="Source column"
                   className="w-full mt-2 px-2 py-1.5 text-sm bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded"
                 >
                   <option value="">Select column...</option>
@@ -157,13 +162,15 @@ export default function RelationshipPanel({ schema, dispatch }: RelationshipPane
 
             {/* Target */}
             <div>
-              <label className="block text-xs text-neutral-500 mb-1">To (target)</label>
+              <label className="block text-xs text-neutral-500 mb-1" id="target-label">To (target)</label>
               <select
                 value={targetTableId}
                 onChange={(e) => {
                   setTargetTableId(e.target.value);
                   setTargetColumnId("");
                 }}
+                aria-labelledby="target-label"
+                aria-label="Target table"
                 className="w-full px-2 py-1.5 text-sm bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded"
               >
                 <option value="">Select table...</option>
@@ -179,6 +186,7 @@ export default function RelationshipPanel({ schema, dispatch }: RelationshipPane
                 <select
                   value={targetColumnId}
                   onChange={(e) => setTargetColumnId(e.target.value)}
+                  aria-label="Target column"
                   className="w-full mt-2 px-2 py-1.5 text-sm bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded"
                 >
                   <option value="">Select column...</option>
