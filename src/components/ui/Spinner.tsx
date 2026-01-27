@@ -7,7 +7,7 @@ interface SpinnerProps {
   /** Size variant */
   size?: "sm" | "md" | "lg";
   /** Color variant - defaults to blue (accent color) */
-  color?: "blue" | "white" | "neutral";
+  color?: "blue" | "indigo" | "white" | "neutral";
   /** Additional CSS classes */
   className?: string;
 }
@@ -20,6 +20,7 @@ const sizeClasses = {
 
 const colorClasses = {
   blue: "border-blue-600 border-t-transparent",
+  indigo: "border-indigo-500 border-t-transparent",
   white: "border-white border-t-transparent",
   neutral: "border-neutral-600 border-t-transparent dark:border-neutral-400",
 };

@@ -6,7 +6,7 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { Spinner } from "./Spinner";
 
-type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
+type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "success";
 type ButtonSize = "sm" | "md" | "lg";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -36,6 +36,8 @@ const variantClasses: Record<ButtonVariant, string> = {
     "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 focus:ring-blue-500",
   danger:
     "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 disabled:hover:bg-red-600",
+  success:
+    "bg-green-600 text-white hover:bg-green-700 focus:ring-green-500 disabled:hover:bg-green-600",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
@@ -80,7 +82,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       {...props}
     >
       {loading ? (
-        <Spinner size="sm" color={variant === "primary" || variant === "danger" ? "white" : "neutral"} />
+        <Spinner size="sm" color={variant === "primary" || variant === "danger" || variant === "success" ? "white" : "neutral"} />
       ) : icon ? (
         <span className="shrink-0">{icon}</span>
       ) : null}

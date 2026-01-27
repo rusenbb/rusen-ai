@@ -1,5 +1,6 @@
 "use client";
 
+import { Spinner, Alert } from "@/components/ui";
 import type { ClassificationResult, ModelStatus } from "../types";
 
 interface ResultsPanelProps {
@@ -22,7 +23,7 @@ export default function ResultsPanel({
     return (
       <div className="p-6 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          <Spinner size="md" color="indigo" />
           <span className="text-sm font-medium">Loading classification model...</span>
         </div>
         <div className="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
@@ -41,9 +42,9 @@ export default function ResultsPanel({
   // Error state
   if (error) {
     return (
-      <div className="p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg">
-        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-      </div>
+      <Alert variant="error">
+        {error}
+      </Alert>
     );
   }
 
@@ -52,7 +53,7 @@ export default function ResultsPanel({
     return (
       <div className="p-6 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
         <div className="flex items-center gap-3">
-          <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          <Spinner size="md" color="indigo" />
           <span className="text-sm font-medium">Analyzing text...</span>
         </div>
       </div>
