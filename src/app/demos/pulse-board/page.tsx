@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { SiBitcoin, SiEthereum, SiSolana, SiChainlink } from "react-icons/si";
 
 // Types
 interface CryptoData {
@@ -520,10 +521,7 @@ function CryptoHubWidget() {
         {/* BTC */}
         <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg overflow-hidden">
           <div className="flex items-center gap-2 mb-1">
-            <svg className="w-5 h-5" viewBox="0 0 32 32" fill="none">
-              <circle cx="16" cy="16" r="16" fill="#F7931A"/>
-              <path d="M22.5 14.1c.3-2-1.2-3.1-3.3-3.8l.7-2.7-1.7-.4-.7 2.6c-.4-.1-.9-.2-1.4-.3l.7-2.7-1.7-.4-.7 2.7c-.4-.1-.7-.2-1-.2v-.1l-2.3-.6-.4 1.8s1.2.3 1.2.3c.7.2.8.6.8 1l-.8 3.2c0 0 .1 0 .2.1h-.2l-1.1 4.5c-.1.2-.3.5-.8.4 0 0-1.2-.3-1.2-.3l-.8 1.9 2.2.5c.4.1.8.2 1.2.3l-.7 2.8 1.7.4.7-2.7c.5.1.9.2 1.4.3l-.7 2.7 1.7.4.7-2.8c2.9.5 5.1.3 6-2.3.7-2.1 0-3.3-1.5-4.1 1.1-.3 1.9-1 2.1-2.5zm-3.8 5.3c-.5 2.1-4 1-5.1.7l.9-3.7c1.1.3 4.7.8 4.2 3zm.5-5.4c-.5 1.9-3.4.9-4.3.7l.8-3.4c1 .2 4 .7 3.5 2.7z" fill="white"/>
-            </svg>
+            <SiBitcoin className="w-5 h-5 text-[#F7931A]" />
             <span className="text-xs font-medium">Bitcoin</span>
           </div>
           <div className={`font-mono text-base font-bold truncate ${getPriceColor(prices.btc.price, prices.btc.prevPrice)}`}>
@@ -539,17 +537,7 @@ function CryptoHubWidget() {
         {/* ETH */}
         <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg overflow-hidden">
           <div className="flex items-center gap-2 mb-1">
-            <svg className="w-5 h-5" viewBox="0 0 32 32" fill="none">
-              <circle cx="16" cy="16" r="16" fill="#627EEA"/>
-              {/* Upper left face */}
-              <path d="M16 6 L9 17 L16 14 Z" fill="white"/>
-              {/* Upper right face */}
-              <path d="M16 6 L16 14 L23 17 Z" fill="white" fillOpacity="0.6"/>
-              {/* Lower left face */}
-              <path d="M9 17 L16 26 L16 19 Z" fill="white"/>
-              {/* Lower right face */}
-              <path d="M16 19 L16 26 L23 17 Z" fill="white" fillOpacity="0.6"/>
-            </svg>
+            <SiEthereum className="w-5 h-5 text-[#627EEA]" />
             <span className="text-xs font-medium">Ethereum</span>
           </div>
           <div className={`font-mono text-base font-bold truncate ${getPriceColor(prices.eth.price, prices.eth.prevPrice)}`}>
@@ -565,21 +553,7 @@ function CryptoHubWidget() {
         {/* SOL */}
         <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg overflow-hidden">
           <div className="flex items-center gap-2 mb-1">
-            <svg className="w-5 h-5" viewBox="0 0 32 32" fill="none">
-              <defs>
-                <linearGradient id="sol-bg" x1="0" y1="32" x2="32" y2="0">
-                  <stop offset="0%" stopColor="#9945FF"/>
-                  <stop offset="50%" stopColor="#14F195"/>
-                  <stop offset="100%" stopColor="#00C2FF"/>
-                </linearGradient>
-              </defs>
-              <circle cx="16" cy="16" r="16" fill="url(#sol-bg)"/>
-              <g fill="white">
-                <path d="M10.3 20.2c.1-.1.2-.2.4-.2h11.1c.2 0 .3.3.2.4l-1.7 1.7c-.1.1-.2.2-.4.2H8.8c-.2 0-.3-.3-.2-.4l1.7-1.7z"/>
-                <path d="M10.3 10c.1-.1.2-.2.4-.2h11.1c.2 0 .3.3.2.4l-1.7 1.7c-.1.1-.2.2-.4.2H8.8c-.2 0-.3-.3-.2-.4l1.7-1.7z"/>
-                <path d="M21.7 15c-.1-.1-.2-.2-.4-.2H10.2c-.2 0-.3.3-.2.4l1.7 1.7c.1.1.2.2.4.2h11.1c.2 0 .3-.3.2-.4L21.7 15z"/>
-              </g>
-            </svg>
+            <SiSolana className="w-5 h-5 text-[#9945FF]" />
             <span className="text-xs font-medium">Solana</span>
           </div>
           <div className={`font-mono text-base font-bold truncate ${getPriceColor(prices.sol.price, prices.sol.prevPrice)}`}>
@@ -610,9 +584,7 @@ function CryptoHubWidget() {
         {/* Chainlink Oracle */}
         <div>
           <div className="text-xs text-neutral-500 mb-1 flex items-center gap-1">
-            <svg className="w-3.5 h-3.5" viewBox="0 0 37.8 43.6" fill="none">
-              <path d="M18.9 0l-4 2.3L4 8.6.1 10.9v21.8l3.9 2.3L15 41.3l4 2.3 4-2.3 10.9-6.3 3.9-2.3V10.9l-3.9-2.3L23 2.3 18.9 0zm0 8.7l9.5 5.5v11l-9.5 5.5-9.5-5.5v-11l9.5-5.5z" fill="#375BD2"/>
-            </svg>
+            <SiChainlink className="w-3.5 h-3.5 text-[#375BD2]" />
             Chainlink Oracle
           </div>
           {chainlink ? (
