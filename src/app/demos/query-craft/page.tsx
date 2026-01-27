@@ -143,12 +143,14 @@ function queryCraftReducer(state: QueryCraftState, action: QueryCraftAction): Qu
       return {
         ...state,
         generatedSQL: action.sql,
+        explanation: action.explanation || null,
         generationProgress: { status: "complete" },
         history: [
           {
             id: generateId(),
             naturalLanguage: state.query,
             sql: action.sql,
+            explanation: action.explanation,
             timestamp: Date.now(),
           },
           ...state.history.slice(0, 9), // Keep last 10
@@ -159,6 +161,7 @@ function queryCraftReducer(state: QueryCraftState, action: QueryCraftAction): Qu
       return {
         ...state,
         generatedSQL: null,
+        explanation: null,
         generationProgress: { status: "idle" },
       };
 
@@ -281,11 +284,11 @@ export default function QueryCraftPage() {
       const systemPrompt = getSystemPrompt(state.schema.dialect, includeExplanation);
       const userPrompt = buildUserPrompt(state.schema, state.query);
 
-      const sql = await generate(systemPrompt, userPrompt, (text) => {
+      const result = await generate(systemPrompt, userPrompt, (text) => {
         setStreamingSQL(text);
-      });
+      }, includeExplanation);
 
-      dispatch({ type: "SET_GENERATED_SQL", sql });
+      dispatch({ type: "SET_GENERATED_SQL", sql: result.sql, explanation: result.explanation });
     } catch (err) {
       dispatch({
         type: "SET_GENERATION_PROGRESS",
@@ -312,13 +315,13 @@ export default function QueryCraftPage() {
         const systemPrompt = getSystemPrompt(state.schema.dialect, includeExplanation);
         const userPrompt = buildUserPrompt(state.schema, exampleQuery);
 
-        const sql = await generate(systemPrompt, userPrompt, (text) => {
+        const result = await generate(systemPrompt, userPrompt, (text) => {
           setStreamingSQL(text);
-        });
+        }, includeExplanation);
 
         // Dispatch with the example query to update history correctly
         dispatch({ type: "SET_QUERY", query: exampleQuery });
-        dispatch({ type: "SET_GENERATED_SQL", sql });
+        dispatch({ type: "SET_GENERATED_SQL", sql: result.sql, explanation: result.explanation });
       } catch (err) {
         dispatch({
           type: "SET_GENERATION_PROGRESS",
@@ -383,6 +386,7 @@ export default function QueryCraftPage() {
       {/* SQL Output */}
       <SQLOutput
         sql={state.generatedSQL}
+        explanation={state.explanation}
         isGenerating={isGenerating}
         streamingSQL={streamingSQL}
         onNewQuery={handleNewQuery}
@@ -409,7 +413,7 @@ export default function QueryCraftPage() {
                   key={entry.id}
                   onClick={() => {
                     dispatch({ type: "SET_QUERY", query: entry.naturalLanguage });
-                    dispatch({ type: "SET_GENERATED_SQL", sql: entry.sql });
+                    dispatch({ type: "SET_GENERATED_SQL", sql: entry.sql, explanation: entry.explanation });
                   }}
                   className={`w-full text-left p-3 border rounded-lg transition ${
                     isActive

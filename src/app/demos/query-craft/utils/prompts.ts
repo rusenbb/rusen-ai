@@ -53,10 +53,39 @@ export function getSystemPrompt(dialect: SQLDialect, includeExplanation: boolean
     "sql-server": "SQL Server",
   };
 
-  const baseRules = `You are an expert SQL query writer. You translate natural language questions into correct, efficient ${dialectNames[dialect]} queries.
+  if (includeExplanation) {
+    return `You are an expert SQL query writer. You translate natural language questions into correct, efficient ${dialectNames[dialect]} queries.
+
+You MUST respond with a valid JSON object in this exact format:
+{
+  "sql": "YOUR SQL QUERY HERE",
+  "explanation": "Brief explanation of what the query does"
+}
+
+Rules for the SQL query:
+1. Use the exact table and column names from the schema provided.
+2. Write efficient queries using appropriate JOINs when needed.
+3. Use ${dialectNames[dialect]}-specific syntax when necessary.
+4. Always include appropriate WHERE clauses to filter data as requested.
+5. Use aggregate functions (COUNT, SUM, AVG, etc.) when the question asks for counts, totals, or averages.
+6. Use GROUP BY when aggregating data by categories.
+7. Use ORDER BY when the question implies a ranking or sorting.
+8. Use LIMIT when the question asks for "top N" or a specific number of results.
+9. If the question is ambiguous, make reasonable assumptions.
+10. End the query with a semicolon.
+
+Rules for the explanation:
+1. Keep it brief (2-3 sentences).
+2. Describe what the query does and why you chose this approach.
+3. Mention any assumptions made.
+
+IMPORTANT: Your entire response must be valid JSON. Do not include any text outside the JSON object.`;
+  }
+
+  return `You are an expert SQL query writer. You translate natural language questions into correct, efficient ${dialectNames[dialect]} queries.
 
 Rules:
-1. ${includeExplanation ? "Output the SQL query followed by a brief explanation." : "Output ONLY the SQL query, nothing else. No explanations, no markdown, no comments."}
+1. Output ONLY the SQL query, nothing else. No explanations, no markdown, no comments.
 2. Use the exact table and column names from the schema provided.
 3. Write efficient queries using appropriate JOINs when needed.
 4. Use ${dialectNames[dialect]}-specific syntax when necessary.
@@ -67,13 +96,6 @@ Rules:
 9. Use LIMIT when the question asks for "top N" or a specific number of results.
 10. If the question is ambiguous, make reasonable assumptions.
 11. End the query with a semicolon.`;
-
-  if (includeExplanation) {
-    return baseRules + `
-12. After the SQL query, add a blank line and then provide a brief explanation (2-3 sentences) starting with "Explanation:" that describes what the query does and why you chose this approach.`;
-  }
-
-  return baseRules;
 }
 
 // Build the user prompt with schema and natural language query
