@@ -35,7 +35,7 @@ export default function DemosPage() {
           description="Zero-shot text classification. Define your own classes, paste any text, get predictions."
           href="/demos/classify-anything"
           tags={["Zero-shot", "Transformers.js"]}
-          status="coming-soon"
+          status="live"
         />
         <DemoCard
           title="Vision Anything"
