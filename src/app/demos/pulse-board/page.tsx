@@ -520,7 +520,10 @@ function CryptoHubWidget() {
         {/* BTC */}
         <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg overflow-hidden">
           <div className="flex items-center gap-2 mb-1">
-            <div className="w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold text-[10px]">₿</div>
+            <svg className="w-5 h-5" viewBox="0 0 32 32" fill="none">
+              <circle cx="16" cy="16" r="16" fill="#F7931A"/>
+              <path d="M22.5 14.1c.3-2-1.2-3.1-3.3-3.8l.7-2.7-1.7-.4-.7 2.6c-.4-.1-.9-.2-1.4-.3l.7-2.7-1.7-.4-.7 2.7c-.4-.1-.7-.2-1-.2v-.1l-2.3-.6-.4 1.8s1.2.3 1.2.3c.7.2.8.6.8 1l-.8 3.2c0 0 .1 0 .2.1h-.2l-1.1 4.5c-.1.2-.3.5-.8.4 0 0-1.2-.3-1.2-.3l-.8 1.9 2.2.5c.4.1.8.2 1.2.3l-.7 2.8 1.7.4.7-2.7c.5.1.9.2 1.4.3l-.7 2.7 1.7.4.7-2.8c2.9.5 5.1.3 6-2.3.7-2.1 0-3.3-1.5-4.1 1.1-.3 1.9-1 2.1-2.5zm-3.8 5.3c-.5 2.1-4 1-5.1.7l.9-3.7c1.1.3 4.7.8 4.2 3zm.5-5.4c-.5 1.9-3.4.9-4.3.7l.8-3.4c1 .2 4 .7 3.5 2.7z" fill="white"/>
+            </svg>
             <span className="text-xs font-medium">Bitcoin</span>
           </div>
           <div className={`font-mono text-base font-bold truncate ${getPriceColor(prices.btc.price, prices.btc.prevPrice)}`}>
@@ -536,7 +539,15 @@ function CryptoHubWidget() {
         {/* ETH */}
         <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg overflow-hidden">
           <div className="flex items-center gap-2 mb-1">
-            <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-[10px]">Ξ</div>
+            <svg className="w-5 h-5" viewBox="0 0 32 32" fill="none">
+              <circle cx="16" cy="16" r="16" fill="#627EEA"/>
+              <path d="M16 4v8.87l7.5 3.35L16 4z" fill="white" fillOpacity="0.6"/>
+              <path d="M16 4L8.5 16.22l7.5-3.35V4z" fill="white"/>
+              <path d="M16 21.97v6.03l7.5-10.4-7.5 4.37z" fill="white" fillOpacity="0.6"/>
+              <path d="M16 28v-6.03L8.5 17.6 16 28z" fill="white"/>
+              <path d="M16 20.57l7.5-4.35L16 12.87v7.7z" fill="white" fillOpacity="0.2"/>
+              <path d="M8.5 16.22l7.5 4.35v-7.7l-7.5 3.35z" fill="white" fillOpacity="0.6"/>
+            </svg>
             <span className="text-xs font-medium">Ethereum</span>
           </div>
           <div className={`font-mono text-base font-bold truncate ${getPriceColor(prices.eth.price, prices.eth.prevPrice)}`}>
@@ -552,7 +563,17 @@ function CryptoHubWidget() {
         {/* SOL */}
         <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg overflow-hidden">
           <div className="flex items-center gap-2 mb-1">
-            <div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-500 to-teal-400 flex items-center justify-center text-white font-bold text-[10px]">S</div>
+            <svg className="w-5 h-5" viewBox="0 0 32 32" fill="none">
+              <circle cx="16" cy="16" r="16" fill="url(#solana-grad)"/>
+              <defs>
+                <linearGradient id="solana-grad" x1="0" y1="32" x2="32" y2="0">
+                  <stop stopColor="#9945FF"/>
+                  <stop offset="0.5" stopColor="#14F195"/>
+                  <stop offset="1" stopColor="#00C2FF"/>
+                </linearGradient>
+              </defs>
+              <path d="M9.5 19.8a.6.6 0 01.4-.2h12.9c.3 0 .4.3.2.5l-2.5 2.5a.6.6 0 01-.4.2H7.2c-.3 0-.4-.3-.2-.5l2.5-2.5zm0-7.6a.6.6 0 01.4-.2h12.9c.3 0 .4.3.2.5l-2.5 2.5a.6.6 0 01-.4.2H7.2c-.3 0-.4-.3-.2-.5l2.5-2.5zm10.6 3.6a.6.6 0 00-.4-.2H6.8c-.3 0-.4.3-.2.5l2.5 2.5a.6.6 0 00.4.2h12.9c.3 0 .4-.3.2-.5l-2.5-2.5z" fill="white"/>
+            </svg>
             <span className="text-xs font-medium">Solana</span>
           </div>
           <div className={`font-mono text-base font-bold truncate ${getPriceColor(prices.sol.price, prices.sol.prevPrice)}`}>
@@ -583,8 +604,8 @@ function CryptoHubWidget() {
         {/* Chainlink Oracle */}
         <div>
           <div className="text-xs text-neutral-500 mb-1 flex items-center gap-1">
-            <svg className="w-3 h-3" viewBox="0 0 32 32" fill="none">
-              <path d="M16 0L6.5 5.5v10.9L16 32l9.5-15.6V5.5L16 0z" fill="#375BD2"/>
+            <svg className="w-3.5 h-3.5" viewBox="0 0 37.8 43.6" fill="none">
+              <path d="M18.9 0l-4 2.3L4 8.6.1 10.9v21.8l3.9 2.3L15 41.3l4 2.3 4-2.3 10.9-6.3 3.9-2.3V10.9l-3.9-2.3L23 2.3 18.9 0zm0 8.7l9.5 5.5v11l-9.5 5.5-9.5-5.5v-11l9.5-5.5z" fill="#375BD2"/>
             </svg>
             Chainlink Oracle
           </div>
