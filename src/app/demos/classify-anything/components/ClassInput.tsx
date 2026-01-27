@@ -55,13 +55,14 @@ export default function ClassInput({
                 onClick={() => onRemoveLabel(index)}
                 disabled={disabled || labels.length <= 2}
                 className="ml-1 hover:text-indigo-900 dark:hover:text-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                title={labels.length <= 2 ? "Minimum 2 labels required" : "Remove label"}
+                aria-label={labels.length <= 2 ? "Cannot remove - minimum 2 labels required" : `Remove label ${label}`}
               >
                 <svg
                   className="w-4 h-4"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
+                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"

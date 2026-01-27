@@ -72,7 +72,7 @@ export default function SummaryPanel({
   const canGenerateAll = isModelReady && !isGenerating && missingSummaries.length > 0;
 
   return (
-    <div className="mb-8">
+    <div className="mb-8" aria-live="polite" aria-busy={isGenerating}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-medium">AI Summaries</h3>
         <div className="flex items-center gap-2">
@@ -89,7 +89,7 @@ export default function SummaryPanel({
             >
               {generateAllProgress ? (
                 <>
-                  <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
@@ -97,7 +97,7 @@ export default function SummaryPanel({
                 </>
               ) : (
                 <>
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
                   Generate All
@@ -111,9 +111,9 @@ export default function SummaryPanel({
               onClick={onClearSummaries}
               disabled={isGenerating}
               className="p-1.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition disabled:opacity-50"
-              title="Clear all summaries"
+              aria-label="Clear all summaries"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
             </button>
@@ -179,11 +179,12 @@ export default function SummaryPanel({
                     {streamingContent}
                     <span className="inline-block w-2 h-4 bg-blue-500 animate-pulse ml-1" />
                   </div>
-                  <p className="text-xs text-blue-500 mt-2 flex items-center gap-1">
+                  <p className="text-xs text-blue-500 mt-2 flex items-center gap-1" role="status">
                     <svg
                       className="w-3 h-3 animate-spin"
                       fill="none"
                       viewBox="0 0 24 24"
+                      aria-hidden="true"
                     >
                       <circle
                         className="opacity-25"
@@ -206,11 +207,12 @@ export default function SummaryPanel({
 
               {/* Show generating placeholder if no streaming content yet */}
               {isThisGenerating && !streamingContent && (
-                <div className="mt-3 flex items-center gap-2 text-sm text-neutral-500">
+                <div className="mt-3 flex items-center gap-2 text-sm text-neutral-500" role="status">
                   <svg
                     className="w-4 h-4 animate-spin"
                     fill="none"
                     viewBox="0 0 24 24"
+                    aria-hidden="true"
                   >
                     <circle
                       className="opacity-25"
@@ -246,14 +248,14 @@ export default function SummaryPanel({
                       <button
                         onClick={() => handleCopy(type, summary.content)}
                         className="p-1 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition"
-                        title={copiedType === type ? "Copied!" : "Copy to clipboard"}
+                        aria-label={copiedType === type ? "Copied!" : `Copy ${label.label} summary`}
                       >
                         {copiedType === type ? (
-                          <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                           </svg>
                         ) : (
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                           </svg>
                         )}
@@ -263,9 +265,9 @@ export default function SummaryPanel({
                         onClick={() => handleGenerate(type)}
                         disabled={!isModelReady || isGenerating}
                         className="p-1 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Regenerate"
+                        aria-label={`Regenerate ${label.label} summary`}
                       >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
                       </button>

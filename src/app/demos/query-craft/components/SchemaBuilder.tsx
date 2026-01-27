@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo } from "react";
 import type { Schema, QueryCraftAction, Table, Column, SQLDialect } from "../types";
 import { PRESET_SCHEMAS, SQL_DIALECTS, COLUMN_TYPES, createDefaultColumn } from "../types";
 import { buildSchemaContext } from "../utils/prompts";
@@ -62,6 +62,7 @@ export default function SchemaBuilder({ schema, dispatch, onPresetLoad }: Schema
           <select
             value={schema.dialect}
             onChange={(e) => setDialect(e.target.value as SQLDialect)}
+            aria-label="SQL dialect"
             className="px-3 py-2 text-sm border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             {SQL_DIALECTS.map((d) => (
@@ -166,7 +167,7 @@ interface TableCardProps {
   dispatch: React.Dispatch<QueryCraftAction>;
 }
 
-function TableCard({ table, schema, dispatch }: TableCardProps) {
+const TableCard = memo(function TableCard({ table, schema, dispatch }: TableCardProps) {
   const updateTable = (updates: Partial<Table>) => {
     dispatch({ type: "UPDATE_TABLE", tableId: table.id, updates });
   };
@@ -197,6 +198,7 @@ function TableCard({ table, schema, dispatch }: TableCardProps) {
             value={table.name}
             onChange={(e) => updateTable({ name: e.target.value })}
             placeholder="table_name"
+            aria-label="Table name"
             className="font-mono text-sm font-medium bg-transparent border-none focus:outline-none focus:ring-0 w-32"
           />
           <input
@@ -204,6 +206,7 @@ function TableCard({ table, schema, dispatch }: TableCardProps) {
             value={table.description}
             onChange={(e) => updateTable({ description: e.target.value })}
             placeholder="Description (optional)"
+            aria-label="Table description"
             className="text-sm text-neutral-500 bg-transparent border-none focus:outline-none focus:ring-0 flex-1"
           />
         </div>
@@ -217,9 +220,9 @@ function TableCard({ table, schema, dispatch }: TableCardProps) {
           <button
             onClick={deleteTable}
             className="p-1 text-neutral-400 hover:text-red-500 transition"
-            title="Delete table"
+            aria-label={`Delete table ${table.name}`}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -241,7 +244,7 @@ function TableCard({ table, schema, dispatch }: TableCardProps) {
       </div>
     </div>
   );
-}
+});
 
 interface ColumnRowProps {
   column: Column;
@@ -251,7 +254,7 @@ interface ColumnRowProps {
   onDelete: () => void;
 }
 
-function ColumnRow({ column, schema, currentTableId, onUpdate, onDelete }: ColumnRowProps) {
+const ColumnRow = memo(function ColumnRow({ column, schema, currentTableId, onUpdate, onDelete }: ColumnRowProps) {
   // Get other tables for FK reference
   const otherTables = schema.tables.filter((t) => t.id !== currentTableId);
 
@@ -263,6 +266,7 @@ function ColumnRow({ column, schema, currentTableId, onUpdate, onDelete }: Colum
         value={column.name}
         onChange={(e) => onUpdate({ name: e.target.value })}
         placeholder="column_name"
+        aria-label="Column name"
         className="font-mono w-28 bg-transparent border border-neutral-200 dark:border-neutral-700 rounded px-2 py-1 text-sm focus:ring-1 focus:ring-blue-500 focus:border-transparent"
       />
 
@@ -270,6 +274,7 @@ function ColumnRow({ column, schema, currentTableId, onUpdate, onDelete }: Colum
       <select
         value={column.type}
         onChange={(e) => onUpdate({ type: e.target.value as Column["type"] })}
+        aria-label="Column type"
         className="w-32 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded px-2 py-1 text-sm focus:ring-1 focus:ring-blue-500 focus:border-transparent"
       >
         {COLUMN_TYPES.map((t) => (
@@ -322,6 +327,7 @@ function ColumnRow({ column, schema, currentTableId, onUpdate, onDelete }: Colum
               onUpdate({ referencesTable: undefined, referencesColumn: undefined });
             }
           }}
+          aria-label="Foreign key reference"
           className="w-36 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-blue-500 focus:border-transparent"
         >
           <option value="">Select reference...</option>
@@ -344,12 +350,12 @@ function ColumnRow({ column, schema, currentTableId, onUpdate, onDelete }: Colum
       <button
         onClick={onDelete}
         className="p-1 text-neutral-400 hover:text-red-500 transition opacity-50 hover:opacity-100"
-        title="Delete column"
+        aria-label={`Delete column ${column.name}`}
       >
-        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
     </div>
   );
-}
+});

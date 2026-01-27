@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import type { Column, ColumnType, DataForgeAction } from "../types";
 import { COLUMN_TYPES } from "../types";
 
@@ -10,7 +11,7 @@ interface ColumnRowProps {
   canDelete: boolean;
 }
 
-export default function ColumnRow({ column, tableId, dispatch, canDelete }: ColumnRowProps) {
+const ColumnRow = memo(function ColumnRow({ column, tableId, dispatch, canDelete }: ColumnRowProps) {
   const updateColumn = (updates: Partial<Column>) => {
     dispatch({
       type: "UPDATE_COLUMN",
@@ -36,6 +37,7 @@ export default function ColumnRow({ column, tableId, dispatch, canDelete }: Colu
         value={column.name}
         onChange={(e) => updateColumn({ name: e.target.value })}
         placeholder="column_name"
+        aria-label="Column name"
         className="flex-1 min-w-0 px-2 py-1 text-sm font-mono bg-transparent border border-neutral-200 dark:border-neutral-700 rounded focus:outline-none focus:ring-1 focus:ring-neutral-400"
       />
 
@@ -43,6 +45,7 @@ export default function ColumnRow({ column, tableId, dispatch, canDelete }: Colu
       <select
         value={column.type}
         onChange={(e) => updateColumn({ type: e.target.value as ColumnType })}
+        aria-label="Column type"
         className="px-2 py-1 text-sm bg-transparent border border-neutral-200 dark:border-neutral-700 rounded focus:outline-none focus:ring-1 focus:ring-neutral-400 cursor-pointer"
       >
         {COLUMN_TYPES.map((t) => (
@@ -60,7 +63,8 @@ export default function ColumnRow({ column, tableId, dispatch, canDelete }: Colu
             ? "bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200"
             : "bg-neutral-100 dark:bg-neutral-800 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
         }`}
-        title="Primary Key"
+        aria-label={column.isPrimaryKey ? "Remove primary key" : "Set as primary key"}
+        aria-pressed={column.isPrimaryKey}
       >
         PK
       </button>
@@ -73,7 +77,8 @@ export default function ColumnRow({ column, tableId, dispatch, canDelete }: Colu
             ? "bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200"
             : "bg-neutral-100 dark:bg-neutral-800 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
         }`}
-        title="Nullable"
+        aria-label={column.nullable ? "Set as not nullable" : "Set as nullable"}
+        aria-pressed={column.nullable}
       >
         NULL
       </button>
@@ -87,13 +92,14 @@ export default function ColumnRow({ column, tableId, dispatch, canDelete }: Colu
             ? "text-neutral-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
             : "text-neutral-200 dark:text-neutral-700 cursor-not-allowed"
         }`}
-        title={canDelete ? "Delete column" : "Cannot delete last column"}
+        aria-label={canDelete ? `Delete column ${column.name}` : "Cannot delete last column"}
       >
         <svg
           className="w-4 h-4"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
+          aria-hidden="true"
         >
           <path
             strokeLinecap="round"
@@ -105,4 +111,6 @@ export default function ColumnRow({ column, tableId, dispatch, canDelete }: Colu
       </button>
     </div>
   );
-}
+});
+
+export default ColumnRow;

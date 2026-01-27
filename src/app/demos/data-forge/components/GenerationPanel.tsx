@@ -1,16 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { AVAILABLE_MODELS } from "@/lib/config";
 import type { Schema, GenerationProgress } from "../types";
-
-export const AVAILABLE_MODELS = [
-  { id: "auto", name: "Auto (Recommended)", description: "Picks best available model with fallback" },
-  { id: "google/gemini-2.0-flash-exp:free", name: "Gemini 2.0 Flash", description: "1M context, fast JSON generation" },
-  { id: "meta-llama/llama-3.3-70b-instruct:free", name: "Llama 3.3 70B", description: "131K context, reliable JSON" },
-  { id: "google/gemma-3-27b-it:free", name: "Gemma 3 27B", description: "131K context, good fallback" },
-  { id: "deepseek/deepseek-r1-0528:free", name: "DeepSeek R1", description: "164K context, reasoning model" },
-  { id: "qwen/qwen3-coder:free", name: "Qwen3 Coder 480B", description: "262K context, coding optimized" },
-];
 
 interface GenerationPanelProps {
   schema: Schema;
@@ -69,6 +61,7 @@ export default function GenerationPanel({
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                aria-hidden="true"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
