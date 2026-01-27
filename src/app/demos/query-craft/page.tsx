@@ -1,20 +1,18 @@
 "use client";
 
 import { useReducer, useCallback, useState, useEffect } from "react";
-import { useAPILLM } from "./hooks/useAPILLM";
+import { useAPI } from "@/hooks";
+import { Alert } from "@/components/ui";
 import SchemaBuilder from "./components/SchemaBuilder";
 import QueryInput from "./components/QueryInput";
 import SQLOutput from "./components/SQLOutput";
 import {
   initialState,
-  createDefaultTable,
-  createDefaultColumn,
-  generateId,
   PRESET_SCHEMAS,
   type QueryCraftState,
-  type QueryCraftAction,
   type Schema,
 } from "./types";
+import { queryCraftReducer } from "./reducers";
 import { getSystemPrompt, buildUserPrompt } from "./utils/prompts";
 
 const SCHEMA_STORAGE_KEY = "query-craft-schema";
@@ -49,160 +47,6 @@ function timeAgo(timestamp: number): string {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
-function queryCraftReducer(state: QueryCraftState, action: QueryCraftAction): QueryCraftState {
-  switch (action.type) {
-    case "ADD_TABLE":
-      return {
-        ...state,
-        schema: {
-          ...state.schema,
-          tables: [...state.schema.tables, createDefaultTable()],
-        },
-      };
-
-    case "UPDATE_TABLE":
-      return {
-        ...state,
-        schema: {
-          ...state.schema,
-          tables: state.schema.tables.map((t) =>
-            t.id === action.tableId ? { ...t, ...action.updates } : t
-          ),
-        },
-      };
-
-    case "DELETE_TABLE":
-      return {
-        ...state,
-        schema: {
-          ...state.schema,
-          tables: state.schema.tables.filter((t) => t.id !== action.tableId),
-        },
-      };
-
-    case "ADD_COLUMN":
-      return {
-        ...state,
-        schema: {
-          ...state.schema,
-          tables: state.schema.tables.map((t) =>
-            t.id === action.tableId
-              ? { ...t, columns: [...t.columns, createDefaultColumn()] }
-              : t
-          ),
-        },
-      };
-
-    case "UPDATE_COLUMN":
-      return {
-        ...state,
-        schema: {
-          ...state.schema,
-          tables: state.schema.tables.map((t) =>
-            t.id === action.tableId
-              ? {
-                  ...t,
-                  columns: t.columns.map((c) =>
-                    c.id === action.columnId ? { ...c, ...action.updates } : c
-                  ),
-                }
-              : t
-          ),
-        },
-      };
-
-    case "DELETE_COLUMN":
-      return {
-        ...state,
-        schema: {
-          ...state.schema,
-          tables: state.schema.tables.map((t) =>
-            t.id === action.tableId
-              ? { ...t, columns: t.columns.filter((c) => c.id !== action.columnId) }
-              : t
-          ),
-        },
-      };
-
-    case "SET_DIALECT":
-      return {
-        ...state,
-        schema: {
-          ...state.schema,
-          dialect: action.dialect,
-        },
-      };
-
-    case "SET_QUERY":
-      return {
-        ...state,
-        query: action.query,
-      };
-
-    case "SET_GENERATED_SQL":
-      return {
-        ...state,
-        generatedSQL: action.sql,
-        explanation: action.explanation || null,
-        generationProgress: { status: "complete" },
-        history: [
-          {
-            id: generateId(),
-            naturalLanguage: state.query,
-            sql: action.sql,
-            explanation: action.explanation,
-            timestamp: Date.now(),
-          },
-          ...state.history.slice(0, 9), // Keep last 10
-        ],
-      };
-
-    case "CLEAR_GENERATED_SQL":
-      return {
-        ...state,
-        generatedSQL: null,
-        explanation: null,
-        generationProgress: { status: "idle" },
-      };
-
-    case "SET_GENERATION_PROGRESS":
-      return {
-        ...state,
-        generationProgress: {
-          ...state.generationProgress,
-          ...action.progress,
-        },
-      };
-
-    case "ADD_TO_HISTORY":
-      return {
-        ...state,
-        history: [action.entry, ...state.history.slice(0, 9)],
-      };
-
-    case "CLEAR_HISTORY":
-      return {
-        ...state,
-        history: [],
-      };
-
-    case "LOAD_PRESET":
-      return {
-        ...state,
-        schema: action.schema,
-        generatedSQL: null,
-        query: "",
-        generationProgress: { status: "idle" },
-      };
-
-    case "RESET":
-      return initialState;
-
-    default:
-      return state;
-  }
-}
-
 // Load initial state, checking localStorage for saved schema
 function getInitialState(): QueryCraftState {
   if (typeof window !== "undefined") {
@@ -227,7 +71,12 @@ export default function QueryCraftPage() {
   const [streamingSQL, setStreamingSQL] = useState<string>("");
   const [autoFocusKey, setAutoFocusKey] = useState(0);
   const [includeExplanation, setIncludeExplanation] = useState(false);
-  const { isGenerating, error, rateLimitRemaining, lastModelUsed, generate } = useAPILLM(selectedModel);
+  const { isGenerating, error, rateLimitRemaining, lastModelUsed, generate } = useAPI(selectedModel, {
+    useCase: "query-craft",
+    defaultStream: true,
+    defaultMaxTokens: 4096,
+    defaultTemperature: 0.2,
+  });
 
   // Persist schema to localStorage when it changes
   useEffect(() => {
@@ -284,11 +133,14 @@ export default function QueryCraftPage() {
       const systemPrompt = getSystemPrompt(state.schema.dialect, includeExplanation);
       const userPrompt = buildUserPrompt(state.schema, state.query);
 
-      const result = await generate(systemPrompt, userPrompt, (text) => {
-        setStreamingSQL(text);
-      }, includeExplanation);
+      const result = await generate({
+        systemPrompt,
+        userPrompt,
+        onStream: (text) => setStreamingSQL(text),
+        jsonMode: includeExplanation,
+      });
 
-      dispatch({ type: "SET_GENERATED_SQL", sql: result.sql, explanation: result.explanation });
+      dispatch({ type: "SET_GENERATED_SQL", sql: result.sql || result.content, explanation: result.explanation });
     } catch (err) {
       dispatch({
         type: "SET_GENERATION_PROGRESS",
@@ -315,13 +167,16 @@ export default function QueryCraftPage() {
         const systemPrompt = getSystemPrompt(state.schema.dialect, includeExplanation);
         const userPrompt = buildUserPrompt(state.schema, exampleQuery);
 
-        const result = await generate(systemPrompt, userPrompt, (text) => {
-          setStreamingSQL(text);
-        }, includeExplanation);
+        const result = await generate({
+          systemPrompt,
+          userPrompt,
+          onStream: (text) => setStreamingSQL(text),
+          jsonMode: includeExplanation,
+        });
 
         // Dispatch with the example query to update history correctly
         dispatch({ type: "SET_QUERY", query: exampleQuery });
-        dispatch({ type: "SET_GENERATED_SQL", sql: result.sql, explanation: result.explanation });
+        dispatch({ type: "SET_GENERATED_SQL", sql: result.sql || result.content, explanation: result.explanation });
       } catch (err) {
         dispatch({
           type: "SET_GENERATION_PROGRESS",
@@ -353,9 +208,9 @@ export default function QueryCraftPage() {
 
       {/* Error display */}
       {(error || state.generationProgress.error) && (
-        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400">
+        <Alert variant="error" className="mb-6">
           {error || state.generationProgress.error}
-        </div>
+        </Alert>
       )}
 
       {/* Schema Builder */}

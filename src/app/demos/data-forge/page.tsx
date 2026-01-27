@@ -1,7 +1,8 @@
 "use client";
 
 import { useReducer, useCallback, useState, useEffect } from "react";
-import { useAPILLM } from "./hooks/useAPILLM";
+import { useAPI } from "@/hooks";
+import { Alert } from "@/components/ui";
 import SchemaBuilder from "./components/SchemaBuilder";
 import GenerationPanel from "./components/GenerationPanel";
 import ExportPanel from "./components/ExportPanel";
@@ -209,10 +210,17 @@ function dataForgeReducer(state: DataForgeState, action: DataForgeAction): DataF
   }
 }
 
+const DATA_FORGE_SYSTEM_PROMPT = "You are a JSON data generator. Output ONLY valid JSON, nothing else. No explanations, no markdown, no code blocks.";
+
 export default function DataForgePage() {
   const [state, dispatch] = useReducer(dataForgeReducer, initialState);
   const [selectedModel, setSelectedModel] = useState<string>("auto");
-  const { isGenerating, error, rateLimitRemaining, lastModelUsed, generate } = useAPILLM(selectedModel);
+  const { isGenerating, error, rateLimitRemaining, lastModelUsed, generate } = useAPI(selectedModel, {
+    useCase: "data-forge",
+    defaultStream: false,
+    defaultMaxTokens: 8192,
+    defaultTemperature: 0.3,
+  });
 
   // URL sharing state
   const [shareStatus, setShareStatus] = useState<"idle" | "copied" | "error">("idle");
@@ -318,10 +326,14 @@ export default function DataForgePage() {
               : table;
 
             const prompt = buildGenerationPrompt(tableForGeneration, state.schema, generatedData);
-            const response = await generate(prompt);
+            const response = await generate({
+              systemPrompt: DATA_FORGE_SYSTEM_PROMPT,
+              userPrompt: prompt,
+              jsonMode: true,
+            });
             return {
               table,
-              result: parseGeneratedData(response, tableForGeneration, state.schema, generatedData),
+              result: parseGeneratedData(response.content, tableForGeneration, state.schema, generatedData),
             };
           })
         );
@@ -369,9 +381,9 @@ export default function DataForgePage() {
 
       {/* Error display */}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400">
+        <Alert variant="error" className="mb-6">
           {error}
-        </div>
+        </Alert>
       )}
 
       {/* Schema Builder */}
@@ -398,11 +410,8 @@ export default function DataForgePage() {
 
       {/* Quality Warnings */}
       {state.generationProgress.qualityReport && state.generationProgress.qualityReport.some(r => r.quality !== "good") && (
-        <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-          <h3 className="font-medium text-yellow-800 dark:text-yellow-300 mb-2">
-            Data Quality Warning
-          </h3>
-          <p className="text-sm text-yellow-700 dark:text-yellow-400 mb-3">
+        <Alert variant="warning" title="Data Quality Warning" className="mb-6">
+          <p className="mb-3">
             Some data may have been generated with fallback values due to model response parsing.
           </p>
           <div className="space-y-2">
@@ -417,16 +426,14 @@ export default function DataForgePage() {
                   }`}>
                     {r.quality === "fallback" ? "Fallback" : "Partial"}
                   </span>
-                  <span className="font-mono text-yellow-800 dark:text-yellow-300">{r.tableName}</span>
+                  <span className="font-mono">{r.tableName}</span>
                   {r.issues.length > 0 && (
-                    <span className="text-yellow-600 dark:text-yellow-500 ml-2">
-                      — {r.issues.join(", ")}
-                    </span>
+                    <span className="ml-2">— {r.issues.join(", ")}</span>
                   )}
                 </div>
               ))}
           </div>
-        </div>
+        </Alert>
       )}
 
       {/* Export Panel */}

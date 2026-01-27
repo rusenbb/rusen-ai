@@ -1,7 +1,8 @@
 "use client";
 
 import { useReducer, useCallback, useState, useRef, useEffect } from "react";
-import { useAPILLM } from "./hooks/useAPILLM";
+import { useAPI } from "@/hooks";
+import { Alert } from "@/components/ui";
 import DOIInput from "./components/DOIInput";
 import PaperDisplay from "./components/PaperDisplay";
 import ModelPanel from "./components/ModelPanel";
@@ -123,7 +124,12 @@ export default function PaperPilotPage() {
     rateLimitRemaining,
     lastModelUsed,
     generate,
-  } = useAPILLM(selectedModel);
+  } = useAPI(selectedModel, {
+    useCase: "paper-pilot",
+    defaultStream: true,
+    defaultMaxTokens: 16384,
+    defaultTemperature: 0.5,
+  });
 
   const handleFetchPaper = useCallback(async (input: string) => {
     stepsCompletedRef.current = [];
@@ -205,14 +211,16 @@ export default function PaperPilotPage() {
 
       try {
         const { systemPrompt, userPrompt } = buildSummaryPrompt(state.paper, currentType);
-        const content = await generate(systemPrompt, userPrompt, (text) => {
-          setStreamingContent(text);
+        const result = await generate({
+          systemPrompt,
+          userPrompt,
+          onStream: (text) => setStreamingContent(text),
         });
 
         setStreamingContent("");
         dispatch({
           type: "ADD_SUMMARY",
-          summary: { type: currentType, content, generatedAt: new Date() },
+          summary: { type: currentType, content: result.content, generatedAt: new Date() },
         });
       } catch (err) {
         setStreamingContent("");
@@ -253,8 +261,10 @@ export default function PaperPilotPage() {
       try {
         const { systemPrompt, userPrompt } = buildSummaryPrompt(state.paper, type);
 
-        const content = await generate(systemPrompt, userPrompt, (text) => {
-          setStreamingContent(text);
+        const result = await generate({
+          systemPrompt,
+          userPrompt,
+          onStream: (text) => setStreamingContent(text),
         });
 
         // Clear streaming content and add final summary
@@ -265,7 +275,7 @@ export default function PaperPilotPage() {
           type: "ADD_SUMMARY",
           summary: {
             type,
-            content,
+            content: result.content,
             generatedAt: new Date(),
           },
         });
@@ -304,8 +314,10 @@ export default function PaperPilotPage() {
       try {
         const { systemPrompt, userPrompt } = buildQAPrompt(state.paper, question);
 
-        const answer = await generate(systemPrompt, userPrompt, (text) => {
-          setStreamingContent(text);
+        const result = await generate({
+          systemPrompt,
+          userPrompt,
+          onStream: (text) => setStreamingContent(text),
         });
 
         // Clear streaming content and add final answer
@@ -316,7 +328,7 @@ export default function PaperPilotPage() {
           qa: {
             id: generateId(),
             question,
-            answer,
+            answer: result.content,
             timestamp: new Date(),
           },
         });
@@ -387,9 +399,9 @@ export default function PaperPilotPage() {
 
       {/* Error display */}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400">
+        <Alert variant="error" className="mb-6">
           {error}
-        </div>
+        </Alert>
       )}
 
       {/* DOI Input */}

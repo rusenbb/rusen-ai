@@ -54,7 +54,7 @@ export default function SchemaBuilder({
                   ? "border-green-300 dark:border-green-700 text-green-600 dark:text-green-400"
                   : "border-neutral-300 dark:border-neutral-700"
               }`}
-              title={shareError || "Copy shareable URL to clipboard"}
+              aria-label={shareStatus === "copied" ? "Link copied" : shareStatus === "error" ? "Share failed" : "Share schema"}
             >
               {shareStatus === "copied" ? (
                 <>
