@@ -17,46 +17,46 @@ interface Env {
 
 // Model configurations by use case
 // Order matters: first is primary, rest are fallbacks
-// Note: DeepSeek R1 uses "reasoning tokens" which can cause truncation, so we prioritize
-// models with direct output for summarization tasks
+// Updated 2026-02: Using current OpenRouter free models
 const MODELS = {
   // Paper Pilot: Long context for full papers, good summarization
-  // Prioritize models that don't use reasoning tokens (Gemini, Llama, Gemma)
   "paper-pilot": [
-    "google/gemini-2.0-flash-exp:free",       // 1M context - best for papers
-    "meta-llama/llama-3.3-70b-instruct:free", // 131K context, reliable
-    "meta-llama/llama-3.1-405b-instruct:free", // 405B params, very capable
-    "google/gemma-3-27b-it:free",             // 131K context, multimodal
-    "mistralai/mistral-small-3.1-24b-instruct:free", // Fast fallback
-    "deepseek/deepseek-r1-0528:free",         // Reasoning model
-    "qwen/qwen3-coder:free",                  // Last resort
+    "google/gemini-2.5-flash",                // Fast, large context
+    "google/gemini-3-flash-preview-20251217", // Newest Gemini
+    "deepseek/deepseek-v3.2-20251201",        // Strong reasoning
+    "x-ai/grok-4.1-fast",                     // Fast fallback
+    "openai/gpt-oss-120b",                    // Large model fallback
   ],
   // Data Forge: JSON generation, structured output
   "data-forge": [
-    "google/gemini-2.0-flash-exp:free",       // Fast, good JSON
-    "meta-llama/llama-3.3-70b-instruct:free", // Reliable JSON
-    "meta-llama/llama-3.1-405b-instruct:free", // Very capable
-    "google/gemma-3-27b-it:free",             // Good fallback
-    "mistralai/mistral-small-3.1-24b-instruct:free", // Fast
-    "deepseek/deepseek-r1-0528:free",         // Strong reasoning
-    "qwen/qwen3-coder:free",                  // Last resort
+    "google/gemini-2.5-flash",                // Good JSON support
+    "google/gemini-2.5-flash-lite",           // Lighter, still good JSON
+    "deepseek/deepseek-v3.2-20251201",        // Reliable JSON
+    "x-ai/grok-4.1-fast",                     // Fast fallback
+    "openai/gpt-oss-120b",                    // Large model fallback
+  ],
+  // Query Craft: SQL generation, precise output
+  "query-craft": [
+    "google/gemini-2.5-flash",                // Good for SQL
+    "deepseek/deepseek-v3.2-20251201",        // Strong coding
+    "x-ai/grok-code-fast-1",                  // Code-optimized
+    "google/gemini-2.5-flash-lite",           // Fast fallback
+    "openai/gpt-oss-120b",                    // Large model fallback
   ],
   // Temperature Playground: Fast responses for comparisons
   "temperature-playground": [
-    "google/gemini-2.0-flash-exp:free",       // Fast, good for comparisons
-    "meta-llama/llama-3.3-70b-instruct:free", // Reliable fallback
-    "meta-llama/llama-3.1-405b-instruct:free", // Very capable
-    "google/gemma-3-27b-it:free",             // Good fallback
-    "mistralai/mistral-small-3.1-24b-instruct:free", // Fast
-    "google/gemma-3-12b-it:free",             // Smaller, faster
+    "google/gemini-2.5-flash-lite",           // Fast, good for demos
+    "google/gemini-2.5-flash",                // Reliable fallback
+    "x-ai/grok-4-fast",                       // Fast
+    "x-ai/grok-4.1-fast",                     // Fast fallback
   ],
   // Default fallback chain
   "default": [
-    "google/gemini-2.0-flash-exp:free",
-    "meta-llama/llama-3.3-70b-instruct:free",
-    "meta-llama/llama-3.1-405b-instruct:free",
-    "mistralai/mistral-small-3.1-24b-instruct:free",
-    "deepseek/deepseek-r1-0528:free",
+    "google/gemini-2.5-flash",
+    "google/gemini-2.5-flash-lite",
+    "deepseek/deepseek-v3.2-20251201",
+    "x-ai/grok-4.1-fast",
+    "openai/gpt-oss-120b",
   ],
 };
 
@@ -64,9 +64,11 @@ type UseCase = keyof typeof MODELS;
 
 // Models that support response_format: { type: "json_object" }
 const JSON_MODE_SUPPORTED = new Set([
-  "google/gemini-2.0-flash-exp:free",
-  "google/gemma-3-27b-it:free",
-  // Note: Llama, DeepSeek, Qwen may not reliably support JSON mode
+  "google/gemini-2.5-flash",
+  "google/gemini-2.5-flash-lite",
+  "google/gemini-3-flash-preview-20251217",
+  "openai/gpt-oss-120b",
+  // Note: DeepSeek, Grok may not reliably support JSON mode
 ]);
 
 // Simple in-memory rate limiting (resets on cold start)
