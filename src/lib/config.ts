@@ -13,6 +13,7 @@ export interface ModelOption {
 /**
  * Available models for all demos.
  * These are free-tier models available through OpenRouter.
+ * Updated 2026-02 with current free models.
  */
 export const AVAILABLE_MODELS: ModelOption[] = [
   {
@@ -21,29 +22,29 @@ export const AVAILABLE_MODELS: ModelOption[] = [
     description: "Picks best available model with fallback",
   },
   {
-    id: "google/gemini-2.0-flash-exp:free",
-    name: "Gemini 2.0 Flash",
-    description: "1M context, fast responses",
+    id: "google/gemini-2.5-flash",
+    name: "Gemini 2.5 Flash",
+    description: "Fast, large context window",
   },
   {
-    id: "meta-llama/llama-3.3-70b-instruct:free",
-    name: "Llama 3.3 70B",
-    description: "131K context, reliable",
+    id: "google/gemini-2.5-flash-lite",
+    name: "Gemini 2.5 Flash Lite",
+    description: "Lighter, faster responses",
   },
   {
-    id: "google/gemma-3-27b-it:free",
-    name: "Gemma 3 27B",
-    description: "131K context, multimodal",
+    id: "deepseek/deepseek-v3.2-20251201",
+    name: "DeepSeek V3.2",
+    description: "Strong reasoning capabilities",
   },
   {
-    id: "deepseek/deepseek-r1-0528:free",
-    name: "DeepSeek R1",
-    description: "164K context, reasoning model",
+    id: "x-ai/grok-4.1-fast",
+    name: "Grok 4.1 Fast",
+    description: "Fast responses from xAI",
   },
   {
-    id: "qwen/qwen3-coder:free",
-    name: "Qwen3 Coder 480B",
-    description: "262K context, coding optimized",
+    id: "openai/gpt-oss-120b",
+    name: "GPT OSS 120B",
+    description: "Large open-source model",
   },
 ];
 
