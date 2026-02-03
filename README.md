@@ -8,44 +8,56 @@ Full-stack AI demo platform showcasing LLM integrations, browser-based ML, and i
 
 | Layer | Technology |
 |-------|------------|
-| Framework | Next.js 16, React 19 |
+| Framework | Next.js 16, React 19 (with Compiler) |
+| Language | TypeScript 5.9 (strict) |
 | Styling | Tailwind CSS 4, Geist font |
-| TypeScript | 5.9 (strict mode) |
-| ML/AI | Transformers.js, OpenRouter API |
+| Cloud ML | OpenRouter API (Gemini, DeepSeek, Grok) |
+| Browser ML | Transformers.js (MobileBERT, SmolLM, mxbai-embed) |
 | Visualization | Three.js, UMAP-js |
-| Deployment | Cloudflare Pages |
+| Testing | Vitest, React Testing Library |
+| Deployment | Cloudflare Pages + Functions |
 
 ## Demos
 
-### Featured
+### Cloud LLM Demos
 
-- **[Paper Pilot](/demos/paper-pilot)** - Academic paper summarizer with multi-source fetching, PDF extraction, and AI-powered summaries
-- **[Data Forge](/demos/data-forge)** - Visual schema builder that generates realistic test data with foreign key awareness
-- **[Query Craft](/demos/query-craft)** - Natural language to SQL translator with schema validation
-- **[Classify Anything](/demos/classify-anything)** - Zero-shot text classification running entirely in-browser
+| Demo | Description |
+|------|-------------|
+| [Paper Pilot](https://rusen.ai/demos/paper-pilot) | Academic paper summarizer with multi-source fetching (arXiv, CrossRef, Semantic Scholar), PDF extraction, multiple summary types, and Q&A |
+| [Query Craft](https://rusen.ai/demos/query-craft) | Natural language to SQL translator with visual schema builder, 4 SQL dialects, shareable URLs |
+| [Data Forge](https://rusen.ai/demos/data-forge) | Schema-aware test data generator with foreign key relationships, parallel generation, export to SQL/JSON/CSV |
 
-### Educational (Nerdy Stuff)
+### Browser ML Demos
 
-- **[Embedding Explorer](/nerdy-stuff/embedding-explorer)** - Interactive word embedding visualization with vector arithmetic
-- **[Rusenizer](/nerdy-stuff/rusenizer)** - Turkish-optimized tokenizer comparison
-- **[Temperature Playground](/nerdy-stuff/temperature-playground)** - LLM sampling visualization
+| Demo | Description |
+|------|-------------|
+| [Classify Anything](https://rusen.ai/demos/classify-anything) | Zero-shot text classification with custom labels, runs entirely in browser (MobileBERT) |
+| [Embedding Explorer](https://rusen.ai/nerdy-stuff/embedding-explorer) | Word embedding visualization with vector arithmetic (king - man + woman = queen) |
+| [Temperature Playground](https://rusen.ai/nerdy-stuff/temperature-playground) | LLM sampling visualization showing token probabilities at different temperatures |
+| [Rusenizer](https://rusen.ai/nerdy-stuff/rusenizer) | Turkish-optimized tokenizer comparison (~45% fewer tokens than GPT-4) |
 
 ## Project Structure
 
 ```
 src/
 ├── app/
-│   ├── demos/              # Interactive AI demos
-│   ├── nerdy-stuff/        # Educational visualizations
-│   └── components/         # Page-level components
-├── components/ui/          # Shared UI components
-├── hooks/                  # Shared React hooks
-└── lib/                    # Utilities and config
+│   ├── demos/                 # Cloud LLM demos
+│   │   ├── paper-pilot/
+│   │   ├── query-craft/
+│   │   ├── data-forge/
+│   │   └── classify-anything/
+│   ├── nerdy-stuff/           # Browser ML demos
+│   │   ├── embedding-explorer/
+│   │   ├── temperature-playground/
+│   │   └── rusenizer/
+│   └── components/            # Page-level components (Header, DemoCard)
+├── components/ui/             # Shared UI library (Button, Alert, Card, Spinner)
+├── hooks/                     # Shared hooks (useAPI)
+└── lib/                       # Config, utilities, design tokens
 
-functions/
-└── api/
-    ├── llm.ts              # LLM proxy with model fallback
-    └── proxy.ts            # CORS proxy for academic APIs
+functions/api/
+├── llm.ts                     # LLM proxy with model fallback
+└── proxy.ts                   # CORS proxy for academic APIs
 ```
 
 ## Getting Started
@@ -53,74 +65,74 @@ functions/
 ### Prerequisites
 
 - Node.js 18+
-- npm or pnpm
+- npm
 
 ### Installation
 
 ```bash
-# Clone the repository
-git clone https://github.com/rusenbirben/rusen-ai.git
+git clone https://github.com/rusenbb/rusen-ai.git
 cd rusen-ai
-
-# Install dependencies
 npm install
-
-# Copy environment example
-cp .env.example .env.local
-
-# Start development server
 npm run dev
 ```
 
-### Environment Variables
+Open [http://localhost:3000](http://localhost:3000).
 
-See `.env.example` for required configuration. At minimum, you need:
+**Note:** In development, LLM API calls proxy through production (`rusen.ai`) since Cloudflare Functions aren't available locally.
 
-- `OPENROUTER_API_KEY_0` - OpenRouter API key for LLM access
+### Scripts
 
-## Architecture
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm run lint` | Run ESLint |
+| `npm test` | Run tests in watch mode |
+| `npm run test:run` | Run tests once |
+
+## Architecture Overview
 
 ### LLM Integration
 
 ```
-Client → /api/llm (Cloudflare Function) → OpenRouter API
-                                        ↓
-                    Fallback chain: Gemini 2.0 Flash → Llama 3.3 70B → ...
+Browser → useAPI hook → /api/llm (Cloudflare Function) → OpenRouter API
 ```
 
-- Round-robin key rotation (up to 10 keys)
-- Rate limiting: 30 req/min per IP
-- Streaming via Server-Sent Events
+- **Model fallback:** Gemini 2.5 Flash → DeepSeek V3.2 → Grok 4.1 → GPT OSS
+- **Rate limiting:** 30 requests/minute per IP
+- **Streaming:** Server-Sent Events with 50ms debounced UI updates
+- **API keys:** Up to 10 keys with round-robin rotation
 
 ### Browser ML
 
-- Transformers.js for zero-shot classification
-- Models cached in IndexedDB
-- WASM backend for consistency
+- **Transformers.js** loads models into browser via WASM
+- **IndexedDB** caches models for fast reloads
+- **Models used:** MobileBERT (classification), SmolLM-135M (generation), mxbai-embed-xsmall (embeddings)
 
 ### State Management
 
-- `useReducer` for complex state
+- `useReducer` for complex demo state
+- URL hash encoding for shareable state
 - localStorage for persistence
-- URL hash for shareable state
-
-## Scripts
-
-```bash
-npm run dev      # Development server
-npm run build    # Production build
-npm run start    # Start production server
-npm run lint     # Run ESLint
-```
 
 ## Deployment
 
-Deployed automatically to Cloudflare Pages on push to `main`.
+Auto-deploys to Cloudflare Pages on push to `main`.
 
-### Cloudflare Configuration
+### Cloudflare Secrets Required
 
-Required secrets:
-- `OPENROUTER_API_KEY_0` through `OPENROUTER_API_KEY_9` (API keys)
+```
+OPENROUTER_API_KEY_01
+OPENROUTER_API_KEY_02
+...
+OPENROUTER_API_KEY_10
+```
+
+## Documentation
+
+- [CLAUDE.md](./CLAUDE.md) - Instructions for AI assistants
+- [DOCUMENTATION.md](./DOCUMENTATION.md) - Technical architecture details
+- [CONTRIBUTING.md](./CONTRIBUTING.md) - Contribution guidelines
 
 ## License
 
