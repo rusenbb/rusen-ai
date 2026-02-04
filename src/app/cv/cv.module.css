@@ -779,20 +779,10 @@
 }
 
 /* ========================================
-   PRINT STYLES
+   PRINT STYLES - PDF OPTIMIZATION
    ======================================== */
 
 @media print {
-  :root {
-    --cbg: #ffffff !important;
-    --csurface: #f5f5f5 !important;
-    --cborder: #000000 !important;
-    --ctext: #000000 !important;
-    --ctext-muted: #333333 !important;
-    --ctext-sub: #666666 !important;
-    --shadow-offset: 0px;
-  }
-
   .container {
     max-width: 100%;
     padding: 0;
@@ -800,46 +790,57 @@
   }
 
   .gridBg {
-    display: none;
+    display: none !important;
   }
 
+  /* Remove shadows and simplify borders */
   .hero,
   .timelineCard,
   .projectCard,
   .educationCard,
   .interestCard {
     box-shadow: none !important;
-    border-width: 2px;
-    break-inside: avoid;
+    border: 1px solid #000 !important;
   }
 
+  .hero {
+    border-width: 2px !important;
+  }
+
+  .heroMain {
+    border-bottom-width: 2px !important;
+  }
+
+  .heroBio {
+    border-bottom: 2px solid #000 !important;
+  }
+
+  /* Hide print button */
   .printBtn {
     display: none !important;
   }
 
-  .section {
+  /* Prevent page breaks */
+  .section,
+  .timelineItem,
+  .projectCard,
+  .educationCard {
     break-inside: avoid;
-    margin-bottom: 1.5rem;
+    page-break-inside: avoid;
   }
 
-  .timelineItem {
-    break-inside: avoid;
-  }
-
-  .linkBtn:hover .linkArrow {
-    transform: none;
-  }
-
-  .projectCard:hover,
-  .timelineCard:hover,
-  .educationCard:hover,
-  .interestCard:hover {
-    transform: none;
-    box-shadow: none;
-  }
-
+  /* Disable animations */
   .roleIndicator {
-    animation: none;
+    animation: none !important;
+  }
+
+  /* Simplify link buttons */
+  .linkBtn {
+    border-right: 1px solid #000 !important;
+  }
+
+  .linkBtn:last-child {
+    border-right: none !important;
   }
 
   /* Show URLs for links */
@@ -847,8 +848,7 @@
   .projectLink::after,
   .footerLink::after {
     content: " (" attr(href) ")";
-    font-size: 0.7em;
-    opacity: 0.7;
+    font-size: 0.75em;
   }
 
   .cardCompanyLink[href^="mailto"]::after,
