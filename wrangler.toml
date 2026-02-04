@@ -1,0 +1,6 @@
+name = "rusen-ai"
+main = "src/worker.ts"
+compatibility_date = "2026-02-04"
+
+[site]
+bucket = "./out"
