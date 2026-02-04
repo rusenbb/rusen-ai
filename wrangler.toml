@@ -1,8 +1,0 @@
-name = "rusen-ai"
-compatibility_date = "2026-02-04"
-
-# Cloudflare Pages - Workers Sites configuration
-# Deploys static assets from ./out with a worker for serving
-[site]
-bucket = "./out"
-entry-point = "./workers-site"
