@@ -19,6 +19,7 @@ const experience = [
     location: "Istanbul, TR",
     description:
       "Built AI automations and agentic LLM implementations for Phillip Capital subsidiary. Intelligent systems for operations and customer-facing platforms.",
+    link: "https://cyberquote.com.tr",
   },
   {
     role: "NLP Research Intern",
@@ -27,6 +28,7 @@ const experience = [
     location: "Istanbul, TR",
     description:
       "Researched LLMs for financial applications: forecasting, sentiment analysis, tool usage, reasoning, and RAG implementations.",
+    link: "https://nlp.itu.edu.tr",
   },
   {
     role: "AIOps Research Intern",
@@ -35,6 +37,7 @@ const experience = [
     location: "Istanbul, TR",
     description:
       "AIOps research using software log data for predictive maintenance. Generated demos on HDFS logs.",
+    link: "https://havelsan.com.tr",
   },
 ];
 
