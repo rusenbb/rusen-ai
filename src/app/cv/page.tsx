@@ -6,118 +6,114 @@ const experience = [
   {
     role: "Founder",
     company: "Fiction Studios",
-    period: "10/2025 - Present",
-    location: "Ankara, Turkiye",
+    period: "10/2025 — Present",
+    location: "Ankara, TR",
     description:
-      "Founded an AI labs working on natural language, speech and LLM technologies to democratize the use of AI systems for all humanity.",
+      "Founded an AI lab working on natural language, speech and LLM technologies to democratize AI systems for humanity.",
     link: "https://fictionstudios.ai",
   },
   {
     role: "Junior AI Engineer",
     company: "CyberQuote",
-    period: "03/2025 - 07/2025",
-    location: "Istanbul, Turkiye",
+    period: "03/2025 — 07/2025",
+    location: "Istanbul, TR",
     description:
-      "Worked on AI automations and agentic LLM implementations for Phillip Capital subsidiary. Built intelligent systems for internal operations and customer-facing websites.",
+      "Built AI automations and agentic LLM implementations for Phillip Capital subsidiary. Intelligent systems for operations and customer-facing platforms.",
   },
   {
     role: "NLP Research Intern",
     company: "ITU NLP Lab",
-    period: "07/2024 - 08/2024",
-    location: "Istanbul, Turkiye",
+    period: "07/2024 — 08/2024",
+    location: "Istanbul, TR",
     description:
-      "Researched LLMs for financial applications including forecasting, sentiment analysis, tool usage, financial reasoning, and RAG implementations.",
+      "Researched LLMs for financial applications: forecasting, sentiment analysis, tool usage, reasoning, and RAG implementations.",
   },
   {
     role: "AIOps Research Intern",
     company: "Havelsan",
-    period: "08/2024 - 09/2024",
-    location: "Istanbul, Turkiye",
+    period: "08/2024 — 09/2024",
+    location: "Istanbul, TR",
     description:
-      "Conducted research for AIOps project using software log data for predictive maintenance. Generated demos on HDFS logs.",
+      "AIOps research using software log data for predictive maintenance. Generated demos on HDFS logs.",
   },
 ];
 
 const projects = [
   {
-    title: "Tobor - Amazon Warehouse Robot",
-    period: "09/2024 - 01/2025",
+    title: "Tobor",
+    subtitle: "Amazon Warehouse Robot",
+    period: "2024 — 2025",
     description:
-      "Developed an autonomous warehouse robot system simulating Amazon's logistics operations. Designed pathfinding, obstacle avoidance, and task scheduling algorithms. The robot detects humans and cargo boxes with a custom-trained YOLO model.",
+      "Autonomous warehouse robot simulating Amazon logistics. Pathfinding, obstacle avoidance, task scheduling. Human/cargo detection with custom YOLO.",
     tags: ["Python", "ROS2", "YOLO", "Robotics"],
     links: [
-      { label: "GitHub", url: "https://github.com/rusenbb/Amazon-Warehouse-Robot" },
-      { label: "Video", url: "https://youtu.be/h-Jxs_y9kNA" },
+      { label: "GH", url: "https://github.com/rusenbb/Amazon-Warehouse-Robot" },
+      { label: "▶", url: "https://youtu.be/h-Jxs_y9kNA" },
     ],
   },
   {
-    title: "Biting The Bytes - Turkish Diacritic Restoration",
-    period: "03/2024 - 06/2024",
+    title: "Biting The Bytes",
+    subtitle: "Turkish Diacritic Restoration",
+    period: "2024",
     description:
-      "Improved Turkish text by automatically adding missing accent marks and special characters using T5, a transformer model by Google. The system restores proper diacritics for enhanced readability.",
+      "T5-based transformer for restoring Turkish diacritics. Automatically adds accent marks and special characters for enhanced readability.",
     tags: ["NLP", "T5", "Transformers", "Turkish"],
     links: [
-      { label: "GitHub", url: "https://github.com/rusenbb/Biting-The-Bytes" },
-      { label: "Demo", url: "https://huggingface.co/spaces/rusen/diacritizeTR" },
+      { label: "GH", url: "https://github.com/rusenbb/Biting-The-Bytes" },
+      { label: "HF", url: "https://huggingface.co/spaces/rusen/diacritizeTR" },
     ],
   },
   {
-    title: "AIZheimer - Machine Unlearning on Stable Diffusion",
-    period: "03/2024 - 06/2024",
+    title: "AIZheimer",
+    subtitle: "Machine Unlearning on SD",
+    period: "2024",
     description:
-      "Selectively removed specific concepts from Stable Diffusion 2.1 while keeping other capabilities intact. Useful for content moderation and customizing AI output.",
-    tags: ["Stable Diffusion", "Machine Unlearning", "Computer Vision"],
-    links: [{ label: "GitHub", url: "https://github.com/rusenbb/AIzheimer" }],
+      "Selectively removed concepts from Stable Diffusion 2.1 while preserving other capabilities. Content moderation and AI output customization.",
+    tags: ["Stable Diffusion", "Unlearning", "CV"],
+    links: [{ label: "GH", url: "https://github.com/rusenbb/AIzheimer" }],
   },
   {
-    title: "To-AI-or-Not-to-AI - GPT Detector",
-    period: "03/2023 - 06/2023",
+    title: "To-AI-or-Not-to-AI",
+    subtitle: "GPT Detector",
+    period: "2023",
     description:
-      "Developed an ensemble method to detect AI-generated text using three fine-tuned models. Addresses concerns about academic integrity and misinformation.",
-    tags: ["NLP", "Ensemble Learning", "Classification"],
+      "Ensemble method to detect AI-generated text using three fine-tuned models. Addresses academic integrity and misinformation concerns.",
+    tags: ["NLP", "Ensemble", "Classification"],
     links: [
-      { label: "GitHub", url: "https://github.com/rusenbb/To-AI-or-Not-to-AI" },
-      { label: "Demo", url: "https://huggingface.co/spaces/rusen/gpt_detector" },
+      { label: "GH", url: "https://github.com/rusenbb/To-AI-or-Not-to-AI" },
+      { label: "HF", url: "https://huggingface.co/spaces/rusen/gpt_detector" },
     ],
   },
   {
     title: "Anime Recommender",
-    period: "09/2022 - 02/2023",
+    subtitle: "Collaborative Filtering",
+    period: "2022 — 2023",
     description:
-      "Created a personalized anime recommendation system combining collaborative filtering and content-based approaches. Achieved RMSE of 0.289, MAE of 0.213 on the test set.",
-    tags: ["Recommender Systems", "Matrix Factorization", "Python"],
-    links: [{ label: "GitHub", url: "https://github.com/rusenbb/Anime-Recommender" }],
+      "Personalized anime recommendations combining collaborative filtering and content-based approaches. RMSE: 0.289, MAE: 0.213.",
+    tags: ["RecSys", "Matrix Factorization"],
+    links: [{ label: "GH", url: "https://github.com/rusenbb/Anime-Recommender" }],
   },
 ];
 
 const education = [
   {
-    degree: "B.Sc. in AI and Data Engineering",
+    degree: "B.Sc. AI and Data Engineering",
     school: "Istanbul Technical University",
-    period: "09/2022 - 07/2025",
-    gpa: "3.61",
+    period: "2022 — 2025",
+    gpa: "3.61 / 4.00",
   },
   {
-    degree: "B.Sc. in Electronics and Communication Engineering",
+    degree: "B.Sc. Electronics & Communication",
     school: "Istanbul Technical University",
-    period: "09/2020 - 09/2022",
-    note: "Transferred to AI and Data Engineering",
+    period: "2020 — 2022",
+    note: "Transferred to AI & Data Engineering",
   },
 ];
 
 const interests = [
-  {
-    title: "Coffee",
-    description: "Specialty coffee enthusiast with V60, Aeropress, and Moka Pot setup",
-  },
-  {
-    title: "Books",
-    description: "Philosophy, AI/CS, and finance",
-  },
-  {
-    title: "Anime & Manga",
-    description: "Avid watcher and reader",
-  },
+  { title: "Coffee", desc: "V60 • Aeropress • Moka Pot" },
+  { title: "Books", desc: "Philosophy • AI/CS • Finance" },
+  { title: "Anime & Manga", desc: "Watcher • Reader • Collector" },
 ];
 
 export default function CVPage() {
@@ -127,151 +123,198 @@ export default function CVPage() {
 
   return (
     <div className={styles.container}>
-      {/* Header */}
-      <header className={styles.header}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <div>
-            <h1 className={styles.name}>Rusen Birben</h1>
-            <p className={styles.title}>AI & Data Engineer</p>
-            <p className={styles.location}>Ankara, Turkiye</p>
+      {/* Grid Background */}
+      <div className={styles.gridBg} />
+
+      {/* Header / Identity Card */}
+      <header className={styles.hero}>
+        <div className={styles.heroMain}>
+          <div className={styles.heroNameSection}>
+            <span className={styles.heroLabel}>IDENTITY</span>
+            <h1 className={styles.heroName}>RUSEN BIRBEN</h1>
+            <div className={styles.heroRole}>
+              <span className={styles.roleIndicator}>►</span>
+              AI & DATA ENGINEER
+            </div>
           </div>
-          <button onClick={handlePrint} className={styles.printButton} aria-label="Download as PDF">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-            Download PDF
-          </button>
+          <div className={styles.heroMeta}>
+            <div className={styles.metaItem}>
+              <span className={styles.metaLabel}>LOC</span>
+              <span className={styles.metaValue}>ANKARA, TR</span>
+            </div>
+            <div className={styles.metaItem}>
+              <span className={styles.metaLabel}>STATUS</span>
+              <span className={styles.metaValue}>AVAILABLE</span>
+            </div>
+          </div>
         </div>
-        <p className={styles.bio}>
-          AI & Data Engineering graduate from Istanbul Technical University, passionate about NLP,
-          LLMs, and building intelligent systems. Currently working on agentic AI applications.
-        </p>
-        <div className={styles.links}>
-          <a
-            href="https://github.com/rusenbb"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.link}
-          >
-            GitHub
+        
+        <div className={styles.heroBio}>
+          <p>
+            AI & Data Engineering graduate from Istanbul Technical University. 
+            Building intelligent systems with NLP, LLMs, and agentic AI applications.
+          </p>
+        </div>
+
+        <div className={styles.heroLinks}>
+          <a href="https://github.com/rusenbb" target="_blank" rel="noopener noreferrer" className={styles.linkBtn}>
+            <span className={styles.linkArrow}>→</span> GITHUB
           </a>
-          <a
-            href="https://linkedin.com/in/rusenbirben"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.link}
-          >
-            LinkedIn
+          <a href="https://linkedin.com/in/rusenbirben" target="_blank" rel="noopener noreferrer" className={styles.linkBtn}>
+            <span className={styles.linkArrow}>→</span> LINKEDIN
           </a>
-          <a href="mailto:contact@rusen.ai" className={styles.link}>
-            contact@rusen.ai
+          <a href="mailto:contact@rusen.ai" className={styles.linkBtn}>
+            <span className={styles.linkArrow}>→</span> EMAIL
           </a>
+          <button onClick={handlePrint} className={styles.printBtn}>
+            <span className={styles.linkArrow}>↓</span> PDF
+          </button>
         </div>
       </header>
 
-      {/* Experience */}
+      {/* Section 01: Experience */}
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Experience</h2>
-        {experience.map((item, index) => (
-          <div key={index} className={styles.experienceItem}>
-            <div className={styles.experienceHeader}>
-              <span className={styles.role}>{item.role}</span>
-              <span className={styles.period}>{item.period}</span>
-            </div>
-            <p className={styles.company}>
-              {item.link ? (
-                <a
-                  href={item.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={styles.link}
-                >
-                  {item.company}
-                </a>
-              ) : (
-                item.company
-              )}{" "}
-              · {item.location}
-            </p>
-            <p className={styles.description}>{item.description}</p>
-          </div>
-        ))}
-      </section>
-
-      {/* Projects */}
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Projects</h2>
-        {projects.map((project, index) => (
-          <div key={index} className={styles.projectItem}>
-            <div className={styles.projectHeader}>
-              <span className={styles.projectTitle}>{project.title}</span>
-              <span className={styles.period}>{project.period}</span>
-            </div>
-            <p className={styles.description}>{project.description}</p>
-            <div className={styles.tags}>
-              {project.tags.map((tag) => (
-                <span key={tag} className={styles.tag}>
-                  {tag}
-                </span>
-              ))}
-            </div>
-            <div className={styles.projectLinks}>
-              {project.links.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={styles.projectLink}
-                >
-                  {link.label}
-                </a>
-              ))}
-            </div>
-          </div>
-        ))}
-      </section>
-
-      {/* Education */}
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Education</h2>
-        {education.map((item, index) => (
-          <div key={index} className={styles.educationItem}>
-            <div className={styles.experienceHeader}>
-              <span className={styles.degree}>{item.degree}</span>
-              <span className={styles.period}>{item.period}</span>
-            </div>
-            <p className={styles.school}>{item.school}</p>
-            {item.gpa && <p className={styles.gpa}>GPA: {item.gpa}</p>}
-            {item.note && <p className={styles.note}>{item.note}</p>}
-          </div>
-        ))}
-      </section>
-
-      {/* Interests */}
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Interests</h2>
-        <div className={styles.interestsGrid}>
-          {interests.map((interest, index) => (
-            <div key={index} className={styles.interestItem}>
-              <p className={styles.interestTitle}>{interest.title}</p>
-              <p className={styles.interestDescription}>{interest.description}</p>
+        <div className={styles.sectionHeader}>
+          <span className={styles.sectionNumber}>01</span>
+          <h2 className={styles.sectionTitle}>EXPERIENCE</h2>
+          <div className={styles.sectionLine} />
+        </div>
+        
+        <div className={styles.timeline}>
+          {experience.map((item, index) => (
+            <div key={index} className={styles.timelineItem}>
+              <div className={styles.timelineMarker}>
+                <div className={styles.markerDot} />
+                {index !== experience.length - 1 && <div className={styles.markerLine} />}
+              </div>
+              <div className={styles.timelineCard}>
+                <div className={styles.cardHeader}>
+                  <div className={styles.cardTitleGroup}>
+                    <span className={styles.cardRole}>{item.role}</span>
+                    <span className={styles.cardDivider}>@</span>
+                    {item.link ? (
+                      <a href={item.link} target="_blank" rel="noopener noreferrer" className={styles.cardCompanyLink}>
+                        {item.company} ↗
+                      </a>
+                    ) : (
+                      <span className={styles.cardCompany}>{item.company}</span>
+                    )}
+                  </div>
+                  <span className={styles.cardPeriod}>{item.period}</span>
+                </div>
+                <div className={styles.cardLocation}>{item.location}</div>
+                <p className={styles.cardDesc}>{item.description}</p>
+              </div>
             </div>
           ))}
         </div>
       </section>
+
+      {/* Section 02: Projects */}
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <span className={styles.sectionNumber}>02</span>
+          <h2 className={styles.sectionTitle}>PROJECTS</h2>
+          <div className={styles.sectionLine} />
+        </div>
+        
+        <div className={styles.projectsGrid}>
+          {projects.map((project, index) => (
+            <div key={index} className={styles.projectCard}>
+              <div className={styles.projectCardHeader}>
+                <div className={styles.projectTitleGroup}>
+                  <h3 className={styles.projectTitle}>{project.title}</h3>
+                  <span className={styles.projectSubtitle}>{project.subtitle}</span>
+                </div>
+                <span className={styles.projectPeriod}>{project.period}</span>
+              </div>
+              
+              <p className={styles.projectDesc}>{project.description}</p>
+              
+              <div className={styles.projectTags}>
+                {project.tags.map((tag) => (
+                  <span key={tag} className={styles.projectTag}>{tag}</span>
+                ))}
+              </div>
+              
+              <div className={styles.projectLinks}>
+                {project.links.map((link) => (
+                  <a
+                    key={link.label}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.projectLink}
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Section 03: Education */}
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <span className={styles.sectionNumber}>03</span>
+          <h2 className={styles.sectionTitle}>EDUCATION</h2>
+          <div className={styles.sectionLine} />
+        </div>
+        
+        <div className={styles.educationList}>
+          {education.map((item, index) => (
+            <div key={index} className={styles.educationCard}>
+              <div className={styles.eduHeader}>
+                <div className={styles.eduMain}>
+                  <h3 className={styles.eduDegree}>{item.degree}</h3>
+                  <span className={styles.eduSchool}>{item.school}</span>
+                </div>
+                <div className={styles.eduMeta}>
+                  <span className={styles.eduPeriod}>{item.period}</span>
+                  {item.gpa && <span className={styles.eduGpa}>GPA: {item.gpa}</span>}
+                </div>
+              </div>
+              {item.note && <p className={styles.eduNote}>{item.note}</p>}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Section 04: Interests */}
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <span className={styles.sectionNumber}>04</span>
+          <h2 className={styles.sectionTitle}>INTERESTS</h2>
+          <div className={styles.sectionLine} />
+        </div>
+        
+        <div className={styles.interestsGrid}>
+          {interests.map((item, index) => (
+            <div key={index} className={styles.interestCard}>
+              <div className={styles.interestIcon}>{["☕", "📚", "📺"][index]}</div>
+              <div className={styles.interestContent}>
+                <h4 className={styles.interestTitle}>{item.title}</h4>
+                <p className={styles.interestDesc}>{item.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Footer / Contact Bar */}
+      <footer className={styles.footer}>
+        <div className={styles.footerLine} />
+        <div className={styles.footerContent}>
+          <span className={styles.footerText}>RUSEN.AI / CV / 2025</span>
+          <div className={styles.footerLinks}>
+            <a href="https://rusen.ai" className={styles.footerLink}>rusen.ai</a>
+            <span className={styles.footerDivider}>│</span>
+            <a href="mailto:contact@rusen.ai" className={styles.footerLink}>contact@rusen.ai</a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
