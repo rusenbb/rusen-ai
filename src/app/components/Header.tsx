@@ -14,8 +14,8 @@ export default function Header() {
           <Link href="/nerdy-stuff" className="hover:opacity-80 transition">
             Nerdy Stuff
           </Link>
-          <Link href="/about" className="hover:opacity-80 transition">
-            About
+          <Link href="/cv" className="hover:opacity-80 transition">
+            CV
           </Link>
         </div>
       </nav>
