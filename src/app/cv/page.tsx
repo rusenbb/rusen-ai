@@ -114,6 +114,7 @@ const interests = [
   { title: "Coffee", desc: "V60 • Aeropress • Moka Pot" },
   { title: "Books", desc: "Philosophy • AI/CS • Finance" },
   { title: "Anime & Manga", desc: "Watcher • Reader • Collector" },
+  { title: "Fitness", desc: "Lifting • Running • Calisthenics" },
 ];
 
 export default function CVPage() {
@@ -293,7 +294,7 @@ export default function CVPage() {
         <div className={styles.interestsGrid}>
           {interests.map((item, index) => (
             <div key={index} className={styles.interestCard}>
-              <div className={styles.interestIcon}>{["☕", "📚", "📺"][index]}</div>
+              <div className={styles.interestIcon}>{["☕", "📚", "📺", "💪"][index]}</div>
               <div className={styles.interestContent}>
                 <h4 className={styles.interestTitle}>{item.title}</h4>
                 <p className={styles.interestDesc}>{item.desc}</p>
