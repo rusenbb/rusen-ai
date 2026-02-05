@@ -102,7 +102,7 @@ const education = [
   {
     degree: "M.Sc. Computer Engineering (Thesis)",
     school: "Middle East Technical University",
-    period: "2025 — Present",
+    period: "2026 — Present",
   },
   {
     degree: "B.Sc. AI and Data Engineering",
