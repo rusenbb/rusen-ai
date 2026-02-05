@@ -181,7 +181,7 @@ export default function DataForgePage() {
       <h1 className="text-4xl font-bold mb-4">Data Forge</h1>
       <p className="text-neutral-600 dark:text-neutral-400 mb-8 max-w-2xl">
         Define your database schema visually, then let AI generate realistic fake data for
-        testing. Powered by Gemini 2.0 Flash for intelligent, contextual data generation.
+        testing. Powered by OpenRouter's free AI models for intelligent, contextual data generation.
       </p>
 
       {/* Error display */}
@@ -254,8 +254,8 @@ export default function DataForgePage() {
           About Data Forge
         </h3>
         <p className="mb-2">
-          Data Forge uses Gemini 2.0 Flash via API to generate contextually realistic fake data
-          based on your schema definitions. Define tables with columns and types, set up foreign
+          Data Forge uses OpenRouter's free AI models to generate contextually realistic
+          fake data based on your schema definitions. Define tables with columns and types, set up foreign
           key relationships, and generate data that respects your constraints.
         </p>
         <p>
