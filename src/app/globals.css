@@ -90,105 +90,17 @@ body {
 }
 
 /* ========================================
-   PRINT STYLES FOR CV - AGGRESSIVE PDF OPTIMIZATION
+   PRINT STYLES - Minimal global, CV handled in cv.module.css
    ======================================== */
 
 @media print {
-  /* Force white background on everything */
-  * {
-    background: white !important;
-    background-color: white !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
+  /* Basic print reset - CV-specific styles are in cv.module.css */
   body {
     background: white !important;
     color: black !important;
   }
 
-  /* Hide grid background */
-  div[class*="gridBg"] {
-    display: none !important;
-  }
-
-  /* Ensure all text is black or dark gray */
-  h1, h2, h3, h4, h5, h6, p, span, div, a, button {
-    color: black !important;
-  }
-
-  /* But keep muted text slightly lighter */
-  span[class*="muted"],
-  span[class*="sub"],
-  p[class*="muted"],
-  p[class*="sub"] {
-    color: #333 !important;
-  }
-
-  /* Labels and periods in gray */
-  span[class*="Label"],
-  span[class*="Period"],
-  span[class*="Location"] {
-    color: #666 !important;
-  }
-
-  /* Remove all shadows */
-  * {
-    box-shadow: none !important;
-  }
-
-  /* Clean borders */
-  div[class*="Card"],
-  div[class*="hero"],
-  header {
-    border: 1px solid #000 !important;
-  }
-
-  /* Section numbers in light gray */
-  span[class*="sectionNumber"] {
-    color: #999 !important;
-  }
-
-  /* Section dashed lines */
-  div[class*="sectionLine"] {
-    background: repeating-linear-gradient(
-      90deg,
-      #000 0,
-      #000 8px,
-      transparent 8px,
-      transparent 12px
-    ) !important;
-    opacity: 0.2 !important;
-  }
-
-  /* Tags with light background */
-  span[class*="Tag"] {
-    border: 1px solid #000 !important;
-    background: #f0f0f0 !important;
-  }
-
-  /* Links show their URLs */
-  a[href]:not([href^="mailto"])::after {
-    content: " (" attr(href) ")";
-    font-size: 0.75em;
-    color: #666 !important;
-  }
-
-  /* Hide print button */
-  button[class*="print"],
-  button[aria-label*="print"],
-  button[aria-label*="PDF"] {
-    display: none !important;
-  }
-
-  /* Prevent page breaks inside cards */
-  div[class*="Card"],
-  div[class*="section"] {
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
-
-  /* Reduce margins */
+  /* Reduce margins for main content area */
   main {
     padding: 0 !important;
   }

@@ -779,80 +779,233 @@
 }
 
 /* ========================================
-   PRINT STYLES - PDF OPTIMIZATION
+   PRINT-ONLY RESUME STYLES (Hidden on screen)
+   ======================================== */
+
+.printResume {
+  display: none;
+}
+
+/* ========================================
+   PRINT STYLES - Simple PDF Resume
    ======================================== */
 
 @media print {
-  .container {
+  @page {
+    margin: 0.6in 0.7in;
+    size: auto;
+  }
+
+  /* Hide all web content */
+  .gridBg,
+  .hero,
+  .section,
+  .footer,
+  .printBtn {
+    display: none !important;
+  }
+
+  /* Show print resume */
+  .printResume {
+    display: block !important;
+    font-family: "Georgia", "Times New Roman", serif;
+    font-size: 10pt;
+    line-height: 1.4;
+    color: #000;
     max-width: 100%;
     padding: 0;
     margin: 0;
   }
 
-  .gridBg {
-    display: none !important;
+  /* Print Header */
+  .printHeader {
+    text-align: center;
+    border-bottom: 1.5pt solid #000;
+    padding-bottom: 8pt;
+    margin-bottom: 12pt;
   }
 
-  /* Remove shadows and simplify borders */
-  .hero,
-  .timelineCard,
-  .projectCard,
-  .educationCard,
-  .interestCard {
-    box-shadow: none !important;
-    border: 1px solid #000 !important;
+  .printName {
+    font-family: "Helvetica", "Arial", sans-serif;
+    font-size: 20pt;
+    font-weight: 700;
+    letter-spacing: 2pt;
+    margin: 0 0 4pt 0;
+    color: #000;
   }
 
-  .hero {
-    border-width: 2px !important;
+  .printTitle {
+    font-family: "Helvetica", "Arial", sans-serif;
+    font-size: 11pt;
+    font-weight: 400;
+    color: #333;
+    margin: 0 0 6pt 0;
+    text-transform: uppercase;
+    letter-spacing: 1pt;
   }
 
-  .heroMain {
-    border-bottom-width: 2px !important;
+  .printContact {
+    font-family: "Helvetica", "Arial", sans-serif;
+    font-size: 8.5pt;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 4pt 8pt;
   }
 
-  .heroBio {
-    border-bottom: 2px solid #000 !important;
+  /* Print Sections */
+  .printSection {
+    margin-bottom: 10pt;
   }
 
-  /* Hide print button */
-  .printBtn {
-    display: none !important;
+  .printSectionTitle {
+    font-family: "Helvetica", "Arial", sans-serif;
+    font-size: 10pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1pt;
+    color: #000;
+    border-bottom: 0.75pt solid #000;
+    padding-bottom: 2pt;
+    margin: 0 0 6pt 0;
   }
 
-  /* Prevent page breaks */
-  .section,
-  .timelineItem,
-  .projectCard,
-  .educationCard {
+  .printText {
+    font-size: 9.5pt;
+    line-height: 1.4;
+    margin: 0;
+    text-align: justify;
+  }
+
+  /* Experience */
+  .printExperienceItem {
+    margin-bottom: 8pt;
+  }
+
+  .printExpHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .printExpRole {
+    font-weight: 700;
+    font-size: 9.5pt;
+  }
+
+  .printExpPeriod {
+    font-size: 8.5pt;
+    color: #333;
+    font-style: italic;
+  }
+
+  .printExpCompany {
+    font-size: 9pt;
+    color: #333;
+    margin-bottom: 2pt;
+  }
+
+  .printExpDesc {
+    font-size: 9pt;
+    line-height: 1.35;
+    margin: 0;
+    text-align: justify;
+  }
+
+  /* Projects */
+  .printProjectItem {
+    margin-bottom: 6pt;
+  }
+
+  .printProjectHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .printProjectName {
+    font-weight: 700;
+    font-size: 9.5pt;
+  }
+
+  .printProjectPeriod {
+    font-size: 8.5pt;
+    color: #333;
+  }
+
+  .printProjectDesc {
+    font-size: 9pt;
+    line-height: 1.3;
+    margin: 1pt 0;
+    text-align: justify;
+  }
+
+  .printProjectTags {
+    font-size: 8pt;
+    color: #444;
+    font-style: italic;
+  }
+
+  /* Education */
+  .printEducationItem {
+    margin-bottom: 6pt;
+  }
+
+  .printEduHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .printEduDegree {
+    font-weight: 700;
+    font-size: 9.5pt;
+  }
+
+  .printEduSchool {
+    font-size: 9pt;
+    color: #333;
+  }
+
+  .printEduPeriod {
+    font-size: 8.5pt;
+    color: #333;
+    font-style: italic;
+  }
+
+  .printEduGpa {
+    font-size: 8.5pt;
+    color: #444;
+    margin-top: 1pt;
+  }
+
+  /* Skills */
+  .printSkillsText {
+    font-size: 9pt;
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  /* Footer */
+  .printFooter {
+    text-align: center;
+    font-size: 8pt;
+    color: #666;
+    margin-top: 12pt;
+    padding-top: 6pt;
+    border-top: 0.5pt solid #999;
+  }
+
+  /* Page break control */
+  .printSection {
     break-inside: avoid;
     page-break-inside: avoid;
   }
 
-  /* Disable animations */
-  .roleIndicator {
-    animation: none !important;
-  }
-
-  /* Simplify link buttons */
-  .linkBtn {
-    border-right: 1px solid #000 !important;
-  }
-
-  .linkBtn:last-child {
-    border-right: none !important;
-  }
-
-  /* Show URLs for links */
-  .cardCompanyLink::after,
-  .projectLink::after,
-  .footerLink::after {
-    content: " (" attr(href) ")";
-    font-size: 0.75em;
-  }
-
-  .cardCompanyLink[href^="mailto"]::after,
-  .footerLink[href^="mailto"]::after {
-    content: "";
+  .printExperienceItem,
+  .printProjectItem {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 }
