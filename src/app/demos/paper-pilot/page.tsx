@@ -299,7 +299,7 @@ export default function PaperPilotPage() {
       <h1 className="text-4xl font-bold mb-4">Paper Pilot</h1>
       <p className="text-neutral-600 dark:text-neutral-400 mb-8 max-w-2xl">
         Enter a DOI or arXiv ID to fetch any academic paper, then let AI summarize and explain it.
-        Powered by Gemini 2.0 Flash with 128k+ context for analyzing full papers.
+        Powered by OpenRouter's free AI models for analyzing full papers.
       </p>
 
       {/* Error display */}
@@ -364,8 +364,8 @@ export default function PaperPilotPage() {
           About Paper Pilot
         </h3>
         <p className="mb-2">
-          Uses Gemini 2.0 Flash via OpenRouter API with 128k+ context window,
-          allowing analysis of full papers including methodology, results, and detailed sections.
+          Uses OpenRouter's free AI models to analyze full papers including
+          methodology, results, and detailed sections.
         </p>
         <p className="mb-2">
           <strong>Data Sources:</strong> Paper metadata is fetched from CrossRef (for DOIs) and

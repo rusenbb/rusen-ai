@@ -13,7 +13,7 @@ export default function DemosPage() {
           title="Paper Pilot"
           description="Enter a DOI, get article summaries and explanations. Perfect for engineers and medical students."
           href="/demos/paper-pilot"
-          tags={["LLM", "Gemini", "Academic"]}
+          tags={["LLM", "OpenRouter", "Academic"]}
           status="live"
         />
         <DemoCard
