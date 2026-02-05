@@ -35,7 +35,9 @@ const letterPatterns: Record<string, number[][]> = {
 
 const PATTERN_COLS = 5;
 const PATTERN_ROWS = 7;
-const GRID_SPACING = 28;
+const BASE_GRID_SPACING = 28; // Spacing for large screens
+const MIN_GRID_SPACING = 10; // Minimum spacing to keep dots visible on mobile
+const MARGIN_COLS = 4; // Extra columns on each side for breathing room
 
 interface Dot {
   gridX: number; // Grid column index
@@ -136,10 +138,6 @@ export default function DataBackground() {
       const width = window.innerWidth;
       const height = window.innerHeight;
 
-      // Calculate grid dimensions (how many dots fit on screen)
-      const gridCols = Math.ceil(width / GRID_SPACING) + 1;
-      const gridRows = Math.ceil(height / GRID_SPACING) + 1;
-
       // Calculate letter placement in grid coordinates
       // Each letter is 5 cols wide, with 2 cols gap between letters
       // Total: 5 + 2 + 5 + 2 + 5 + 2 + 5 = 26 columns for "DATA"
@@ -147,6 +145,21 @@ export default function DataBackground() {
       const gapInCols = 2;
       const totalLetterCols = letterWidthInCols * 4 + gapInCols * 3; // 26
       const totalLetterRows = PATTERN_ROWS; // 7
+
+      // Calculate dynamic grid spacing to ensure "DATA" always fits on screen
+      // We need: totalLetterCols + margin on both sides
+      const requiredCols = totalLetterCols + MARGIN_COLS * 2;
+      const calculatedSpacing = Math.floor(width / requiredCols);
+      
+      // Use base spacing on large screens, min spacing on small screens
+      const gridSpacing = Math.max(
+        MIN_GRID_SPACING,
+        Math.min(BASE_GRID_SPACING, calculatedSpacing)
+      );
+
+      // Calculate grid dimensions (how many dots fit on screen)
+      const gridCols = Math.ceil(width / gridSpacing) + 1;
+      const gridRows = Math.ceil(height / gridSpacing) + 1;
 
       // Center the letters on the grid
       const startCol = Math.floor((gridCols - totalLetterCols) / 2);
@@ -176,8 +189,8 @@ export default function DataBackground() {
       const newDots: Dot[] = [];
       for (let gridY = 0; gridY < gridRows; gridY++) {
         for (let gridX = 0; gridX < gridCols; gridX++) {
-          const screenX = gridX * GRID_SPACING + GRID_SPACING / 2;
-          const screenY = gridY * GRID_SPACING + GRID_SPACING / 2;
+          const screenX = gridX * gridSpacing + gridSpacing / 2;
+          const screenY = gridY * gridSpacing + gridSpacing / 2;
           const key = `${gridX},${gridY}`;
           const letterIndex = letterMap.get(key) ?? -1;
 
