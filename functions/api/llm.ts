@@ -140,16 +140,45 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       body: JSON.stringify(requestBody),
     });
 
-    // Extract actual model used from response headers (OpenRouter provides this)
-    const modelUsed = response.headers.get("x-model") || FREE_MODEL;
-
     // Handle streaming response
     if (body.stream && response.body) {
-      return new Response(response.body, {
+      const reader = response.body.getReader();
+
+      // Read first chunk to extract the model name
+      const firstRead = await reader.read();
+      let modelUsed = FREE_MODEL;
+
+      if (!firstRead.done && firstRead.value) {
+        const text = new TextDecoder().decode(firstRead.value);
+        const modelMatch = text.match(/"model"\s*:\s*"([^"]+)"/);
+        if (modelMatch) {
+          modelUsed = modelMatch[1];
+        }
+      }
+
+      // Create a new stream that starts with the first chunk we already read
+      const readable = new ReadableStream({
+        async start(controller) {
+          // First, emit the chunk we already read
+          if (!firstRead.done && firstRead.value) {
+            controller.enqueue(firstRead.value);
+          }
+          // Then continue with the rest of the stream
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            controller.enqueue(value);
+          }
+          controller.close();
+        },
+      });
+
+      return new Response(readable, {
         status: response.status,
         headers: {
           "Content-Type": "text/event-stream",
           "Access-Control-Allow-Origin": "*",
+          "Access-Control-Expose-Headers": "X-Model-Used, X-RateLimit-Remaining",
           "X-RateLimit-Remaining": String(remaining),
           "X-Model-Used": modelUsed,
           "Cache-Control": "no-cache",
@@ -159,6 +188,9 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
     // Handle non-streaming response
     const data = await response.json() as Record<string, unknown>;
+
+    // Extract actual model from response body (OpenRouter returns it here)
+    const modelUsed = (data.model as string) || FREE_MODEL;
 
     // Normalize error responses from OpenRouter
     if (!response.ok && data.error && typeof data.error === "object") {
@@ -173,6 +205,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
           headers: {
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*",
+            "Access-Control-Expose-Headers": "X-Model-Used, X-RateLimit-Remaining",
             "X-RateLimit-Remaining": String(remaining),
             "X-Model-Used": modelUsed,
           },
@@ -185,6 +218,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       headers: {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
+        "Access-Control-Expose-Headers": "X-Model-Used, X-RateLimit-Remaining",
         "X-RateLimit-Remaining": String(remaining),
         "X-Model-Used": modelUsed,
       },
