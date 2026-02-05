@@ -38,8 +38,10 @@ export default function AIStatusPanel({
   // Extract model name from full model ID (e.g., "google/gemini-2.5-flash" -> "Gemini 2.5 Flash")
   const formatModelName = (modelId: string | null): string => {
     if (!modelId) return "AI";
+    if (modelId === "openrouter/free") return "OpenRouter Auto";
     const name = modelId.split("/").pop() || modelId;
     return name
+      .replace(/:free$/, "")
       .replace(/-/g, " ")
       .replace(/\b\w/g, c => c.toUpperCase());
   };
