@@ -103,7 +103,7 @@ export default function QueryInput({
           {/* Model used indicator */}
           {lastModelUsed && (
             <span className="text-xs text-neutral-500">
-              Model: {lastModelUsed.split("/").pop()?.split(":")[0]}
+              Model: {lastModelUsed === "openrouter/free" ? "Auto" : lastModelUsed.split("/").pop()?.split(":")[0]}
             </span>
           )}
 
