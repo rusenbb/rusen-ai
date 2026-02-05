@@ -100,6 +100,11 @@ const projects = [
 
 const education = [
   {
+    degree: "M.Sc. Computer Engineering (Thesis)",
+    school: "Middle East Technical University",
+    period: "2025 — Present",
+  },
+  {
     degree: "B.Sc. AI and Data Engineering",
     school: "Istanbul Technical University",
     period: "2022 — 2025",
