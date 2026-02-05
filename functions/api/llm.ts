@@ -140,18 +140,24 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       body: JSON.stringify(requestBody),
     });
 
+    // Check if OpenRouter provides the actual model in response headers
+    const openRouterModel = response.headers.get("x-model") ||
+                            response.headers.get("openrouter-model") ||
+                            response.headers.get("x-openrouter-model");
+
     // Handle streaming response
     if (body.stream && response.body) {
       const reader = response.body.getReader();
 
       // Read first chunk to extract the model name
       const firstRead = await reader.read();
-      let modelUsed = FREE_MODEL;
+      let modelUsed = openRouterModel || FREE_MODEL;
 
       if (!firstRead.done && firstRead.value) {
         const text = new TextDecoder().decode(firstRead.value);
+        // Try to extract actual model from the chunk
         const modelMatch = text.match(/"model"\s*:\s*"([^"]+)"/);
-        if (modelMatch) {
+        if (modelMatch && modelMatch[1] !== FREE_MODEL) {
           modelUsed = modelMatch[1];
         }
       }
@@ -189,8 +195,12 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     // Handle non-streaming response
     const data = await response.json() as Record<string, unknown>;
 
-    // Extract actual model from response body (OpenRouter returns it here)
-    const modelUsed = (data.model as string) || FREE_MODEL;
+    // Extract actual model from response body or headers
+    // Prefer body model if it's not the router name, otherwise try headers
+    const bodyModel = data.model as string;
+    const modelUsed = (bodyModel && bodyModel !== FREE_MODEL)
+      ? bodyModel
+      : (openRouterModel || bodyModel || FREE_MODEL);
 
     // Normalize error responses from OpenRouter
     if (!response.ok && data.error && typeof data.error === "object") {
