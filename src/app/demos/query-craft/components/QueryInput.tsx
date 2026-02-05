@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useEffect } from "react";
-import { AVAILABLE_MODELS } from "@/lib/config";
 import { Button } from "@/components/ui";
 import { EXAMPLE_QUERIES } from "../utils/prompts";
 
@@ -13,8 +12,6 @@ interface QueryInputProps {
   hasSchema: boolean;
   rateLimitRemaining: number | null;
   lastModelUsed: string | null;
-  selectedModel: string;
-  onModelChange: (model: string) => void;
   currentPreset: string | null;
   autoFocusKey?: number;
   onExampleClick?: (example: string) => void;
@@ -30,8 +27,6 @@ export default function QueryInput({
   hasSchema,
   rateLimitRemaining,
   lastModelUsed,
-  selectedModel,
-  onModelChange,
   currentPreset,
   autoFocusKey,
   onExampleClick,
@@ -105,33 +100,10 @@ export default function QueryInput({
       {/* Controls row */}
       <div className="mt-4 flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          {/* Model selector - collapsible */}
-          <details className="group">
-            <summary className="cursor-pointer text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200 transition list-none flex items-center gap-1">
-              <svg className="w-4 h-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-              Model: {AVAILABLE_MODELS.find((m) => m.id === selectedModel)?.name || "Auto"}
-            </summary>
-            <div className="mt-2">
-              <select
-                value={selectedModel}
-                onChange={(e) => onModelChange(e.target.value)}
-                className="px-3 py-2 text-sm border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                {AVAILABLE_MODELS.map((model) => (
-                  <option key={model.id} value={model.id}>
-                    {model.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </details>
-
           {/* Model used indicator */}
           {lastModelUsed && (
             <span className="text-xs text-neutral-500">
-              Last: {lastModelUsed.split("/").pop()?.split(":")[0]}
+              Model: {lastModelUsed.split("/").pop()?.split(":")[0]}
             </span>
           )}
 

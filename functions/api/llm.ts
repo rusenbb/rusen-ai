@@ -1,6 +1,6 @@
 // Cloudflare Pages Function to proxy LLM API calls
 // API keys are stored as secrets, never exposed to client
-// Rotates between multiple keys and falls back to alternative models
+// Uses OpenRouter's free model router for automatic model selection
 
 interface Env {
   OPENROUTER_API_KEY_01?: string;
@@ -15,61 +15,8 @@ interface Env {
   OPENROUTER_API_KEY_10?: string;
 }
 
-// Model configurations by use case
-// Order matters: first is primary, rest are fallbacks
-// Updated 2026-02: Using current OpenRouter free models
-const MODELS = {
-  // Paper Pilot: Long context for full papers, good summarization
-  "paper-pilot": [
-    "google/gemini-2.5-flash",                // Fast, large context
-    "google/gemini-3-flash-preview-20251217", // Newest Gemini
-    "deepseek/deepseek-v3.2-20251201",        // Strong reasoning
-    "x-ai/grok-4.1-fast",                     // Fast fallback
-    "openai/gpt-oss-120b",                    // Large model fallback
-  ],
-  // Data Forge: JSON generation, structured output
-  "data-forge": [
-    "google/gemini-2.5-flash",                // Good JSON support
-    "google/gemini-2.5-flash-lite",           // Lighter, still good JSON
-    "deepseek/deepseek-v3.2-20251201",        // Reliable JSON
-    "x-ai/grok-4.1-fast",                     // Fast fallback
-    "openai/gpt-oss-120b",                    // Large model fallback
-  ],
-  // Query Craft: SQL generation, precise output
-  "query-craft": [
-    "google/gemini-2.5-flash",                // Good for SQL
-    "deepseek/deepseek-v3.2-20251201",        // Strong coding
-    "x-ai/grok-code-fast-1",                  // Code-optimized
-    "google/gemini-2.5-flash-lite",           // Fast fallback
-    "openai/gpt-oss-120b",                    // Large model fallback
-  ],
-  // Temperature Playground: Fast responses for comparisons
-  "temperature-playground": [
-    "google/gemini-2.5-flash-lite",           // Fast, good for demos
-    "google/gemini-2.5-flash",                // Reliable fallback
-    "x-ai/grok-4-fast",                       // Fast
-    "x-ai/grok-4.1-fast",                     // Fast fallback
-  ],
-  // Default fallback chain
-  "default": [
-    "google/gemini-2.5-flash",
-    "google/gemini-2.5-flash-lite",
-    "deepseek/deepseek-v3.2-20251201",
-    "x-ai/grok-4.1-fast",
-    "openai/gpt-oss-120b",
-  ],
-};
-
-type UseCase = keyof typeof MODELS;
-
-// Models that support response_format: { type: "json_object" }
-const JSON_MODE_SUPPORTED = new Set([
-  "google/gemini-2.5-flash",
-  "google/gemini-2.5-flash-lite",
-  "google/gemini-3-flash-preview-20251217",
-  "openai/gpt-oss-120b",
-  // Note: DeepSeek, Grok may not reliably support JSON mode
-]);
+// OpenRouter's free model router - automatically selects the best available free model
+const FREE_MODEL = "openrouter/auto";
 
 // Simple in-memory rate limiting (resets on cold start)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
@@ -122,74 +69,6 @@ function checkRateLimit(ip: string): { allowed: boolean; remaining: number } {
   return { allowed: true, remaining: RATE_LIMIT - record.count };
 }
 
-function getModelsForUseCase(useCase?: string): string[] {
-  if (useCase && useCase in MODELS) {
-    return MODELS[useCase as UseCase];
-  }
-  return MODELS.default;
-}
-
-// Try request with fallback models
-async function tryWithFallback(
-  apiKey: string,
-  requestBody: Record<string, unknown>,
-  models: string[],
-  stream: boolean,
-  wantsJsonMode: boolean
-): Promise<{ response: Response; model: string }> {
-  const errors: string[] = [];
-
-  for (const model of models) {
-    try {
-      const body = { ...requestBody, model };
-
-      // Only add JSON mode for models that support it
-      if (wantsJsonMode && JSON_MODE_SUPPORTED.has(model)) {
-        body.response_format = { type: "json_object" };
-      } else {
-        // Remove response_format if present (model doesn't support it)
-        delete body.response_format;
-      }
-
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`,
-          "HTTP-Referer": "https://rusen.ai",
-          "X-Title": "Rusen AI Demos",
-        },
-        body: JSON.stringify(body),
-      });
-
-      // If successful or client error (not rate limit/payment), return
-      if (response.ok || (response.status >= 400 && response.status < 402)) {
-        return { response, model };
-      }
-
-      // If payment required (402), rate limited (429), or server error (5xx), try next model
-      if (response.status === 402 || response.status === 429 || response.status >= 500) {
-        const shortModel = model.split("/").pop() || model;
-        errors.push(`${shortModel}:${response.status}`);
-        console.log(`Model ${model} unavailable (${response.status}), trying next...`);
-        continue;
-      }
-
-      // Other errors, return as-is
-      return { response, model };
-    } catch (err) {
-      const shortModel = model.split("/").pop() || model;
-      const errMsg = err instanceof Error ? err.message : String(err);
-      errors.push(`${shortModel}:${errMsg.slice(0, 30)}`);
-      console.log(`Model ${model} failed: ${errMsg}, trying next...`);
-      continue;
-    }
-  }
-
-  // All models failed, throw with details
-  throw new Error(`All models failed: ${errors.join(", ")}`);
-}
-
 // Handle POST requests for chat completions
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   const ip = context.request.headers.get("cf-connecting-ip") || "unknown";
@@ -229,40 +108,40 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   try {
     const body = await context.request.json() as {
       messages: Array<{ role: string; content: string }>;
-      model?: string;
       max_tokens?: number;
       temperature?: number;
       stream?: boolean;
       response_format?: { type: string };
-      use_case?: string; // "paper-pilot" | "data-forge"
+      use_case?: string;
     };
 
-    // Get models: if specific model requested, put it first then add fallbacks
-    // This way if the selected model fails (429), we still have options
-    const fallbackModels = getModelsForUseCase(body.use_case);
-    const models = body.model
-      ? [body.model, ...fallbackModels.filter(m => m !== body.model)]
-      : fallbackModels;
-
-    // Build request body
+    // Build request body using OpenRouter's free model router
     const requestBody: Record<string, unknown> = {
+      model: FREE_MODEL,
       messages: body.messages,
       max_tokens: body.max_tokens || 16384,
       temperature: body.temperature ?? 0.5,
       stream: body.stream ?? false,
     };
 
-    // Check if JSON mode is requested
-    const wantsJsonMode = body.response_format?.type === "json_object";
+    // Add JSON mode if requested
+    if (body.response_format?.type === "json_object") {
+      requestBody.response_format = { type: "json_object" };
+    }
 
-    // Try with fallback models (JSON mode is handled per-model inside)
-    const { response, model } = await tryWithFallback(
-      apiKey,
-      requestBody,
-      models,
-      body.stream ?? false,
-      wantsJsonMode
-    );
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+        "HTTP-Referer": "https://rusen.ai",
+        "X-Title": "Rusen AI Demos",
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    // Extract actual model used from response headers (OpenRouter provides this)
+    const modelUsed = response.headers.get("x-model") || FREE_MODEL;
 
     // Handle streaming response
     if (body.stream && response.body) {
@@ -272,7 +151,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
           "Content-Type": "text/event-stream",
           "Access-Control-Allow-Origin": "*",
           "X-RateLimit-Remaining": String(remaining),
-          "X-Model-Used": model,
+          "X-Model-Used": modelUsed,
           "Cache-Control": "no-cache",
         },
       });
@@ -282,7 +161,6 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     const data = await response.json() as Record<string, unknown>;
 
     // Normalize error responses from OpenRouter
-    // OpenRouter returns { error: { message, type, code } } but we want { error: "string" }
     if (!response.ok && data.error && typeof data.error === "object") {
       const errObj = data.error as { message?: string; type?: string; code?: string };
       return new Response(
@@ -296,7 +174,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*",
             "X-RateLimit-Remaining": String(remaining),
-            "X-Model-Used": model,
+            "X-Model-Used": modelUsed,
           },
         }
       );
@@ -308,7 +186,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
         "X-RateLimit-Remaining": String(remaining),
-        "X-Model-Used": model,
+        "X-Model-Used": modelUsed,
       },
     });
   } catch (error) {

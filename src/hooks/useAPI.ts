@@ -2,12 +2,8 @@
 
 /**
  * Unified API hook for LLM interactions across all demos.
- * Handles streaming, rate limiting, JSON mode, and model fallback.
- *
- * Consolidates:
- * - paper-pilot/hooks/useAPILLM.ts (streaming, large context)
- * - query-craft/hooks/useAPILLM.ts (streaming + JSON mode)
- * - data-forge/hooks/useAPILLM.ts (non-streaming, JSON mode)
+ * Handles streaming, rate limiting, and JSON mode.
+ * Uses OpenRouter's free model router for automatic model selection.
  */
 
 import { useState, useCallback } from "react";
@@ -70,22 +66,22 @@ export interface UseAPIConfig {
 
 /**
  * Unified API hook for LLM interactions.
+ * Uses OpenRouter's free model router - model selection is automatic.
  *
- * @param selectedModel - Model ID or 'auto' for automatic selection
  * @param config - Configuration options for the hook
  * @returns API state and generate function
  *
  * @example
  * ```tsx
  * // Paper Pilot - streaming, large context
- * const { generate, isGenerating } = useAPI('auto', {
+ * const { generate, isGenerating } = useAPI({
  *   useCase: 'paper-pilot',
  *   defaultStream: true,
  *   defaultMaxTokens: 16384,
  * });
  *
  * // Query Craft - streaming + JSON mode
- * const { generate } = useAPI(model, {
+ * const { generate } = useAPI({
  *   useCase: 'query-craft',
  *   defaultStream: true,
  * });
@@ -97,17 +93,14 @@ export interface UseAPIConfig {
  * });
  *
  * // Data Forge - non-streaming, JSON mode
- * const { generate } = useAPI(model, {
+ * const { generate } = useAPI({
  *   useCase: 'data-forge',
  *   defaultStream: false,
  *   defaultMaxTokens: 8192,
  * });
  * ```
  */
-export function useAPI(
-  selectedModel: string = "auto",
-  config: UseAPIConfig
-): UseAPIReturn {
+export function useAPI(config: UseAPIConfig): UseAPIReturn {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rateLimitRemaining, setRateLimitRemaining] = useState<number | null>(null);
@@ -149,11 +142,6 @@ export function useAPI(
           temperature,
           use_case: useCase,
         };
-
-        // Pass specific model if not auto
-        if (selectedModel !== "auto") {
-          requestBody.model = selectedModel;
-        }
 
         // Request JSON structured output
         if (jsonMode) {
@@ -211,7 +199,7 @@ export function useAPI(
         setIsGenerating(false);
       }
     },
-    [selectedModel, useCase, defaultStream, defaultMaxTokens, defaultTemperature]
+    [useCase, defaultStream, defaultMaxTokens, defaultTemperature]
   );
 
   return {

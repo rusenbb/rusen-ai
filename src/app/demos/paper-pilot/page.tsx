@@ -5,12 +5,11 @@ import { useAPI } from "@/hooks";
 import { Alert } from "@/components/ui";
 import DOIInput from "./components/DOIInput";
 import PaperDisplay from "./components/PaperDisplay";
-import ModelPanel from "./components/ModelPanel";
+import AIStatusPanel from "./components/AIStatusPanel";
 import SummaryPanel from "./components/SummaryPanel";
 import QAPanel from "./components/QAPanel";
 import { fetchPaper } from "./utils/paperFetcher";
 import { buildSummaryPrompt, buildQAPrompt } from "./utils/prompts";
-import { getSelectedModel, saveSelectedModel } from "./utils/storage";
 import {
   initialState,
   generateId,
@@ -21,31 +20,16 @@ import { paperPilotReducer } from "./reducers";
 export default function PaperPilotPage() {
   const [state, dispatch] = useReducer(paperPilotReducer, initialState);
   const [streamingContent, setStreamingContent] = useState<string>("");
-  const [selectedModel, setSelectedModel] = useState<string>("auto");
   const stepsCompletedRef = useRef<string[]>([]);
 
-  // Load saved model preference on mount
-  useEffect(() => {
-    const saved = getSelectedModel();
-    if (saved) {
-      setSelectedModel(saved);
-    }
-  }, []);
-
-  // Save model preference when changed
-  const handleModelChange = useCallback((modelId: string) => {
-    setSelectedModel(modelId);
-    saveSelectedModel(modelId);
-  }, []);
-
-  // Cloud-based LLM (API)
+  // Cloud-based LLM (API) - uses OpenRouter's free model router
   const {
     isGenerating,
     error,
     rateLimitRemaining,
     lastModelUsed,
     generate,
-  } = useAPI(selectedModel, {
+  } = useAPI({
     useCase: "paper-pilot",
     defaultStream: true,
     defaultMaxTokens: 16384,
@@ -338,15 +322,11 @@ export default function PaperPilotPage() {
         <>
           <PaperDisplay paper={state.paper} onClear={handleClearPaper} />
 
-          {/* Model Panel */}
-          <ModelPanel
+          {/* AI Status Panel */}
+          <AIStatusPanel
             isGenerating={isGeneratingState || isGenerating}
             rateLimitRemaining={rateLimitRemaining}
             lastModelUsed={lastModelUsed}
-            selectedModel={selectedModel}
-            onModelChange={handleModelChange}
-            paperTitle={state.paper?.title}
-            paperSubjects={state.paper?.subjects}
           />
 
           {/* Summary Panel */}

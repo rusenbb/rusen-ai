@@ -19,8 +19,8 @@ const DATA_FORGE_SYSTEM_PROMPT = "You are a JSON data generator. Output ONLY val
 
 export default function DataForgePage() {
   const [state, dispatch] = useReducer(dataForgeReducer, initialState);
-  const [selectedModel, setSelectedModel] = useState<string>("auto");
-  const { isGenerating, error, rateLimitRemaining, lastModelUsed, generate } = useAPI(selectedModel, {
+  // Uses OpenRouter's free model router for automatic model selection
+  const { isGenerating, error, rateLimitRemaining, lastModelUsed, generate } = useAPI({
     useCase: "data-forge",
     defaultStream: false,
     defaultMaxTokens: 8192,
@@ -207,8 +207,6 @@ export default function DataForgePage() {
         isGenerating={isGenerating}
         rateLimitRemaining={rateLimitRemaining}
         lastModelUsed={lastModelUsed}
-        selectedModel={selectedModel}
-        onModelChange={setSelectedModel}
         onGenerate={handleGenerateFull}
         onPreview={handleGeneratePreview}
       />

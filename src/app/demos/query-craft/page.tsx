@@ -67,11 +67,11 @@ function getInitialState(): QueryCraftState {
 
 export default function QueryCraftPage() {
   const [state, dispatch] = useReducer(queryCraftReducer, initialState, getInitialState);
-  const [selectedModel, setSelectedModel] = useState<string>("auto");
   const [streamingSQL, setStreamingSQL] = useState<string>("");
   const [autoFocusKey, setAutoFocusKey] = useState(0);
   const [includeExplanation, setIncludeExplanation] = useState(false);
-  const { isGenerating, error, rateLimitRemaining, lastModelUsed, generate } = useAPI(selectedModel, {
+  // Uses OpenRouter's free model router for automatic model selection
+  const { isGenerating, error, rateLimitRemaining, lastModelUsed, generate } = useAPI({
     useCase: "query-craft",
     defaultStream: true,
     defaultMaxTokens: 4096,
@@ -229,8 +229,6 @@ export default function QueryCraftPage() {
         hasSchema={state.schema.tables.length > 0}
         rateLimitRemaining={rateLimitRemaining}
         lastModelUsed={lastModelUsed}
-        selectedModel={selectedModel}
-        onModelChange={setSelectedModel}
         currentPreset={currentPreset}
         autoFocusKey={autoFocusKey}
         onExampleClick={handleExampleClick}
