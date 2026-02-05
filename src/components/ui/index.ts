@@ -16,4 +16,3 @@ export { Button } from "./Button";
 export { Alert } from "./Alert";
 export { Card, CardHeader, CardTitle } from "./Card";
 export { EmptyState, EmptyStateIcon } from "./EmptyState";
-export { ModelSelector } from "./ModelSelector";
