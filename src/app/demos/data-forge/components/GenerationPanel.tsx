@@ -16,8 +16,12 @@ interface GenerationPanelProps {
 // Extract model name from full model ID
 function formatModelName(modelId: string | null): string {
   if (!modelId) return "AI";
+  if (modelId === "openrouter/free") return "OpenRouter Auto";
   const name = modelId.split("/").pop() || modelId;
-  return name.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+  return name
+    .replace(/:free$/, "")
+    .replace(/-/g, " ")
+    .replace(/\b\w/g, c => c.toUpperCase());
 }
 
 export default function GenerationPanel({

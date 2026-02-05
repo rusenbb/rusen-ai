@@ -201,7 +201,7 @@ export default function SummaryPanel({
                   <div className="flex items-center justify-between mt-2">
                     <p className="text-xs text-neutral-400">
                       Generated at {summary.generatedAt.toLocaleTimeString()}
-                      {lastModelUsed && ` · via ${lastModelUsed.split("/").pop()?.replace(":free", "")}`}
+                      {lastModelUsed && ` · via ${lastModelUsed === "openrouter/free" ? "OpenRouter" : lastModelUsed.split("/").pop()?.replace(":free", "")}`}
                     </p>
                     <div className="flex items-center gap-1">
                       {/* Copy button */}
