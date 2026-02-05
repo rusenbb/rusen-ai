@@ -2,6 +2,7 @@
 
 import styles from "./cv.module.css";
 
+// Data for both web and PDF views
 const experience = [
   {
     role: "Co-Founder",
@@ -324,6 +325,102 @@ export default function CVPage() {
           </div>
         </div>
       </footer>
+
+      {/* ========================================
+          PRINT-ONLY RESUME (Simple & Direct)
+          ======================================== */}
+      <div className={styles.printResume}>
+        {/* Header */}
+        <header className={styles.printHeader}>
+          <h1 className={styles.printName}>RUSEN BIRBEN</h1>
+          <p className={styles.printTitle}>AI & Data Engineer</p>
+          <div className={styles.printContact}>
+            <span>Ankara, Turkey</span>
+            <span>•</span>
+            <span>contact@rusen.ai</span>
+            <span>•</span>
+            <span>rusen.ai</span>
+            <span>•</span>
+            <span>linkedin.com/in/rusenbirben</span>
+            <span>•</span>
+            <span>github.com/rusenbb</span>
+          </div>
+        </header>
+
+        {/* Summary */}
+        <section className={styles.printSection}>
+          <h2 className={styles.printSectionTitle}>SUMMARY</h2>
+          <p className={styles.printText}>
+            AI & Data Engineering graduate from Istanbul Technical University with experience in NLP, LLMs, 
+            and agentic AI applications. Co-founder of Fiction Studios, an AI lab focused on democratizing 
+            AI systems through natural language, speech, and LLM technologies.
+          </p>
+        </section>
+
+        {/* Experience */}
+        <section className={styles.printSection}>
+          <h2 className={styles.printSectionTitle}>EXPERIENCE</h2>
+          {experience.map((item, index) => (
+            <div key={index} className={styles.printExperienceItem}>
+              <div className={styles.printExpHeader}>
+                <div className={styles.printExpRole}>{item.role}</div>
+                <div className={styles.printExpPeriod}>{item.period}</div>
+              </div>
+              <div className={styles.printExpCompany}>{item.company} — {item.location}</div>
+              <p className={styles.printExpDesc}>{item.description}</p>
+            </div>
+          ))}
+        </section>
+
+        {/* Projects */}
+        <section className={styles.printSection}>
+          <h2 className={styles.printSectionTitle}>PROJECTS</h2>
+          {projects.map((project, index) => (
+            <div key={index} className={styles.printProjectItem}>
+              <div className={styles.printProjectHeader}>
+                <span className={styles.printProjectName}>{project.title}</span>
+                <span className={styles.printProjectPeriod}>{project.period}</span>
+              </div>
+              <p className={styles.printProjectDesc}>{project.description}</p>
+              <div className={styles.printProjectTags}>
+                {project.tags.join(" • ")}
+              </div>
+            </div>
+          ))}
+        </section>
+
+        {/* Education */}
+        <section className={styles.printSection}>
+          <h2 className={styles.printSectionTitle}>EDUCATION</h2>
+          {education.map((item, index) => (
+            <div key={index} className={styles.printEducationItem}>
+              <div className={styles.printEduHeader}>
+                <div>
+                  <div className={styles.printEduDegree}>{item.degree}</div>
+                  <div className={styles.printEduSchool}>{item.school}</div>
+                </div>
+                <div className={styles.printEduPeriod}>{item.period}</div>
+              </div>
+              {item.gpa && <div className={styles.printEduGpa}>GPA: {item.gpa}</div>}
+            </div>
+          ))}
+        </section>
+
+        {/* Skills */}
+        <section className={styles.printSection}>
+          <h2 className={styles.printSectionTitle}>SKILLS</h2>
+          <p className={styles.printSkillsText}>
+            <strong>Languages:</strong> Python, JavaScript/TypeScript, SQL, C/C++<br />
+            <strong>Frameworks & Tools:</strong> PyTorch, TensorFlow, ROS2, YOLO, Transformers, Scikit-learn, Pandas, NumPy<br />
+            <strong>Specialties:</strong> NLP, LLMs, Computer Vision, RAG, MLOps, Agentic AI, Data Engineering
+          </p>
+        </section>
+
+        {/* Footer */}
+        <footer className={styles.printFooter}>
+          References available upon request • rusen.ai/cv
+        </footer>
+      </div>
     </div>
   );
 }
