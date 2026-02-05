@@ -4,7 +4,7 @@ import styles from "./cv.module.css";
 
 const experience = [
   {
-    role: "Founder",
+    role: "Co-Founder",
     company: "Fiction Studios",
     period: "10/2025 — Present",
     location: "Ankara, TR",
