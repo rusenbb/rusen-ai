@@ -16,7 +16,7 @@ interface Env {
 }
 
 // OpenRouter's free model router - automatically selects the best available free model
-const FREE_MODEL = "openrouter/auto";
+const FREE_MODEL = "openrouter/free";
 
 // Simple in-memory rate limiting (resets on cold start)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
