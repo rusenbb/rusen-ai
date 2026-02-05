@@ -14,10 +14,6 @@ export default function Home() {
         <p className="text-xl text-neutral-600 dark:text-neutral-400 mb-4 max-w-2xl mx-auto">
           I&apos;m Rusen, an AI &amp; Data Engineer building tools to make sense of it all.
         </p>
-        <p className="text-lg text-neutral-500 dark:text-neutral-500 mb-8 max-w-xl mx-auto">
-          Interactive demos that run in your browser. No servers, no API costs,
-          just pure client-side magic.
-        </p>
         <div className="flex gap-4 justify-center">
           <Link
             href="/demos"
