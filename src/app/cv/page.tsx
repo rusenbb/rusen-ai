@@ -401,8 +401,11 @@ export default function CVPage() {
                           </svg>
                         )}
                         {link.label === "HF" && (
-                          <svg className={styles.printLogo} viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-3 8.5c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5-1.5.67-1.5 1.5.67 1.5 1.5 1.5zm6 0c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5-1.5.67-1.5 1.5.67 1.5 1.5 1.5zm-6.75 3c.73 2.27 2.93 3.5 5.25 3.5s4.52-1.23 5.25-3.5H8.25z"/>
+                          <svg className={styles.printLogo} viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="1.5"/>
+                            <circle cx="9" cy="10" r="1.2" fill="currentColor"/>
+                            <circle cx="15" cy="10" r="1.2" fill="currentColor"/>
+                            <path d="M8 14c1.5 2 4.5 2 6 0" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                           </svg>
                         )}
                         {link.label === "▶" && (
