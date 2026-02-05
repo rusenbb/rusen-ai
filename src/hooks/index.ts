@@ -8,7 +8,7 @@
  * ```tsx
  * import { useAPI } from '@/hooks';
  *
- * const { generate, isGenerating, error } = useAPI('auto', {
+ * const { generate, isGenerating, error } = useAPI({
  *   useCase: 'paper-pilot',
  * });
  * ```

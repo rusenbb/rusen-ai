@@ -1,52 +1,7 @@
 /**
  * Shared configuration constants across all demos.
- * Single source of truth for models, timeouts, and API settings.
+ * Single source of truth for timeouts and API settings.
  */
-
-/** Available LLM models for selection */
-export interface ModelOption {
-  id: string;
-  name: string;
-  description?: string;
-}
-
-/**
- * Available models for all demos.
- * These are free-tier models available through OpenRouter.
- * Updated 2026-02 with current free models.
- */
-export const AVAILABLE_MODELS: ModelOption[] = [
-  {
-    id: "auto",
-    name: "Auto (Recommended)",
-    description: "Picks best available model with fallback",
-  },
-  {
-    id: "google/gemini-2.5-flash",
-    name: "Gemini 2.5 Flash",
-    description: "Fast, large context window",
-  },
-  {
-    id: "google/gemini-2.5-flash-lite",
-    name: "Gemini 2.5 Flash Lite",
-    description: "Lighter, faster responses",
-  },
-  {
-    id: "deepseek/deepseek-v3.2-20251201",
-    name: "DeepSeek V3.2",
-    description: "Strong reasoning capabilities",
-  },
-  {
-    id: "x-ai/grok-4.1-fast",
-    name: "Grok 4.1 Fast",
-    description: "Fast responses from xAI",
-  },
-  {
-    id: "openai/gpt-oss-120b",
-    name: "GPT OSS 120B",
-    description: "Large open-source model",
-  },
-];
 
 /** Common timeout values in milliseconds */
 export const TIMEOUTS = {
