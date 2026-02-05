@@ -294,8 +294,8 @@ export default function QueryCraftPage() {
           About Query Craft
         </h3>
         <p className="mb-2">
-          Query Craft uses Gemini 2.0 Flash via API to translate natural language questions
-          into SQL queries. Define your database schema, describe what you want in plain English,
+          Query Craft uses OpenRouter's free AI models to translate natural language
+          questions into SQL queries. Define your database schema, describe what you want in plain English,
           and get instant, executable SQL.
         </p>
         <p>
