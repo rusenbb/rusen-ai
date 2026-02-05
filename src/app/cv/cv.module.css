@@ -941,10 +941,35 @@
     text-align: justify;
   }
 
+  .printProjectMeta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2pt;
+  }
+
   .printProjectTags {
     font-size: 8pt;
     color: #444;
     font-style: italic;
+  }
+
+  .printProjectLogos {
+    display: flex;
+    gap: 6pt;
+    align-items: center;
+  }
+
+  .printLogoLink {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+  }
+
+  .printLogo {
+    width: 12pt;
+    height: 12pt;
+    color: #000;
   }
 
   /* Education */
