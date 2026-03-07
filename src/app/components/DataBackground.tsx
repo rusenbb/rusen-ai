@@ -15,7 +15,7 @@ function speedFromSlider(t: number): number {
   const base = Math.pow(2, (t - 0.3) * SPEED_COEFF);
   const correction =
     (minStep - Math.pow(2, -0.3 * SPEED_COEFF)) * (1 - Math.min(1, t / 0.3));
-  return Math.max(0, base + correction);
+  return Math.max(0, (base + correction) * 0.5);
 }
 
 function sliderFromDigitKey(key: string): number | null {
@@ -1037,9 +1037,9 @@ export default function DataBackground() {
 
       {/* Loading indicator */}
       {!clearBgMode && !loaded && !initError && (
-        <div className="fixed right-4 top-16 z-[60] pointer-events-none">
-          <div className="inline-flex items-center gap-2 rounded-md border border-neutral-300/70 dark:border-neutral-700/70 bg-white/82 dark:bg-neutral-900/82 px-2 py-1 text-[10px] tracking-wide text-neutral-600 dark:text-neutral-300 backdrop-blur">
-            <span className="w-3 h-3 border-2 border-neutral-300 dark:border-neutral-600 border-t-transparent rounded-full animate-spin" />
+        <div className="fixed inset-0 z-[5] flex items-center justify-center pointer-events-none">
+          <div className="inline-flex items-center gap-3 rounded-lg border border-neutral-300/65 dark:border-neutral-600/70 bg-white/26 dark:bg-neutral-900/32 px-4 py-2 text-sm font-medium tracking-wide text-neutral-800 dark:text-neutral-100 backdrop-blur-[2px]">
+            <span className="w-4 h-4 border-2 border-neutral-500/70 dark:border-neutral-300/70 border-t-transparent rounded-full animate-spin" />
             <span>Initializing Life...</span>
           </div>
         </div>
