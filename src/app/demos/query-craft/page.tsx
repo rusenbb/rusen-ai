@@ -198,10 +198,10 @@ export default function QueryCraftPage() {
   }, []);
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-16">
+    <div className="max-w-5xl mx-auto px-4 py-10 sm:py-12 md:py-16">
       {/* Header */}
-      <h1 className="text-4xl font-bold mb-4">Query Craft</h1>
-      <p className="text-neutral-600 dark:text-neutral-400 mb-8 max-w-2xl">
+      <h1 className="text-3xl sm:text-4xl font-bold mb-3 sm:mb-4">Query Craft</h1>
+      <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 mb-6 sm:mb-8 max-w-2xl text-pretty">
         Describe what data you need in plain English, get SQL queries instantly.
         Define your database schema below, then write natural language questions.
       </p>
@@ -289,7 +289,7 @@ export default function QueryCraftPage() {
       )}
 
       {/* About section */}
-      <div className="mt-12 text-sm text-neutral-500">
+      <div className="mt-10 sm:mt-12 text-sm text-neutral-500">
         <h3 className="font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
           About Query Craft
         </h3>

@@ -204,7 +204,7 @@ function findDivergentBoundaries(
 
 function SkeletonLoader() {
   return (
-    <div className="max-w-6xl mx-auto px-4 py-16 animate-pulse">
+    <div className="max-w-6xl mx-auto px-4 py-10 sm:py-12 md:py-16 animate-pulse">
       {/* Header skeleton */}
       <div className="h-10 w-48 bg-neutral-200 dark:bg-neutral-800 rounded mb-4" />
       <div className="h-6 w-96 bg-neutral-200 dark:bg-neutral-800 rounded mb-8" />
@@ -227,7 +227,7 @@ function SkeletonLoader() {
       <div className="h-24 w-full bg-neutral-200 dark:bg-neutral-800 rounded-lg mb-8" />
 
       {/* Results grid skeleton */}
-      <div className="grid md:grid-cols-2 gap-6 mb-8">
+      <div className="grid md:grid-cols-2 gap-4 sm:gap-6 mb-8">
         <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-6">
           <div className="flex justify-between mb-4">
             <div className="h-6 w-32 bg-neutral-200 dark:bg-neutral-800 rounded" />
@@ -253,7 +253,7 @@ function SkeletonLoader() {
       </div>
 
       {/* Stats skeleton */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
         {[1, 2, 3, 4, 5].map((i) => (
           <div key={i} className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-4 text-center">
             <div className="h-8 w-12 mx-auto bg-neutral-200 dark:bg-neutral-800 rounded mb-2" />
@@ -529,7 +529,7 @@ function RusenizerPageInner() {
   // ─────────────────────────────────────────────────────────────────────────
   if (state.error) {
     return (
-      <div className="max-w-6xl mx-auto px-4 py-16">
+      <div className="max-w-6xl mx-auto px-4 py-10 sm:py-12 md:py-16">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-red-500">Error: {state.error}</div>
         </div>
@@ -541,17 +541,17 @@ function RusenizerPageInner() {
   // RENDER: Main Content
   // ─────────────────────────────────────────────────────────────────────────
   return (
-    <div className="max-w-6xl mx-auto px-4 py-16">
+    <div className="max-w-6xl mx-auto px-4 py-10 sm:py-12 md:py-16">
       {/* Header */}
-      <h1 className="text-4xl font-bold mb-4">Rusenizer</h1>
-      <p className="text-neutral-600 dark:text-neutral-400 mb-8 max-w-2xl">
+      <h1 className="text-3xl sm:text-4xl font-bold mb-3 sm:mb-4">Rusenizer</h1>
+      <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 mb-6 sm:mb-8 max-w-2xl text-pretty">
         A Turkish-optimized BPE tokenizer trained on Turkish Wikipedia. Uses{" "}
         <span className="font-mono text-sm">{state.vocabSize.toLocaleString()}</span> tokens
         and achieves ~45% fewer tokens than GPT-4 on Turkish text.
       </p>
 
       {/* Mode Toggle */}
-      <div className="flex items-center gap-4 mb-6">
+      <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-6">
         <button
           onClick={() => dispatch({ type: "TOGGLE_BATCH_MODE" })}
           className={`px-4 py-2 rounded-lg font-medium transition ${
@@ -726,7 +726,7 @@ function RusenizerPageInner() {
       {!state.batchMode && state.inputText && (
         <>
           {/* Results Grid */}
-          <div className="grid md:grid-cols-2 gap-6 mb-8">
+          <div className="grid md:grid-cols-2 gap-4 sm:gap-6 mb-8">
             {/* Rusenizer */}
             <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-6">
               <div className="flex items-center justify-between mb-4">
@@ -837,7 +837,7 @@ function RusenizerPageInner() {
           )}
 
           {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 mb-8">
             <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-4 text-center">
               <div className="text-2xl font-bold">{state.inputText.length}</div>
               <div className="text-sm text-neutral-500">Characters</div>

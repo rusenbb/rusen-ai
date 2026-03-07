@@ -122,7 +122,7 @@ export default function RelationshipPanel({ schema, dispatch }: RelationshipPane
       {/* Add relationship form */}
       {isAdding && (
         <div className="p-4 border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-900">
-          <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
             {/* Source */}
             <div>
               <label className="block text-xs text-neutral-500 mb-1" id="source-label">From (source)</label>

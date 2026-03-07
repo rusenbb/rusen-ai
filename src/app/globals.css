@@ -24,7 +24,9 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), "Segoe UI", sans-serif;
+  line-height: 1.5;
+  overflow-x: hidden;
 }
 
 .content-shell {
@@ -54,6 +56,19 @@ body {
   backdrop-filter: saturate(1.1);
 }
 
+@media (max-width: 640px) {
+  .content-shell::before {
+    background:
+      radial-gradient(800px 420px at 20% 0%, rgb(255 255 255 / 0.12), transparent 56%),
+      radial-gradient(620px 360px at 82% 100%, rgb(255 255 255 / 0.1), transparent 53%),
+      rgb(250 250 250 / 0.32);
+  }
+
+  .ui-card {
+    border-radius: 0.9rem;
+  }
+}
+
 body[data-bg-focus="on"] .content-shell::before {
   background:
     radial-gradient(1200px 600px at 15% 0%, rgb(255 255 255 / 0.26), transparent 52%),
@@ -62,12 +77,24 @@ body[data-bg-focus="on"] .content-shell::before {
 }
 
 body[data-bg-clear="on"] {
-  background: #000 !important;
+  background: var(--background) !important;
 }
 
 body[data-bg-clear="on"] .content-shell::before {
   background: transparent !important;
   backdrop-filter: none !important;
+}
+
+body[data-game-life-page="on"] main {
+  padding-bottom: 0;
+}
+
+body[data-game-life-page="on"] footer {
+  display: none !important;
+}
+
+body[data-game-life-fullscreen="on"] header {
+  display: none !important;
 }
 
 @media (prefers-color-scheme: dark) {
