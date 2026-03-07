@@ -176,10 +176,10 @@ export default function DataForgePage() {
   const handleGeneratePreview = useCallback(() => handleGenerate(true), [handleGenerate]);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-16">
+    <div className="max-w-6xl mx-auto px-4 py-10 sm:py-12 md:py-16">
       {/* Header */}
-      <h1 className="text-4xl font-bold mb-4">Data Forge</h1>
-      <p className="text-neutral-600 dark:text-neutral-400 mb-8 max-w-2xl">
+      <h1 className="text-3xl sm:text-4xl font-bold mb-3 sm:mb-4">Data Forge</h1>
+      <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 mb-6 sm:mb-8 max-w-2xl text-pretty">
         Define your database schema visually, then let AI generate realistic fake data for
         testing. Powered by OpenRouter's free AI models for intelligent, contextual data generation.
       </p>
@@ -249,7 +249,7 @@ export default function DataForgePage() {
       )}
 
       {/* About section */}
-      <div className="mt-12 text-sm text-neutral-500">
+      <div className="mt-10 sm:mt-12 text-sm text-neutral-500">
         <h3 className="font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
           About Data Forge
         </h3>
