@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 
 // Speed slider space retained for the Oimo speed mapping curve.
 const DEFAULT_SPEED = 0.3;
@@ -39,9 +40,10 @@ function getCanvasPixelSize(canvas: HTMLCanvasElement): {
   height: number;
 } {
   const { width: displayW, height: displayH } = getCanvasDisplaySize(canvas);
+  const dpr = window.devicePixelRatio || 1;
   return {
-    width: Math.max(1, Math.round(displayW)),
-    height: Math.max(1, Math.round(displayH)),
+    width: Math.max(1, Math.round(displayW * dpr)),
+    height: Math.max(1, Math.round(displayH * dpr)),
   };
 }
 
@@ -55,17 +57,17 @@ function isInteractiveElement(target: EventTarget | null): boolean {
   );
 }
 
-function isLikelyTrackpadWheel(e: WheelEvent): boolean {
-  if (e.deltaMode !== 0) return false;
-  return Math.abs(e.deltaX) > 0 || Math.abs(e.deltaY) < 18;
-}
-
 type CommandResult = {
   ok: boolean;
   message: string;
 };
 
+function clampSpeedDigit(digit: number): number {
+  return Math.max(0, Math.min(9, Math.floor(digit)));
+}
+
 export default function DataBackground() {
+  const pathname = usePathname();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rendererRef = useRef<import("./game-of-life/renderer").Renderer | null>(
     null,
@@ -94,16 +96,41 @@ export default function DataBackground() {
 
   const [loaded, setLoaded] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
-  const [showHint, setShowHint] = useState(true);
+  const [showHint, setShowHint] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [bgNavMode, setBgNavMode] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [autoZoomEnabled, setAutoZoomEnabled] = useState(true);
+  const [speedDigit, setSpeedDigit] = useState(3);
+  const [manualPaused, setManualPaused] = useState(false);
+  const [clearBgMode, setClearBgMode] = useState(false);
+  const prevPathRef = useRef<string | null>(null);
   const [showTerminal, setShowTerminal] = useState(false);
+  const [paletteEverOpened, setPaletteEverOpened] = useState(true);
+  const [platformIsMac, setPlatformIsMac] = useState(false);
   const [terminalInput, setTerminalInput] = useState("");
   const [terminalOutput, setTerminalOutput] = useState(
     "Type 'help' for available commands.",
   );
+  const routeIsDemoDetail = Boolean(pathname && /^\/demos\/.+/.test(pathname));
+  const animationPaused = manualPaused;
+
+  const openTerminal = () => {
+    setShowTerminal(true);
+    setShowHint(false);
+    if (!paletteEverOpened) {
+      localStorage.setItem("bg.palette.opened", "1");
+      setPaletteEverOpened(true);
+    }
+  };
+
+  const applySpeedDigit = (digit: number) => {
+    const clamped = clampSpeedDigit(digit);
+    const value = sliderFromDigitKey(String(clamped));
+    if (value === null) return;
+    speedRef.current = value;
+    setSpeedDigit(clamped);
+  };
 
   // Load data and initialize
   useEffect(() => {
@@ -154,9 +181,9 @@ export default function DataBackground() {
         const universe = new Universe(sampler, aspect);
         universeRef.current = universe;
 
-        // Initial zoom — match original controller space (CSS pixels).
-        universe.scaleCamera(displaySize.width / 8);
-        universe.normalizeZoom(displaySize.width);
+        // Keep camera normalization in render-pixel space, matching renderer.
+        universe.scaleCamera(pixelSize.width / 8);
+        universe.normalizeZoom(pixelSize.width);
 
         const renderer = new Renderer(canvas, decoder.graph, decoder.frames);
         localRenderer = renderer;
@@ -227,15 +254,18 @@ export default function DataBackground() {
           ? 1
           : Math.max(0, Math.min(4, (now - prev) / TARGET_FRAME_MS));
 
-      const speed = speedFromSlider(speedRef.current);
-      universe.step(speed * frameScale);
-      if (autoZoomEnabled) {
-        const displaySize = getCanvasDisplaySize(canvas);
-        const gentleScale = Math.pow(0.9997, frameScale);
-        universe.scaleCamera(gentleScale);
-        universe.normalizeZoom(displaySize.width);
+      if (!animationPaused && !clearBgMode) {
+        const speed = speedFromSlider(speedRef.current);
+        universe.step(speed * frameScale);
       }
-      renderer.render(universe, isDark);
+      if (!animationPaused && !clearBgMode && autoZoomEnabled) {
+        const gentleScale = Math.pow(0.9992, frameScale);
+        universe.scaleCamera(gentleScale);
+        universe.normalizeZoom(getCanvasPixelSize(canvas).width);
+      }
+      if (!clearBgMode) {
+        renderer.render(universe, isDark);
+      }
 
       animationRef.current = requestAnimationFrame(render);
     };
@@ -247,7 +277,17 @@ export default function DataBackground() {
       lastStepTimeRef.current = null;
       mq.removeEventListener("change", onSchemeChange);
     };
-  }, [loaded, initError, autoZoomEnabled]);
+  }, [loaded, initError, autoZoomEnabled, animationPaused, clearBgMode]);
+
+  useEffect(() => {
+    const nav = navigator as Navigator & {
+      userAgentData?: { platform?: string };
+    };
+    const platform = nav.userAgentData?.platform ?? navigator.platform ?? "";
+    setPlatformIsMac(/mac|iphone|ipad|ipod/i.test(platform));
+    const opened = localStorage.getItem("bg.palette.opened") === "1";
+    setPaletteEverOpened(opened);
+  }, []);
 
   // Background navigation mode:
   // - Trackpad pinch: zoom
@@ -276,7 +316,7 @@ export default function DataBackground() {
 
       universe.translateCamera(-dx / rect.width, -dy / rect.height);
       universe.scaleCamera(1 + scaleVelocity);
-      universe.normalizeZoom(rect.width);
+      universe.normalizeZoom(getCanvasPixelSize(canvas).width);
     };
 
     const endPan = () => {
@@ -341,14 +381,11 @@ export default function DataBackground() {
       setShowHint(false);
       stopAutoZoom();
 
-      let dx = e.deltaX;
       let dy = e.deltaY;
       if (e.deltaMode === 1) {
-        dx *= 40;
         dy *= 40;
       }
       if (e.deltaMode === 2) {
-        dx *= 800;
         dy *= 800;
       }
 
@@ -361,13 +398,7 @@ export default function DataBackground() {
         return;
       }
 
-      if (isLikelyTrackpadWheel(e)) {
-        const displaySize = getCanvasDisplaySize(canvas);
-        universe.translateCamera(dx / displaySize.width, dy / displaySize.height);
-        return;
-      }
-
-      // Mouse wheel: zoom.
+      // Wheel/trackpad scroll: zoom only. Pan is click+drag.
       const delta = -dy * 0.012;
       const scale = Math.pow(2, delta);
       applyZoomAt(scale, e.clientX, e.clientY);
@@ -443,11 +474,17 @@ export default function DataBackground() {
     };
   }, [loaded, initError, bgNavMode, showTerminal]);
 
-  // Hide hint after first few seconds.
+  // Auto-pause when entering a demo detail route, but allow manual override afterward.
   useEffect(() => {
-    const timer = window.setTimeout(() => setShowHint(false), 8000);
-    return () => window.clearTimeout(timer);
-  }, []);
+    if (!pathname) return;
+    const was = prevPathRef.current;
+    const isDemoDetail = /^\/demos\/.+/.test(pathname);
+    const wasDemoDetail = was ? /^\/demos\/.+/.test(was) : false;
+    if (isDemoDetail && !wasDemoDetail) {
+      setManualPaused(true);
+    }
+    prevPathRef.current = pathname;
+  }, [pathname]);
 
   // Cleanup renderer on unmount
   useEffect(() => {
@@ -494,6 +531,7 @@ export default function DataBackground() {
       if (value === null) return;
 
       speedRef.current = value;
+      setSpeedDigit(Number(e.key));
       setShowHint(false);
     };
 
@@ -603,13 +641,13 @@ export default function DataBackground() {
       return {
         ok: true,
         message:
-          "Commands: help, status, bg on/off, sound on/off, autozoom on/off, speed 0..9, close",
+          "Commands: help, status, bg on/off, sound|music on/off, autozoom on/off, clear on/off, speed 0..9, close",
       };
     }
     if (cmd === "status") {
       return {
         ok: true,
-        message: `bg:${bgNavMode ? "on" : "off"} sound:${soundEnabled ? "on" : "off"} autozoom:${autoZoomEnabled ? "on" : "off"} speed:${speedRef.current.toFixed(2)}`,
+        message: `bg:${bgNavMode ? "on" : "off"} music:${soundEnabled ? "on" : "off"} autozoom:${autoZoomEnabled ? "on" : "off"} clear:${clearBgMode ? "on" : "off"} speed:${speedDigit}`,
       };
     }
     if (cmd === "bg on") {
@@ -628,6 +666,14 @@ export default function DataBackground() {
       setSoundEnabled(false);
       return { ok: true, message: "Ambient sound disabled." };
     }
+    if (cmd === "music on") {
+      setSoundEnabled(true);
+      return { ok: true, message: "Background music enabled." };
+    }
+    if (cmd === "music off") {
+      setSoundEnabled(false);
+      return { ok: true, message: "Background music disabled." };
+    }
     if (cmd === "autozoom on") {
       setAutoZoomEnabled(true);
       return { ok: true, message: "Auto zoom enabled." };
@@ -636,6 +682,16 @@ export default function DataBackground() {
       setAutoZoomEnabled(false);
       return { ok: true, message: "Auto zoom disabled." };
     }
+    if (cmd === "clear on") {
+      setClearBgMode(true);
+      setManualPaused(true);
+      setBgNavMode(false);
+      return { ok: true, message: "Background cleared to black." };
+    }
+    if (cmd === "clear off") {
+      setClearBgMode(false);
+      return { ok: true, message: "Game of Life background restored." };
+    }
     if (cmd === "close" || cmd === "exit") {
       setShowTerminal(false);
       return { ok: true, message: "Closed." };
@@ -643,22 +699,48 @@ export default function DataBackground() {
 
     const speedMatch = cmd.match(/^speed\s+([0-9])$/);
     if (speedMatch) {
-      const v = sliderFromDigitKey(speedMatch[1]);
-      if (v !== null) {
-        speedRef.current = v;
-        return { ok: true, message: `Speed set via digit ${speedMatch[1]}.` };
-      }
+      applySpeedDigit(Number(speedMatch[1]));
+      return { ok: true, message: `Speed set to ${speedMatch[1]}.` };
     }
 
     return { ok: false, message: `Unknown command: ${raw}` };
   };
 
   useEffect(() => {
+    const handleControl = (event: Event) => {
+      const e = event as CustomEvent<{ action?: string }>;
+      const action = e.detail?.action;
+      if (!action) return;
+      if (action === "toggle-bg-nav") {
+        if (clearBgMode) return;
+        setBgNavMode((v) => !v);
+      }
+      if (action === "toggle-auto-zoom") setAutoZoomEnabled((v) => !v);
+      if (action === "toggle-sound") setSoundEnabled((v) => !v);
+      if (action === "speed-up") applySpeedDigit(speedDigit + 1);
+      if (action === "speed-down") applySpeedDigit(speedDigit - 1);
+      if (action === "toggle-bg-clear") {
+        setClearBgMode((v) => {
+          const next = !v;
+          if (next) {
+            setManualPaused(true);
+            setBgNavMode(false);
+          }
+          return next;
+        });
+      }
+      if (action === "toggle-animation-pause") {
+        if (clearBgMode) return;
+        setManualPaused((v) => !v);
+      }
+      if (action === "toggle-help") setShowHelp((v) => !v);
+      if (action === "open-terminal") openTerminal();
+    };
+
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       const isPalette = (e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "p";
       if (isPalette) {
-        setShowTerminal(true);
-        setShowHint(false);
+        openTerminal();
         e.preventDefault();
         return;
       }
@@ -682,23 +764,70 @@ export default function DataBackground() {
       cmdSequenceTimeRef.current = now;
       cmdSequenceRef.current = (cmdSequenceRef.current + e.key.toLowerCase()).slice(-3);
       if (cmdSequenceRef.current === "cmd") {
-        setShowTerminal(true);
-        setShowHint(false);
+        openTerminal();
         cmdSequenceRef.current = "";
         e.preventDefault();
       }
     };
 
+    window.addEventListener("bg-control", handleControl);
     window.addEventListener("keydown", handleGlobalKeyDown);
-    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
-  }, [showTerminal]);
+    return () => {
+      window.removeEventListener("bg-control", handleControl);
+      window.removeEventListener("keydown", handleGlobalKeyDown);
+    };
+  }, [showTerminal, paletteEverOpened, clearBgMode, speedDigit]);
+
+  useEffect(() => {
+    const focusOn = showHelp || showTerminal;
+    document.body.dataset.bgFocus = focusOn ? "on" : "off";
+    document.body.dataset.bgNav = bgNavMode ? "on" : "off";
+    document.body.dataset.bgAutozoom = autoZoomEnabled ? "on" : "off";
+    document.body.dataset.bgSound = soundEnabled ? "on" : "off";
+    document.body.dataset.bgPaused = animationPaused ? "on" : "off";
+    document.body.dataset.bgClear = clearBgMode ? "on" : "off";
+    document.body.dataset.bgSpeed = String(speedDigit);
+    window.dispatchEvent(
+      new CustomEvent("bg-state", {
+        detail: {
+          bgNavMode,
+          autoZoomEnabled,
+          soundEnabled,
+          speedDigit,
+          animationPaused,
+          clearBgMode,
+          showHelp,
+          routeIsDemoDetail,
+        },
+      }),
+    );
+    return () => {
+      delete document.body.dataset.bgFocus;
+      delete document.body.dataset.bgNav;
+      delete document.body.dataset.bgAutozoom;
+      delete document.body.dataset.bgSound;
+      delete document.body.dataset.bgPaused;
+      delete document.body.dataset.bgClear;
+      delete document.body.dataset.bgSpeed;
+    };
+  }, [
+    showHelp,
+    showTerminal,
+    bgNavMode,
+    autoZoomEnabled,
+    soundEnabled,
+    speedDigit,
+    animationPaused,
+    clearBgMode,
+    routeIsDemoDetail,
+  ]);
 
   return (
     <>
       <canvas
         ref={canvasRef}
         className="fixed inset-0 pointer-events-none z-0"
-        style={{ width: "100%", height: "100%" }}
+        style={{ width: "100%", height: "100%", opacity: clearBgMode ? 0 : 1 }}
       />
 
       {/* Loading indicator */}
@@ -715,63 +844,27 @@ export default function DataBackground() {
         </div>
       )}
 
-      {/* Navigation hint */}
-      {loaded && !initError && showHint && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[60] bg-black/70 text-white text-xs px-3 py-1.5 rounded-full backdrop-blur pointer-events-none select-none">
-          BG Nav {bgNavMode ? "ON" : "OFF"} &middot; Trackpad: pan/pinch
-          &middot; Mouse wheel: zoom &middot; Auto Zoom {autoZoomEnabled ? "ON" : "OFF"} &middot; type cmd or Ctrl/Cmd+Shift+P
-        </div>
-      )}
-
-      {/* Controls help */}
-      {loaded && !initError && (
-        <div className="fixed bottom-4 left-4 z-[60] pointer-events-auto flex items-center gap-2">
-          <button
-            onClick={() => {
-              setBgNavMode((prev) => !prev);
-              setShowHint(false);
-            }}
-            className="text-[10px] px-2 py-1 rounded border border-neutral-300/60 dark:border-neutral-700/60 bg-white/70 dark:bg-neutral-900/70 text-neutral-600 dark:text-neutral-300 backdrop-blur"
-            aria-label="Toggle background navigation mode"
-          >
-            BG Nav: {bgNavMode ? "On" : "Off"}
-          </button>
-          <button
-            onClick={() => setAutoZoomEnabled((prev) => !prev)}
-            className="text-[10px] px-2 py-1 rounded border border-neutral-300/60 dark:border-neutral-700/60 bg-white/70 dark:bg-neutral-900/70 text-neutral-600 dark:text-neutral-300 backdrop-blur"
-            aria-label="Toggle auto zoom mode"
-          >
-            Auto Zoom: {autoZoomEnabled ? "On" : "Off"}
-          </button>
-          <button
-            onClick={() => setSoundEnabled((prev) => !prev)}
-            className="text-[10px] px-2 py-1 rounded border border-neutral-300/60 dark:border-neutral-700/60 bg-white/70 dark:bg-neutral-900/70 text-neutral-600 dark:text-neutral-300 backdrop-blur"
-            aria-label="Toggle ambient sound"
-          >
-            Sound: {soundEnabled ? "On" : "Off"}
-          </button>
-          <button
-            onClick={() => {
-              setShowHelp((prev) => !prev);
-              setShowHint(false);
-            }}
-            className="text-[10px] px-2 py-1 rounded border border-neutral-300/60 dark:border-neutral-700/60 bg-white/70 dark:bg-neutral-900/70 text-neutral-600 dark:text-neutral-300 backdrop-blur"
-            aria-label="Toggle controls help"
-          >
-            {showHelp ? "Hide controls" : "Show controls (?)"}
-          </button>
-        </div>
-      )}
-
       {loaded && !initError && showHelp && (
-        <div className="fixed bottom-12 left-4 z-[60] max-w-xs text-[11px] leading-relaxed px-3 py-2 rounded border border-neutral-300/60 dark:border-neutral-700/60 bg-white/80 dark:bg-neutral-900/80 text-neutral-700 dark:text-neutral-200 backdrop-blur pointer-events-none">
+        <div className="fixed top-16 right-4 z-[60] max-w-xs text-[11px] leading-relaxed px-3 py-2 rounded border border-neutral-300/60 dark:border-neutral-700/60 bg-white/85 dark:bg-neutral-900/85 text-neutral-700 dark:text-neutral-200 backdrop-blur pointer-events-none">
           <div>Mode: BG Nav {bgNavMode ? "On" : "Off"}</div>
-          <div>Trackpad: two-finger move = pan, pinch = zoom</div>
-          <div>Mouse: wheel = zoom, drag = pan</div>
+          <div>Trackpad: scroll/pinch = zoom</div>
+          <div>Pan: click + drag</div>
           <div>Auto zoom starts On and stops when you navigate manually</div>
           <div>Sound: subtle ambient bed (toggle with button or terminal)</div>
           <div>Terminal: type "cmd" or press Ctrl/Cmd+Shift+P</div>
           <div>Speed: keys 0-9 (0 pauses)</div>
+        </div>
+      )}
+
+      {loaded && !initError && !showTerminal && !paletteEverOpened && (
+        <div className="fixed top-16 right-4 z-[70] max-w-sm px-3 py-2 rounded-lg border border-neutral-300/70 dark:border-neutral-700/70 bg-white/90 dark:bg-neutral-900/90 text-xs text-neutral-700 dark:text-neutral-200 shadow-lg">
+          Open Command Palette:
+          {" "}
+          <span className="font-mono">
+            {platformIsMac ? "Cmd+Shift+P" : "Ctrl+Shift+P"}
+          </span>
+          {" "}
+          or type <span className="font-mono">cmd</span>.
         </div>
       )}
 

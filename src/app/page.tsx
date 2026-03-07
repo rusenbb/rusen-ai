@@ -89,7 +89,7 @@ function DemoPreview({ title, description, href, tag }: { title: string; descrip
   return (
     <Link
       href={href}
-      className="block p-6 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:border-neutral-400 dark:hover:border-neutral-600 transition group"
+      className="ui-card block p-6 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:border-neutral-400 dark:hover:border-neutral-600 transition group"
     >
       <div className="flex items-start justify-between mb-2">
         <h3 className="font-semibold text-lg group-hover:opacity-80 transition">{title}</h3>

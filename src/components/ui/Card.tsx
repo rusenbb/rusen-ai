@@ -62,7 +62,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(function Card(
   return (
     <div
       ref={ref}
-      className={`bg-white dark:bg-neutral-900 rounded-lg ${borderClasses} ${interactiveClasses} ${className}`}
+      className={`ui-card rounded-lg ${borderClasses} ${interactiveClasses} ${className}`}
       {...props}
     >
       {header && (
