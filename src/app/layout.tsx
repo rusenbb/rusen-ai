@@ -40,9 +40,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
         <DataBackground />
-        <div className="relative z-10 min-h-screen flex flex-col">
+        <div className="content-shell relative z-10 min-h-screen flex flex-col">
           <Header />
-          <main className="flex-1">{children}</main>
+          <main className="flex-1 relative">{children}</main>
           <Footer />
         </div>
       </body>

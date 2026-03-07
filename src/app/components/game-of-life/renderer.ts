@@ -107,6 +107,8 @@ export class Renderer {
   private prerenderedFB: WebGLFramebuffer | null = null;
   private prerenderedWidth = 0;
   private prerenderedHeight = 0;
+  private activePrerenderWidth = 0;
+  private activePrerenderHeight = 0;
 
   private tilesData = new Uint32Array(TILES_TEX_WIDTH * TILES_TEX_HEIGHT * 4);
   private topTilesData = new Uint32Array(16 * 16 * 4);
@@ -141,6 +143,7 @@ export class Renderer {
       "uTiles",
       "uTopTiles",
       "uPrerendered",
+      "uPrerenderSize",
     ];
     for (const name of uniformNames) {
       this.uniforms[name] = gl.getUniformLocation(this.program, name);
@@ -273,6 +276,8 @@ export class Renderer {
     // Ensure pre-rendered texture is large enough
     const neededW = w * 512;
     const neededH = h * 512;
+    this.activePrerenderWidth = neededW;
+    this.activePrerenderHeight = neededH;
     if (
       !this.prerenderedTexture ||
       this.prerenderedWidth < neededW ||
@@ -392,6 +397,11 @@ export class Renderer {
     gl.uniform1i(this.uniforms.uPreRendering!, 0);
     gl.uniform1f(this.uniforms.uTransition!, transition);
     gl.uniform1f(this.uniforms.uCellColor!, isDark ? 1.0 : 0.0);
+    gl.uniform2f(
+      this.uniforms.uPrerenderSize!,
+      this.activePrerenderWidth,
+      this.activePrerenderHeight,
+    );
 
     this.bindTextures();
     this.drawQuad();

@@ -38,7 +38,7 @@ export default function DemoCard({ title, description, href, tags = [], status =
   // Don't make coming-soon items clickable - prevents 404 prefetch errors
   if (!isLive) {
     return (
-      <div className="block p-6 border border-neutral-200 dark:border-neutral-800 rounded-lg opacity-60 cursor-not-allowed">
+      <div className="ui-card block p-6 border border-neutral-200 dark:border-neutral-800 rounded-lg opacity-80 cursor-not-allowed">
         {content}
       </div>
     );
@@ -47,7 +47,7 @@ export default function DemoCard({ title, description, href, tags = [], status =
   return (
     <Link
       href={href}
-      className="block p-6 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:border-neutral-400 dark:hover:border-neutral-600 transition group"
+      className="ui-card block p-6 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:border-neutral-400 dark:hover:border-neutral-600 transition group"
     >
       {content}
     </Link>

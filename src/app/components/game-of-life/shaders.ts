@@ -35,6 +35,7 @@ uniform usampler2D uTiles;
 uniform usampler2D uTopTiles;
 // Pre-rendered top tiles (float texture from pass 1)
 uniform sampler2D uPrerendered;
+uniform vec2 uPrerenderSize;
 
 uniform vec2 uResolution;
 uniform vec4 uCamera;
@@ -95,6 +96,7 @@ float correctDensity(float rawDensity, int level, float cellState) {
 
 // Pre-rendering pass: traverse quadtree to get cell state (binary)
 int sampleBitExact(int index, ivec2 pos) {
+  if (index < 0) return 0;
   int level = 9;
   for (int iter = 0; iter < 7; iter++) {
     int size = 1 << (level - 1);
@@ -125,6 +127,7 @@ int sampleBitExact(int index, ivec2 pos) {
 
 // Normal pass: traverse with LOD-based density anti-aliasing
 float sampleBitDensity(int index, ivec2 pos, float res, float cellState) {
+  if (index < 0) return 0.0;
   int level = 9;
   float invArea = 1.0 / (512.0 * 512.0);
   float prevValue = 0.0;
@@ -229,8 +232,15 @@ int fetchTile(ivec2 index, int channel) {
 }
 
 ivec2 samplePixel(ivec2 pixCoord, ivec2 offset) {
+  ivec2 size = max(ivec2(1), ivec2(uPrerenderSize));
   pixCoord += offset;
-  pixCoord = ivec2(pixCoord.x, textureSize(uPrerendered, 0).y - 1 - pixCoord.y);
+  pixCoord = ivec2(pixCoord.x, size.y - 1 - pixCoord.y);
+  if (
+    pixCoord.x < 0 || pixCoord.y < 0 ||
+    pixCoord.x >= size.x || pixCoord.y >= size.y
+  ) {
+    return ivec2(0);
+  }
   return ivec2(texelFetch(uPrerendered, pixCoord, 0).xy);
 }
 
@@ -261,6 +271,10 @@ void main() {
     ivec2 insideTileIndex = ivec2(fract(tileCoord) * 512.0);
     int index = fetchTile(tileIndex, 0);
     int pindex = fetchTile(tileIndex, 1);
+    if (index < 0 || pindex < 0) {
+      fragColor = vec4(0.0, 0.0, 0.0, 1.0);
+      return;
+    }
     float pop = float(sampleBitExact(index, insideTileIndex));
     float ppop = float(sampleBitExact(pindex, insideTileIndex));
     fragColor = vec4(pop, ppop, 0.0, 1.0);
@@ -278,9 +292,8 @@ void main() {
     int level9Index = getTileNodeIndex(innerTileIndex, outerPattern);
     float pop = sampleBitDensity(level9Index, ivec2(fract(insidePixelCoord) * 512.0), innerRes * 0.25, cellState);
 
-    float opacity = pop * 0.45;
-    vec3 color = vec3(uCellColor);
-    fragColor = vec4(color, opacity);
+    vec3 color = vec3(uCellColor) * (pop * 0.45);
+    fragColor = vec4(color, 1.0);
   }
 }
 `;
