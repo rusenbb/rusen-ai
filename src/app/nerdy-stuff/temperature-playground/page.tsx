@@ -143,11 +143,11 @@ export default function TemperaturePlaygroundPage() {
   const availableTemps = [0.0, 0.3, 0.5, 0.7, 1.0, 1.5];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-16">
+    <div className="max-w-7xl mx-auto px-4 py-10 sm:py-12 md:py-16">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-4">Temperature Playground</h1>
-        <p className="text-neutral-600 dark:text-neutral-400 max-w-2xl">
+        <h1 className="text-3xl sm:text-4xl font-bold mb-3 sm:mb-4">Temperature Playground</h1>
+        <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 max-w-2xl text-pretty">
           See how temperature affects token selection. Generate text, then click on any token
           to see the probability distribution the model used when choosing it.
         </p>
@@ -205,7 +205,7 @@ export default function TemperaturePlaygroundPage() {
       </div>
 
       {/* Input Section */}
-      <div className="mb-8 p-6 border border-neutral-200 dark:border-neutral-800 rounded-lg">
+      <div className="mb-8 p-4 sm:p-6 border border-neutral-200 dark:border-neutral-800 rounded-lg">
         <div className="mb-4">
           <label className="block text-sm font-medium mb-2">Prompt</label>
           <input

@@ -334,8 +334,8 @@ export default function EmbeddingExplorerPage() {
   // Loading state
   if (!isModelReady) {
     return (
-      <div className="max-w-5xl mx-auto px-4 py-16">
-        <h1 className="text-4xl font-bold mb-4">Embedding Explorer</h1>
+      <div className="max-w-5xl mx-auto px-4 py-10 sm:py-12 md:py-16">
+        <h1 className="text-3xl sm:text-4xl font-bold mb-3 sm:mb-4">Embedding Explorer</h1>
         <div className="space-y-4">
           <div className="flex items-center gap-3 text-neutral-500">
             <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
@@ -370,10 +370,10 @@ export default function EmbeddingExplorerPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-16">
+    <div className="max-w-5xl mx-auto px-4 py-10 sm:py-12 md:py-16">
       {/* Header */}
-      <h1 className="text-4xl font-bold mb-2">Embedding Explorer</h1>
-      <p className="text-neutral-600 dark:text-neutral-400 mb-8 max-w-2xl">
+      <h1 className="text-3xl sm:text-4xl font-bold mb-2">Embedding Explorer</h1>
+      <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 mb-6 sm:mb-8 max-w-2xl text-pretty">
         Explore word relationships using a neural embedding model running directly in your browser.
         Define axes by word differences, see how words cluster, and try the famous &quot;king - man + woman = queen&quot; analogy.
         <span className="text-neutral-500 text-sm ml-2">
@@ -391,7 +391,7 @@ export default function EmbeddingExplorerPage() {
         </div>
       )}
 
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Left: Controls */}
         <div className="space-y-4">
           {/* Axis Definition */}

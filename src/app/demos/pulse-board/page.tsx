@@ -517,7 +517,7 @@ function CryptoHubWidget() {
       </div>
 
       {/* Real-time prices */}
-      <div className="grid grid-cols-3 gap-4 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-4">
         {/* BTC */}
         <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg overflow-hidden">
           <div className="flex items-center gap-2 mb-1">
@@ -563,7 +563,7 @@ function CryptoHubWidget() {
       </div>
 
       {/* Bottom row: Fear & Greed + Chainlink Oracle + Gas */}
-      <div className="grid grid-cols-3 gap-4 pt-4 border-t border-neutral-200 dark:border-neutral-700">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 pt-4 border-t border-neutral-200 dark:border-neutral-700">
         {/* Fear & Greed */}
         <div>
           <div className="text-xs text-neutral-500 mb-1">Fear & Greed Index</div>
@@ -1852,12 +1852,12 @@ export default function PulseBoardPage() {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-16">
+    <div className="max-w-6xl mx-auto px-4 py-10 sm:py-12 md:py-16">
       {/* Keyboard shortcuts modal */}
       <ShortcutsModal isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
 
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2 relative inline-block">
+        <h1 className="text-3xl sm:text-4xl font-bold mb-2 relative inline-block">
           <span className="relative z-10">Pulse Board</span>
           <span className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 blur-xl animate-pulse-glow -z-10 rounded-lg" />
         </h1>

@@ -1,12 +1,10 @@
-import Link from "next/link";
-
 export default function Footer() {
   return (
     <footer className="ui-surface border-t border-neutral-200/70 dark:border-neutral-800/70 mt-auto">
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+      <div className="max-w-6xl mx-auto px-4 py-6 sm:py-8">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 sm:gap-5">
           {/* Social Links */}
-          <div className="flex gap-6">
+          <div className="flex gap-5 sm:gap-6">
             <a
               href="https://github.com/rusenbb"
               target="_blank"
@@ -48,7 +46,7 @@ export default function Footer() {
             href="https://rusenbirben.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition flex items-center gap-2"
+            className="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition flex items-center gap-2 text-sm sm:text-base"
           >
             Read my blog
             <svg
@@ -69,7 +67,7 @@ export default function Footer() {
           </a>
 
           {/* Copyright */}
-          <p className="text-sm text-neutral-500 dark:text-neutral-500">
+          <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-500">
             &copy; {new Date().getFullYear()} Rusen Birben
           </p>
         </div>

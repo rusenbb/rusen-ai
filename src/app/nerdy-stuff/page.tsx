@@ -2,13 +2,20 @@ import DemoCard from "../components/DemoCard";
 
 export default function NerdyStuffPage() {
   return (
-    <div className="max-w-6xl mx-auto px-4 py-16">
-      <h1 className="text-4xl font-bold mb-4">Nerdy Stuff</h1>
-      <p className="text-neutral-600 dark:text-neutral-400 mb-12 max-w-2xl">
+    <div className="max-w-6xl mx-auto px-4 py-10 sm:py-12 md:py-16">
+      <h1 className="text-3xl sm:text-4xl font-bold mb-3 sm:mb-4">Nerdy Stuff</h1>
+      <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 mb-8 sm:mb-12 max-w-2xl text-pretty">
         Under the hood explorations. See how AI actually works with interactive visualizations.
       </p>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <DemoCard
+          title="Game of Life Background Lab"
+          description="The interactive cellular automata world that used to run as the site background, now as a standalone playground."
+          href="/nerdy-stuff/game-of-life"
+          tags={["Cellular Automata", "Visualization", "Interactive"]}
+          status="live"
+        />
         <DemoCard
           title="Embedding Explorer"
           description="Visualize how texts cluster in vector space using UMAP. See semantic similarity in action."
