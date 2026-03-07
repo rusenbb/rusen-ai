@@ -64,60 +64,60 @@ export default function ControlsDock() {
       </div>
       {!collapsed && (
         <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         <button
           type="button"
           onClick={() => dispatchBgControl("toggle-bg-nav")}
-          className="px-2.5 py-2 text-xs rounded-md border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+          className="w-full h-9 px-2.5 text-xs rounded-md border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
         >
           Nav: {state.bgNavMode ? "On" : "Off"}
         </button>
         <button
           type="button"
           onClick={() => dispatchBgControl("toggle-auto-zoom")}
-          className="px-2.5 py-2 text-xs rounded-md border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+          className="w-full h-9 px-2.5 text-xs rounded-md border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
         >
           AutoZoom: {state.autoZoomEnabled ? "On" : "Off"}
         </button>
         <button
           type="button"
           onClick={() => dispatchBgControl("autozoom-speed-down")}
-          className="px-2.5 py-2 text-xs rounded-md border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+          className="w-full h-9 px-2.5 text-xs rounded-md border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
         >
           AutoZoom -
         </button>
         <button
           type="button"
           onClick={() => dispatchBgControl("autozoom-speed-up")}
-          className="px-2.5 py-2 text-xs rounded-md border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+          className="w-full h-9 px-2.5 text-xs rounded-md border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
         >
           AutoZoom +
         </button>
         <button
           type="button"
           onClick={() => dispatchBgControl("speed-down")}
-          className="px-2.5 py-2 text-xs rounded-md border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+          className="w-full h-9 px-2.5 text-xs rounded-md border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
         >
           Speed -
         </button>
         <button
           type="button"
           onClick={() => dispatchBgControl("speed-up")}
-          className="px-2.5 py-2 text-xs rounded-md border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+          className="w-full h-9 px-2.5 text-xs rounded-md border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
         >
           Speed +
         </button>
         <button
           type="button"
           onClick={() => dispatchBgControl("toggle-animation-pause")}
-          className="px-2.5 py-2 text-xs rounded-md border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 col-span-2"
+          className="w-full h-9 px-2.5 text-xs rounded-md border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
         >
           {state.animationPaused ? "Resume" : "Pause"}
         </button>
         <button
           type="button"
           onClick={() => setFullscreenMode((v) => !v)}
-          className="px-2.5 py-2 text-xs rounded-md border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 col-span-2"
+          className="w-full h-9 px-2.5 text-xs rounded-md border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
         >
           {fullscreenMode ? "Show Navigation Bar" : "Hide Navigation Bar"}
         </button>

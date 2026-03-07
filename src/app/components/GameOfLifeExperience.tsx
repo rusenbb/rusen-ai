@@ -80,6 +80,21 @@ export default function GameOfLifeExperience() {
   const lastStepTimeRef = useRef<number | null>(null);
   const panModeRef = useRef<"none" | "drag">("none");
   const lastMouseRef = useRef({ x: 0, y: 0 });
+  const touchGestureRef = useRef<{
+    mode: "none" | "pan" | "pinch";
+    lastX: number;
+    lastY: number;
+    lastCenterX: number;
+    lastCenterY: number;
+    lastDistance: number;
+  }>({
+    mode: "none",
+    lastX: 0,
+    lastY: 0,
+    lastCenterX: 0,
+    lastCenterY: 0,
+    lastDistance: 0,
+  });
   const [loaded, setLoaded] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
   const [showHelp, setShowHelp] = useState(false);
@@ -377,6 +392,26 @@ export default function GameOfLifeExperience() {
       document.body.style.cursor = "";
     };
 
+    const endTouchGesture = () => {
+      touchGestureRef.current.mode = "none";
+      touchGestureRef.current.lastDistance = 0;
+    };
+
+    const getTouchCenter = (touches: TouchList) => {
+      const a = touches[0];
+      const b = touches[1];
+      return {
+        x: (a.clientX + b.clientX) / 2,
+        y: (a.clientY + b.clientY) / 2,
+      };
+    };
+
+    const getTouchDistance = (touches: TouchList) => {
+      const a = touches[0];
+      const b = touches[1];
+      return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+    };
+
     const handleMouseDown = (e: MouseEvent) => {
       if (!bgNavMode) return;
       if (isInteractiveElement(e.target)) return;
@@ -411,6 +446,97 @@ export default function GameOfLifeExperience() {
 
     const handleMouseUp = (e: MouseEvent) => {
       if (e.button === 0 || e.button === 2) endPan();
+    };
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (!bgNavMode) return;
+      if (isInteractiveElement(e.target)) return;
+
+      if (e.touches.length === 1) {
+        const touch = e.touches[0];
+        touchGestureRef.current.mode = "pan";
+        touchGestureRef.current.lastX = touch.clientX;
+        touchGestureRef.current.lastY = touch.clientY;
+        stopAutoZoom();
+        e.preventDefault();
+        return;
+      }
+
+      if (e.touches.length >= 2) {
+        const center = getTouchCenter(e.touches);
+        touchGestureRef.current.mode = "pinch";
+        touchGestureRef.current.lastCenterX = center.x;
+        touchGestureRef.current.lastCenterY = center.y;
+        touchGestureRef.current.lastDistance = getTouchDistance(e.touches);
+        stopAutoZoom();
+        e.preventDefault();
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!bgNavMode) return;
+
+      const universe = universeRef.current;
+      const canvas = canvasRef.current;
+      if (!universe || !canvas) return;
+
+      const gesture = touchGestureRef.current;
+      if (gesture.mode === "none") return;
+
+      if (gesture.mode === "pan" && e.touches.length === 1) {
+        const touch = e.touches[0];
+        const dx = touch.clientX - gesture.lastX;
+        const dy = touch.clientY - gesture.lastY;
+        gesture.lastX = touch.clientX;
+        gesture.lastY = touch.clientY;
+
+        const displaySize = getCanvasDisplaySize(canvas);
+        universe.translateCamera(-dx / displaySize.width, -dy / displaySize.height);
+        stopAutoZoom();
+        e.preventDefault();
+        return;
+      }
+
+      if (e.touches.length >= 2) {
+        const center = getTouchCenter(e.touches);
+        const distance = getTouchDistance(e.touches);
+        const prevDistance = gesture.lastDistance || distance;
+        const ratio = prevDistance / Math.max(1, distance);
+
+        applyZoomAt(ratio, center.x, center.y);
+
+        const displaySize = getCanvasDisplaySize(canvas);
+        const centerDx = center.x - gesture.lastCenterX;
+        const centerDy = center.y - gesture.lastCenterY;
+        universe.translateCamera(-centerDx / displaySize.width, -centerDy / displaySize.height);
+
+        gesture.mode = "pinch";
+        gesture.lastCenterX = center.x;
+        gesture.lastCenterY = center.y;
+        gesture.lastDistance = distance;
+        stopAutoZoom();
+        e.preventDefault();
+      }
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (e.touches.length === 1) {
+        const touch = e.touches[0];
+        touchGestureRef.current.mode = "pan";
+        touchGestureRef.current.lastX = touch.clientX;
+        touchGestureRef.current.lastY = touch.clientY;
+        touchGestureRef.current.lastDistance = 0;
+        return;
+      }
+      if (e.touches.length >= 2) {
+        const center = getTouchCenter(e.touches);
+        touchGestureRef.current.mode = "pinch";
+        touchGestureRef.current.lastCenterX = center.x;
+        touchGestureRef.current.lastCenterY = center.y;
+        touchGestureRef.current.lastDistance = getTouchDistance(e.touches);
+        return;
+      }
+      endTouchGesture();
     };
 
     const handleContextMenu = (e: MouseEvent) => {
@@ -496,6 +622,10 @@ export default function GameOfLifeExperience() {
     window.addEventListener("mousedown", handleMouseDown, { passive: false });
     window.addEventListener("mousemove", handleMouseMove, { passive: false });
     window.addEventListener("mouseup", handleMouseUp, { passive: false });
+    window.addEventListener("touchstart", handleTouchStart, { passive: false });
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
+    window.addEventListener("touchend", handleTouchEnd, { passive: false });
+    window.addEventListener("touchcancel", handleTouchEnd, { passive: false });
     window.addEventListener("wheel", handleWheel, { passive: false });
     window.addEventListener("gesturestart", handleGestureStart, {
       passive: false,
@@ -511,6 +641,10 @@ export default function GameOfLifeExperience() {
       window.removeEventListener("mousedown", handleMouseDown);
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleTouchEnd);
+      window.removeEventListener("touchcancel", handleTouchEnd);
       window.removeEventListener("wheel", handleWheel);
       window.removeEventListener("gesturestart", handleGestureStart);
       window.removeEventListener("gesturechange", handleGestureChange);
@@ -518,6 +652,7 @@ export default function GameOfLifeExperience() {
       window.removeEventListener("contextmenu", handleContextMenu);
       window.removeEventListener("blur", endPan);
       endPan();
+      endTouchGesture();
     };
   }, [loaded, initError, bgNavMode]);
 
@@ -529,7 +664,6 @@ export default function GameOfLifeExperience() {
     const wasDemoDetail = was ? /^\/demos\/.+/.test(was) : false;
     if (isDemoDetail && !wasDemoDetail) {
       setManualPaused(true);
-      setSoundEnabled(false);
     }
     prevPathRef.current = pathname;
   }, [pathname]);
