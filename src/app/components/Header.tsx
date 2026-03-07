@@ -82,7 +82,7 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="ui-surface relative z-[90] border-b border-neutral-200/70 dark:border-neutral-800/70">
+    <header className="ui-surface sticky top-0 z-[90] border-b border-neutral-200/70 dark:border-neutral-800/70">
       <nav className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
         <Link href="/" className="text-xl font-bold hover:opacity-80 transition">
           rusen.ai
