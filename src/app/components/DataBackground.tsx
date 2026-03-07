@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 const DEFAULT_SPEED = 0.3;
 const SPEED_COEFF = 16 / 0.7;
 const TARGET_FRAME_MS = 1000 / 60;
+const BG_PREFS_KEY = "bg.settings.v1";
 
 function speedFromSlider(t: number): number {
   if (t < 0.01) return 0;
@@ -66,6 +67,10 @@ function clampSpeedDigit(digit: number): number {
   return Math.max(0, Math.min(9, Math.floor(digit)));
 }
 
+function clampPercent(value: number): number {
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
+
 export default function DataBackground() {
   const pathname = usePathname();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -87,11 +92,10 @@ export default function DataBackground() {
   const audioContextRef = useRef<AudioContext | null>(null);
   const audioNodesRef = useRef<{
     master: GainNode;
-    bedGain: GainNode;
-    oscA: OscillatorNode;
-    oscB: OscillatorNode;
-    lfo: OscillatorNode;
-    lfoGain: GainNode;
+    toneGain: GainNode;
+    bassGain: GainNode;
+    oscLead: OscillatorNode;
+    oscBass: OscillatorNode;
   } | null>(null);
 
   const [loaded, setLoaded] = useState(false);
@@ -99,15 +103,18 @@ export default function DataBackground() {
   const [showHint, setShowHint] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [bgNavMode, setBgNavMode] = useState(true);
-  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [soundEnabled, setSoundEnabled] = useState(false);
+  const [soundVolume, setSoundVolume] = useState(35);
   const [autoZoomEnabled, setAutoZoomEnabled] = useState(true);
   const [speedDigit, setSpeedDigit] = useState(3);
+  const speedDigitRef = useRef(3);
   const [manualPaused, setManualPaused] = useState(false);
   const [clearBgMode, setClearBgMode] = useState(false);
   const prevPathRef = useRef<string | null>(null);
   const [showTerminal, setShowTerminal] = useState(false);
   const [paletteEverOpened, setPaletteEverOpened] = useState(true);
   const [platformIsMac, setPlatformIsMac] = useState(false);
+  const [prefsHydrated, setPrefsHydrated] = useState(false);
   const [terminalInput, setTerminalInput] = useState("");
   const [terminalOutput, setTerminalOutput] = useState(
     "Type 'help' for available commands.",
@@ -132,22 +139,50 @@ export default function DataBackground() {
     setSpeedDigit(clamped);
   };
 
-  // Load data and initialize
+  const applySoundVolume = (value: number) => {
+    setSoundVolume(clampPercent(value));
+  };
+
+  useEffect(() => {
+    speedDigitRef.current = speedDigit;
+  }, [speedDigit]);
+
+  // Load data and initialize (lazy-reinitialize when clear mode is turned off).
   useEffect(() => {
     let cancelled = false;
     let localRenderer: import("./game-of-life/renderer").Renderer | null = null;
+
+    const disposeScene = () => {
+      if (rendererRef.current) {
+        rendererRef.current.dispose();
+        rendererRef.current = null;
+      }
+      universeRef.current = null;
+      lastStepTimeRef.current = null;
+    };
+
+    if (clearBgMode) {
+      disposeScene();
+      setLoaded(false);
+      setInitError(null);
+      return () => {
+        cancelled = true;
+      };
+    }
 
     async function init() {
       try {
         const canvas = canvasRef.current;
         if (!canvas) return;
 
-        rendererRef.current?.dispose();
-        rendererRef.current = null;
-        universeRef.current = null;
-        lastStepTimeRef.current = null;
+        disposeScene();
         setInitError(null);
         setLoaded(false);
+        // Let the first frame paint before heavy decode work starts.
+        await new Promise<void>((resolve) => {
+          requestAnimationFrame(() => resolve());
+        });
+        if (cancelled) return;
 
         const [
           { loadAllData },
@@ -212,7 +247,7 @@ export default function DataBackground() {
       universeRef.current = null;
       lastStepTimeRef.current = null;
     };
-  }, []);
+  }, [clearBgMode]);
 
   // Render loop
   useEffect(() => {
@@ -287,7 +322,63 @@ export default function DataBackground() {
     setPlatformIsMac(/mac|iphone|ipad|ipod/i.test(platform));
     const opened = localStorage.getItem("bg.palette.opened") === "1";
     setPaletteEverOpened(opened);
+
+    try {
+      const raw = localStorage.getItem(BG_PREFS_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as Partial<{
+          bgNavMode: boolean;
+          autoZoomEnabled: boolean;
+          soundEnabled: boolean;
+          soundVolume: number;
+          speedDigit: number;
+          manualPaused: boolean;
+          clearBgMode: boolean;
+          showHelp: boolean;
+        }>;
+
+        if (typeof parsed.bgNavMode === "boolean") setBgNavMode(parsed.bgNavMode);
+        if (typeof parsed.autoZoomEnabled === "boolean") {
+          setAutoZoomEnabled(parsed.autoZoomEnabled);
+        }
+        if (typeof parsed.soundEnabled === "boolean") setSoundEnabled(parsed.soundEnabled);
+        if (typeof parsed.soundVolume === "number") applySoundVolume(parsed.soundVolume);
+        if (typeof parsed.speedDigit === "number") applySpeedDigit(parsed.speedDigit);
+        if (typeof parsed.manualPaused === "boolean") setManualPaused(parsed.manualPaused);
+        if (typeof parsed.clearBgMode === "boolean") setClearBgMode(parsed.clearBgMode);
+        if (typeof parsed.showHelp === "boolean") setShowHelp(parsed.showHelp);
+      }
+    } catch (error) {
+      console.warn("[life-bg] failed to restore settings:", error);
+    } finally {
+      setPrefsHydrated(true);
+    }
   }, []);
+
+  useEffect(() => {
+    if (!prefsHydrated) return;
+    const payload = {
+      bgNavMode,
+      autoZoomEnabled,
+      soundEnabled,
+      soundVolume,
+      speedDigit,
+      manualPaused,
+      clearBgMode,
+      showHelp,
+    };
+    localStorage.setItem(BG_PREFS_KEY, JSON.stringify(payload));
+  }, [
+    prefsHydrated,
+    bgNavMode,
+    autoZoomEnabled,
+    soundEnabled,
+    soundVolume,
+    speedDigit,
+    manualPaused,
+    clearBgMode,
+    showHelp,
+  ]);
 
   // Background navigation mode:
   // - Trackpad pinch: zoom
@@ -482,6 +573,7 @@ export default function DataBackground() {
     const wasDemoDetail = was ? /^\/demos\/.+/.test(was) : false;
     if (isDemoDetail && !wasDemoDetail) {
       setManualPaused(true);
+      setSoundEnabled(false);
     }
     prevPathRef.current = pathname;
   }, [pathname]);
@@ -505,8 +597,18 @@ export default function DataBackground() {
     }
   }, []);
 
-  // Keyboard speed controls: 0 pauses, 1..9 sets speed levels.
+  // Keyboard speed controls: 0 toggles pause/play, 1..9 sets speed levels.
   useEffect(() => {
+    const blurNonTextActiveElement = () => {
+      const active = document.activeElement as HTMLElement | null;
+      if (!active) return;
+      const tag = active.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || active.isContentEditable) {
+        return;
+      }
+      active.blur();
+    };
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
 
@@ -527,20 +629,60 @@ export default function DataBackground() {
         return;
       }
 
+      if (e.key === "0") {
+        blurNonTextActiveElement();
+        setManualPaused((prev) => !prev);
+        setShowHint(false);
+        e.preventDefault();
+        return;
+      }
+
       const value = sliderFromDigitKey(e.key);
       if (value === null) return;
 
+      blurNonTextActiveElement();
       speedRef.current = value;
       setSpeedDigit(Number(e.key));
+      setManualPaused(false);
       setShowHint(false);
+      e.preventDefault();
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Ambient sound bed
+  // Retro bip-bop procedural soundtrack
   useEffect(() => {
+    let sequenceTimer: number | null = null;
+    let disposed = false;
+
+    const advanceSeed = (seed: number): number => {
+      return (seed * 1664525 + 1013904223) >>> 0;
+    };
+
+    const disposeAudio = () => {
+      if (sequenceTimer !== null) {
+        window.clearInterval(sequenceTimer);
+        sequenceTimer = null;
+      }
+      const nodes = audioNodesRef.current;
+      if (nodes) {
+        nodes.oscLead.stop();
+        nodes.oscBass.stop();
+      }
+      audioNodesRef.current = null;
+      if (audioContextRef.current) {
+        void audioContextRef.current.close();
+      }
+      audioContextRef.current = null;
+    };
+
+    if (clearBgMode) {
+      disposeAudio();
+      return;
+    }
+
     const createAudio = () => {
       if (audioContextRef.current && audioNodesRef.current) return;
       const Ctx = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
@@ -548,43 +690,98 @@ export default function DataBackground() {
 
       const ctx = new Ctx();
       const master = ctx.createGain();
-      const bedGain = ctx.createGain();
-      const oscA = ctx.createOscillator();
-      const oscB = ctx.createOscillator();
-      const lfo = ctx.createOscillator();
-      const lfoGain = ctx.createGain();
+      const toneGain = ctx.createGain();
+      const bassGain = ctx.createGain();
+      const oscLead = ctx.createOscillator();
+      const oscBass = ctx.createOscillator();
       const lowpass = ctx.createBiquadFilter();
+      const hp = ctx.createBiquadFilter();
 
       lowpass.type = "lowpass";
-      lowpass.frequency.value = 900;
-      lowpass.Q.value = 0.7;
+      lowpass.frequency.value = 2800;
+      lowpass.Q.value = 0.6;
+      hp.type = "highpass";
+      hp.frequency.value = 110;
+      hp.Q.value = 0.35;
 
-      oscA.type = "sine";
-      oscA.frequency.value = 96;
-      oscB.type = "triangle";
-      oscB.frequency.value = 144;
-      lfo.type = "sine";
-      lfo.frequency.value = 0.08;
+      oscLead.type = "square";
+      oscLead.frequency.value = 440;
+      oscBass.type = "triangle";
+      oscBass.frequency.value = 110;
 
-      lfoGain.gain.value = 0.0035;
-      bedGain.gain.value = 0;
-      master.gain.value = 0.025;
+      toneGain.gain.value = 0;
+      bassGain.gain.value = 0;
+      master.gain.value = soundEnabled ? (soundVolume / 100) * 0.085 : 0;
 
-      oscA.connect(bedGain);
-      oscB.connect(bedGain);
-      bedGain.connect(lowpass);
-      lowpass.connect(master);
+      oscLead.connect(toneGain);
+      oscBass.connect(bassGain);
+      toneGain.connect(lowpass);
+      bassGain.connect(lowpass);
+      lowpass.connect(hp);
+      hp.connect(master);
       master.connect(ctx.destination);
 
-      lfo.connect(lfoGain);
-      lfoGain.connect(bedGain.gain);
+      oscLead.start();
+      oscBass.start();
 
-      oscA.start();
-      oscB.start();
-      lfo.start();
+      let seed = (Date.now() >>> 0) ^ 0x9e3779b9;
+      const scales: number[][] = [
+        [0, 3, 5, 7, 10], // minor pentatonic
+        [0, 2, 4, 7, 9], // major pentatonic
+      ];
+      const basePitches = [110, 123.47, 130.81, 146.83];
+      const leadPattern = [0, 2, 4, 7, 4, 2, 0, 7];
+      let step = 0;
+      let currentScale = scales[0];
+
+      const scheduleNext = () => {
+        if (disposed) return;
+        seed = advanceSeed(seed);
+        const randA = seed / 0xffffffff;
+        seed = advanceSeed(seed);
+        const randB = seed / 0xffffffff;
+        seed = advanceSeed(seed);
+        const randC = seed / 0xffffffff;
+
+        const speedNorm = speedDigitRef.current / 9;
+        if (randA > 0.82) {
+          currentScale =
+            scales[Math.floor(randA * scales.length)] ??
+            scales[0];
+        }
+        const base = basePitches[Math.floor(randB * basePitches.length)] ?? 130.81;
+        const degree = currentScale[leadPattern[step % leadPattern.length] % currentScale.length] ?? 0;
+        const targetLead = base * Math.pow(2, (degree + (randC > 0.9 ? 12 : 0)) / 12);
+        const targetBass = base * Math.pow(2, -12 / 12);
+        const now = ctx.currentTime;
+        const pulseLen = 0.06 + speedNorm * 0.03;
+        const bassPulseLen = 0.08 + speedNorm * 0.04;
+
+        oscLead.frequency.setValueAtTime(targetLead, now);
+        oscBass.frequency.setValueAtTime(targetBass, now);
+
+        toneGain.gain.cancelScheduledValues(now);
+        toneGain.gain.setValueAtTime(0.0001, now);
+        toneGain.gain.linearRampToValueAtTime(0.12 + speedNorm * 0.06, now + 0.01);
+        toneGain.gain.exponentialRampToValueAtTime(0.0001, now + pulseLen);
+
+        bassGain.gain.cancelScheduledValues(now);
+        bassGain.gain.setValueAtTime(0.0001, now);
+        bassGain.gain.linearRampToValueAtTime(0.06 + speedNorm * 0.03, now + 0.015);
+        bassGain.gain.exponentialRampToValueAtTime(0.0001, now + bassPulseLen);
+
+        lowpass.frequency.setTargetAtTime(1800 + speedNorm * 1100 + randA * 250, now, 0.04);
+
+        step += 1;
+        const bpm = 92 + speedNorm * 52;
+        const stepMs = Math.max(130, Math.round((60000 / bpm) / 2));
+        sequenceTimer = window.setTimeout(scheduleNext, stepMs);
+      };
+
+      scheduleNext();
 
       audioContextRef.current = ctx;
-      audioNodesRef.current = { master, bedGain, oscA, oscB, lfo, lfoGain };
+      audioNodesRef.current = { master, toneGain, bassGain, oscLead, oscBass };
     };
 
     createAudio();
@@ -601,31 +798,23 @@ export default function DataBackground() {
     window.addEventListener("wheel", resumeAudio, { passive: true });
 
     return () => {
+      disposed = true;
       window.removeEventListener("pointerdown", resumeAudio);
       window.removeEventListener("keydown", resumeAudio);
       window.removeEventListener("wheel", resumeAudio);
-      const nodes = audioNodesRef.current;
-      if (nodes) {
-        nodes.oscA.stop();
-        nodes.oscB.stop();
-        nodes.lfo.stop();
-      }
-      audioNodesRef.current = null;
-      if (audioContextRef.current) {
-        void audioContextRef.current.close();
-      }
-      audioContextRef.current = null;
+      disposeAudio();
     };
-  }, []);
+  }, [clearBgMode]);
 
   useEffect(() => {
     const nodes = audioNodesRef.current;
     const ctx = audioContextRef.current;
     if (!nodes || !ctx) return;
     const now = ctx.currentTime;
-    nodes.bedGain.gain.cancelScheduledValues(now);
-    nodes.bedGain.gain.setTargetAtTime(soundEnabled ? 0.02 : 0.0, now, 0.35);
-  }, [soundEnabled]);
+    const level = (soundVolume / 100) * 0.085;
+    nodes.master.gain.cancelScheduledValues(now);
+    nodes.master.gain.setTargetAtTime(soundEnabled ? level : 0.0, now, 0.35);
+  }, [soundEnabled, soundVolume]);
 
   // Command terminal
   useEffect(() => {
@@ -641,13 +830,13 @@ export default function DataBackground() {
       return {
         ok: true,
         message:
-          "Commands: help, status, bg on/off, sound|music on/off, autozoom on/off, clear on/off, speed 0..9, close",
+          "Commands: help, status, bg on/off, sound|music on/off, volume 0..100, autozoom on/off, clear on/off, speed 0..9, close",
       };
     }
     if (cmd === "status") {
       return {
         ok: true,
-        message: `bg:${bgNavMode ? "on" : "off"} music:${soundEnabled ? "on" : "off"} autozoom:${autoZoomEnabled ? "on" : "off"} clear:${clearBgMode ? "on" : "off"} speed:${speedDigit}`,
+        message: `bg:${bgNavMode ? "on" : "off"} music:${soundEnabled ? "on" : "off"} vol:${soundVolume}% autozoom:${autoZoomEnabled ? "on" : "off"} clear:${clearBgMode ? "on" : "off"} speed:${speedDigit}`,
       };
     }
     if (cmd === "bg on") {
@@ -674,6 +863,11 @@ export default function DataBackground() {
       setSoundEnabled(false);
       return { ok: true, message: "Background music disabled." };
     }
+    const volumeMatch = cmd.match(/^volume\s+(\d{1,3})$/);
+    if (volumeMatch) {
+      applySoundVolume(Number(volumeMatch[1]));
+      return { ok: true, message: `Volume set to ${clampPercent(Number(volumeMatch[1]))}%.` };
+    }
     if (cmd === "autozoom on") {
       setAutoZoomEnabled(true);
       return { ok: true, message: "Auto zoom enabled." };
@@ -690,6 +884,8 @@ export default function DataBackground() {
     }
     if (cmd === "clear off") {
       setClearBgMode(false);
+      setManualPaused(false);
+      setBgNavMode(true);
       return { ok: true, message: "Game of Life background restored." };
     }
     if (cmd === "close" || cmd === "exit") {
@@ -717,6 +913,8 @@ export default function DataBackground() {
       }
       if (action === "toggle-auto-zoom") setAutoZoomEnabled((v) => !v);
       if (action === "toggle-sound") setSoundEnabled((v) => !v);
+      if (action === "music-vol-up") applySoundVolume(soundVolume + 10);
+      if (action === "music-vol-down") applySoundVolume(soundVolume - 10);
       if (action === "speed-up") applySpeedDigit(speedDigit + 1);
       if (action === "speed-down") applySpeedDigit(speedDigit - 1);
       if (action === "toggle-bg-clear") {
@@ -725,6 +923,9 @@ export default function DataBackground() {
           if (next) {
             setManualPaused(true);
             setBgNavMode(false);
+          } else {
+            setManualPaused(false);
+            setBgNavMode(true);
           }
           return next;
         });
@@ -776,7 +977,7 @@ export default function DataBackground() {
       window.removeEventListener("bg-control", handleControl);
       window.removeEventListener("keydown", handleGlobalKeyDown);
     };
-  }, [showTerminal, paletteEverOpened, clearBgMode, speedDigit]);
+  }, [showTerminal, paletteEverOpened, clearBgMode, speedDigit, soundVolume]);
 
   useEffect(() => {
     const focusOn = showHelp || showTerminal;
@@ -784,6 +985,7 @@ export default function DataBackground() {
     document.body.dataset.bgNav = bgNavMode ? "on" : "off";
     document.body.dataset.bgAutozoom = autoZoomEnabled ? "on" : "off";
     document.body.dataset.bgSound = soundEnabled ? "on" : "off";
+    document.body.dataset.bgVolume = String(soundVolume);
     document.body.dataset.bgPaused = animationPaused ? "on" : "off";
     document.body.dataset.bgClear = clearBgMode ? "on" : "off";
     document.body.dataset.bgSpeed = String(speedDigit);
@@ -793,6 +995,7 @@ export default function DataBackground() {
           bgNavMode,
           autoZoomEnabled,
           soundEnabled,
+          soundVolume,
           speedDigit,
           animationPaused,
           clearBgMode,
@@ -806,6 +1009,7 @@ export default function DataBackground() {
       delete document.body.dataset.bgNav;
       delete document.body.dataset.bgAutozoom;
       delete document.body.dataset.bgSound;
+      delete document.body.dataset.bgVolume;
       delete document.body.dataset.bgPaused;
       delete document.body.dataset.bgClear;
       delete document.body.dataset.bgSpeed;
@@ -816,6 +1020,7 @@ export default function DataBackground() {
     bgNavMode,
     autoZoomEnabled,
     soundEnabled,
+    soundVolume,
     speedDigit,
     animationPaused,
     clearBgMode,
@@ -831,9 +1036,12 @@ export default function DataBackground() {
       />
 
       {/* Loading indicator */}
-      {!loaded && !initError && (
-        <div className="fixed inset-0 -z-10 flex items-center justify-center pointer-events-none">
-          <div className="w-4 h-4 border-2 border-neutral-300 dark:border-neutral-600 border-t-transparent rounded-full animate-spin" />
+      {!clearBgMode && !loaded && !initError && (
+        <div className="fixed right-4 top-16 z-[60] pointer-events-none">
+          <div className="inline-flex items-center gap-2 rounded-md border border-neutral-300/70 dark:border-neutral-700/70 bg-white/82 dark:bg-neutral-900/82 px-2 py-1 text-[10px] tracking-wide text-neutral-600 dark:text-neutral-300 backdrop-blur">
+            <span className="w-3 h-3 border-2 border-neutral-300 dark:border-neutral-600 border-t-transparent rounded-full animate-spin" />
+            <span>Initializing Life...</span>
+          </div>
         </div>
       )}
 
@@ -845,14 +1053,33 @@ export default function DataBackground() {
       )}
 
       {loaded && !initError && showHelp && (
-        <div className="fixed top-16 right-4 z-[60] max-w-xs text-[11px] leading-relaxed px-3 py-2 rounded border border-neutral-300/60 dark:border-neutral-700/60 bg-white/85 dark:bg-neutral-900/85 text-neutral-700 dark:text-neutral-200 backdrop-blur pointer-events-none">
-          <div>Mode: BG Nav {bgNavMode ? "On" : "Off"}</div>
-          <div>Trackpad: scroll/pinch = zoom</div>
-          <div>Pan: click + drag</div>
-          <div>Auto zoom starts On and stops when you navigate manually</div>
-          <div>Sound: subtle ambient bed (toggle with button or terminal)</div>
-          <div>Terminal: type "cmd" or press Ctrl/Cmd+Shift+P</div>
-          <div>Speed: keys 0-9 (0 pauses)</div>
+        <div className="fixed inset-0 z-[70] bg-black/30 backdrop-blur-[1px] flex items-center justify-center p-4">
+          <div
+            data-bg-nav-ignore
+            className="w-full max-w-md rounded-lg border border-neutral-300/70 dark:border-neutral-700/70 bg-white/94 dark:bg-neutral-900/94 shadow-2xl"
+          >
+            <div className="flex items-center justify-between px-3 py-2 border-b border-neutral-300/60 dark:border-neutral-700/60">
+              <div className="text-xs font-mono text-neutral-700 dark:text-neutral-200">
+                bg-help
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowHelp(false)}
+                className="w-6 h-6 rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                aria-label="Close help"
+              >
+                ×
+              </button>
+            </div>
+            <div className="px-3 py-3 text-[11px] leading-relaxed text-neutral-700 dark:text-neutral-200 space-y-1">
+              <div>Mode: BG Nav {bgNavMode ? "On" : "Off"}</div>
+              <div>Trackpad: scroll/pinch = zoom</div>
+              <div>Pan: click + drag</div>
+              <div>Auto zoom starts On and stops when you navigate manually</div>
+              <div>Terminal: type "cmd" or press Ctrl/Cmd+Shift+P</div>
+              <div>Speed: keys 1-9, key 0 toggles pause/play</div>
+            </div>
+          </div>
         </div>
       )}
 
