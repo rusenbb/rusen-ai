@@ -36,6 +36,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link rel="preload" as="image" href="/game-of-life/graph.png" fetchPriority="high" />
+        <link rel="preload" as="image" href="/game-of-life/anim.png" fetchPriority="high" />
+        <link rel="preload" as="image" href="/game-of-life/loc.png" fetchPriority="high" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
