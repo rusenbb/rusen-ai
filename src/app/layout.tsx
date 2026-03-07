@@ -16,8 +16,33 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://rusen.ai"),
   title: "Rusen.ai - AI & Data Engineering Portfolio",
   description: "Interactive AI demos and experiments by Rusen Birben. Explore machine learning tools that run in your browser.",
+  openGraph: {
+    title: "Rusen.ai - AI & Data Engineering Portfolio",
+    description:
+      "Interactive AI demos and experiments by Rusen Birben. Explore machine learning tools that run in your browser.",
+    url: "https://rusen.ai",
+    siteName: "Rusen.ai",
+    locale: "en_US",
+    type: "website",
+    images: [
+      {
+        url: "/og.png",
+        width: 1200,
+        height: 630,
+        alt: "Rusen.ai",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Rusen.ai - AI & Data Engineering Portfolio",
+    description:
+      "Interactive AI demos and experiments by Rusen Birben. Explore machine learning tools that run in your browser.",
+    images: ["/twitter.png"],
+  },
   icons: {
     icon: [
       { url: "/icon.svg", type: "image/svg+xml" },
