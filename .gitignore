@@ -47,3 +47,10 @@ CLAUDE.md
 
 # worktrees
 /worktrees
+
+# adaptive arena training artifacts
+/public/adaptive-arena-checkpoints
+
+# syncthing
+*.sync-conflict-*
+.syncthing.*.tmp
