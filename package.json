@@ -9,10 +9,11 @@
     "lint": "eslint",
     "test": "vitest",
     "test:run": "vitest run",
+    "train:adaptive-arena": "tsx scripts/train-adaptive-arena.ts",
     "deploy": "wrangler pages deploy ./out"
   },
   "dependencies": {
-    "@huggingface/transformers": "^3.8.1",
+    "@huggingface/transformers": "^4.0.0-next.6",
     "@types/three": "^0.182.0",
     "next": "16.1.1",
     "pdfjs-dist": "^5.4.530",
@@ -37,6 +38,7 @@
     "eslint-config-next": "16.1.1",
     "jsdom": "^27.4.0",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "5.9.3",
     "vitest": "^4.0.18"
   }
