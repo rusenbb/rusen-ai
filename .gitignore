@@ -42,14 +42,24 @@ next-env.d.ts
 
 # claude
 CLAUDE.md
+/.claude/
 .env
 .dev.vars
 
 # worktrees
 /worktrees
 
-# adaptive arena training artifacts
-/public/adaptive-arena-checkpoints
+# python
+/.venv/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# adaptive arena local training caches
+/scripts/.arena_bfs_cache.pt
 
 # syncthing
 *.sync-conflict-*
