@@ -1,40 +1,41 @@
-"use client"
+"use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ACTION_LABELS,
   ARENA_SIZE,
+  BOT_ACCENT,
+  BOT_CONFIG,
   BOT_DIFFICULTIES,
-  BOT_PROFILES,
   MAX_HEALTH,
-  PLAYER_CATEGORY_LABELS,
   TICK_MS,
   advanceMatch,
   buildArenaMap,
+  createArenaNavigator,
   createInitialMatch,
   createPlayerModel,
-  deserializeQTable,
-  getDifficultyProfile,
+  getDifficultyConfig,
   type AbilityAction,
   type ArenaAction,
-  type BotCheckpointAsset,
   type ArenaTile,
-  type BotCheckpointManifest,
+  type BotBrain,
   type BotDifficulty,
-  type BotProfileId,
+  type DQNCheckpointAsset,
+  type DQNCheckpointManifest,
   type MatchState,
   type MoveAction,
-  type PlayerCategory,
-  type SerializedQTableEntry,
   type TrainingMetricPoint,
-  type QTable,
-} from "./game"
-import { ADAPTIVE_ARENA_CHECKPOINTS } from "./checkpoints.generated"
+} from "./game";
+import { createDQNAgent, deserializeDQNWeights } from "./dqn";
+import { ADAPTIVE_ARENA_CHECKPOINTS } from "./checkpoints.generated";
 
 type ControlState = {
-  move: MoveAction | null
-  ability: AbilityAction | null
-}
+  move: MoveAction | null;
+  ability: AbilityAction | null;
+  abilityTicksLeft: number;
+};
+
+const ABILITY_BUFFER_TICKS = 3;
 
 const MOVE_KEYS: Record<string, MoveAction> = {
   ArrowUp: "move-up",
@@ -45,259 +46,416 @@ const MOVE_KEYS: Record<string, MoveAction> = {
   s: "move-down",
   a: "move-left",
   d: "move-right",
-}
+};
 
 const ABILITY_KEYS: Record<string, AbilityAction> = {
   j: "attack",
   k: "guard",
   l: "dash",
-}
+};
 
-const CONTROL_BUTTONS: Array<{ label: string; action: MoveAction; hint: string }> = [
-  { label: "N", action: "move-up", hint: "W / ↑" },
-  { label: "S", action: "move-down", hint: "S / ↓" },
-  { label: "W", action: "move-left", hint: "A / ←" },
-  { label: "E", action: "move-right", hint: "D / →" },
-]
+const CONTROL_BUTTONS: Array<{
+  label: string;
+  action: MoveAction;
+}> = [
+  { label: "W / ↑", action: "move-up" },
+  { label: "S / ↓", action: "move-down" },
+  { label: "A / ←", action: "move-left" },
+  { label: "D / →", action: "move-right" },
+];
 
-const ABILITY_BUTTONS: Array<{ label: string; action: AbilityAction; hint: string }> = [
+const ABILITY_BUTTONS: Array<{
+  label: string;
+  action: AbilityAction;
+  hint: string;
+}> = [
   { label: "Attack", action: "attack", hint: "J" },
   { label: "Guard", action: "guard", hint: "K" },
   { label: "Dash", action: "dash", hint: "L" },
-]
+];
 
 const ARENA_LEGEND = [
-  { label: "You", detail: "Your cyan unit. Stay alive longer than the bot to win the round.", swatch: "bg-cyan-300" },
-  { label: "Bot", detail: "The opponent. Its behavior changes based on the selected seed and live adaptation.", swatch: "bg-orange-400" },
-  { label: "Health", detail: "Orange pickup. Restores health when you step onto it.", swatch: "bg-orange-500" },
-  { label: "Energy", detail: "Green pickup. Refills dash energy so you can reposition harder.", swatch: "bg-lime-400" },
-  { label: "Cover", detail: "Teal cover tile. Breaks line of sight and reduces direct pressure.", swatch: "bg-sky-900" },
-  { label: "Hazard", detail: "The center cross. Standing on it burns health over time.", swatch: "bg-amber-900" },
-] as const
+  {
+    label: "You",
+    detail: "Your cyan unit. Stay alive longer than the bot to win the round.",
+    swatch: "bg-cyan-300",
+  },
+  {
+    label: "Bot",
+    detail:
+      "The opponent. Each difficulty loads a different trained checkpoint.",
+    swatch: "bg-orange-400",
+  },
+  {
+    label: "Health",
+    detail: "Orange pickup. Restores health when you step onto it.",
+    swatch: "bg-orange-500",
+  },
+  {
+    label: "Energy",
+    detail: "Green pickup. Refills dash energy so you can reposition harder.",
+    swatch: "bg-lime-400",
+  },
+  {
+    label: "Cover",
+    detail:
+      "Teal cover tile. Breaks line of sight and reduces direct pressure.",
+    swatch: "bg-sky-900",
+  },
+  {
+    label: "Hazard",
+    detail: "The center cross. Standing on it burns health over time.",
+    swatch: "bg-amber-900",
+  },
+] as const;
 
 function formatPercent(value: number): string {
-  return `${Math.round(value * 100)}%`
+  return `${Math.round(value * 100)}%`;
 }
 
 function getTileColor(tile: ArenaTile): string {
   switch (tile) {
     case "wall":
-      return "#24303c"
+      return "#24303c";
     case "cover":
-      return "#193748"
+      return "#193748";
     case "hazard":
-      return "#512212"
+      return "#512212";
     default:
-      return "#091119"
+      return "#091119";
   }
 }
 
 function getKeycapClass(): string {
-  return "border-white/10 bg-white/[0.04] text-neutral-200"
+  return "border-white/10 bg-white/[0.04] text-neutral-200";
+}
+
+function drawWrappedText(
+  context: CanvasRenderingContext2D,
+  text: string,
+  centerX: number,
+  startY: number,
+  maxWidth: number,
+  lineHeight: number,
+): number {
+  const words = text.split(/\s+/).filter(Boolean);
+  const lines: string[] = [];
+  let currentLine = "";
+
+  words.forEach((word) => {
+    const candidate = currentLine ? `${currentLine} ${word}` : word;
+    if (currentLine && context.measureText(candidate).width > maxWidth) {
+      lines.push(currentLine);
+      currentLine = word;
+      return;
+    }
+    currentLine = candidate;
+  });
+
+  if (currentLine) {
+    lines.push(currentLine);
+  }
+
+  lines.forEach((line, index) => {
+    context.fillText(line, centerX, startY + index * lineHeight);
+  });
+
+  return lines.length;
 }
 
 function drawArena(
   canvas: HTMLCanvasElement,
   arena: ArenaTile[][],
   match: MatchState,
-  profileAccent: string
+  profileAccent: string,
 ) {
-  const context = canvas.getContext("2d")
-  if (!context) return
+  const context = canvas.getContext("2d");
+  if (!context) return;
 
-  const size = 900
-  canvas.width = size
-  canvas.height = size
+  const size = 900;
+  canvas.width = size;
+  canvas.height = size;
 
-  const tileSize = size / ARENA_SIZE
-  context.clearRect(0, 0, size, size)
+  const tileSize = size / ARENA_SIZE;
+  context.clearRect(0, 0, size, size);
 
-  const background = context.createLinearGradient(0, 0, size, size)
-  background.addColorStop(0, "#040608")
-  background.addColorStop(1, "#09121a")
-  context.fillStyle = background
-  context.fillRect(0, 0, size, size)
+  const background = context.createLinearGradient(0, 0, size, size);
+  background.addColorStop(0, "#040608");
+  background.addColorStop(1, "#09121a");
+  context.fillStyle = background;
+  context.fillRect(0, 0, size, size);
 
   for (let y = 0; y < ARENA_SIZE; y += 1) {
     for (let x = 0; x < ARENA_SIZE; x += 1) {
-      const px = x * tileSize
-      const py = y * tileSize
-      context.fillStyle = getTileColor(arena[y][x])
-      context.fillRect(px, py, tileSize, tileSize)
+      const px = x * tileSize;
+      const py = y * tileSize;
+      context.fillStyle = getTileColor(arena[y][x]);
+      context.fillRect(px, py, tileSize, tileSize);
 
-      context.strokeStyle = "rgba(255,255,255,0.04)"
-      context.lineWidth = 1
-      context.strokeRect(px, py, tileSize, tileSize)
+      context.strokeStyle = "rgba(255,255,255,0.04)";
+      context.lineWidth = 1;
+      context.strokeRect(px, py, tileSize, tileSize);
     }
   }
 
   match.pickups.forEach((pickup) => {
-    if (pickup.cooldown > 0) return
-    const px = pickup.position.x * tileSize
-    const py = pickup.position.y * tileSize
-    context.fillStyle = pickup.kind === "health" ? "#f97316" : "#a3e635"
-    context.fillRect(px + tileSize * 0.2, py + tileSize * 0.2, tileSize * 0.6, tileSize * 0.6)
-    context.strokeStyle = "rgba(255,255,255,0.7)"
-    context.lineWidth = 1.5
-    context.strokeRect(px + tileSize * 0.2, py + tileSize * 0.2, tileSize * 0.6, tileSize * 0.6)
-  })
+    if (pickup.cooldown > 0) return;
+    const px = pickup.position.x * tileSize;
+    const py = pickup.position.y * tileSize;
+    context.fillStyle = pickup.kind === "health" ? "#f97316" : "#a3e635";
+    context.fillRect(
+      px + tileSize * 0.2,
+      py + tileSize * 0.2,
+      tileSize * 0.6,
+      tileSize * 0.6,
+    );
+    context.strokeStyle = "rgba(255,255,255,0.7)";
+    context.lineWidth = 1.5;
+    context.strokeRect(
+      px + tileSize * 0.2,
+      py + tileSize * 0.2,
+      tileSize * 0.6,
+      tileSize * 0.6,
+    );
+  });
 
-  if (Math.abs(match.player.position.x - match.bot.position.x) + Math.abs(match.player.position.y - match.bot.position.y) <= 5) {
-    context.strokeStyle = "rgba(255,255,255,0.12)"
-    context.setLineDash([8, 8])
-    context.beginPath()
-    context.moveTo((match.player.position.x + 0.5) * tileSize, (match.player.position.y + 0.5) * tileSize)
-    context.lineTo((match.bot.position.x + 0.5) * tileSize, (match.bot.position.y + 0.5) * tileSize)
-    context.stroke()
-    context.setLineDash([])
+  if (
+    Math.abs(match.player.position.x - match.bot.position.x) +
+      Math.abs(match.player.position.y - match.bot.position.y) <=
+    5
+  ) {
+    context.strokeStyle = "rgba(255,255,255,0.12)";
+    context.setLineDash([8, 8]);
+    context.beginPath();
+    context.moveTo(
+      (match.player.position.x + 0.5) * tileSize,
+      (match.player.position.y + 0.5) * tileSize,
+    );
+    context.lineTo(
+      (match.bot.position.x + 0.5) * tileSize,
+      (match.bot.position.y + 0.5) * tileSize,
+    );
+    context.stroke();
+    context.setLineDash([]);
   }
 
   const fighters = [
     { ...match.player, color: "#67e8f9", label: "You" },
     { ...match.bot, color: profileAccent, label: "Bot" },
-  ]
+  ];
 
   fighters.forEach((fighter) => {
-    const centerX = (fighter.position.x + 0.5) * tileSize
-    const centerY = (fighter.position.y + 0.5) * tileSize
-    const radius = tileSize * 0.28
+    const centerX = (fighter.position.x + 0.5) * tileSize;
+    const centerY = (fighter.position.y + 0.5) * tileSize;
+    const radius = tileSize * 0.28;
 
-    context.beginPath()
-    context.fillStyle = fighter.color
-    context.shadowColor = fighter.color
-    context.shadowBlur = fighter.flashTicks > 0 ? 24 : 14
-    context.arc(centerX, centerY, radius, 0, Math.PI * 2)
-    context.fill()
-    context.shadowBlur = 0
+    context.beginPath();
+    context.fillStyle = fighter.color;
+    context.shadowColor = fighter.color;
+    context.shadowBlur = fighter.flashTicks > 0 ? 24 : 14;
+    context.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    context.fill();
+    context.shadowBlur = 0;
 
     if (fighter.guarding) {
-      context.beginPath()
-      context.strokeStyle = "rgba(255,255,255,0.9)"
-      context.lineWidth = 2
-      context.arc(centerX, centerY, radius + 4, 0, Math.PI * 2)
-      context.stroke()
+      context.beginPath();
+      context.strokeStyle = "rgba(255,255,255,0.9)";
+      context.lineWidth = 2;
+      context.arc(centerX, centerY, radius + 4, 0, Math.PI * 2);
+      context.stroke();
     }
 
-    context.fillStyle = "rgba(0,0,0,0.85)"
-    context.fillRect(centerX - 18, centerY - radius - 16, 36, 14)
-    context.fillStyle = "#f8fafc"
-    context.font = "10px monospace"
-    context.textAlign = "center"
-    context.fillText(fighter.label, centerX, centerY - radius - 5)
-  })
+    context.fillStyle = "rgba(0,0,0,0.85)";
+    context.fillRect(centerX - 18, centerY - radius - 16, 36, 14);
+    context.fillStyle = "#f8fafc";
+    context.font = "10px monospace";
+    context.textAlign = "center";
+    context.fillText(fighter.label, centerX, centerY - radius - 5);
+  });
 
-  context.fillStyle = "rgba(3,7,12,0.88)"
-  context.fillRect(size / 2 - 74, 4, 148, 28)
-  context.strokeStyle = "rgba(255,255,255,0.14)"
-  context.strokeRect(size / 2 - 74, 4, 148, 28)
+  context.fillStyle = "rgba(3,7,12,0.88)";
+  context.fillRect(size / 2 - 74, 4, 148, 28);
+  context.strokeStyle = "rgba(255,255,255,0.14)";
+  context.strokeRect(size / 2 - 74, 4, 148, 28);
 
-  context.fillStyle = "#e5e7eb"
-  context.font = "12px monospace"
-  context.textAlign = "center"
-  context.fillText(`TIMER ${match.timer.toString().padStart(3, "0")}`, size / 2, 23)
+  context.fillStyle = "#e5e7eb";
+  context.font = "12px monospace";
+  context.textAlign = "center";
+  context.fillText(
+    `TIMER ${match.timer.toString().padStart(3, "0")}`,
+    size / 2,
+    23,
+  );
 
-  const hudY = 16
-  const barWidth = 190
-  const barHeight = 12
-  const hudMargin = 44
+  const hudY = 16;
+  const barWidth = 190;
+  const barHeight = 12;
+  const hudMargin = 44;
 
-  context.textAlign = "left"
-  context.fillStyle = "#67e8f9"
-  context.font = "11px monospace"
-  context.fillText("YOU", hudMargin, hudY)
-  context.fillStyle = "rgba(255,255,255,0.12)"
-  context.fillRect(hudMargin, hudY + 10, barWidth, barHeight)
-  context.fillStyle = "#67e8f9"
-  context.fillRect(hudMargin, hudY + 10, barWidth * (match.player.health / MAX_HEALTH), barHeight)
-  context.fillStyle = "#e5e7eb"
-  context.fillText(`${match.player.health}/${MAX_HEALTH}`, hudMargin, hudY + 38)
+  context.textAlign = "left";
+  context.fillStyle = "#67e8f9";
+  context.font = "11px monospace";
+  context.fillText("YOU", hudMargin, hudY);
+  context.fillStyle = "rgba(255,255,255,0.12)";
+  context.fillRect(hudMargin, hudY + 10, barWidth, barHeight);
+  context.fillStyle = "#67e8f9";
+  context.fillRect(
+    hudMargin,
+    hudY + 10,
+    barWidth * (match.player.health / MAX_HEALTH),
+    barHeight,
+  );
+  context.fillStyle = "#e5e7eb";
+  context.fillText(
+    `${match.player.health}/${MAX_HEALTH}`,
+    hudMargin,
+    hudY + 38,
+  );
 
-  context.textAlign = "right"
-  context.fillStyle = profileAccent
-  context.fillText("BOT", size - hudMargin, hudY)
-  context.fillStyle = "rgba(255,255,255,0.12)"
-  context.fillRect(size - hudMargin - barWidth, hudY + 10, barWidth, barHeight)
-  context.fillStyle = profileAccent
-  context.fillRect(size - hudMargin - barWidth, hudY + 10, barWidth * (match.bot.health / MAX_HEALTH), barHeight)
-  context.fillStyle = "#e5e7eb"
-  context.fillText(`${match.bot.health}/${MAX_HEALTH}`, size - hudMargin, hudY + 38)
-  context.fillStyle = "rgba(229,231,235,0.75)"
-  context.font = "10px monospace"
-  context.fillText(`${match.lastDecisionMode.toUpperCase()} / ${ACTION_LABELS[match.botIntent]}`, size - hudMargin, hudY + 56)
+  context.textAlign = "right";
+  context.fillStyle = profileAccent;
+  context.fillText("BOT", size - hudMargin, hudY);
+  context.fillStyle = "rgba(255,255,255,0.12)";
+  context.fillRect(size - hudMargin - barWidth, hudY + 10, barWidth, barHeight);
+  context.fillStyle = profileAccent;
+  context.fillRect(
+    size - hudMargin - barWidth,
+    hudY + 10,
+    barWidth * (match.bot.health / MAX_HEALTH),
+    barHeight,
+  );
+  context.fillStyle = "#e5e7eb";
+  context.fillText(
+    `${match.bot.health}/${MAX_HEALTH}`,
+    size - hudMargin,
+    hudY + 38,
+  );
+  context.fillStyle = "rgba(229,231,235,0.75)";
+  context.font = "10px monospace";
+  context.fillText(
+    `${match.lastDecisionMode.toUpperCase()} / ${ACTION_LABELS[match.botIntent]}`,
+    size - hudMargin,
+    hudY + 56,
+  );
 
   if (match.phase === "intermission") {
-    context.fillStyle = "rgba(1,4,9,0.72)"
-    context.fillRect(0, 0, size, size)
-    context.fillStyle = "#f8fafc"
-    context.font = "700 32px monospace"
-    context.textAlign = "center"
-    context.fillText(match.statusMessage, size / 2, size / 2 - 18)
-    context.font = "14px monospace"
-    context.fillText(`next spawn in ${match.intermissionTicks}`, size / 2, size / 2 + 20)
+    context.fillStyle = "rgba(1,4,9,0.72)";
+    context.fillRect(0, 0, size, size);
+    context.fillStyle = "rgba(3,7,12,0.9)";
+    context.fillRect(size / 2 - 220, size / 2 - 92, 440, 144);
+    context.strokeStyle = "rgba(255,255,255,0.14)";
+    context.strokeRect(size / 2 - 220, size / 2 - 92, 440, 144);
+    context.fillStyle = "#f8fafc";
+    context.font = "700 32px monospace";
+    context.textAlign = "center";
+    const lineCount = drawWrappedText(
+      context,
+      match.statusMessage,
+      size / 2,
+      size / 2 - 40,
+      380,
+      36,
+    );
+    context.font = "14px monospace";
+    context.fillText(
+      `next round in ${match.intermissionTicks}  |  press space to continue`,
+      size / 2,
+      size / 2 + 14 + Math.max(0, lineCount - 1) * 18,
+    );
   }
 }
 
-function StatBlock({ label, value, tone }: { label: string; value: string; tone?: string }) {
+function StatBlock({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone?: string;
+}) {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
-      <div className="text-[10px] uppercase tracking-[0.24em] text-neutral-500">{label}</div>
-      <div className="mt-2 text-xl font-semibold text-neutral-100" style={tone ? { color: tone } : undefined}>
+      <div className="text-[10px] uppercase tracking-[0.24em] text-neutral-500">
+        {label}
+      </div>
+      <div
+        className="mt-2 text-xl font-semibold text-neutral-100"
+        style={tone ? { color: tone } : undefined}
+      >
         {value}
       </div>
     </div>
-  )
+  );
 }
 
 function formatSigned(value: number, digits = 2): string {
-  const rounded = value.toFixed(digits)
-  return value > 0 ? `+${rounded}` : rounded
+  const rounded = value.toFixed(digits);
+  return value > 0 ? `+${rounded}` : rounded;
 }
 
 function TrainingMetricChart(props: {
-  label: string
-  color: string
-  points: TrainingMetricPoint[]
-  valueKey: "averageReward" | "averageBotWinRate" | "averageHealthDelta"
-  formatValue: (value: number) => string
+  label: string;
+  color: string;
+  points: TrainingMetricPoint[];
+  valueKey: "averageReward" | "averageBotWinRate" | "averageHealthDelta";
+  formatValue: (value: number) => string;
 }) {
-  const { label, color, points, valueKey, formatValue } = props
+  const { label, color, points, valueKey, formatValue } = props;
 
-  if (points.length === 0) return null
+  if (points.length === 0) return null;
 
-  const width = 220
-  const height = 64
-  const padding = 6
-  const values = points.map((point) => point[valueKey])
-  const min = Math.min(...values)
-  const max = Math.max(...values)
-  const range = max - min || 1
+  const width = 220;
+  const height = 64;
+  const padding = 6;
+  const values = points.map((point) => point[valueKey]);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
   const path = points
     .map((point, index) => {
-      const x = padding + (index / Math.max(1, points.length - 1)) * (width - padding * 2)
-      const y = height - padding - ((point[valueKey] - min) / range) * (height - padding * 2)
-      return `${index === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`
+      const x =
+        padding +
+        (index / Math.max(1, points.length - 1)) * (width - padding * 2);
+      const y =
+        height -
+        padding -
+        ((point[valueKey] - min) / range) * (height - padding * 2);
+      return `${index === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
     })
-    .join(" ")
-  const latest = values.at(-1) ?? 0
-  const first = values[0] ?? 0
+    .join(" ");
+  const latest = values.at(-1) ?? 0;
+  const first = values[0] ?? 0;
 
   return (
     <div className="rounded-2xl border border-white/8 bg-black/20 p-3">
       <div className="flex items-center justify-between gap-3">
-        <span className="text-[10px] uppercase tracking-[0.22em] text-neutral-500">{label}</span>
+        <span className="text-[10px] uppercase tracking-[0.22em] text-neutral-500">
+          {label}
+        </span>
         <span className="text-sm font-medium" style={{ color }}>
           {formatValue(latest)}
         </span>
       </div>
-      <svg viewBox={`0 0 ${width} ${height}`} className="mt-2 h-16 w-full overflow-visible">
-        <path d={path} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        className="mt-2 h-16 w-full overflow-visible"
+      >
+        <path
+          d={path}
+          fill="none"
+          stroke={color}
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </svg>
       <div className="mt-1 flex items-center justify-between text-[11px] text-neutral-500">
         <span>start {formatValue(first)}</span>
         <span>end {formatValue(latest)}</span>
       </div>
     </div>
-  )
+  );
 }
 
 function FullscreenCornersIcon() {
@@ -312,251 +470,330 @@ function FullscreenCornersIcon() {
         strokeLinejoin="round"
       />
     </svg>
-  )
+  );
 }
 
 export default function AdaptiveArenaPage() {
-  const arena = useMemo(() => buildArenaMap(), [])
-  const arenaPanelRef = useRef<HTMLDivElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const controlsRef = useRef<ControlState>({ move: null, ability: null })
-  const pressedMovesRef = useRef<MoveAction[]>([])
-  const qTableRef = useRef<QTable>(new Map())
-  const playerModelRef = useRef(createPlayerModel())
-  const checkpointEntriesRef = useRef<SerializedQTableEntry[]>([])
-  const checkpointCacheRef = useRef<Map<string, BotCheckpointAsset>>(new Map())
+  const arena = useMemo(() => buildArenaMap(), []);
+  const navigator = useMemo(() => createArenaNavigator(arena), [arena]);
+  const arenaPanelRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const controlsRef = useRef<ControlState>({
+    move: null,
+    ability: null,
+    abilityTicksLeft: 0,
+  });
+  const pressedMovesRef = useRef<MoveAction[]>([]);
+  const brainRef = useRef<BotBrain>({
+    kind: "dqn",
+    agent: createDQNAgent({
+      layerSizes: [68, 128, 64, 8],
+      learningRate: 3e-4,
+      gamma: 0.97,
+      batchSize: 64,
+      replayCapacity: 50_000,
+      targetUpdateFreq: 500,
+      epsilon: 0.1,
+      epsilonDecay: 1,
+      epsilonMin: 0.05,
+      weightDecay: 0,
+    }),
+  });
+  const playerModelRef = useRef(createPlayerModel());
+  const checkpointCacheRef = useRef<Map<string, DQNCheckpointAsset>>(new Map());
 
-  const [selectedProfileId, setSelectedProfileId] = useState<BotProfileId>("duelist")
-  const [selectedDifficulty, setSelectedDifficulty] = useState<BotDifficulty>("medium")
-  const [onlineLearning, setOnlineLearning] = useState(true)
-  const [autoRunRounds, setAutoRunRounds] = useState(false)
-  const [isRunning, setIsRunning] = useState(false)
-  const [isFullscreen, setIsFullscreen] = useState(false)
-  const [checkpointManifest, setCheckpointManifest] = useState<BotCheckpointManifest | null>(null)
-  const [checkpointLoading, setCheckpointLoading] = useState(true)
-  const [checkpointError, setCheckpointError] = useState<string | null>(null)
-  const [match, setMatch] = useState<MatchState>(() => createInitialMatch(createPlayerModel()))
+  const [selectedDifficulty, setSelectedDifficulty] =
+    useState<BotDifficulty>("medium");
+  const [autoRunRounds, setAutoRunRounds] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isBotReadoutOpen, setIsBotReadoutOpen] = useState(false);
+  const [checkpointManifest, setCheckpointManifest] =
+    useState<DQNCheckpointManifest | null>(null);
+  const [checkpointLoading, setCheckpointLoading] = useState(true);
+  const [checkpointError, setCheckpointError] = useState<string | null>(null);
+  const [match, setMatch] = useState<MatchState>(() =>
+    createInitialMatch(createPlayerModel()),
+  );
 
-  const profile = useMemo(
-    () => BOT_PROFILES.find((entry) => entry.id === selectedProfileId) ?? BOT_PROFILES[0],
-    [selectedProfileId]
-  )
-  const runtimeProfile = useMemo(
-    () => getDifficultyProfile(profile, selectedDifficulty),
-    [profile, selectedDifficulty]
-  )
-  const checkpointKey = `${selectedProfileId}:${selectedDifficulty}`
+  const runtimeConfig = useMemo(
+    () => getDifficultyConfig(BOT_CONFIG, selectedDifficulty),
+    [selectedDifficulty],
+  );
+  const checkpointKey = selectedDifficulty;
 
   const resetSession = useCallback(() => {
-    qTableRef.current = deserializeQTable(checkpointEntriesRef.current)
-    playerModelRef.current = createPlayerModel()
+    const cached = checkpointCacheRef.current.get(checkpointKey);
+    if (cached) {
+      const agent = createDQNAgent({
+        layerSizes: cached.config.layerSizes,
+        learningRate: 3e-4,
+        gamma: 0.97,
+        batchSize: 64,
+        replayCapacity: 50_000,
+        targetUpdateFreq: 500,
+        epsilon: 0.1,
+        epsilonDecay: 1,
+        epsilonMin: 0.05,
+        weightDecay: 0,
+      });
+      agent.policy = deserializeDQNWeights(cached.weights);
+      agent.target = deserializeDQNWeights(cached.weights);
+      brainRef.current = { kind: "dqn", agent };
+    }
+    playerModelRef.current = createPlayerModel();
+    const brain = brainRef.current;
+    const paramCount = brain.agent.config.layerSizes.reduce(
+      (acc, _, i, a) =>
+        i < a.length - 1 ? acc + a[i] * a[i + 1] + a[i + 1] : acc,
+      0,
+    );
     setMatch({
       ...createInitialMatch(playerModelRef.current),
-      qStateCount: qTableRef.current.size,
-      explorationRate: runtimeProfile.epsilon,
+      qStateCount: paramCount,
+      explorationRate: runtimeConfig.epsilon,
       statusMessage: checkpointManifest
         ? `Loaded ${checkpointManifest.label} checkpoint.`
         : "Checkpoint ready.",
-    })
-    controlsRef.current = { move: null, ability: null }
-    pressedMovesRef.current = []
-    setIsRunning(false)
-  }, [checkpointManifest, runtimeProfile.epsilon])
+    });
+    controlsRef.current = { move: null, ability: null, abilityTicksLeft: 0 };
+    pressedMovesRef.current = [];
+    setIsRunning(false);
+  }, [checkpointKey, checkpointManifest, runtimeConfig.epsilon]);
 
   useEffect(() => {
-    let cancelled = false
+    let cancelled = false;
 
     const loadCheckpoint = async () => {
-      setCheckpointLoading(true)
-      setCheckpointError(null)
+      setCheckpointLoading(true);
+      setCheckpointError(null);
 
       const manifest =
         ADAPTIVE_ARENA_CHECKPOINTS.find(
-          (entry) => entry.profileId === selectedProfileId && entry.difficulty === selectedDifficulty
-        ) ?? null
+          (entry) => entry.difficulty === selectedDifficulty,
+        ) ?? null;
 
       if (!manifest) {
         if (!cancelled) {
-          setCheckpointManifest(null)
-          setCheckpointError("Missing checkpoint manifest for the selected seed.")
-          setCheckpointLoading(false)
+          setCheckpointManifest(null);
+          setCheckpointError(
+            "Missing checkpoint manifest for the selected seed.",
+          );
+          setCheckpointLoading(false);
         }
-        return
+        return;
       }
 
       try {
-        const cached = checkpointCacheRef.current.get(checkpointKey)
-        let asset: BotCheckpointAsset
+        const cached = checkpointCacheRef.current.get(checkpointKey);
+        let asset: DQNCheckpointAsset;
 
         if (cached) {
-          asset = cached
+          asset = cached;
         } else {
           asset = await fetch(manifest.assetPath).then(async (response) => {
             if (!response.ok) {
-              throw new Error(`Failed to load checkpoint asset: ${response.status}`)
+              throw new Error(
+                `Failed to load checkpoint asset: ${response.status}`,
+              );
             }
 
-            return (await response.json()) as BotCheckpointAsset
-          })
-          checkpointCacheRef.current.set(checkpointKey, asset)
+            return (await response.json()) as DQNCheckpointAsset;
+          });
+          checkpointCacheRef.current.set(checkpointKey, asset);
         }
 
-        if (cancelled) return
+        if (cancelled) return;
 
-        checkpointEntriesRef.current = asset.qTable
-        setCheckpointManifest(manifest)
-        qTableRef.current = deserializeQTable(asset.qTable)
-        playerModelRef.current = createPlayerModel()
+        const agent = createDQNAgent({
+          layerSizes: asset.config.layerSizes,
+          learningRate: 3e-4,
+          gamma: 0.97,
+          batchSize: 64,
+          replayCapacity: 50_000,
+          targetUpdateFreq: 500,
+          epsilon: 0.1,
+          epsilonDecay: 1,
+          epsilonMin: 0.05,
+          weightDecay: 0,
+        });
+        agent.policy = deserializeDQNWeights(asset.weights);
+        agent.target = deserializeDQNWeights(asset.weights);
+        brainRef.current = { kind: "dqn", agent };
+
+        setCheckpointManifest(manifest);
+        playerModelRef.current = createPlayerModel();
         setMatch({
           ...createInitialMatch(playerModelRef.current),
-          qStateCount: qTableRef.current.size,
-          explorationRate: runtimeProfile.epsilon,
+          qStateCount: manifest.parameterCount,
+          explorationRate: runtimeConfig.epsilon,
           statusMessage: `Loaded ${manifest.label} checkpoint.`,
-        })
-        controlsRef.current = { move: null, ability: null }
-        pressedMovesRef.current = []
-        setIsRunning(false)
+        });
+        controlsRef.current = {
+          move: null,
+          ability: null,
+          abilityTicksLeft: 0,
+        };
+        pressedMovesRef.current = [];
+        setIsRunning(false);
       } catch (error) {
-        if (cancelled) return
-        setCheckpointManifest(manifest)
-        setCheckpointError(error instanceof Error ? error.message : "Failed to load checkpoint.")
+        if (cancelled) return;
+        setCheckpointManifest(manifest);
+        setCheckpointError(
+          error instanceof Error ? error.message : "Failed to load checkpoint.",
+        );
       } finally {
         if (!cancelled) {
-          setCheckpointLoading(false)
+          setCheckpointLoading(false);
         }
       }
-    }
+    };
 
-    void loadCheckpoint()
+    void loadCheckpoint();
 
     return () => {
-      cancelled = true
-    }
-  }, [checkpointKey, runtimeProfile.epsilon, selectedDifficulty, selectedProfileId])
+      cancelled = true;
+    };
+  }, [checkpointKey, runtimeConfig.epsilon, selectedDifficulty]);
 
   useEffect(() => {
-    if (!isRunning) return
+    if (!isRunning) return;
 
     const interval = window.setInterval(() => {
       setMatch((current) => {
-        const ability = controlsRef.current.ability
-        const moveIntent = controlsRef.current.move
-        const playerAction: ArenaAction = ability ?? moveIntent ?? "hold"
-        controlsRef.current.ability = null
+        const controls = controlsRef.current;
+        const ability = controls.ability;
+        const moveIntent = controls.move;
+        const playerAction: ArenaAction = ability ?? moveIntent ?? "hold";
+        if (ability) {
+          controls.abilityTicksLeft -= 1;
+          if (controls.abilityTicksLeft <= 0) {
+            controls.ability = null;
+            controls.abilityTicksLeft = 0;
+          }
+        }
 
         const nextMatch = advanceMatch({
           match: current,
           arena,
-          profile: runtimeProfile,
-          onlineLearning,
-          qTable: qTableRef.current,
+          navigator,
+          config: runtimeConfig,
+          onlineLearning: false,
+          brain: brainRef.current,
           playerModel: playerModelRef.current,
           playerAction,
           playerMoveIntent: moveIntent,
-        })
+        });
 
-        if (nextMatch.phase === "intermission" && !autoRunRounds) {
-          window.setTimeout(() => setIsRunning(false), 0)
+        if (
+          current.phase === "live" &&
+          nextMatch.phase === "intermission" &&
+          !autoRunRounds
+        ) {
+          window.setTimeout(() => setIsRunning(false), 0);
         }
 
-        return nextMatch
-      })
-    }, TICK_MS)
+        return nextMatch;
+      });
+    }, TICK_MS);
 
-    return () => window.clearInterval(interval)
-  }, [arena, autoRunRounds, isRunning, onlineLearning, runtimeProfile])
+    return () => window.clearInterval(interval);
+  }, [arena, autoRunRounds, isRunning, navigator, runtimeConfig]);
 
   useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    drawArena(canvas, arena, match, profile.accent)
-  }, [arena, match, profile.accent])
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    drawArena(canvas, arena, match, BOT_ACCENT);
+  }, [arena, match, BOT_ACCENT]);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(document.fullscreenElement === arenaPanelRef.current)
-    }
+      setIsFullscreen(document.fullscreenElement === arenaPanelRef.current);
+    };
 
-    document.addEventListener("fullscreenchange", handleFullscreenChange)
-    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange)
-  }, [])
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () =>
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
 
   const setActiveMove = useCallback((action: MoveAction, active: boolean) => {
-    const current = pressedMovesRef.current
+    const current = pressedMovesRef.current;
 
     if (active) {
       if (!current.includes(action)) {
-        pressedMovesRef.current = [...current, action]
+        pressedMovesRef.current = [...current, action];
       }
     } else {
-      pressedMovesRef.current = current.filter((entry) => entry !== action)
+      pressedMovesRef.current = current.filter((entry) => entry !== action);
     }
 
-    const nextMove = pressedMovesRef.current.at(-1) ?? null
-    controlsRef.current.move = nextMove
-  }, [])
+    const nextMove = pressedMovesRef.current.at(-1) ?? null;
+    controlsRef.current.move = nextMove;
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === " ") {
-        event.preventDefault()
-        setIsRunning((current) => !current)
-        return
+        event.preventDefault();
+        if (event.repeat) return;
+        setIsRunning((current) => !current);
+        return;
       }
 
-      const move = MOVE_KEYS[event.key] ?? MOVE_KEYS[event.key.toLowerCase()]
+      const move = MOVE_KEYS[event.key] ?? MOVE_KEYS[event.key.toLowerCase()];
       if (move) {
-        event.preventDefault()
-        setActiveMove(move, true)
-        return
+        event.preventDefault();
+        setActiveMove(move, true);
+        return;
       }
 
-      const ability = ABILITY_KEYS[event.key] ?? ABILITY_KEYS[event.key.toLowerCase()]
+      const ability =
+        ABILITY_KEYS[event.key] ?? ABILITY_KEYS[event.key.toLowerCase()];
       if (ability) {
-        event.preventDefault()
-        controlsRef.current.ability = ability
+        event.preventDefault();
+        controlsRef.current.ability = ability;
+        controlsRef.current.abilityTicksLeft = ABILITY_BUFFER_TICKS;
       }
-    }
+    };
 
     const handleKeyUp = (event: KeyboardEvent) => {
-      const move = MOVE_KEYS[event.key] ?? MOVE_KEYS[event.key.toLowerCase()]
+      const move = MOVE_KEYS[event.key] ?? MOVE_KEYS[event.key.toLowerCase()];
       if (move) {
-        event.preventDefault()
-        setActiveMove(move, false)
+        event.preventDefault();
+        setActiveMove(move, false);
       }
-    }
+    };
 
-    window.addEventListener("keydown", handleKeyDown)
-    window.addEventListener("keyup", handleKeyUp)
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
 
     return () => {
-      window.removeEventListener("keydown", handleKeyDown)
-      window.removeEventListener("keyup", handleKeyUp)
-    }
-  }, [setActiveMove])
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, [setActiveMove]);
 
   const toggleFullscreen = useCallback(async () => {
-    const panel = arenaPanelRef.current
-    if (!panel) return
+    const panel = arenaPanelRef.current;
+    if (!panel) return;
 
     if (document.fullscreenElement === panel) {
-      await document.exitFullscreen()
-      return
+      await document.exitFullscreen();
+      return;
     }
 
-    await panel.requestFullscreen()
-  }, [])
+    await panel.requestFullscreen();
+  }, []);
 
-  const dominantHabits = (Object.entries(match.playerHabits.percentages) as Array<[PlayerCategory, number]>)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 3)
   const primaryActionLabel =
     match.phase === "intermission"
       ? autoRunRounds
         ? "Continue"
         : "Start Next Round"
-      : "Start Match"
-  const arenaMaxWidth = isFullscreen ? "min(calc(100vw - 4rem), calc(100vh - 8rem))" : "min(100%, calc(100vh - 12rem), 1080px)"
+      : "Start Match";
+  const arenaMaxWidth = isFullscreen
+    ? "min(calc(100vw - 4rem), calc(100vh - 8rem))"
+    : "min(100%, calc(100vh - 12rem), 1080px)";
 
   return (
     <div className="min-h-screen bg-[#05070a] text-neutral-100">
@@ -568,7 +805,8 @@ export default function AdaptiveArenaPage() {
               backgroundImage:
                 "linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px)",
               backgroundSize: "48px 48px",
-              maskImage: "linear-gradient(to bottom, rgba(0,0,0,1), rgba(0,0,0,0.15))",
+              maskImage:
+                "linear-gradient(to bottom, rgba(0,0,0,1), rgba(0,0,0,0.15))",
             }}
           />
 
@@ -579,9 +817,12 @@ export default function AdaptiveArenaPage() {
                   Reinforcement Learning / 30x30 Tactical Arena
                 </div>
                 <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:gap-4">
-                  <h1 className="text-4xl font-semibold tracking-[0.02em] text-neutral-50">Adaptive Arena</h1>
+                  <h1 className="text-4xl font-semibold tracking-[0.02em] text-neutral-50">
+                    RL-Arena
+                  </h1>
                   <p className="max-w-xl text-sm leading-6 text-neutral-400">
-                    Fight, vary your habits, and see whether the bot actually learns you.
+                    Fight checkpoint-trained bots across four difficulty levels
+                    in a tight tactical arena.
                   </p>
                 </div>
               </div>
@@ -592,8 +833,12 @@ export default function AdaptiveArenaPage() {
                 ref={arenaPanelRef}
                 className={`overflow-hidden rounded-[28px] border border-white/10 bg-[#04080d]/80 shadow-[0_24px_90px_rgba(0,0,0,0.45)] ${isFullscreen ? "h-full bg-[#05070a]" : ""}`}
               >
-                <div className={`${isFullscreen ? "block" : "grid xl:grid-cols-[minmax(0,1fr)_360px]"}`}>
-                  <div className={`relative border-b border-white/10 xl:border-b-0 xl:border-r xl:border-white/10 ${isFullscreen ? "p-4" : "p-4 sm:p-5"}`}>
+                <div
+                  className={`${isFullscreen ? "block" : "grid xl:grid-cols-[minmax(0,1fr)_360px]"}`}
+                >
+                  <div
+                    className={`relative border-b border-white/10 xl:border-b-0 xl:border-r xl:border-white/10 ${isFullscreen ? "p-4" : "p-4 sm:p-5"}`}
+                  >
                     {isFullscreen && (
                       <div className="absolute left-6 top-6 z-10 flex w-40 flex-col gap-2">
                         <button
@@ -605,7 +850,9 @@ export default function AdaptiveArenaPage() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => setAutoRunRounds((current) => !current)}
+                          onClick={() =>
+                            setAutoRunRounds((current) => !current)
+                          }
                           className={`rounded-full border px-4 py-2 text-[11px] uppercase tracking-[0.22em] backdrop-blur transition ${
                             autoRunRounds
                               ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-200"
@@ -621,30 +868,26 @@ export default function AdaptiveArenaPage() {
                         >
                           Reset
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => setOnlineLearning((current) => !current)}
-                          className={`rounded-full border px-3 py-2 text-[11px] uppercase tracking-[0.18em] backdrop-blur transition ${
-                            onlineLearning
-                              ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-200"
-                              : "border-white/10 bg-[#02060b]/80 text-neutral-200 hover:bg-[#0a1118]"
-                          }`}
-                        >
-                          {onlineLearning ? "Adaptive On" : "Adaptive Off"}
-                        </button>
                       </div>
                     )}
                     <button
                       type="button"
                       onClick={() => void toggleFullscreen()}
                       className="absolute right-6 top-6 z-10 inline-flex items-center justify-center rounded-full border border-white/10 bg-[#02060b]/80 p-2 text-neutral-200 backdrop-blur transition hover:bg-[#0a1118]"
-                      aria-label={isFullscreen ? "Exit fullscreen" : "Go fullscreen"}
+                      aria-label={
+                        isFullscreen ? "Exit fullscreen" : "Go fullscreen"
+                      }
                       title={isFullscreen ? "Exit fullscreen" : "Go fullscreen"}
                     >
                       <FullscreenCornersIcon />
                     </button>
-                    <div className={`${isFullscreen ? "flex h-[calc(100vh-8rem)] items-center justify-center" : ""}`}>
-                      <div className="mx-auto w-full" style={{ maxWidth: arenaMaxWidth }}>
+                    <div
+                      className={`${isFullscreen ? "flex h-[calc(100vh-8rem)] items-center justify-center" : ""}`}
+                    >
+                      <div
+                        className="mx-auto w-full"
+                        style={{ maxWidth: arenaMaxWidth }}
+                      >
                         <canvas
                           ref={canvasRef}
                           className="aspect-square w-full rounded-[22px] border border-white/10 bg-[#020407]"
@@ -659,14 +902,18 @@ export default function AdaptiveArenaPage() {
                         <button
                           type="button"
                           onClick={() => setIsRunning((current) => !current)}
-                          disabled={checkpointLoading || Boolean(checkpointError)}
+                          disabled={
+                            checkpointLoading || Boolean(checkpointError)
+                          }
                           className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[11px] uppercase tracking-[0.22em] text-neutral-100 transition hover:bg-white/10"
                         >
                           {isRunning ? "Pause" : primaryActionLabel}
                         </button>
                         <button
                           type="button"
-                          onClick={() => setAutoRunRounds((current) => !current)}
+                          onClick={() =>
+                            setAutoRunRounds((current) => !current)
+                          }
                           className={`rounded-full border px-4 py-2 text-[11px] uppercase tracking-[0.22em] transition ${
                             autoRunRounds
                               ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-200"
@@ -683,29 +930,22 @@ export default function AdaptiveArenaPage() {
                         >
                           Reset
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => setOnlineLearning((current) => !current)}
-                          className={`rounded-full border px-3 py-2 text-[11px] uppercase tracking-[0.18em] transition ${
-                            onlineLearning
-                              ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-200"
-                              : "border-white/10 bg-white/5 text-neutral-200 hover:bg-white/10"
-                          }`}
-                        >
-                          {onlineLearning ? "Adaptive On" : "Adaptive Off"}
-                        </button>
                       </div>
 
                       <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-3">
-                        <div className="mb-2 text-[10px] uppercase tracking-[0.24em] text-neutral-500">Bot Seeds</div>
-                        <div className="mb-3 flex flex-wrap gap-2">
+                        <div className="mb-2 text-[10px] uppercase tracking-[0.24em] text-neutral-500">
+                          Difficulty
+                        </div>
+                        <div className="flex flex-wrap gap-2">
                           {BOT_DIFFICULTIES.map((difficulty) => {
-                            const active = difficulty.id === selectedDifficulty
+                            const active = difficulty.id === selectedDifficulty;
                             return (
                               <button
                                 key={difficulty.id}
                                 type="button"
-                                onClick={() => setSelectedDifficulty(difficulty.id)}
+                                onClick={() =>
+                                  setSelectedDifficulty(difficulty.id)
+                                }
                                 className={`rounded-full border px-3 py-2 text-[11px] uppercase tracking-[0.18em] transition ${
                                   active
                                     ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-200"
@@ -715,43 +955,25 @@ export default function AdaptiveArenaPage() {
                               >
                                 {difficulty.label}
                               </button>
-                            )
-                          })}
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {BOT_PROFILES.map((entry) => {
-                            const active = entry.id === selectedProfileId
-                            return (
-                              <div key={entry.id} className="group relative">
-                                <button
-                                  type="button"
-                                  onClick={() => setSelectedProfileId(entry.id)}
-                                  className={`rounded-full border px-3 py-2 text-[11px] uppercase tracking-[0.18em] transition ${
-                                    active
-                                      ? "bg-white/[0.1] text-neutral-100"
-                                      : "border-white/8 bg-black/20 text-neutral-300 hover:border-white/16 hover:bg-white/[0.05]"
-                                  }`}
-                                  style={active ? { borderColor: `${entry.accent}66`, color: entry.accent } : undefined}
-                                >
-                                  {entry.name.replace(" Seed", "")}
-                                </button>
-                                <div className="pointer-events-none absolute right-0 top-full z-20 mt-2 w-64 rounded-2xl border border-white/10 bg-[#02060b]/95 px-3 py-2 text-xs leading-5 text-neutral-300 opacity-0 shadow-[0_12px_32px_rgba(0,0,0,0.45)] transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
-                                  {entry.label}
-                                </div>
-                              </div>
-                            )
+                            );
                           })}
                         </div>
                       </div>
 
                       <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-3">
-                        <div className="mb-2 text-[10px] uppercase tracking-[0.24em] text-neutral-500">Legend</div>
+                        <div className="mb-2 text-[10px] uppercase tracking-[0.24em] text-neutral-500">
+                          Legend
+                        </div>
                         <div className="flex flex-wrap gap-2">
                           {ARENA_LEGEND.map((item) => (
                             <div key={item.label} className="group relative">
                               <div className="flex items-center gap-2 rounded-full border border-white/8 bg-black/20 px-3 py-2 text-[11px] text-neutral-300">
-                                <span className={`h-2.5 w-2.5 rounded-full ${item.swatch}`} />
-                                <span className="font-medium text-neutral-100">{item.label}</span>
+                                <span
+                                  className={`h-2.5 w-2.5 rounded-full ${item.swatch}`}
+                                />
+                                <span className="font-medium text-neutral-100">
+                                  {item.label}
+                                </span>
                               </div>
                               <div className="pointer-events-none absolute right-0 top-full z-20 mt-2 w-56 rounded-2xl border border-white/10 bg-[#02060b]/95 px-3 py-2 text-xs leading-5 text-neutral-300 opacity-0 shadow-[0_12px_32px_rgba(0,0,0,0.45)] transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
                                 {item.detail}
@@ -762,7 +984,9 @@ export default function AdaptiveArenaPage() {
                       </div>
 
                       <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                        <div className="mb-3 text-[10px] uppercase tracking-[0.24em] text-neutral-500">Controls</div>
+                        <div className="mb-3 text-[10px] uppercase tracking-[0.24em] text-neutral-500">
+                          Controls
+                        </div>
                         <div className="grid gap-4">
                           <div className="grid grid-cols-3 gap-2 text-center">
                             <div />
@@ -771,8 +995,9 @@ export default function AdaptiveArenaPage() {
                                 key={button.action}
                                 className={`rounded-2xl border px-4 py-3 ${getKeycapClass()}`}
                               >
-                                <div className="text-lg font-semibold">{button.label}</div>
-                                <div className="mt-1 text-[10px] uppercase tracking-[0.22em] text-neutral-500">{button.hint}</div>
+                                <div className="text-sm font-semibold">
+                                  {button.label}
+                                </div>
                               </div>
                             ))}
                             <div />
@@ -781,8 +1006,9 @@ export default function AdaptiveArenaPage() {
                                 key={button.action}
                                 className={`rounded-2xl border px-4 py-3 ${getKeycapClass()}`}
                               >
-                                <div className="text-lg font-semibold">{button.label}</div>
-                                <div className="mt-1 text-[10px] uppercase tracking-[0.22em] text-neutral-500">{button.hint}</div>
+                                <div className="text-sm font-semibold">
+                                  {button.label}
+                                </div>
                               </div>
                             ))}
                             {CONTROL_BUTTONS.slice(1, 2).map((button) => (
@@ -790,8 +1016,9 @@ export default function AdaptiveArenaPage() {
                                 key={button.action}
                                 className={`rounded-2xl border px-4 py-3 ${getKeycapClass()}`}
                               >
-                                <div className="text-lg font-semibold">{button.label}</div>
-                                <div className="mt-1 text-[10px] uppercase tracking-[0.22em] text-neutral-500">{button.hint}</div>
+                                <div className="text-sm font-semibold">
+                                  {button.label}
+                                </div>
                               </div>
                             ))}
                             {CONTROL_BUTTONS.slice(3, 4).map((button) => (
@@ -799,8 +1026,9 @@ export default function AdaptiveArenaPage() {
                                 key={button.action}
                                 className={`rounded-2xl border px-4 py-3 ${getKeycapClass()}`}
                               >
-                                <div className="text-lg font-semibold">{button.label}</div>
-                                <div className="mt-1 text-[10px] uppercase tracking-[0.22em] text-neutral-500">{button.hint}</div>
+                                <div className="text-sm font-semibold">
+                                  {button.label}
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -811,8 +1039,12 @@ export default function AdaptiveArenaPage() {
                                 key={button.action}
                                 className={`rounded-2xl border px-4 py-3 ${getKeycapClass()}`}
                               >
-                                <div className="text-sm font-semibold uppercase tracking-[0.18em] text-neutral-100">{button.label}</div>
-                                <div className="mt-1 text-[10px] uppercase tracking-[0.22em] text-neutral-500">{button.hint}</div>
+                                <div className="text-sm font-semibold uppercase tracking-[0.18em] text-neutral-100">
+                                  {button.label}
+                                </div>
+                                <div className="mt-1 text-[10px] uppercase tracking-[0.22em] text-neutral-500">
+                                  {button.hint}
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -820,108 +1052,124 @@ export default function AdaptiveArenaPage() {
                       </div>
 
                       <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                        <div className="text-[10px] uppercase tracking-[0.24em] text-neutral-500">Bot Readout</div>
-                        <div className="mt-2 text-lg font-semibold" style={{ color: profile.accent }}>
-                          {checkpointManifest?.label ?? `${profile.name} ${selectedDifficulty}`}
-                        </div>
-                        <p className="mt-1 text-sm leading-6 text-neutral-400">
-                          {checkpointLoading
-                            ? "Loading checkpoint..."
-                            : checkpointError
-                              ? checkpointError
-                              : checkpointManifest?.summary ?? profile.summary}
-                        </p>
-                        {checkpointManifest && !checkpointLoading && !checkpointError && (
-                          <div className="mt-3 rounded-2xl border border-white/10 bg-black/20 px-3 py-3 text-xs leading-5 text-neutral-400">
-                            {checkpointManifest.trainingRounds} training rounds / {formatPercent(checkpointManifest.stats.botWinRate)} eval win rate
-                          </div>
-                        )}
-                        {checkpointManifest?.telemetry.points.length ? (
-                          <div className="mt-3 grid gap-3">
-                            <TrainingMetricChart
-                              label="Training Reward"
-                              color={profile.accent}
-                              points={checkpointManifest.telemetry.points}
-                              valueKey="averageReward"
-                              formatValue={(value) => formatSigned(value)}
-                            />
-                            <TrainingMetricChart
-                              label="Training Win Rate"
-                              color="#67e8f9"
-                              points={checkpointManifest.telemetry.points}
-                              valueKey="averageBotWinRate"
-                              formatValue={formatPercent}
-                            />
-                          </div>
-                        ) : null}
-                        {checkpointManifest && !checkpointLoading && !checkpointError && (
-                          <div className="mt-3 grid grid-cols-2 gap-3 text-xs text-neutral-400">
-                            <div className="rounded-2xl border border-white/8 bg-black/20 px-3 py-3">
-                              reward window {checkpointManifest.telemetry.rollingWindow} rounds
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setIsBotReadoutOpen((current) => !current)
+                          }
+                          className="flex w-full items-center justify-between gap-3 text-left"
+                        >
+                          <div>
+                            <div className="text-[10px] uppercase tracking-[0.24em] text-neutral-500">
+                              Bot Readout
                             </div>
-                            <div className="rounded-2xl border border-white/8 bg-black/20 px-3 py-3">
-                              states learned {checkpointManifest.qStateCount}
+                            <div
+                              className="mt-2 text-lg font-semibold"
+                              style={{ color: BOT_ACCENT }}
+                            >
+                              {checkpointManifest?.label ??
+                                selectedDifficulty.charAt(0).toUpperCase() +
+                                  selectedDifficulty.slice(1)}
                             </div>
                           </div>
+                          <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-[10px] uppercase tracking-[0.18em] text-neutral-300">
+                            {isBotReadoutOpen ? "Hide" : "Show"}
+                          </span>
+                        </button>
+                        {!isBotReadoutOpen ? (
+                          <p className="mt-3 text-sm leading-6 text-neutral-400">
+                            Collapsed by default. Open to inspect checkpoint
+                            metadata and live bot decisions.
+                          </p>
+                        ) : (
+                          <>
+                            <p className="mt-3 text-sm leading-6 text-neutral-400">
+                              {checkpointLoading
+                                ? "Loading checkpoint..."
+                                : checkpointError
+                                  ? checkpointError
+                                  : (checkpointManifest?.summary ??
+                                    "Self-play trained DQN agent.")}
+                            </p>
+                            {checkpointManifest &&
+                              !checkpointLoading &&
+                              !checkpointError && (
+                                <div className="mt-3 rounded-2xl border border-white/10 bg-black/20 px-3 py-3 text-xs leading-5 text-neutral-400">
+                                  {checkpointManifest.trainingRounds} training
+                                  rounds /{" "}
+                                  {formatPercent(
+                                    checkpointManifest.stats.botWinRate,
+                                  )}{" "}
+                                  eval win rate
+                                </div>
+                              )}
+                            {checkpointManifest?.telemetry.points.length ? (
+                              <div className="mt-3 grid gap-3">
+                                <TrainingMetricChart
+                                  label="Training Reward"
+                                  color={BOT_ACCENT}
+                                  points={checkpointManifest.telemetry.points}
+                                  valueKey="averageReward"
+                                  formatValue={(value) => formatSigned(value)}
+                                />
+                                <TrainingMetricChart
+                                  label="Training Win Rate"
+                                  color="#67e8f9"
+                                  points={checkpointManifest.telemetry.points}
+                                  valueKey="averageBotWinRate"
+                                  formatValue={formatPercent}
+                                />
+                              </div>
+                            ) : null}
+                            {checkpointManifest &&
+                              !checkpointLoading &&
+                              !checkpointError && (
+                                <div className="mt-3 grid grid-cols-2 gap-3 text-xs text-neutral-400">
+                                  <div className="rounded-2xl border border-white/8 bg-black/20 px-3 py-3">
+                                    reward window{" "}
+                                    {checkpointManifest.telemetry.rollingWindow}{" "}
+                                    rounds
+                                  </div>
+                                  <div className="rounded-2xl border border-white/8 bg-black/20 px-3 py-3">
+                                    params{" "}
+                                    {checkpointManifest.parameterCount.toLocaleString()}
+                                  </div>
+                                </div>
+                              )}
+                            <div className="mt-4 grid grid-cols-2 gap-3">
+                              <StatBlock
+                                label="Explore"
+                                value={formatPercent(match.explorationRate)}
+                              />
+                              <StatBlock
+                                label="Params"
+                                value={match.qStateCount.toLocaleString()}
+                              />
+                              <StatBlock
+                                label="Intent"
+                                value={ACTION_LABELS[match.botIntent]}
+                                tone={BOT_ACCENT}
+                              />
+                              <StatBlock
+                                label="Mode"
+                                value={match.lastDecisionMode.toUpperCase()}
+                              />
+                            </div>
+                          </>
                         )}
-                        <div className="mt-4 grid grid-cols-2 gap-3">
-                          <StatBlock label="Explore" value={formatPercent(match.explorationRate)} />
-                          <StatBlock label="States" value={match.qStateCount.toString()} />
-                          <StatBlock label="Intent" value={ACTION_LABELS[match.botIntent]} tone={profile.accent} />
-                          <StatBlock label="Mode" value={match.lastDecisionMode.toUpperCase()} />
-                        </div>
                       </div>
                     </aside>
                   )}
                 </div>
               </div>
 
-              <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-                <div className="rounded-[24px] border border-white/10 bg-white/[0.04] p-4 sm:p-5">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h2 className="text-sm uppercase tracking-[0.24em] text-neutral-500">Tick Feed</h2>
-                      <p className="mt-2 text-sm text-neutral-300">What just happened and what the learner thinks it is doing.</p>
-                    </div>
-                    <div className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[11px] uppercase tracking-[0.18em] text-neutral-300">
-                      {match.predictedHabit === "balanced" ? "Balanced read" : `${PLAYER_CATEGORY_LABELS[match.predictedHabit]} read`}
-                    </div>
-                  </div>
-                  <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-neutral-200">
-                    {match.statusMessage}
-                  </div>
-                  <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                    {dominantHabits.map(([category, value]) => (
-                      <div key={category} className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3">
-                        <div className="flex items-center justify-between text-sm text-neutral-300">
-                          <span>{PLAYER_CATEGORY_LABELS[category]}</span>
-                          <span>{formatPercent(value)}</span>
-                        </div>
-                        <div className="mt-2 h-2 rounded-full bg-white/8">
-                          <div
-                            className="h-full rounded-full bg-[linear-gradient(90deg,#67e8f9_0%,#f8fafc_100%)]"
-                            style={{ width: `${Math.max(6, value * 100)}%` }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-4 grid gap-2">
-                    {match.eventLog.map((event, index) => (
-                      <div
-                        key={`${event}-${index}`}
-                        className="rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-2 text-sm text-neutral-300"
-                      >
-                        {event}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
+              <div className="grid gap-4">
                 <div className="rounded-[24px] border border-white/10 bg-white/[0.04] p-4 sm:p-5">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
-                      <h2 className="text-sm uppercase tracking-[0.24em] text-neutral-500">Round Ledger</h2>
+                      <h2 className="text-sm uppercase tracking-[0.24em] text-neutral-500">
+                        Round Ledger
+                      </h2>
                       <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-neutral-300">
                         Round {match.round.toString().padStart(2, "0")}
                       </span>
@@ -932,18 +1180,35 @@ export default function AdaptiveArenaPage() {
                       disabled={checkpointLoading}
                       className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[11px] uppercase tracking-[0.22em] text-neutral-200 transition hover:bg-white/10"
                     >
-                      Flush Memory
+                      Reset Session
                     </button>
                   </div>
+                  <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-neutral-200">
+                    <div className="break-words leading-6">
+                      {match.statusMessage}
+                    </div>
+                  </div>
                   <div className="mt-4 grid grid-cols-3 gap-3">
-                    <StatBlock label="You" value={match.scoreboard.player.toString()} tone="#67e8f9" />
-                    <StatBlock label="Bot" value={match.scoreboard.bot.toString()} tone={profile.accent} />
-                    <StatBlock label="Draw" value={match.scoreboard.draw.toString()} />
+                    <StatBlock
+                      label="You"
+                      value={match.scoreboard.player.toString()}
+                      tone="#67e8f9"
+                    />
+                    <StatBlock
+                      label="Bot"
+                      value={match.scoreboard.bot.toString()}
+                      tone={BOT_ACCENT}
+                    />
+                    <StatBlock
+                      label="Draw"
+                      value={match.scoreboard.draw.toString()}
+                    />
                   </div>
                   <div className="mt-4 space-y-2">
                     {match.roundHistory.length === 0 ? (
                       <div className="rounded-2xl border border-dashed border-white/10 px-4 py-6 text-sm text-neutral-400">
-                        No finished rounds yet. The first few rounds are where exploration is most visible.
+                        No finished rounds yet. The first few rounds are where
+                        exploration is most visible.
                       </div>
                     ) : (
                       match.roundHistory.map((entry) => (
@@ -952,7 +1217,9 @@ export default function AdaptiveArenaPage() {
                           className="rounded-2xl border border-white/8 bg-black/20 px-4 py-3 text-sm text-neutral-300"
                         >
                           <div className="flex items-center justify-between gap-3">
-                            <span className="text-[10px] uppercase tracking-[0.22em] text-neutral-500">Round {entry.round}</span>
+                            <span className="text-[10px] uppercase tracking-[0.22em] text-neutral-500">
+                              Round {entry.round}
+                            </span>
                             <span
                               className={`rounded-full px-2 py-1 text-[10px] uppercase tracking-[0.18em] ${
                                 entry.outcome === "player"
@@ -961,13 +1228,21 @@ export default function AdaptiveArenaPage() {
                                     ? "text-white"
                                     : "bg-white/10 text-neutral-300"
                               }`}
-                              style={entry.outcome === "bot" ? { backgroundColor: `${profile.accent}1f`, color: profile.accent } : undefined}
+                              style={
+                                entry.outcome === "bot"
+                                  ? {
+                                      backgroundColor: `${BOT_ACCENT}1f`,
+                                      color: BOT_ACCENT,
+                                    }
+                                  : undefined
+                              }
                             >
                               {entry.outcome}
                             </span>
                           </div>
                           <div className="mt-2 text-xs text-neutral-400">
-                            you {entry.playerHealth} hp / bot {entry.botHealth} hp
+                            you {entry.playerHealth} hp / bot {entry.botHealth}{" "}
+                            hp
                           </div>
                         </div>
                       ))
@@ -980,5 +1255,5 @@ export default function AdaptiveArenaPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
