@@ -50,6 +50,18 @@ export function project(vector: number[], axis: number[]): number {
   return dot(vector, axis);
 }
 
+// Project a vector onto a 2D basis defined by x/y axes
+export function projectVectorTo2D(
+  vector: number[],
+  xAxis: number[],
+  yAxis: number[]
+): { x: number; y: number } {
+  return {
+    x: project(vector, xAxis),
+    y: project(vector, yAxis),
+  };
+}
+
 // Vector arithmetic: a - b + c
 export function arithmetic(a: number[], b: number[], c: number[]): number[] {
   return add(subtract(a, b), c);
@@ -97,9 +109,9 @@ export function projectTo2D(
 }
 
 // Normalize points to [-1, 1] range for visualization
-export function normalizePoints(
-  points: { word: string; x: number; y: number }[]
-): { word: string; x: number; y: number }[] {
+export function normalizePoints<T extends { x: number; y: number }>(
+  points: T[]
+): T[] {
   if (points.length === 0) return [];
 
   const xValues = points.map((p) => p.x);
@@ -114,7 +126,7 @@ export function normalizePoints(
   const yRange = yMax - yMin || 1;
 
   return points.map((p) => ({
-    word: p.word,
+    ...p,
     x: ((p.x - xMin) / xRange) * 2 - 1,
     y: ((p.y - yMin) / yRange) * 2 - 1,
   }));
