@@ -172,18 +172,23 @@ function drawArena(
   const context = canvas.getContext("2d");
   if (!context) return;
 
-  const size = 900;
+  const dpr = window.devicePixelRatio || 1;
+  const cssSize = canvas.clientWidth || 900;
+  const size = Math.round(cssSize * dpr);
   canvas.width = size;
   canvas.height = size;
+  context.scale(dpr, dpr);
 
-  const tileSize = size / ARENA_SIZE;
-  context.clearRect(0, 0, size, size);
+  // All drawing uses CSS pixels from here
+  const drawSize = cssSize;
+  const tileSize = drawSize / ARENA_SIZE;
+  context.clearRect(0, 0, drawSize, drawSize);
 
-  const background = context.createLinearGradient(0, 0, size, size);
+  const background = context.createLinearGradient(0, 0, drawSize, drawSize);
   background.addColorStop(0, "#040608");
   background.addColorStop(1, "#09121a");
   context.fillStyle = background;
-  context.fillRect(0, 0, size, size);
+  context.fillRect(0, 0, drawSize, drawSize);
 
   for (let y = 0; y < ARENA_SIZE; y += 1) {
     for (let x = 0; x < ARENA_SIZE; x += 1) {
@@ -210,7 +215,7 @@ function drawArena(
       tileSize * 0.6,
     );
     context.strokeStyle = "rgba(255,255,255,0.7)";
-    context.lineWidth = 1.5;
+    context.lineWidth = 1.5 * (drawSize / 900);
     context.strokeRect(
       px + tileSize * 0.2,
       py + tileSize * 0.2,
@@ -244,6 +249,9 @@ function drawArena(
     { ...match.bot, color: profileAccent, label: "Bot" },
   ];
 
+  // Scale HUD/label elements proportionally (designed at 900px baseline)
+  const s = drawSize / 900;
+
   fighters.forEach((fighter) => {
     const centerX = (fighter.position.x + 0.5) * tileSize;
     const centerY = (fighter.position.y + 0.5) * tileSize;
@@ -252,7 +260,7 @@ function drawArena(
     context.beginPath();
     context.fillStyle = fighter.color;
     context.shadowColor = fighter.color;
-    context.shadowBlur = fighter.flashTicks > 0 ? 24 : 14;
+    context.shadowBlur = (fighter.flashTicks > 0 ? 24 : 14) * s;
     context.arc(centerX, centerY, radius, 0, Math.PI * 2);
     context.fill();
     context.shadowBlur = 0;
@@ -260,48 +268,48 @@ function drawArena(
     if (fighter.guarding) {
       context.beginPath();
       context.strokeStyle = "rgba(255,255,255,0.9)";
-      context.lineWidth = 2;
-      context.arc(centerX, centerY, radius + 4, 0, Math.PI * 2);
+      context.lineWidth = 2 * s;
+      context.arc(centerX, centerY, radius + 4 * s, 0, Math.PI * 2);
       context.stroke();
     }
 
     context.fillStyle = "rgba(0,0,0,0.85)";
-    context.fillRect(centerX - 18, centerY - radius - 16, 36, 14);
+    context.fillRect(centerX - 18 * s, centerY - radius - 16 * s, 36 * s, 14 * s);
     context.fillStyle = "#f8fafc";
-    context.font = "10px monospace";
+    context.font = `${10 * s}px monospace`;
     context.textAlign = "center";
-    context.fillText(fighter.label, centerX, centerY - radius - 5);
+    context.fillText(fighter.label, centerX, centerY - radius - 5 * s);
   });
 
   context.fillStyle = "rgba(3,7,12,0.88)";
-  context.fillRect(size / 2 - 74, 4, 148, 28);
+  context.fillRect(drawSize / 2 - 74 * s, 4 * s, 148 * s, 28 * s);
   context.strokeStyle = "rgba(255,255,255,0.14)";
-  context.strokeRect(size / 2 - 74, 4, 148, 28);
+  context.strokeRect(drawSize / 2 - 74 * s, 4 * s, 148 * s, 28 * s);
 
   context.fillStyle = "#e5e7eb";
-  context.font = "12px monospace";
+  context.font = `${12 * s}px monospace`;
   context.textAlign = "center";
   context.fillText(
     `TIMER ${match.timer.toString().padStart(3, "0")}`,
-    size / 2,
-    23,
+    drawSize / 2,
+    23 * s,
   );
 
-  const hudY = 16;
-  const barWidth = 190;
-  const barHeight = 12;
-  const hudMargin = 44;
+  const hudY = 16 * s;
+  const barWidth = 190 * s;
+  const barHeight = 12 * s;
+  const hudMargin = 44 * s;
 
   context.textAlign = "left";
   context.fillStyle = "#67e8f9";
-  context.font = "11px monospace";
+  context.font = `${11 * s}px monospace`;
   context.fillText("YOU", hudMargin, hudY);
   context.fillStyle = "rgba(255,255,255,0.12)";
-  context.fillRect(hudMargin, hudY + 10, barWidth, barHeight);
+  context.fillRect(hudMargin, hudY + 10 * s, barWidth, barHeight);
   context.fillStyle = "#67e8f9";
   context.fillRect(
     hudMargin,
-    hudY + 10,
+    hudY + 10 * s,
     barWidth * (match.player.health / MAX_HEALTH),
     barHeight,
   );
@@ -309,58 +317,58 @@ function drawArena(
   context.fillText(
     `${match.player.health}/${MAX_HEALTH}`,
     hudMargin,
-    hudY + 38,
+    hudY + 38 * s,
   );
 
   context.textAlign = "right";
   context.fillStyle = profileAccent;
-  context.fillText("BOT", size - hudMargin, hudY);
+  context.fillText("BOT", drawSize - hudMargin, hudY);
   context.fillStyle = "rgba(255,255,255,0.12)";
-  context.fillRect(size - hudMargin - barWidth, hudY + 10, barWidth, barHeight);
+  context.fillRect(drawSize - hudMargin - barWidth, hudY + 10 * s, barWidth, barHeight);
   context.fillStyle = profileAccent;
   context.fillRect(
-    size - hudMargin - barWidth,
-    hudY + 10,
+    drawSize - hudMargin - barWidth,
+    hudY + 10 * s,
     barWidth * (match.bot.health / MAX_HEALTH),
     barHeight,
   );
   context.fillStyle = "#e5e7eb";
   context.fillText(
     `${match.bot.health}/${MAX_HEALTH}`,
-    size - hudMargin,
-    hudY + 38,
+    drawSize - hudMargin,
+    hudY + 38 * s,
   );
   context.fillStyle = "rgba(229,231,235,0.75)";
-  context.font = "10px monospace";
+  context.font = `${10 * s}px monospace`;
   context.fillText(
     `${match.lastDecisionMode.toUpperCase()} / ${ACTION_LABELS[match.botIntent]}`,
-    size - hudMargin,
-    hudY + 56,
+    drawSize - hudMargin,
+    hudY + 56 * s,
   );
 
   if (match.phase === "intermission") {
     context.fillStyle = "rgba(1,4,9,0.72)";
-    context.fillRect(0, 0, size, size);
+    context.fillRect(0, 0, drawSize, drawSize);
     context.fillStyle = "rgba(3,7,12,0.9)";
-    context.fillRect(size / 2 - 220, size / 2 - 92, 440, 144);
+    context.fillRect(drawSize / 2 - 220 * s, drawSize / 2 - 92 * s, 440 * s, 144 * s);
     context.strokeStyle = "rgba(255,255,255,0.14)";
-    context.strokeRect(size / 2 - 220, size / 2 - 92, 440, 144);
+    context.strokeRect(drawSize / 2 - 220 * s, drawSize / 2 - 92 * s, 440 * s, 144 * s);
     context.fillStyle = "#f8fafc";
-    context.font = "700 32px monospace";
+    context.font = `700 ${32 * s}px monospace`;
     context.textAlign = "center";
     const lineCount = drawWrappedText(
       context,
       match.statusMessage,
-      size / 2,
-      size / 2 - 40,
-      380,
-      36,
+      drawSize / 2,
+      drawSize / 2 - 40 * s,
+      380 * s,
+      36 * s,
     );
-    context.font = "14px monospace";
+    context.font = `${14 * s}px monospace`;
     context.fillText(
       `next round in ${match.intermissionTicks}  |  press space to continue`,
-      size / 2,
-      size / 2 + 14 + Math.max(0, lineCount - 1) * 18,
+      drawSize / 2,
+      drawSize / 2 + 14 * s + Math.max(0, lineCount - 1) * 18 * s,
     );
   }
 }
@@ -507,6 +515,7 @@ export default function AdaptiveArenaPage() {
   const [autoRunRounds, setAutoRunRounds] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [, setCanvasSize] = useState(0);
   const [isBotReadoutOpen, setIsBotReadoutOpen] = useState(false);
   const [checkpointManifest, setCheckpointManifest] =
     useState<DQNCheckpointManifest | null>(null);
@@ -706,6 +715,20 @@ export default function AdaptiveArenaPage() {
     drawArena(canvas, arena, match, BOT_ACCENT);
   }, [arena, match, BOT_ACCENT]);
 
+  // Re-draw at native resolution when canvas container resizes
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) return;
+      setCanvasSize(entry.contentRect.width);
+    });
+    observer.observe(canvas);
+    return () => observer.disconnect();
+  }, []);
+
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(document.fullscreenElement === arenaPanelRef.current);
@@ -792,7 +815,7 @@ export default function AdaptiveArenaPage() {
         : "Start Next Round"
       : "Start Match";
   const arenaMaxWidth = isFullscreen
-    ? "min(calc(100vw - 4rem), calc(100vh - 8rem))"
+    ? "min(calc(100vw - 2rem), calc(100vh - 2rem))"
     : "min(100%, calc(100vh - 12rem), 1080px)";
 
   return (
@@ -831,13 +854,13 @@ export default function AdaptiveArenaPage() {
             <section className="space-y-4">
               <div
                 ref={arenaPanelRef}
-                className={`overflow-hidden rounded-[28px] border border-white/10 bg-[#04080d]/80 shadow-[0_24px_90px_rgba(0,0,0,0.45)] ${isFullscreen ? "h-full bg-[#05070a]" : ""}`}
+                className={`overflow-hidden ${isFullscreen ? "h-screen bg-[#05070a]" : "rounded-[28px] border border-white/10 bg-[#04080d]/80 shadow-[0_24px_90px_rgba(0,0,0,0.45)]"}`}
               >
                 <div
                   className={`${isFullscreen ? "block" : "grid xl:grid-cols-[minmax(0,1fr)_360px]"}`}
                 >
                   <div
-                    className={`relative border-b border-white/10 xl:border-b-0 xl:border-r xl:border-white/10 ${isFullscreen ? "p-4" : "p-4 sm:p-5"}`}
+                    className={`relative ${isFullscreen ? "p-2" : "border-b border-white/10 p-4 sm:p-5 xl:border-b-0 xl:border-r xl:border-white/10"}`}
                   >
                     {isFullscreen && (
                       <div className="absolute left-6 top-6 z-10 flex w-40 flex-col gap-2">
@@ -882,7 +905,7 @@ export default function AdaptiveArenaPage() {
                       <FullscreenCornersIcon />
                     </button>
                     <div
-                      className={`${isFullscreen ? "flex h-[calc(100vh-8rem)] items-center justify-center" : ""}`}
+                      className={`${isFullscreen ? "flex h-[calc(100vh-2rem)] items-center justify-center" : ""}`}
                     >
                       <div
                         className="mx-auto w-full"
@@ -890,7 +913,7 @@ export default function AdaptiveArenaPage() {
                       >
                         <canvas
                           ref={canvasRef}
-                          className="aspect-square w-full rounded-[22px] border border-white/10 bg-[#020407]"
+                          className={`aspect-square w-full bg-[#020407] ${isFullscreen ? "" : "rounded-[22px] border border-white/10"}`}
                         />
                       </div>
                     </div>
