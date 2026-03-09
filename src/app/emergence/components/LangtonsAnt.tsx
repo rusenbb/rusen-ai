@@ -658,7 +658,7 @@ export default function LangtonsAnt(): React.ReactElement {
       <div className="text-neutral-300 text-sm sm:text-base leading-relaxed space-y-3 border-l-2 border-red-800 pl-4">
         <p>
           After approximately 10,000 steps of seemingly random behavior, the ant
-          always builds a diagonal highway &mdash; a perfectly regular, repeating
+          always builds a diagonal highway. A perfectly regular, repeating
           pattern that extends forever.
         </p>
         <p>

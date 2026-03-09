@@ -574,7 +574,7 @@ export default function GameOfLifeDemo() {
       <div className="space-y-8">
         <p className="text-neutral-300 leading-relaxed max-w-2xl">
           The Game of Life is a cellular automaton devised by mathematician John
-          Conway in 1970. It has no players &mdash; its evolution is determined
+          Conway in 1970. It has no players. Its evolution is determined
           entirely by its initial state. The universe is an infinite
           two-dimensional grid of cells, each either <em>alive</em> or{" "}
           <em>dead</em>. Every generation, four rules are applied simultaneously
@@ -734,15 +734,15 @@ export default function GameOfLifeDemo() {
         <p className="text-neutral-300 leading-relaxed max-w-2xl">
           The Game of Life is{" "}
           <span className="text-neutral-100 font-medium">Turing complete</span>{" "}
-          &mdash; you can build entire computers inside it. Logic gates,
-          memory, clocks &mdash; all from four rules applied to a grid.
+          ... you can build entire computers inside it. Logic gates,
+          memory, clocks. All from four rules applied to a grid.
         </p>
         <p className="text-neutral-300 leading-relaxed max-w-2xl">
           The background of this website is a Game of Life simulation running an{" "}
           <span className="text-neutral-100 font-medium">
             OTCA metapixel
           </span>{" "}
-          &mdash; a Game of Life inside a Game of Life.
+          ... a Game of Life inside a Game of Life.
         </p>
         <p className="text-neutral-400 text-sm">
           See the full experience &rarr;

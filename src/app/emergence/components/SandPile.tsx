@@ -610,7 +610,7 @@ export default function SandPile(): React.ReactElement {
       <div className="space-y-4 text-neutral-300 text-sm sm:text-base leading-relaxed">
         <p>
           A grid of cells. Each cell holds 0&ndash;3 grains of sand. Drop one
-          grain on a random cell &mdash; or wherever you click. When a cell
+          grain on a random cell (or wherever you click). When a cell
           reaches <strong className="text-amber-400">4 grains</strong>, it{" "}
           <em>topples</em>: loses 4 grains, each of its 4 neighbors gains 1. If
           a neighbor now has 4+, it topples too. Chain reaction.

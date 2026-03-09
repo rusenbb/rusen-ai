@@ -395,7 +395,7 @@ export default function ElementaryCA(): React.ReactElement {
       <div className="space-y-4 text-neutral-300 text-sm sm:text-base leading-relaxed">
         <p>
           A one-dimensional row of cells, each either <strong className="text-cyan-400">on</strong> or off.
-          Each cell looks at itself and its two neighbors &mdash; three cells, eight possible patterns.
+          Each cell looks at itself and its two neighbors: three cells, eight possible patterns.
           A <em>rule number</em> from 0 to 255 encodes what the output should be for each pattern.
           That&rsquo;s it. Apply the rule to every cell, simultaneously, to produce the next generation.
         </p>
@@ -403,7 +403,7 @@ export default function ElementaryCA(): React.ReactElement {
         {/* Rule table */}
         <div className="p-4 sm:p-6 rounded-lg border border-neutral-800 bg-neutral-900/50">
           <div className="text-xs text-neutral-500 mb-4 text-center tracking-wide uppercase">
-            Rule {rule} &mdash; Lookup Table
+            Rule {rule} / Lookup Table
           </div>
           <RuleTable rule={rule} />
         </div>
@@ -527,13 +527,13 @@ export default function ElementaryCA(): React.ReactElement {
       {/* Takeaway */}
       <div className="text-neutral-300 text-sm sm:text-base leading-relaxed space-y-3 border-l-2 border-cyan-800 pl-4">
         <p>
-          <strong className="text-neutral-100">Rule 30</strong> produces apparent randomness &mdash;
+          <strong className="text-neutral-100">Rule 30</strong> produces apparent randomness.
           Wolfram used it as a pseudorandom number generator in Mathematica.{" "}
           <strong className="text-neutral-100">Rule 110</strong> is proven Turing complete: it can
           compute anything a general-purpose computer can.{" "}
           <strong className="text-neutral-100">Rule 90</strong> produces the Sierpinski triangle, a
           fractal with infinite self-similarity.{" "}
-          <strong className="text-neutral-100">Rule 184</strong> models basic traffic flow &mdash;
+          <strong className="text-neutral-100">Rule 184</strong> models basic traffic flow,
           particles that conserve density.
         </p>
         <p className="text-neutral-500">

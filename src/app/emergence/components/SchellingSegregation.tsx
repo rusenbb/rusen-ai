@@ -435,7 +435,7 @@ export default function SchellingSegregation() {
           me.&rdquo; Unhappy agents move to a random empty cell.
         </p>
         <p className="text-sm sm:text-base text-neutral-700 dark:text-neutral-300 leading-relaxed">
-          That&apos;s it. No bias, no hostility &mdash; just a mild preference
+          That&apos;s it. No bias, no hostility. Just a mild preference
           for similarity.
         </p>
 

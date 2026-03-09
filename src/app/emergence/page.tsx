@@ -18,7 +18,7 @@ export default function EmergencePage() {
         </h1>
         <p className="text-base sm:text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl text-pretty leading-relaxed">
           Simple rules, followed locally, can produce complex behavior globally
-          &mdash; behavior that nobody designed, nobody predicted, and sometimes
+          ... behavior that nobody designed, nobody predicted, and sometimes
           nobody can fully explain. This page lets you see it happen.
         </p>
       </header>
@@ -61,7 +61,7 @@ export default function EmergencePage() {
         <p className="text-neutral-500 text-sm leading-relaxed max-w-2xl">
           Five systems. Rules you can fit on an index card. Behavior that
           surprises, disturbs, and remains unexplained. Emergence is not a
-          special case &mdash; it is the default. The question is not why
+          special case. It is the default. The question is not why
           complex things are complex, but why simple rules refuse to stay
           simple.
         </p>
