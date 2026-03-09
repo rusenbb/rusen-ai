@@ -421,6 +421,16 @@ export default function SandPile(): React.ReactElement {
   // Drop logic
   // -----------------------------------------------------------------------
 
+  /** Snapshot statsRef into React state so the UI re-renders */
+  const flushStats = useCallback((): void => {
+    const s = statsRef.current;
+    setStats({
+      totalDropped: s.totalDropped,
+      lastAvalancheSize: s.lastAvalancheSize,
+      histogram: { ...s.histogram },
+    });
+  }, []);
+
   const dropAtRandom = useCallback((): void => {
     const x = Math.floor(Math.random() * GRID_W);
     const y = Math.floor(Math.random() * GRID_H);
@@ -435,7 +445,6 @@ export default function SandPile(): React.ReactElement {
     s.totalDropped++;
     s.lastAvalancheSize = size;
     recordAvalanche(s.histogram, size);
-    setStats({ ...s });
   }, []);
 
   const dropAt = useCallback((x: number, y: number): void => {
@@ -452,7 +461,6 @@ export default function SandPile(): React.ReactElement {
     s.totalDropped++;
     s.lastAvalancheSize = size;
     recordAvalanche(s.histogram, size);
-    setStats({ ...s });
   }, []);
 
   const dropMany = useCallback(
@@ -473,12 +481,12 @@ export default function SandPile(): React.ReactElement {
         s.lastAvalancheSize = size;
         recordAvalanche(s.histogram, size);
       }
-      setStats({ ...statsRef.current });
+      flushStats();
       drawGrid(true);
       // Clear topple highlight after a brief flash
       setTimeout(() => drawGrid(false), 80);
     },
-    [drawGrid]
+    [drawGrid, flushStats]
   );
 
   // -----------------------------------------------------------------------
@@ -497,10 +505,11 @@ export default function SandPile(): React.ReactElement {
       const gy = Math.floor((my / rect.height) * GRID_H);
 
       dropAt(gx, gy);
+      flushStats();
       drawGrid(true);
       setTimeout(() => drawGrid(false), 80);
     },
-    [dropAt, drawGrid]
+    [dropAt, flushStats, drawGrid]
   );
 
   // -----------------------------------------------------------------------
@@ -545,6 +554,7 @@ export default function SandPile(): React.ReactElement {
         for (let i = 0; i < drops; i++) {
           dropAtRandom();
         }
+        flushStats();
         drawGrid(toppledCellsRef.current.size > 0);
 
         // Clear topple flash for next frame
@@ -568,7 +578,7 @@ export default function SandPile(): React.ReactElement {
         animFrameRef.current = 0;
       }
     };
-  }, [playing, dropAtRandom, drawGrid]);
+  }, [playing, dropAtRandom, flushStats, drawGrid]);
 
   // -----------------------------------------------------------------------
   // Reset
@@ -594,9 +604,10 @@ export default function SandPile(): React.ReactElement {
 
   const handleDropOne = useCallback(() => {
     dropAtRandom();
+    flushStats();
     drawGrid(true);
     setTimeout(() => drawGrid(false), 80);
-  }, [dropAtRandom, drawGrid]);
+  }, [dropAtRandom, flushStats, drawGrid]);
 
   return (
     <div className="space-y-8">
