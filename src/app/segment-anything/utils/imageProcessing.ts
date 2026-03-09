@@ -1,5 +1,3 @@
-const IMAGE_SIZE = 1008;
-
 /**
  * Load a File as an HTMLImageElement.
  */
@@ -21,19 +19,22 @@ export function loadImage(file: File): Promise<HTMLImageElement> {
 
 /**
  * Preprocess an image for SAM3's image encoder.
- * Resizes to 1008x1008 and converts RGBA → RGB in CHW uint8 format.
- * Returns a Uint8Array of shape [3, 1008, 1008].
+ * Resizes to the loaded model's square input size and converts RGBA → RGB
+ * in CHW uint8 format.
  */
-export function preprocessImage(img: HTMLImageElement): Uint8Array {
+export function preprocessImage(
+  img: HTMLImageElement,
+  imageSize: number,
+): Uint8Array {
   const canvas = document.createElement("canvas");
-  canvas.width = IMAGE_SIZE;
-  canvas.height = IMAGE_SIZE;
+  canvas.width = imageSize;
+  canvas.height = imageSize;
   const ctx = canvas.getContext("2d")!;
-  ctx.drawImage(img, 0, 0, IMAGE_SIZE, IMAGE_SIZE);
-  const imageData = ctx.getImageData(0, 0, IMAGE_SIZE, IMAGE_SIZE);
+  ctx.drawImage(img, 0, 0, imageSize, imageSize);
+  const imageData = ctx.getImageData(0, 0, imageSize, imageSize);
 
   // RGBA (HWC) → RGB (CHW)
-  const pixels = IMAGE_SIZE * IMAGE_SIZE;
+  const pixels = imageSize * imageSize;
   const rgb = new Uint8Array(3 * pixels);
   for (let i = 0; i < pixels; i++) {
     rgb[i] = imageData.data[i * 4]; // R

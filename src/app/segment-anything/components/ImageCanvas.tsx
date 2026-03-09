@@ -1,5 +1,5 @@
 import { useRef, useEffect, useCallback, useState } from "react";
-import type { SegmentResult } from "../types";
+import type { BoxPrompt, SegmentResult } from "../types";
 import type { MaskFill } from "../utils/imageProcessing";
 import {
   renderMaskOverlay,
@@ -12,9 +12,11 @@ interface ImageCanvasProps {
   imageUrl: string | null;
   originalWidth: number | null;
   originalHeight: number | null;
+  boxPrompt: BoxPrompt | null;
   results: SegmentResult | null;
   textPrompt: string;
-  onImageDrop: (file: File) => void;
+  onImageDrop: (file: File | null) => void;
+  onBoxPromptChange: (boxPrompt: BoxPrompt | null) => void;
   disabled: boolean;
 }
 
@@ -43,72 +45,145 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
   return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
 }
 
+function getCanvasPoint(
+  event: React.MouseEvent<HTMLCanvasElement>,
+  canvas: HTMLCanvasElement,
+) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+
+  return {
+    x: Math.max(0, Math.min(canvas.width, (event.clientX - rect.left) * scaleX)),
+    y: Math.max(
+      0,
+      Math.min(canvas.height, (event.clientY - rect.top) * scaleY),
+    ),
+  };
+}
+
+function normalizeBox(box: BoxPrompt): BoxPrompt | null {
+  const x1 = Math.min(box.x1, box.x2);
+  const y1 = Math.min(box.y1, box.y2);
+  const x2 = Math.max(box.x1, box.x2);
+  const y2 = Math.max(box.y1, box.y2);
+
+  if (x2 - x1 < 4 || y2 - y1 < 4) return null;
+  return { x1, y1, x2, y2 };
+}
+
+function drawPromptBox(
+  ctx: CanvasRenderingContext2D,
+  box: BoxPrompt,
+  label: string,
+  color: string,
+  dashed: boolean,
+) {
+  const width = box.x2 - box.x1;
+  const height = box.y2 - box.y1;
+  if (width <= 0 || height <= 0) return;
+
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.setLineDash(dashed ? [8, 6] : []);
+  ctx.strokeRect(box.x1, box.y1, width, height);
+
+  ctx.setLineDash([]);
+  ctx.font = "12px var(--font-geist-mono), monospace";
+  const labelWidth = ctx.measureText(label).width + 10;
+  const labelY = box.y1 > 22 ? box.y1 - 22 : box.y1;
+  ctx.fillStyle = color;
+  ctx.fillRect(box.x1, labelY, labelWidth, 18);
+  ctx.fillStyle = "#ffffff";
+  ctx.fillText(label, box.x1 + 5, labelY + 13);
+  ctx.restore();
+}
+
 export default function ImageCanvas({
   imageUrl,
   originalWidth,
   originalHeight,
+  boxPrompt,
   results,
   textPrompt,
   onImageDrop,
+  onBoxPromptChange,
   disabled,
 }: ImageCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [showMask, setShowMask] = useState(true);
+  const [isBoxMode, setIsBoxMode] = useState(false);
+  const [draftBox, setDraftBox] = useState<BoxPrompt | null>(null);
 
   // Export state
   const [keepMode, setKeepMode] = useState<KeepMode>("subject");
-  const [fillIndex, setFillIndex] = useState(0); // index into PRESET_FILLS, or -1 for custom
+  const [fillIndex, setFillIndex] = useState(0);
   const [customColor, setCustomColor] = useState("#ff0000");
 
-  // Draw image + overlays
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !imageUrl || !originalWidth || !originalHeight) return;
 
-    const ctx = canvas.getContext("2d")!;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
     const img = new Image();
     img.onload = () => {
       imgRef.current = img;
       canvas.width = originalWidth;
       canvas.height = originalHeight;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0);
 
-      if (!results || !showMask) return;
-
       const threshold = 0.3;
+      if (results && showMask) {
+        if (results.maskData && results.maskDims && results.scores[0] > threshold) {
+          const dims = results.maskDims;
+          const maskH = dims[dims.length - 2];
+          const maskW = dims[dims.length - 1];
+          renderMaskOverlay(
+            ctx,
+            results.maskData,
+            maskW,
+            maskH,
+            originalWidth,
+            originalHeight,
+          );
+        }
 
-      if (
-        results.maskData &&
-        results.maskDims &&
-        results.scores[0] > threshold
-      ) {
-        const dims = results.maskDims;
-        const maskH = dims[dims.length - 2];
-        const maskW = dims[dims.length - 1];
-        renderMaskOverlay(
-          ctx,
-          results.maskData,
-          maskW,
-          maskH,
-          originalWidth,
-          originalHeight
-        );
+        for (let i = 0; i < results.scores.length; i += 1) {
+          if (results.scores[i] < threshold) break;
+          renderBoundingBox(
+            ctx,
+            results.boxes[i],
+            results.scores[i],
+            textPrompt || "object",
+          );
+        }
       }
 
-      for (let i = 0; i < results.scores.length; i++) {
-        if (results.scores[i] < threshold) break;
-        renderBoundingBox(
-          ctx,
-          results.boxes[i],
-          results.scores[i],
-          textPrompt || "object"
-        );
+      if (boxPrompt) {
+        drawPromptBox(ctx, boxPrompt, "visual prompt", "#14b8a6", false);
+      }
+
+      if (draftBox) {
+        drawPromptBox(ctx, draftBox, "drawing", "#f59e0b", true);
       }
     };
     img.src = imageUrl;
-  }, [imageUrl, originalWidth, originalHeight, results, textPrompt, showMask]);
+  }, [
+    boxPrompt,
+    draftBox,
+    imageUrl,
+    originalHeight,
+    originalWidth,
+    results,
+    showMask,
+    textPrompt,
+  ]);
 
   const handleExport = useCallback(() => {
     const img = imgRef.current;
@@ -129,7 +204,7 @@ export default function ImageCanvas({
       maskW,
       maskH,
       keepMode,
-      fill
+      fill,
     );
     const label = textPrompt.trim().replace(/\s+/g, "-") || "object";
     const suffix = keepMode === "subject" ? "extracted" : "bg-removed";
@@ -139,9 +214,10 @@ export default function ImageCanvas({
   const handleFile = useCallback(
     (file: File) => {
       if (!file.type.startsWith("image/")) return;
+      onBoxPromptChange(null);
       onImageDrop(file);
     },
-    [onImageDrop]
+    [onBoxPromptChange, onImageDrop],
   );
 
   const handleDrop = useCallback(
@@ -152,7 +228,7 @@ export default function ImageCanvas({
       const file = e.dataTransfer.files[0];
       if (file) handleFile(file);
     },
-    [disabled, handleFile]
+    [disabled, handleFile],
   );
 
   const handleDragOver = useCallback(
@@ -160,7 +236,7 @@ export default function ImageCanvas({
       e.preventDefault();
       if (!disabled) setIsDragging(true);
     },
-    [disabled]
+    [disabled],
   );
 
   const handleDragLeave = useCallback(() => setIsDragging(false), []);
@@ -176,6 +252,42 @@ export default function ImageCanvas({
     };
     input.click();
   }, [disabled, imageUrl, handleFile]);
+
+  const handleBoxStart = useCallback(
+    (event: React.MouseEvent<HTMLCanvasElement>) => {
+      if (!isBoxMode || !imageUrl) return;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const point = getCanvasPoint(event, canvas);
+      setDraftBox({ x1: point.x, y1: point.y, x2: point.x, y2: point.y });
+    },
+    [imageUrl, isBoxMode],
+  );
+
+  const handleBoxMove = useCallback(
+    (event: React.MouseEvent<HTMLCanvasElement>) => {
+      if (!draftBox) return;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const point = getCanvasPoint(event, canvas);
+      setDraftBox({ ...draftBox, x2: point.x, y2: point.y });
+    },
+    [draftBox],
+  );
+
+  const commitDraftBox = useCallback(() => {
+    if (!draftBox) return;
+    onBoxPromptChange(normalizeBox(draftBox));
+    setDraftBox(null);
+    setIsBoxMode(false);
+  }, [draftBox, onBoxPromptChange]);
+
+  const clearImage = useCallback(() => {
+    setDraftBox(null);
+    setIsBoxMode(false);
+    onBoxPromptChange(null);
+    onImageDrop(null);
+  }, [onBoxPromptChange, onImageDrop]);
 
   if (!imageUrl) {
     return (
@@ -216,21 +328,27 @@ export default function ImageCanvas({
   }
 
   const hasMask =
-    results &&
-    results.maskData &&
-    results.maskDims &&
+    !!results &&
+    !!results.maskData &&
+    !!results.maskDims &&
     results.scores[0] > 0.3;
 
   return (
     <div className="space-y-3">
-      {/* Canvas */}
       <div
         className="relative w-full overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800"
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
       >
-        <canvas ref={canvasRef} className="w-full h-auto" />
+        <canvas
+          ref={canvasRef}
+          className={`w-full h-auto ${isBoxMode ? "cursor-crosshair" : ""}`}
+          onMouseDown={handleBoxStart}
+          onMouseMove={handleBoxMove}
+          onMouseUp={commitDraftBox}
+          onMouseLeave={commitDraftBox}
+        />
         {isDragging && (
           <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
             <p className="text-white font-medium text-sm bg-blue-600 px-3 py-1.5 rounded">
@@ -240,7 +358,6 @@ export default function ImageCanvas({
         )}
       </div>
 
-      {/* Toolbar row */}
       <div className="flex items-center gap-2 flex-wrap">
         {results && (
           <label className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400 cursor-pointer">
@@ -253,23 +370,60 @@ export default function ImageCanvas({
             Show mask
           </label>
         )}
-        <div className="flex-1" />
+
         <button
-          onClick={() => onImageDrop(null as unknown as File)}
+          onClick={() => {
+            setDraftBox(null);
+            setIsBoxMode((current) => !current);
+          }}
+          className={`px-2.5 py-1 text-xs rounded-md border transition-colors ${
+            isBoxMode
+              ? "border-teal-500 bg-teal-50 text-teal-700 dark:bg-teal-950/30 dark:text-teal-300"
+              : "border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800"
+          }`}
+        >
+          {isBoxMode ? "Cancel box" : "Draw box prompt"}
+        </button>
+
+        {boxPrompt && (
+          <button
+            onClick={() => onBoxPromptChange(null)}
+            className="px-2.5 py-1 text-xs rounded-md border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800"
+          >
+            Clear box
+          </button>
+        )}
+
+        <div className="flex-1" />
+
+        <button
+          onClick={clearImage}
           className="text-xs text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200"
         >
           Clear image
         </button>
       </div>
 
-      {/* Export panel */}
+      <div className="text-xs text-neutral-500 dark:text-neutral-400">
+        {boxPrompt ? (
+          <p>
+            Visual prompt active. The drawn box will be passed into the SAM3
+            decoder alongside the text prompt.
+          </p>
+        ) : (
+          <p>
+            Optional: draw a box to constrain the text prompt to a specific
+            region or instance.
+          </p>
+        )}
+      </div>
+
       {hasMask && (
         <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg space-y-3">
           <p className="text-xs font-medium text-neutral-700 dark:text-neutral-300 uppercase tracking-wide">
             Export
           </p>
 
-          {/* Keep toggle */}
           <div className="flex items-center gap-2">
             <span className="text-xs text-neutral-500 dark:text-neutral-400 w-8 shrink-0">
               Keep
@@ -298,7 +452,6 @@ export default function ImageCanvas({
             </div>
           </div>
 
-          {/* Fill options */}
           <div className="flex items-center gap-2">
             <span className="text-xs text-neutral-500 dark:text-neutral-400 w-8 shrink-0">
               Fill
@@ -324,7 +477,6 @@ export default function ImageCanvas({
                   }
                 />
               ))}
-              {/* Custom color */}
               <div className="relative">
                 <button
                   onClick={() => setFillIndex(-1)}
@@ -349,7 +501,6 @@ export default function ImageCanvas({
             </div>
           </div>
 
-          {/* Download button */}
           <button
             onClick={handleExport}
             className="w-full flex items-center justify-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-md transition-colors"

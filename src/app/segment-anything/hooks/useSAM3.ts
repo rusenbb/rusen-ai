@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import type {
+  BoxPrompt,
   OrtTensor,
   OrtInferenceSession,
   SegmentResult,
@@ -56,6 +57,14 @@ type ModelBuffers = {
   imageEncoder: ArrayBuffer;
   languageEncoder: ArrayBuffer;
   decoder: ArrayBuffer;
+};
+
+type SegmentRunOptions = {
+  tokens: Int32Array;
+  imageRgb?: Uint8Array;
+  originalWidth?: number;
+  originalHeight?: number;
+  boxPrompt?: BoxPrompt | null;
 };
 
 // ── Load ORT from CDN ───────────────────────────────────────────────
@@ -191,6 +200,21 @@ function sessionHasInt64Inputs(session: OrtInferenceSession): boolean {
   );
 }
 
+function getImageInputSize(session: OrtInferenceSession): number {
+  const metadata = session.inputMetadata.find((input) => input.name === "image");
+  const shape = metadata?.shape;
+  if (!shape) return 1008;
+
+  for (let index = shape.length - 1; index >= 0; index -= 1) {
+    const value = shape[index];
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value;
+    }
+  }
+
+  return 1008;
+}
+
 function createIntegerTensor(
   ort: OrtAPI,
   type: IntegerTensorType,
@@ -236,6 +260,7 @@ export function useSAM3(dispatch: React.Dispatch<SegmentAction>) {
   const cachedEncOutputs = useRef<Record<string, OrtTensor> | null>(null);
   const cachedImageWidth = useRef<number>(0);
   const cachedImageHeight = useRef<number>(0);
+  const [modelInputSize, setModelInputSize] = useState(1008);
 
   const createSessions = useCallback(async (executionProviders: string[]) => {
     const ort = ortRef.current;
@@ -270,6 +295,7 @@ export function useSAM3(dispatch: React.Dispatch<SegmentAction>) {
       imgEncSession.current = sessions.imageEncoder;
       langEncSession.current = sessions.languageEncoder;
       decSession.current = sessions.decoder;
+      setModelInputSize(getImageInputSize(sessions.imageEncoder));
       providerRef.current = provider;
       gpuDeviceRef.current = device ?? null;
       dispatch({ type: "SET_EXECUTION_PROVIDER", provider, device });
@@ -419,7 +445,12 @@ export function useSAM3(dispatch: React.Dispatch<SegmentAction>) {
 
       dispatch({ type: "SET_INFERENCE_STATUS", status: "encoding-image" });
 
-      const imageTensor = new ort.Tensor("uint8", imageRgb, [3, 1008, 1008]);
+      const inputSize = getImageInputSize(session);
+      const imageTensor = new ort.Tensor("uint8", imageRgb, [
+        3,
+        inputSize,
+        inputSize,
+      ]);
 
       const t0 = performance.now();
       const result = await session.run({ image: imageTensor });
@@ -436,13 +467,13 @@ export function useSAM3(dispatch: React.Dispatch<SegmentAction>) {
   );
 
   const segment = useCallback(
-    async (
-      tokens: Int32Array,
-      textPrompt: string,
-      imageRgb?: Uint8Array,
-      originalWidth?: number,
-      originalHeight?: number,
-    ): Promise<SegmentResult> => {
+    async ({
+      tokens,
+      imageRgb,
+      originalWidth,
+      originalHeight,
+      boxPrompt,
+    }: SegmentRunOptions): Promise<SegmentResult> => {
       const ort = ortRef.current;
       const langSession = langEncSession.current;
       const decoder = decSession.current;
@@ -503,9 +534,17 @@ export function useSAM3(dispatch: React.Dispatch<SegmentAction>) {
           } else if (name === "language_features") {
             decoderInputs[name] = langResult["text_memory"];
           } else if (name === "box_coords") {
+            const coords = boxPrompt
+              ? [
+                  Math.min(boxPrompt.x1, boxPrompt.x2),
+                  Math.min(boxPrompt.y1, boxPrompt.y2),
+                  Math.max(boxPrompt.x1, boxPrompt.x2),
+                  Math.max(boxPrompt.y1, boxPrompt.y2),
+                ]
+              : [0, 0, 0, 0];
             decoderInputs[name] = new ort.Tensor(
               "float32",
-              new Float32Array(4),
+              new Float32Array(coords),
               [1, 1, 4],
             );
           } else if (name === "box_labels") {
@@ -518,7 +557,7 @@ export function useSAM3(dispatch: React.Dispatch<SegmentAction>) {
           } else if (name === "box_masks") {
             decoderInputs[name] = new ort.Tensor(
               "bool" as string,
-              Uint8Array.from([1]),
+              Uint8Array.from([boxPrompt ? 0 : 1]),
               [1, 1],
             );
           }
@@ -552,6 +591,7 @@ export function useSAM3(dispatch: React.Dispatch<SegmentAction>) {
           boxes,
           maskData: masksData ?? null,
           maskDims: masksDims ? Array.from(masksDims) : null,
+          boxPromptUsed: !!boxPrompt,
           timings: {
             imageEncoder: encTime,
             languageEncoder: langTime,
@@ -587,5 +627,5 @@ export function useSAM3(dispatch: React.Dispatch<SegmentAction>) {
     dispatch({ type: "SET_IMAGE_ENCODED", encoded: false });
   }, [dispatch]);
 
-  return { loadModels, encodeImage, segment, clearCache };
+  return { loadModels, encodeImage, segment, clearCache, modelInputSize };
 }

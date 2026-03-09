@@ -1,9 +1,11 @@
-import type { SegmentResult, InferenceStatus } from "../types";
+import type { BoxPrompt, SegmentResult, InferenceStatus } from "../types";
 
 interface ResultsPanelProps {
   results: SegmentResult | null;
   inferenceStatus: InferenceStatus;
   imageEncoded: boolean;
+  boxPrompt: BoxPrompt | null;
+  modelInputSize: number;
 }
 
 function TimingRow({ label, value }: { label: string; value: number }) {
@@ -22,6 +24,8 @@ export default function ResultsPanel({
   results,
   inferenceStatus,
   imageEncoded,
+  boxPrompt,
+  modelInputSize,
 }: ResultsPanelProps) {
   if (inferenceStatus === "preparing") {
     return <StatusMessage>Preparing tokenizer and image...</StatusMessage>;
@@ -52,6 +56,11 @@ export default function ResultsPanel({
           <p className="text-xs mt-1">
             Re-prompting is fast since the image embedding is cached.
           </p>
+          {boxPrompt && (
+            <p className="text-xs mt-1">
+              A visual box prompt is active and will be sent to the decoder.
+            </p>
+          )}
         </div>
       );
     }
@@ -110,6 +119,28 @@ export default function ResultsPanel({
             ))}
         </div>
       )}
+
+      <div className="space-y-1.5">
+        <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wide">
+          Run Context
+        </p>
+        <div className="flex justify-between text-xs">
+          <span className="text-neutral-500 dark:text-neutral-400">
+            Encoder input
+          </span>
+          <span className="font-mono text-neutral-700 dark:text-neutral-300">
+            {modelInputSize}px
+          </span>
+        </div>
+        <div className="flex justify-between text-xs">
+          <span className="text-neutral-500 dark:text-neutral-400">
+            Visual prompt
+          </span>
+          <span className="font-mono text-neutral-700 dark:text-neutral-300">
+            {results.boxPromptUsed ? "box" : "none"}
+          </span>
+        </div>
+      </div>
 
       {/* Timings */}
       <div className="space-y-1.5">
