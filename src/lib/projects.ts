@@ -272,7 +272,7 @@ export const PROJECTS: ProjectMeta[] = [
 ];
 
 export function getProjectPath(project: ProjectMeta): string {
-  return `/${project.collection}/${project.slug}`;
+  return `/${project.slug}`;
 }
 
 export function getProjectsByCollection(

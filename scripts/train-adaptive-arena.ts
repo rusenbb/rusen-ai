@@ -21,8 +21,8 @@ import {
   type DQNBrain,
   type MatchState,
   type TrainingMetricPoint,
-} from "../src/app/nerdy-stuff/adaptive-arena/game";
-import { advanceMatch } from "../src/app/nerdy-stuff/adaptive-arena/game";
+} from "../src/app/adaptive-arena/game";
+import { advanceMatch } from "../src/app/adaptive-arena/game";
 import {
   chooseAction as dqnChooseAction,
   createDQNAgent,
@@ -32,7 +32,7 @@ import {
   type DQNConfig,
   type DQNWeights,
   type SerializedDQNWeights,
-} from "../src/app/nerdy-stuff/adaptive-arena/dqn";
+} from "../src/app/adaptive-arena/dqn";
 
 // ── Shared Types ──────────────────────────────────────────────────────────────
 
@@ -538,7 +538,7 @@ async function main() {
 
   const outDir = path.resolve(
     process.cwd(),
-    "src/app/nerdy-stuff/adaptive-arena",
+    "src/app/adaptive-arena",
   );
   mkdirSync(outDir, { recursive: true });
   const outFile = path.join(outDir, "checkpoints.generated.ts");
