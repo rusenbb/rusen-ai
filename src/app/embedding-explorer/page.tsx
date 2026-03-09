@@ -1064,11 +1064,11 @@ export default function EmbeddingExplorerPage() {
                       value={term.value}
                       onChange={(e) => handleOpenArithmeticTermChange(index, "value", e.target.value)}
                       placeholder={index === 0 ? "king" : "another term"}
-                      className="flex-1 px-2 py-1.5 text-sm border border-neutral-200 dark:border-neutral-700 rounded bg-transparent"
+                      className="flex-1 min-w-0 px-2 py-1.5 text-sm border border-neutral-200 dark:border-neutral-700 rounded bg-transparent"
                     />
                     <button
                       onClick={() => handleRemoveArithmeticTerm(index)}
-                      className="px-2 py-1.5 text-xs rounded border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                      className="shrink-0 px-2 py-1.5 text-xs whitespace-nowrap rounded border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
                     >
                       Remove
                     </button>
