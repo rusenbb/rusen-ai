@@ -145,6 +145,23 @@ export const PROJECTS: ProjectMeta[] = [
     order: 70,
   },
   {
+    id: "emergence",
+    title: "Emergence",
+    slug: "emergence",
+    collection: "nerdy-stuff",
+    status: "live",
+    summary:
+      "Simple rules, complex behavior. An interactive essay on cellular automata, segregation, and unexplained highways.",
+    description:
+      "A guided, interactive exploration of emergence through four systems: Elementary CA, Game of Life, Schelling's Segregation, and Langton's Ant.",
+    tags: ["Emergence", "Interactive Essay", "Simulation"],
+    domains: ["Computational Tools"],
+    capabilities: ["Simulation", "Visualization"],
+    tech: ["Canvas 2D", "Cellular Automata"],
+    order: 9,
+    featuredHome: true,
+  },
+  {
     id: "game-of-life",
     title: "Game of Life",
     slug: "game-of-life",
