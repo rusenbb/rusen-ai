@@ -115,17 +115,17 @@ export default function SiteTerminal() {
       if (target === "demos") router.push("/demos");
       if (target === "nerdy") router.push("/nerdy-stuff");
       if (target === "cv") router.push("/cv");
-      if (target === "life") router.push("/nerdy-stuff/game-of-life");
+      if (target === "life") router.push("/game-of-life");
       return { ok: true, message: `Navigating to ${target}.` };
     }
 
     if (cmd === "open life") {
-      router.push("/nerdy-stuff/game-of-life");
+      router.push("/game-of-life");
       return { ok: true, message: "Navigating to life." };
     }
 
     if (cmd === "list pages") {
-      return { ok: true, message: "Pages: /, /demos, /nerdy-stuff, /cv, /nerdy-stuff/game-of-life" };
+      return { ok: true, message: "Pages: /, /demos, /nerdy-stuff, /cv, /game-of-life" };
     }
 
     if (cmd === "list demos") {

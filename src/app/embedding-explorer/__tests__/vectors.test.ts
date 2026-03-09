@@ -97,7 +97,7 @@ describe("embedding explorer URL state", () => {
   });
 
   it("reads and writes explorer state in URLs", () => {
-    const url = buildExplorerShareUrl("/nerdy-stuff/embedding-explorer", "?foo=bar", state);
+    const url = buildExplorerShareUrl("/embedding-explorer", "?foo=bar", state);
     const search = url.split("?")[1] ?? "";
     const decoded = readExplorerState(`?${search}`);
 
