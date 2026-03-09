@@ -1,5 +1,9 @@
 // Simple types for the word2viz-style embedding explorer
 
+export type ProjectionMode = "axes" | "umap";
+export type ArithmeticMode = "classic" | "open";
+export type ArithmeticOperation = "+" | "-";
+
 // A word with its embedding (computed on-demand via transformer model)
 export interface Word {
   text: string;
@@ -25,11 +29,15 @@ export interface Axis {
   vector: number[] | null;
 }
 
+export interface ArithmeticTerm {
+  operation: ArithmeticOperation;
+  value: string;
+}
+
 // Vector arithmetic result
 export interface ArithmeticResult {
-  a: string;
-  b: string;
-  c: string;
+  expression: string;
+  terms: ArithmeticTerm[];
   result: number[];
   nearest: { word: string; similarity: number }[];
 }
