@@ -1,6 +1,9 @@
 import DemoCard from "../components/DemoCard";
+import { getProjectPath, getProjectsByCollection } from "@/lib/projects";
 
 export default function DemosPage() {
+  const demoProjects = getProjectsByCollection("demos");
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-10 sm:py-12 md:py-16">
       <h1 className="text-3xl sm:text-4xl font-bold mb-3 sm:mb-4">Demos</h1>
@@ -9,55 +12,16 @@ export default function DemosPage() {
       </p>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        <DemoCard
-          title="Paper Pilot"
-          description="Enter a DOI, get article summaries and explanations. Perfect for engineers and medical students."
-          href="/demos/paper-pilot"
-          tags={["LLM", "OpenRouter", "Academic"]}
-          status="live"
-        />
-        <DemoCard
-          title="Data Forge"
-          description="Define tables and relationships, let AI generate realistic fake data for your testing needs."
-          href="/demos/data-forge"
-          tags={["LLM", "Data Engineering"]}
-          status="live"
-        />
-        <DemoCard
-          title="Query Craft"
-          description="Describe what you need in plain English, get SQL queries instantly."
-          href="/demos/query-craft"
-          tags={["Text-to-SQL", "NLP"]}
-          status="live"
-        />
-        <DemoCard
-          title="Classify Anything"
-          description="Zero-shot text classification. Define your own classes, paste any text, get predictions."
-          href="/demos/classify-anything"
-          tags={["Zero-shot", "Transformers.js"]}
-          status="live"
-        />
-        <DemoCard
-          title="Vision Anything"
-          description="Zero-shot image classification. Upload an image, define classes, see what the model thinks."
-          href="/demos/vision-anything"
-          tags={["Vision", "CLIP", "Zero-shot"]}
-          status="coming-soon"
-        />
-        <DemoCard
-          title="Pulse Board"
-          description="Live dashboard with real-time WebSocket crypto prices, Chainlink oracle, earthquakes, weather, and more."
-          href="/demos/pulse-board"
-          tags={["WebSocket", "Blockchain", "Real-time"]}
-          status="live"
-        />
-        <DemoCard
-          title="Voice Morph"
-          description="Prompt-guided voice transformation. Change how audio sounds with text descriptions."
-          href="/demos/voice-morph"
-          tags={["Audio", "Gradio", "Advanced"]}
-          status="coming-soon"
-        />
+        {demoProjects.map((project) => (
+          <DemoCard
+            key={project.id}
+            title={project.title}
+            description={project.summary}
+            href={getProjectPath(project)}
+            tags={project.tags}
+            status={project.status}
+          />
+        ))}
       </div>
     </div>
   );

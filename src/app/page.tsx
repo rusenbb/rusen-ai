@@ -1,6 +1,10 @@
 import Link from "next/link";
+import { getFeaturedProjects, getProjectPath } from "@/lib/projects";
 
 export default function Home() {
+  const featuredDemos = getFeaturedProjects("demos", 3);
+  const featuredNerdy = getFeaturedProjects("nerdy-stuff", 3);
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-10 sm:py-12 md:py-16">
       {/* Hero Section */}
@@ -35,24 +39,15 @@ export default function Home() {
         <h2 className="text-xl sm:text-2xl font-bold mb-2">Featured Demos</h2>
         <p className="text-sm sm:text-base text-neutral-500 dark:text-neutral-500 mb-5 sm:mb-8">Tools that transform data into insights</p>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <DemoPreview
-            title="Paper Pilot"
-            description="Enter a DOI, get article summaries and explanations for engineers and medical students."
-            href="/demos/paper-pilot"
-            tag="NLP"
-          />
-          <DemoPreview
-            title="Data Forge"
-            description="Define tables and relationships, let AI generate realistic fake data for testing."
-            href="/demos/data-forge"
-            tag="Generation"
-          />
-          <DemoPreview
-            title="Query Craft"
-            description="Describe what you need in plain English, get SQL queries instantly."
-            href="/demos/query-craft"
-            tag="Text-to-SQL"
-          />
+          {featuredDemos.map((project) => (
+            <DemoPreview
+              key={project.id}
+              title={project.title}
+              description={project.summary}
+              href={getProjectPath(project)}
+              tag={project.capabilities[0] ?? project.tags[0]}
+            />
+          ))}
         </div>
       </section>
 
@@ -61,24 +56,15 @@ export default function Home() {
         <h2 className="text-xl sm:text-2xl font-bold mb-2">Under The Hood</h2>
         <p className="text-sm sm:text-base text-neutral-500 dark:text-neutral-500 mb-5 sm:mb-8">See how the data sausage is made</p>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <DemoPreview
-            title="Embedding Explorer"
-            description="Visualize how words and sentences cluster in vector space."
-            href="/nerdy-stuff/embedding-explorer"
-            tag="Vectors"
-          />
-          <DemoPreview
-            title="Rusenizer"
-            description="Turkish-optimized tokenizer. Compare BPE vs morphological approaches."
-            href="/nerdy-stuff/rusenizer"
-            tag="Tokenization"
-          />
-          <DemoPreview
-            title="Temperature Playground"
-            description="Same prompt, different temperatures. See how randomness affects output."
-            href="/nerdy-stuff/temperature-playground"
-            tag="LLM"
-          />
+          {featuredNerdy.map((project) => (
+            <DemoPreview
+              key={project.id}
+              title={project.title}
+              description={project.summary}
+              href={getProjectPath(project)}
+              tag={project.capabilities[0] ?? project.tags[0]}
+            />
+          ))}
         </div>
       </section>
     </div>
