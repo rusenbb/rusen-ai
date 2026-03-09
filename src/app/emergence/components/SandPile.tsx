@@ -537,16 +537,20 @@ export default function SandPile(): React.ReactElement {
     const loop = (now: number): void => {
       if (!playingRef.current) return;
 
+      const elapsed = now - lastTickRef.current;
       const interval = 1000 / speedRef.current;
-      if (now - lastTickRef.current >= interval) {
-        dropAtRandom();
+      const drops = Math.min(Math.floor(elapsed / interval), 100); // cap at 100 per frame
+
+      if (drops > 0) {
+        for (let i = 0; i < drops; i++) {
+          dropAtRandom();
+        }
         drawGrid(toppledCellsRef.current.size > 0);
 
         // Clear topple flash for next frame
         if (toppledCellsRef.current.size > 0) {
-          // Schedule a non-flash redraw shortly after
           setTimeout(() => {
-            if (playingRef.current) return; // next frame will handle it
+            if (playingRef.current) return;
             drawGrid(false);
           }, 40);
         }
@@ -734,7 +738,7 @@ export default function SandPile(): React.ReactElement {
               id="sand-speed"
               type="range"
               min={1}
-              max={60}
+              max={600}
               value={speed}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 setSpeed(parseInt(e.target.value, 10))
