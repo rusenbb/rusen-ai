@@ -9,7 +9,9 @@
     "lint": "eslint",
     "test": "vitest",
     "test:run": "vitest run",
-    "train:adaptive-arena": "tsx scripts/train-adaptive-arena.ts",
+    "train:adaptive-arena": "uv run python scripts/train_adaptive_arena.py",
+    "train:adaptive-arena:deps": "uv sync && uv pip install --reinstall torch==2.10.0 --torch-backend=cu128",
+    "train:adaptive-arena:ts": "tsx scripts/train-adaptive-arena.ts",
     "deploy": "wrangler pages deploy ./out"
   },
   "dependencies": {

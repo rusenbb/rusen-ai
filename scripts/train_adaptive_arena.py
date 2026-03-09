@@ -1,0 +1,4 @@
+from train_arena_gpu import main
+
+if __name__ == "__main__":
+    main()

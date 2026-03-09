@@ -89,6 +89,18 @@ Open [http://localhost:3000](http://localhost:3000).
 | `npm run lint` | Run ESLint |
 | `npm test` | Run tests in watch mode |
 | `npm run test:run` | Run tests once |
+| `npm run train:adaptive-arena:deps` | Sync the `uv` Python env and install the pinned CUDA PyTorch build (`torch==2.10.0`, `cu128`) |
+| `npm run train:adaptive-arena` | Train RL-Arena checkpoints with the Python/PyTorch trainer |
+| `npm run train:adaptive-arena:ts` | Run the legacy TypeScript trainer |
+
+### RL-Arena Training
+
+RL-Arena checkpoint generation now runs through `uv` and PyTorch. On the current NVIDIA setup, the supported install path is the pinned `cu128` wheel:
+
+```bash
+npm run train:adaptive-arena:deps
+npm run train:adaptive-arena
+```
 
 ## Architecture Overview
 
@@ -130,6 +142,7 @@ OPENROUTER_API_KEY_10
 
 ## Documentation
 
+- [PROJECTS.md](./PROJECTS.md) - Human-readable registry of all projects and planned ideas
 - [CLAUDE.md](./CLAUDE.md) - Instructions for AI assistants
 - [DOCUMENTATION.md](./DOCUMENTATION.md) - Technical architecture details
 - [CONTRIBUTING.md](./CONTRIBUTING.md) - Contribution guidelines
