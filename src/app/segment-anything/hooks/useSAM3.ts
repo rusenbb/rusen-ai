@@ -707,10 +707,7 @@ export function useSAM3(dispatch: React.Dispatch<SegmentAction>) {
       boxPrompt,
     }: SegmentRunOptions): Promise<SegmentResult> => {
       const ort = ortRef.current;
-      const langSession = langEncSession.current;
-      const decoder = decSession.current;
-      if (!ort || !langSession || !decoder)
-        throw new Error("Models not loaded");
+      if (!ort) throw new Error("Models not loaded");
 
       let encResult = cachedEncOutputs.current;
       let encTime = 0;
@@ -728,6 +725,12 @@ export function useSAM3(dispatch: React.Dispatch<SegmentAction>) {
         throw new Error("No image encoded. Upload an image first.");
 
       const runSegment = async (): Promise<SegmentResult> => {
+        const langSession = langEncSession.current;
+        const decoder = decSession.current;
+        if (!langSession || !decoder) {
+          throw new Error("Models not loaded");
+        }
+
         // Language encoder
         dispatch({ type: "SET_INFERENCE_STATUS", status: "encoding-text" });
         const tokenTensor = createIntegerTensor(
