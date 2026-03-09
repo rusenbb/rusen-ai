@@ -59,6 +59,26 @@ function createGrid(): Uint8Array {
   return new Uint8Array(GRID_W * GRID_H);
 }
 
+/**
+ * Create a grid pre-loaded near criticality.
+ * Each cell gets a random value 0-3, then we resolve all unstable cells.
+ * This skips the long sub-critical phase so the power law is visible immediately.
+ */
+function createCriticalGrid(): Uint8Array {
+  const grid = new Uint8Array(GRID_W * GRID_H);
+  for (let i = 0; i < grid.length; i++) {
+    grid[i] = Math.floor(Math.random() * 4);
+  }
+  // Resolve any cells that ended up at 4+ (none initially, but stabilize the grid)
+  // Then drop a burst of grains to push it firmly into the critical regime
+  for (let i = 0; i < 5000; i++) {
+    const x = Math.floor(Math.random() * GRID_W);
+    const y = Math.floor(Math.random() * GRID_H);
+    dropAndResolve(grid, x, y, null);
+  }
+  return grid;
+}
+
 function idx(x: number, y: number): number {
   return y * GRID_W + x;
 }
@@ -342,7 +362,7 @@ export default function SandPile(): React.ReactElement {
   // Refs
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const gridRef = useRef<Uint8Array>(createGrid());
+  const gridRef = useRef<Uint8Array>(createCriticalGrid());
   const statsRef = useRef<SimStats>({
     totalDropped: 0,
     lastAvalancheSize: 0,
@@ -586,7 +606,7 @@ export default function SandPile(): React.ReactElement {
 
   const handleReset = useCallback(() => {
     setPlaying(false);
-    gridRef.current = createGrid();
+    gridRef.current = createCriticalGrid();
     const freshStats: SimStats = {
       totalDropped: 0,
       lastAvalancheSize: 0,
@@ -639,7 +659,8 @@ export default function SandPile(): React.ReactElement {
 
         <p className="text-neutral-500">
           That&rsquo;s the entire system. No agents. No decisions. Just gravity
-          and counting to four.
+          and counting to four. The grid below starts pre-loaded near its
+          critical state so you can see the avalanche dynamics immediately.
         </p>
       </div>
 
