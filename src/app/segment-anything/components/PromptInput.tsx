@@ -9,7 +9,6 @@ interface PromptInputProps {
   modelsReady: boolean;
   imageReady: boolean;
   inferenceStatus: InferenceStatus;
-  imageEncoded: boolean;
 }
 
 const SUGGESTIONS = ["cat", "dog", "person", "car", "tree", "bird", "building", "sky"];
@@ -39,7 +38,6 @@ export default function PromptInput({
   modelsReady,
   imageReady,
   inferenceStatus,
-  imageEncoded,
 }: PromptInputProps) {
   const canRun = modelsReady && imageReady && value.trim().length > 0 && !isRunning;
 
