@@ -26,12 +26,6 @@ function ProgressBar({ value, label }: { value: number; label: string }) {
   );
 }
 
-const MODEL_SIZES = {
-  imageEncoder: 466,
-  languageEncoder: 387,
-  decoder: 35,
-};
-
 export default function ModelLoader({
   status,
   progress,
@@ -62,12 +56,7 @@ export default function ModelLoader({
 
   if (status === "downloading" || status === "creating-sessions") {
     const totalProgress =
-      (progress.imageEncoder * MODEL_SIZES.imageEncoder +
-        progress.languageEncoder * MODEL_SIZES.languageEncoder +
-        progress.decoder * MODEL_SIZES.decoder) /
-      (MODEL_SIZES.imageEncoder +
-        MODEL_SIZES.languageEncoder +
-        MODEL_SIZES.decoder);
+      (progress.imageEncoder + progress.languageEncoder + progress.decoder) / 3;
 
     return (
       <div className="space-y-3">
@@ -84,18 +73,12 @@ export default function ModelLoader({
         </div>
         {status === "downloading" && (
           <div className="space-y-2">
-            <ProgressBar
-              value={progress.imageEncoder}
-              label={`Image encoder (${MODEL_SIZES.imageEncoder} MB)`}
-            />
+            <ProgressBar value={progress.imageEncoder} label="Image encoder" />
             <ProgressBar
               value={progress.languageEncoder}
-              label={`Language encoder (${MODEL_SIZES.languageEncoder} MB)`}
+              label="Language encoder"
             />
-            <ProgressBar
-              value={progress.decoder}
-              label={`Decoder (${MODEL_SIZES.decoder} MB)`}
-            />
+            <ProgressBar value={progress.decoder} label="Decoder" />
           </div>
         )}
       </div>
@@ -108,10 +91,12 @@ export default function ModelLoader({
         onClick={onLoad}
         className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        Load Models (888 MB)
+        Load SAM3 Models
       </button>
       <p className="text-xs text-neutral-500 dark:text-neutral-400">
-        Downloads 3 quantized SAM3 models. Cached by your browser after first load.
+        Chooses the fastest compatible runtime for this browser, prefers
+        WebGPU with <code>shader-f16</code> when available, and falls back to
+        WASM automatically.
       </p>
       {error && (
         <p className="text-xs text-red-500 dark:text-red-400">{error}</p>

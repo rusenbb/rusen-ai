@@ -42,21 +42,44 @@ const ORT_VERSION = "1.24.2";
 const ORT_CDN = `https://cdn.jsdelivr.net/npm/onnxruntime-web@${ORT_VERSION}/dist/ort.all.min.js`;
 const ORT_WASM_CDN = `https://cdn.jsdelivr.net/npm/onnxruntime-web@${ORT_VERSION}/dist/`;
 
-const MODEL_BASE_URL =
-  "https://huggingface.co/rusen/sam3-browser-int8/resolve/main";
-
-const MODEL_FILES = {
-  imageEncoder: "sam3_image_encoder_fp16.onnx",
-  languageEncoder: "sam3_language_encoder.onnx",
-  decoder: "sam3_decoder.onnx",
-} as const;
-
 type IntegerTensorType = "int32" | "int64";
+type ExecutionProvider = "webgpu" | "wasm";
+type ModelVariantId = "balanced-672" | "compact";
 
 type ModelBuffers = {
   imageEncoder: ArrayBuffer;
   languageEncoder: ArrayBuffer;
   decoder: ArrayBuffer;
+};
+
+type ModelFiles = {
+  imageEncoder: string;
+  languageEncoder: string;
+  decoder: string;
+};
+
+type ModelVariant = {
+  id: ModelVariantId;
+  label: string;
+  inputSize: number;
+  baseUrl: string;
+  files: ModelFiles;
+};
+
+type WebGPUCapabilities = {
+  available: boolean;
+  device?: string;
+  hasShaderF16: boolean;
+  maxBufferSize: number;
+  maxStorageBufferBindingSize: number;
+  note?: string;
+};
+
+type ModelLoadPlan = {
+  id: string;
+  provider: ExecutionProvider;
+  variant: ModelVariant;
+  reason: string;
 };
 
 type SegmentRunOptions = {
@@ -66,6 +89,157 @@ type SegmentRunOptions = {
   originalHeight?: number;
   boxPrompt?: BoxPrompt | null;
 };
+
+const MB = 1024 * 1024;
+const WEBGPU_BALANCED_LIMITS = {
+  maxBufferSize: 256 * MB,
+  maxStorageBufferBindingSize: 128 * MB,
+};
+const WEBGPU_COMPACT_LIMITS = {
+  maxBufferSize: 128 * MB,
+  maxStorageBufferBindingSize: 64 * MB,
+};
+
+const DEFAULT_MODEL_VARIANT: ModelVariant = {
+  id: "balanced-672",
+  label: "Balanced 672",
+  inputSize: 672,
+  baseUrl: "https://huggingface.co/rusen/sam3-browser-int8/resolve/main",
+  files: {
+    imageEncoder: "sam3_image_encoder_fp16.onnx",
+    languageEncoder: "sam3_language_encoder.onnx",
+    decoder: "sam3_decoder.onnx",
+  },
+};
+
+const DEFAULT_COMPACT_MODEL_BASE_URL =
+  "https://huggingface.co/rusen/sam3-browser-int8/resolve/main/compact-448";
+const COMPACT_MODEL_BASE_URL =
+  process.env.NEXT_PUBLIC_SAM3_COMPACT_MODEL_BASE_URL?.trim() ||
+  DEFAULT_COMPACT_MODEL_BASE_URL;
+const COMPACT_MODEL_INPUT_SIZE = Number.parseInt(
+  process.env.NEXT_PUBLIC_SAM3_COMPACT_INPUT_SIZE ?? "448",
+  10,
+);
+
+const COMPACT_MODEL_VARIANT: ModelVariant | null = COMPACT_MODEL_BASE_URL
+  ? {
+      id: "compact",
+      label: `Compact ${COMPACT_MODEL_INPUT_SIZE}`,
+      inputSize: COMPACT_MODEL_INPUT_SIZE,
+      baseUrl: COMPACT_MODEL_BASE_URL,
+      files: {
+        imageEncoder: "sam3_image_encoder_fp16.onnx",
+        languageEncoder: "sam3_language_encoder.onnx",
+        decoder: "sam3_decoder.onnx",
+      },
+    }
+  : null;
+
+function resetDownloadProgress(
+  dispatch: React.Dispatch<SegmentAction>,
+): void {
+  dispatch({
+    type: "SET_DOWNLOAD_PROGRESS",
+    progress: {
+      imageEncoder: 0,
+      languageEncoder: 0,
+      decoder: 0,
+    },
+  });
+}
+
+function isLikelyLowMemoryDevice(): boolean {
+  const nav = navigator as Navigator & { deviceMemory?: number };
+  const deviceMemory = nav.deviceMemory ?? Number.POSITIVE_INFINITY;
+  const userAgent = navigator.userAgent.toLowerCase();
+  return (
+    deviceMemory <= 8 ||
+    /android|iphone|ipad|mobile/.test(userAgent) ||
+    window.innerWidth < 900
+  );
+}
+
+function supportsWebGPUPlan(
+  gpu: WebGPUCapabilities,
+  limits: { maxBufferSize: number; maxStorageBufferBindingSize: number },
+): boolean {
+  return (
+    gpu.available &&
+    gpu.hasShaderF16 &&
+    gpu.maxBufferSize >= limits.maxBufferSize &&
+    gpu.maxStorageBufferBindingSize >= limits.maxStorageBufferBindingSize
+  );
+}
+
+function getPlanLabel(plan: ModelLoadPlan, gpu: WebGPUCapabilities): string {
+  const device = gpu.device ?? "Browser";
+  if (plan.provider === "webgpu") {
+    return `${device} · ${plan.variant.label}`;
+  }
+
+  return `${device} (${plan.reason}; ${plan.variant.label})`;
+}
+
+function buildLoadPlans(gpu: WebGPUCapabilities): ModelLoadPlan[] {
+  const plans: ModelLoadPlan[] = [];
+  const lowMemoryDevice = isLikelyLowMemoryDevice();
+
+  if (supportsWebGPUPlan(gpu, WEBGPU_BALANCED_LIMITS)) {
+    plans.push({
+      id: "balanced-672-webgpu",
+      provider: "webgpu",
+      variant: DEFAULT_MODEL_VARIANT,
+      reason: "using balanced WebGPU profile",
+    });
+  }
+
+  if (
+    COMPACT_MODEL_VARIANT &&
+    supportsWebGPUPlan(gpu, WEBGPU_COMPACT_LIMITS) &&
+    (lowMemoryDevice || !supportsWebGPUPlan(gpu, WEBGPU_BALANCED_LIMITS))
+  ) {
+    plans.push({
+      id: "compact-webgpu",
+      provider: "webgpu",
+      variant: COMPACT_MODEL_VARIANT,
+      reason: "using compact WebGPU profile for broader compatibility",
+    });
+  }
+
+  if (COMPACT_MODEL_VARIANT && lowMemoryDevice) {
+    plans.push({
+      id: "compact-wasm",
+      provider: "wasm",
+      variant: COMPACT_MODEL_VARIANT,
+      reason: gpu.available
+        ? "using compact fallback"
+        : "WebGPU unavailable; using compact fallback",
+    });
+  }
+
+  const wasmReason = !gpu.available
+    ? (gpu.note ?? "WebGPU unavailable")
+    : !gpu.hasShaderF16
+      ? "shader-f16 unavailable; using WASM"
+      : gpu.maxStorageBufferBindingSize <
+            WEBGPU_BALANCED_LIMITS.maxStorageBufferBindingSize ||
+          gpu.maxBufferSize < WEBGPU_BALANCED_LIMITS.maxBufferSize
+        ? "adapter limits are below the balanced WebGPU profile; using WASM"
+        : "WebGPU session fallback";
+
+  plans.push({
+    id: "balanced-672-wasm",
+    provider: "wasm",
+    variant: DEFAULT_MODEL_VARIANT,
+    reason: wasmReason,
+  });
+
+  return plans.filter(
+    (plan, index, allPlans) =>
+      allPlans.findIndex((candidate) => candidate.id === plan.id) === index,
+  );
+}
 
 // ── Load ORT from CDN ───────────────────────────────────────────────
 
@@ -151,22 +325,47 @@ async function fetchModel(
 
 // ── Detect WebGPU ───────────────────────────────────────────────────
 
-async function detectWebGPU(): Promise<{
-  available: boolean;
-  device?: string;
-}> {
-  if (!navigator.gpu) return { available: false };
+async function detectWebGPU(): Promise<WebGPUCapabilities> {
+  if (!navigator.gpu) {
+    return {
+      available: false,
+      hasShaderF16: false,
+      maxBufferSize: 0,
+      maxStorageBufferBindingSize: 0,
+      note: "WebGPU unavailable",
+    };
+  }
 
   try {
     const adapter = await navigator.gpu.requestAdapter();
-    if (!adapter) return { available: false };
+    if (!adapter) {
+      return {
+        available: false,
+        hasShaderF16: false,
+        maxBufferSize: 0,
+        maxStorageBufferBindingSize: 0,
+        note: "No compatible WebGPU adapter found",
+      };
+    }
+
     const info = adapter.info;
     return {
       available: true,
+      hasShaderF16: adapter.features.has("shader-f16"),
+      maxBufferSize: Number(adapter.limits.maxBufferSize ?? 0),
+      maxStorageBufferBindingSize: Number(
+        adapter.limits.maxStorageBufferBindingSize ?? 0,
+      ),
       device: info.description || info.device || info.vendor || "WebGPU",
     };
   } catch {
-    return { available: false };
+    return {
+      available: false,
+      hasShaderF16: false,
+      maxBufferSize: 0,
+      maxStorageBufferBindingSize: 0,
+      note: "WebGPU initialization failed",
+    };
   }
 }
 
@@ -253,8 +452,9 @@ export function useSAM3(dispatch: React.Dispatch<SegmentAction>) {
   const decSession = useRef<OrtInferenceSession | null>(null);
   const ortRef = useRef<OrtAPI | null>(null);
   const modelBuffersRef = useRef<ModelBuffers | null>(null);
-  const providerRef = useRef<"webgpu" | "wasm" | null>(null);
+  const providerRef = useRef<ExecutionProvider | null>(null);
   const gpuDeviceRef = useRef<string | null>(null);
+  const activePlanRef = useRef<ModelLoadPlan | null>(null);
 
   // Cached image encoder outputs for re-prompting
   const cachedEncOutputs = useRef<Record<string, OrtTensor> | null>(null);
@@ -262,25 +462,83 @@ export function useSAM3(dispatch: React.Dispatch<SegmentAction>) {
   const cachedImageHeight = useRef<number>(0);
   const [modelInputSize, setModelInputSize] = useState(1008);
 
-  const createSessions = useCallback(async (executionProviders: string[]) => {
-    const ort = ortRef.current;
-    const buffers = modelBuffersRef.current;
-    if (!ort || !buffers) throw new Error("Model buffers not available");
+  const createSessions = useCallback(
+    async (buffers: ModelBuffers, executionProviders: string[]) => {
+      const ort = ortRef.current;
+      if (!ort) throw new Error("ORT not loaded");
 
-    const imageEncoder = await ort.InferenceSession.create(
-      buffers.imageEncoder,
-      { executionProviders },
-    );
-    const languageEncoder = await ort.InferenceSession.create(
-      buffers.languageEncoder,
-      { executionProviders },
-    );
-    const decoder = await ort.InferenceSession.create(buffers.decoder, {
-      executionProviders,
-    });
+      const imageEncoder = await ort.InferenceSession.create(
+        buffers.imageEncoder,
+        { executionProviders },
+      );
+      const languageEncoder = await ort.InferenceSession.create(
+        buffers.languageEncoder,
+        { executionProviders },
+      );
+      const decoder = await ort.InferenceSession.create(buffers.decoder, {
+        executionProviders,
+      });
 
-    return { imageEncoder, languageEncoder, decoder };
-  }, []);
+      return { imageEncoder, languageEncoder, decoder };
+    },
+    [],
+  );
+
+  const downloadPlanModels = useCallback(
+    async (plan: ModelLoadPlan): Promise<ModelBuffers> => {
+      const imageEncoder = await fetchModel(
+        `${plan.variant.baseUrl}/${plan.variant.files.imageEncoder}`,
+        (loaded, total) =>
+          dispatch({
+            type: "SET_DOWNLOAD_PROGRESS",
+            progress: {
+              imageEncoder: total > 0 ? (loaded / total) * 100 : 0,
+            },
+          }),
+      );
+      dispatch({
+        type: "SET_DOWNLOAD_PROGRESS",
+        progress: { imageEncoder: 100 },
+      });
+
+      const languageEncoder = await fetchModel(
+        `${plan.variant.baseUrl}/${plan.variant.files.languageEncoder}`,
+        (loaded, total) =>
+          dispatch({
+            type: "SET_DOWNLOAD_PROGRESS",
+            progress: {
+              languageEncoder: total > 0 ? (loaded / total) * 100 : 0,
+            },
+          }),
+      );
+      dispatch({
+        type: "SET_DOWNLOAD_PROGRESS",
+        progress: { languageEncoder: 100 },
+      });
+
+      const decoder = await fetchModel(
+        `${plan.variant.baseUrl}/${plan.variant.files.decoder}`,
+        (loaded, total) =>
+          dispatch({
+            type: "SET_DOWNLOAD_PROGRESS",
+            progress: {
+              decoder: total > 0 ? (loaded / total) * 100 : 0,
+            },
+          }),
+      );
+      dispatch({
+        type: "SET_DOWNLOAD_PROGRESS",
+        progress: { decoder: 100 },
+      });
+
+      return {
+        imageEncoder,
+        languageEncoder,
+        decoder,
+      };
+    },
+    [dispatch],
+  );
 
   const attachSessions = useCallback(
     (
@@ -289,8 +547,9 @@ export function useSAM3(dispatch: React.Dispatch<SegmentAction>) {
         languageEncoder: OrtInferenceSession;
         decoder: OrtInferenceSession;
       },
-      provider: "webgpu" | "wasm",
+      provider: ExecutionProvider,
       device?: string,
+      plan?: ModelLoadPlan | null,
     ) => {
       imgEncSession.current = sessions.imageEncoder;
       langEncSession.current = sessions.languageEncoder;
@@ -298,6 +557,7 @@ export function useSAM3(dispatch: React.Dispatch<SegmentAction>) {
       setModelInputSize(getImageInputSize(sessions.imageEncoder));
       providerRef.current = provider;
       gpuDeviceRef.current = device ?? null;
+      activePlanRef.current = plan ?? null;
       dispatch({ type: "SET_EXECUTION_PROVIDER", provider, device });
     },
     [dispatch],
@@ -305,18 +565,26 @@ export function useSAM3(dispatch: React.Dispatch<SegmentAction>) {
 
   const switchToWasm = useCallback(
     async (reason?: string) => {
+      const currentBuffers = modelBuffersRef.current;
+      if (!currentBuffers) throw new Error("Model buffers not available");
+
       await releaseSessions(
         imgEncSession.current,
         langEncSession.current,
         decSession.current,
       );
-      const sessions = await createSessions(["wasm"]);
+      const sessions = await createSessions(currentBuffers, ["wasm"]);
+      const activePlan = activePlanRef.current;
+      const fallbackPlan = activePlan
+        ? { ...activePlan, provider: "wasm" as const }
+        : null;
       attachSessions(
         sessions,
         "wasm",
         reason
           ? `${gpuDeviceRef.current ?? "WebGPU"} (${reason})`
           : (gpuDeviceRef.current ?? undefined),
+        fallbackPlan,
       );
     },
     [attachSessions, createSessions],
@@ -331,6 +599,7 @@ export function useSAM3(dispatch: React.Dispatch<SegmentAction>) {
       const ort = await loadOrt();
       ortRef.current = ort;
       const gpu = await detectWebGPU();
+      const plans = buildLoadPlans(gpu);
 
       await releaseSessions(
         imgEncSession.current,
@@ -340,98 +609,61 @@ export function useSAM3(dispatch: React.Dispatch<SegmentAction>) {
       imgEncSession.current = null;
       langEncSession.current = null;
       decSession.current = null;
+      activePlanRef.current = null;
+      modelBuffersRef.current = null;
 
-      // Download models
-      const imgEncBuffer = await fetchModel(
-        `${MODEL_BASE_URL}/${MODEL_FILES.imageEncoder}`,
-        (loaded, total) =>
-          dispatch({
-            type: "SET_DOWNLOAD_PROGRESS",
-            progress: { imageEncoder: (loaded / total) * 100 },
-          }),
-      );
-      dispatch({
-        type: "SET_DOWNLOAD_PROGRESS",
-        progress: { imageEncoder: 100 },
-      });
+      let lastError: Error | null = null;
 
-      const langEncBuffer = await fetchModel(
-        `${MODEL_BASE_URL}/${MODEL_FILES.languageEncoder}`,
-        (loaded, total) =>
-          dispatch({
-            type: "SET_DOWNLOAD_PROGRESS",
-            progress: { languageEncoder: (loaded / total) * 100 },
-          }),
-      );
-      dispatch({
-        type: "SET_DOWNLOAD_PROGRESS",
-        progress: { languageEncoder: 100 },
-      });
-
-      const decBuffer = await fetchModel(
-        `${MODEL_BASE_URL}/${MODEL_FILES.decoder}`,
-        (loaded, total) =>
-          dispatch({
-            type: "SET_DOWNLOAD_PROGRESS",
-            progress: { decoder: (loaded / total) * 100 },
-          }),
-      );
-      dispatch({
-        type: "SET_DOWNLOAD_PROGRESS",
-        progress: { decoder: 100 },
-      });
-
-      modelBuffersRef.current = {
-        imageEncoder: imgEncBuffer,
-        languageEncoder: langEncBuffer,
-        decoder: decBuffer,
-      };
-
-      // Create sessions
-      dispatch({ type: "SET_MODELS_STATUS", status: "creating-sessions" });
-
-      if (!gpu.available) {
-        const sessions = await createSessions(["wasm"]);
-        attachSessions(sessions, "wasm");
-      } else {
+      for (const plan of plans) {
         try {
-          const sessions = await createSessions(["webgpu", "wasm"]);
+          resetDownloadProgress(dispatch);
+          const buffers = await downloadPlanModels(plan);
+          modelBuffersRef.current = buffers;
+
+          dispatch({ type: "SET_MODELS_STATUS", status: "creating-sessions" });
+          const sessions = await createSessions(
+            buffers,
+            plan.provider === "webgpu" ? ["webgpu", "wasm"] : ["wasm"],
+          );
+
           const hasInt64Inputs =
             sessionHasInt64Inputs(sessions.languageEncoder) ||
             sessionHasInt64Inputs(sessions.decoder);
 
-          if (hasInt64Inputs) {
+          if (plan.provider === "webgpu" && hasInt64Inputs) {
             await releaseSessions(
               sessions.imageEncoder,
               sessions.languageEncoder,
               sessions.decoder,
             );
-            const wasmSessions = await createSessions(["wasm"]);
-            attachSessions(
-              wasmSessions,
-              "wasm",
-              `${gpu.device} (model inputs still use int64; upload the WebGPU-patched models to enable GPU inference)`,
+            throw new Error(
+              "WebGPU candidate still exposes int64 inputs to the browser",
             );
-          } else {
-            attachSessions(sessions, "webgpu", gpu.device);
           }
-        } catch {
-          const sessions = await createSessions(["wasm"]);
-          attachSessions(
-            sessions,
-            "wasm",
-            `${gpu.device} (WebGPU session init failed; using WASM)`,
+
+          attachSessions(sessions, plan.provider, getPlanLabel(plan, gpu), plan);
+          dispatch({ type: "SET_MODELS_STATUS", status: "ready" });
+          return;
+        } catch (error) {
+          lastError = normalizeError(error);
+          await releaseSessions(
+            imgEncSession.current,
+            langEncSession.current,
+            decSession.current,
           );
+          imgEncSession.current = null;
+          langEncSession.current = null;
+          decSession.current = null;
         }
       }
 
-      dispatch({ type: "SET_MODELS_STATUS", status: "ready" });
+      throw lastError ?? new Error("No compatible SAM3 model plan succeeded");
     } catch (e) {
       const message = e instanceof Error ? e.message : "Failed to load models";
       dispatch({ type: "SET_ERROR", error: message });
       dispatch({ type: "SET_MODELS_STATUS", status: "error" });
     }
-  }, [attachSessions, createSessions, dispatch]);
+  }, [attachSessions, createSessions, dispatch, downloadPlanModels]);
 
   const encodeImage = useCallback(
     async (
