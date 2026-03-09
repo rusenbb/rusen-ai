@@ -104,7 +104,8 @@ export default function SegmentAnythingPage() {
         <h1 className="text-3xl font-bold mb-2">Segment Anything</h1>
         <p className="text-neutral-600 dark:text-neutral-400">
           Type what you see in the image. Get pixel-perfect segmentation masks.
-          840M-parameter SAM3 running entirely in your browser.
+          SAM3 running entirely in your browser with capability-aware WebGPU
+          and WASM fallback.
         </p>
       </div>
 
@@ -208,13 +209,15 @@ export default function SegmentAnythingPage() {
               1. Load Models
             </h3>
             <p>
-              Three quantized ONNX models (888 MB total) are downloaded and
-              cached by your browser. This only happens once.
+              The runtime picks the fastest compatible SAM3 variant for your
+              browser, downloads three ONNX models, and caches them locally for
+              future visits.
             </p>
             <p className="text-xs mt-2 text-neutral-500 dark:text-neutral-500">
               Current browser upload loads a {modelInputSize}px encoder input.
-              The runtime now adapts to the uploaded model size instead of
-              hardcoding 1008px.
+              Stronger systems prefer the balanced WebGPU path; weaker systems
+              can fall back to compact or WASM-compatible profiles when
+              configured.
             </p>
           </div>
           <div>
@@ -240,19 +243,13 @@ export default function SegmentAnythingPage() {
 
       {/* Technical note */}
       <div className="mt-4 text-xs text-neutral-500 dark:text-neutral-400 text-center">
-        SAM3 (Segment Anything Model 3) by Meta, INT8 quantized, via ONNX
-        Runtime Web.
+        SAM3 (Segment Anything Model 3) by Meta, via ONNX Runtime Web with
+        quantized and mixed-precision browser variants.
         {state.executionProvider === "wasm" && (
           <span>
-            {" "}
-            Running on WASM.{" "}
-            <a
-              href="chrome://flags/#enable-unsafe-webgpu"
-              className="underline"
-            >
-              Enable WebGPU
-            </a>{" "}
-            for faster inference.
+            {" "}Running on WASM because the browser or GPU did not meet the
+            preferred WebGPU profile, or because a WebGPU attempt failed at
+            runtime.
           </span>
         )}
       </div>
