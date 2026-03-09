@@ -3,6 +3,7 @@ import ElementaryCA from "./components/ElementaryCA";
 import GameOfLifeDemo from "./components/GameOfLifeDemo";
 import SchellingSegregation from "./components/SchellingSegregation";
 import LangtonsAnt from "./components/LangtonsAnt";
+import SandPile from "./components/SandPile";
 
 export default function EmergencePage() {
   return (
@@ -50,10 +51,15 @@ export default function EmergencePage() {
         <LangtonsAnt />
       </section>
 
+      {/* Section 5 */}
+      <section className="mb-20 sm:mb-28">
+        <SandPile />
+      </section>
+
       {/* Closing */}
       <footer className="border-t border-neutral-200 dark:border-neutral-800 pt-10 pb-6">
         <p className="text-neutral-500 text-sm leading-relaxed max-w-2xl">
-          Four systems. Rules you can fit on an index card. Behavior that
+          Five systems. Rules you can fit on an index card. Behavior that
           surprises, disturbs, and remains unexplained. Emergence is not a
           special case &mdash; it is the default. The question is not why
           complex things are complex, but why simple rules refuse to stay
