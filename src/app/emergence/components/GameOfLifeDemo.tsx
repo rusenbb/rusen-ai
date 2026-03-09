@@ -744,9 +744,6 @@ export default function GameOfLifeDemo() {
           </span>{" "}
           ... a Game of Life inside a Game of Life.
         </p>
-        <p className="text-neutral-400 text-sm">
-          See the full experience &rarr;
-        </p>
       </div>
     </section>
   );

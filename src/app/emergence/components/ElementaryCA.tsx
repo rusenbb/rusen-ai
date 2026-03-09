@@ -84,19 +84,47 @@ const CELL_OFF_RULE_TABLE = "#404040"; // neutral-600
 // Canvas drawing
 // ---------------------------------------------------------------------------
 
-/** Draw a single row of cells onto the canvas. */
-function drawRow(
+/** Draw the entire visible portion of the grid onto the canvas. */
+function drawFullGrid(
   canvas: HTMLCanvasElement,
-  row: Uint8Array,
-  rowIndex: number,
-  cellSize: number
+  grid: Uint8Array[],
+  gridWidth: number,
+  view: { x: number; y: number; scale: number }
 ): void {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
 
-  for (let x = 0; x < row.length; x++) {
-    ctx.fillStyle = row[x] ? CELL_ON_COLOR : CELL_OFF_COLOR;
-    ctx.fillRect(x * cellSize, rowIndex * cellSize, cellSize, cellSize);
+  const dpr = window.devicePixelRatio || 1;
+  const displayW = canvas.width / dpr;
+  const displayH = canvas.height / dpr;
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = BG_COLOR;
+  ctx.fillRect(0, 0, displayW, displayH);
+
+  const cellSize = view.scale;
+  const offsetX = view.x;
+  const offsetY = view.y;
+
+  // Determine visible range to avoid drawing off-screen cells
+  const startCol = Math.max(0, Math.floor(-offsetX / cellSize));
+  const endCol = Math.min(gridWidth, Math.ceil((displayW - offsetX) / cellSize));
+  const startRow = Math.max(0, Math.floor(-offsetY / cellSize));
+  const endRow = Math.min(grid.length, Math.ceil((displayH - offsetY) / cellSize));
+
+  for (let r = startRow; r < endRow; r++) {
+    const row = grid[r];
+    for (let c = startCol; c < endCol; c++) {
+      if (row[c]) {
+        ctx.fillStyle = CELL_ON_COLOR;
+        ctx.fillRect(
+          offsetX + c * cellSize,
+          offsetY + r * cellSize,
+          cellSize,
+          cellSize
+        );
+      }
+    }
   }
 }
 
@@ -187,67 +215,72 @@ function RuleTable({ rule }: { rule: RuleNumber }): React.ReactElement {
 // Main component
 // ---------------------------------------------------------------------------
 
+const GRID_WIDTH = 301; // odd so center cell is exactly centered
+const CANVAS_HEIGHT = 400;
+
 export default function ElementaryCA(): React.ReactElement {
   // State
   const [rule, setRule] = useState<RuleNumber>(30);
   const [customRuleInput, setCustomRuleInput] = useState<string>("30");
   const [playing, setPlaying] = useState<boolean>(false);
-  const [speed, setSpeed] = useState<number>(10); // generations per second
-  const [cellState, setCellState] = useState<CellState | null>(null);
+  const [speed, setSpeed] = useState<number>(10);
+  const [generation, setGeneration] = useState<number>(0);
+  const [view, setView] = useState({ x: 0, y: 0, scale: 3 });
 
   // Refs
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const animFrameRef = useRef<number>(0);
   const lastTickRef = useRef<number>(0);
-  const cellStateRef = useRef<CellState | null>(null);
+  const gridRef = useRef<Uint8Array[]>([]);
   const ruleTableRef = useRef<Uint8Array>(decodeRule(30));
-  const cellSizeRef = useRef<number>(2);
-  const maxRowsRef = useRef<number>(200);
+  const dragging = useRef(false);
+  const lastMouse = useRef({ x: 0, y: 0 });
+  const viewRef = useRef(view);
 
-  // Keep refs in sync
   useEffect(() => {
-    cellStateRef.current = cellState;
-  }, [cellState]);
+    viewRef.current = view;
+  }, [view]);
 
   useEffect(() => {
     ruleTableRef.current = decodeRule(rule);
   }, [rule]);
 
-  // Compute cell size and initialize grid when container mounts or resizes
+  // Initialize grid
   const initializeGrid = useCallback(() => {
+    const initial = createInitialGrid(GRID_WIDTH);
+    gridRef.current = initial.grid;
+    setGeneration(0);
+
+    // Center the view so the initial cell is in the middle of the canvas
     const container = containerRef.current;
-    const canvas = canvasRef.current;
-    if (!container || !canvas) return;
-
-    const containerW = container.clientWidth;
-    const canvasH = 400;
-
-    // Target ~200 cells across; clamp cell size to at least 1
-    const cellSize = Math.max(1, Math.floor(containerW / 200));
-    cellSizeRef.current = cellSize;
-
-    const gridWidth = Math.floor(containerW / cellSize);
-    const maxRows = Math.floor(canvasH / cellSize);
-    maxRowsRef.current = maxRows;
-
-    // Set canvas resolution to match container
-    canvas.width = containerW;
-    canvas.height = canvasH;
-
-    // Clear canvas
-    const ctx = canvas.getContext("2d");
-    if (ctx) {
-      ctx.fillStyle = BG_COLOR;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    if (container) {
+      const containerW = container.clientWidth;
+      const centerX = containerW / 2 - (GRID_WIDTH / 2) * 3;
+      setView({ x: centerX, y: 0, scale: 3 });
     }
 
-    const initial = createInitialGrid(gridWidth);
-    setCellState(initial);
-    cellStateRef.current = initial;
+    redraw();
+  }, []);
 
-    // Draw initial row
-    drawRow(canvas, initial.grid[0], 0, cellSize);
+  // Redraw canvas from grid + view
+  const redraw = useCallback(() => {
+    const canvas = canvasRef.current;
+    const container = containerRef.current;
+    if (!canvas || !container) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const displayW = container.clientWidth;
+    const displayH = CANVAS_HEIGHT;
+    const w = Math.floor(displayW * dpr);
+    const h = Math.floor(displayH * dpr);
+
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w;
+      canvas.height = h;
+    }
+
+    drawFullGrid(canvas, gridRef.current, GRID_WIDTH, viewRef.current);
   }, []);
 
   // Initialize on mount
@@ -255,67 +288,32 @@ export default function ElementaryCA(): React.ReactElement {
     initializeGrid();
   }, [initializeGrid]);
 
+  // Redraw when view changes
+  useEffect(() => {
+    redraw();
+  }, [view, redraw]);
+
   // Handle resize
   useEffect(() => {
-    const observer = new ResizeObserver(() => {
-      setPlaying(false);
-      initializeGrid();
-    });
+    const observer = new ResizeObserver(() => redraw());
     const container = containerRef.current;
     if (container) observer.observe(container);
     return () => observer.disconnect();
-  }, [initializeGrid]);
+  }, [redraw]);
 
-  // Advance one generation
+  // Advance one generation (grid grows indefinitely, no scrolling)
   const stepOnce = useCallback((): boolean => {
-    const state = cellStateRef.current;
-    const canvas = canvasRef.current;
-    if (!state || !canvas) return false;
+    const grid = gridRef.current;
+    if (grid.length === 0) return false;
 
     const table = ruleTableRef.current;
-    const currentRow = state.grid[state.grid.length - 1];
+    const currentRow = grid[grid.length - 1];
     const nextRow = stepRow(currentRow, table);
-    const nextGen = state.generation + 1;
-
-    const maxRows = maxRowsRef.current;
-    const cellSize = cellSizeRef.current;
-
-    if (nextGen >= maxRows) {
-      // Scroll: shift everything up by one row
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return false;
-
-      const newGrid = [...state.grid.slice(1), nextRow];
-      const newState: CellState = {
-        grid: newGrid,
-        width: state.width,
-        generation: nextGen,
-      };
-      setCellState(newState);
-      cellStateRef.current = newState;
-
-      // Redraw entire canvas (scrolling)
-      ctx.fillStyle = BG_COLOR;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      for (let r = 0; r < newGrid.length; r++) {
-        drawRow(canvas, newGrid[r], r, cellSize);
-      }
-    } else {
-      // Append: just draw the new row
-      const newGrid = [...state.grid, nextRow];
-      const newState: CellState = {
-        grid: newGrid,
-        width: state.width,
-        generation: nextGen,
-      };
-      setCellState(newState);
-      cellStateRef.current = newState;
-
-      drawRow(canvas, nextRow, nextGen, cellSize);
-    }
-
+    grid.push(nextRow);
+    setGeneration(grid.length - 1);
+    redraw();
     return true;
-  }, []);
+  }, [redraw]);
 
   // Animation loop
   useEffect(() => {
@@ -348,6 +346,75 @@ export default function ElementaryCA(): React.ReactElement {
     };
   }, [playing, speed, stepOnce]);
 
+  // --- Pan ---
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    if (e.button !== 0) return;
+    dragging.current = true;
+    lastMouse.current = { x: e.clientX, y: e.clientY };
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  }, []);
+
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!dragging.current) return;
+    const dx = e.clientX - lastMouse.current.x;
+    const dy = e.clientY - lastMouse.current.y;
+    lastMouse.current = { x: e.clientX, y: e.clientY };
+    setView((prev) => ({ ...prev, x: prev.x + dx, y: prev.y + dy }));
+  }, []);
+
+  const onPointerUp = useCallback(() => {
+    dragging.current = false;
+  }, []);
+
+  // --- Zoom (wheel: pinch-to-zoom on trackpad, scroll to pan) ---
+  const zoomAt = useCallback((cx: number, cy: number, factor: number) => {
+    setView((prev) => {
+      const newScale = Math.min(Math.max(prev.scale * factor, 0.5), 20);
+      const ratio = newScale / prev.scale;
+      return {
+        x: cx - (cx - prev.x) * ratio,
+        y: cy - (cy - prev.y) * ratio,
+        scale: newScale,
+      };
+    });
+  }, []);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const handler = (e: WheelEvent) => {
+      e.preventDefault();
+      if (e.ctrlKey) {
+        // Trackpad pinch or ctrl+scroll
+        const rect = el.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+        const factor = Math.pow(2, -e.deltaY * 0.01);
+        zoomAt(mx, my, factor);
+      } else {
+        // Two-finger scroll / regular scroll = pan
+        setView((prev) => ({
+          ...prev,
+          x: prev.x - e.deltaX,
+          y: prev.y - e.deltaY,
+        }));
+      }
+    };
+    el.addEventListener("wheel", handler, { passive: false });
+    return () => el.removeEventListener("wheel", handler);
+  }, [zoomAt]);
+
+  // Zoom buttons
+  const zoomCenter = useCallback(
+    (factor: number) => {
+      const el = containerRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      zoomAt(rect.width / 2, rect.height / 2, factor);
+    },
+    [zoomAt]
+  );
+
   // Reset handler
   const handleReset = useCallback(() => {
     setPlaying(false);
@@ -360,8 +427,6 @@ export default function ElementaryCA(): React.ReactElement {
       setRule(newRule);
       setCustomRuleInput(String(newRule));
       setPlaying(false);
-      // Re-initialize after rule change so the table and canvas are in sync
-      // Use a microtask so the rule state update commits first
       queueMicrotask(() => {
         initializeGrid();
       });
@@ -376,8 +441,6 @@ export default function ElementaryCA(): React.ReactElement {
       handleRuleChange(parsed);
     }
   }, [customRuleInput, handleRuleChange]);
-
-  const generation = cellState?.generation ?? 0;
 
   return (
     <div className="space-y-8">
@@ -413,14 +476,50 @@ export default function ElementaryCA(): React.ReactElement {
       <div className="space-y-3">
         <div
           ref={containerRef}
-          className="w-full rounded-lg border border-neutral-800 overflow-hidden"
-          style={{ height: 400, background: BG_COLOR }}
+          className="relative w-full rounded-lg border border-neutral-800 overflow-hidden select-none cursor-grab active:cursor-grabbing"
+          style={{ height: CANVAS_HEIGHT, background: BG_COLOR }}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerLeave={onPointerUp}
         >
           <canvas
             ref={canvasRef}
-            className="block w-full"
-            style={{ height: 400, imageRendering: "pixelated" }}
+            className="block w-full touch-none"
+            style={{ height: CANVAS_HEIGHT, imageRendering: "pixelated" }}
           />
+          {/* Zoom controls */}
+          <div className="absolute top-2 right-2 z-10 flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => zoomCenter(1.4)}
+              className="w-7 h-7 flex items-center justify-center text-sm rounded border border-neutral-700 bg-neutral-800/80 hover:bg-neutral-700 text-neutral-400"
+              title="Zoom in"
+            >
+              +
+            </button>
+            <button
+              type="button"
+              onClick={() => zoomCenter(0.7)}
+              className="w-7 h-7 flex items-center justify-center text-sm rounded border border-neutral-700 bg-neutral-800/80 hover:bg-neutral-700 text-neutral-400"
+              title="Zoom out"
+            >
+              &minus;
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const container = containerRef.current;
+                if (!container) return;
+                const containerW = container.clientWidth;
+                setView({ x: containerW / 2 - (GRID_WIDTH / 2) * 3, y: 0, scale: 3 });
+              }}
+              className="h-7 px-2 flex items-center justify-center text-[10px] font-mono rounded border border-neutral-700 bg-neutral-800/80 hover:bg-neutral-700 text-neutral-400"
+              title="Reset view"
+            >
+              {Math.round(view.scale * 100)}%
+            </button>
+          </div>
         </div>
 
         {/* Generation counter */}
