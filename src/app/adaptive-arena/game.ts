@@ -248,7 +248,7 @@ export const BOT_CONFIG: BotConfig = {
   gamma: 0.74,
 };
 
-export const BOT_ACCENT = "#a78bfa";
+export const BOT_ACCENT = "#f97316";
 
 export const BOT_DIFFICULTIES: BotDifficultySetting[] = [
   {
@@ -1714,8 +1714,7 @@ export function advanceMatch(options: {
     terminalReward = 1;
   } else if (bot.health <= 0) {
     terminalOutcome = "player";
-    terminalMessage =
-      "You win the round. The bot will try to patch that pattern next time.";
+    terminalMessage = "You win the round.";
     terminalReward = -1;
   } else if (nextTimer <= 0) {
     if (player.health === bot.health) {

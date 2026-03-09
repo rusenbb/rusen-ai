@@ -516,7 +516,6 @@ export default function AdaptiveArenaPage() {
   const [isRunning, setIsRunning] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [, setCanvasSize] = useState(0);
-  const [isBotReadoutOpen, setIsBotReadoutOpen] = useState(false);
   const [checkpointManifest, setCheckpointManifest] =
     useState<DQNCheckpointManifest | null>(null);
   const [checkpointLoading, setCheckpointLoading] = useState(true);
@@ -1074,113 +1073,6 @@ export default function AdaptiveArenaPage() {
                         </div>
                       </div>
 
-                      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setIsBotReadoutOpen((current) => !current)
-                          }
-                          className="flex w-full items-center justify-between gap-3 text-left"
-                        >
-                          <div>
-                            <div className="text-[10px] uppercase tracking-[0.24em] text-neutral-500">
-                              Bot Readout
-                            </div>
-                            <div
-                              className="mt-2 text-lg font-semibold"
-                              style={{ color: BOT_ACCENT }}
-                            >
-                              {checkpointManifest?.label ??
-                                selectedDifficulty.charAt(0).toUpperCase() +
-                                  selectedDifficulty.slice(1)}
-                            </div>
-                          </div>
-                          <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-[10px] uppercase tracking-[0.18em] text-neutral-300">
-                            {isBotReadoutOpen ? "Hide" : "Show"}
-                          </span>
-                        </button>
-                        {!isBotReadoutOpen ? (
-                          <p className="mt-3 text-sm leading-6 text-neutral-400">
-                            Collapsed by default. Open to inspect checkpoint
-                            metadata and live bot decisions.
-                          </p>
-                        ) : (
-                          <>
-                            <p className="mt-3 text-sm leading-6 text-neutral-400">
-                              {checkpointLoading
-                                ? "Loading checkpoint..."
-                                : checkpointError
-                                  ? checkpointError
-                                  : (checkpointManifest?.summary ??
-                                    "Self-play trained DQN agent.")}
-                            </p>
-                            {checkpointManifest &&
-                              !checkpointLoading &&
-                              !checkpointError && (
-                                <div className="mt-3 rounded-2xl border border-white/10 bg-black/20 px-3 py-3 text-xs leading-5 text-neutral-400">
-                                  {checkpointManifest.trainingRounds} training
-                                  rounds /{" "}
-                                  {formatPercent(
-                                    checkpointManifest.stats.botWinRate,
-                                  )}{" "}
-                                  eval win rate
-                                </div>
-                              )}
-                            {checkpointManifest?.telemetry.points.length ? (
-                              <div className="mt-3 grid gap-3">
-                                <TrainingMetricChart
-                                  label="Training Reward"
-                                  color={BOT_ACCENT}
-                                  points={checkpointManifest.telemetry.points}
-                                  valueKey="averageReward"
-                                  formatValue={(value) => formatSigned(value)}
-                                />
-                                <TrainingMetricChart
-                                  label="Training Win Rate"
-                                  color="#67e8f9"
-                                  points={checkpointManifest.telemetry.points}
-                                  valueKey="averageBotWinRate"
-                                  formatValue={formatPercent}
-                                />
-                              </div>
-                            ) : null}
-                            {checkpointManifest &&
-                              !checkpointLoading &&
-                              !checkpointError && (
-                                <div className="mt-3 grid grid-cols-2 gap-3 text-xs text-neutral-400">
-                                  <div className="rounded-2xl border border-white/8 bg-black/20 px-3 py-3">
-                                    reward window{" "}
-                                    {checkpointManifest.telemetry.rollingWindow}{" "}
-                                    rounds
-                                  </div>
-                                  <div className="rounded-2xl border border-white/8 bg-black/20 px-3 py-3">
-                                    params{" "}
-                                    {checkpointManifest.parameterCount.toLocaleString()}
-                                  </div>
-                                </div>
-                              )}
-                            <div className="mt-4 grid grid-cols-2 gap-3">
-                              <StatBlock
-                                label="Explore"
-                                value={formatPercent(match.explorationRate)}
-                              />
-                              <StatBlock
-                                label="Params"
-                                value={match.qStateCount.toLocaleString()}
-                              />
-                              <StatBlock
-                                label="Intent"
-                                value={ACTION_LABELS[match.botIntent]}
-                                tone={BOT_ACCENT}
-                              />
-                              <StatBlock
-                                label="Mode"
-                                value={match.lastDecisionMode.toUpperCase()}
-                              />
-                            </div>
-                          </>
-                        )}
-                      </div>
                     </aside>
                   )}
                 </div>
