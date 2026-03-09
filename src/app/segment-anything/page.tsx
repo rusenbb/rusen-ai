@@ -12,10 +12,10 @@ import ResultsPanel from "./components/ResultsPanel";
 
 export default function SegmentAnythingPage() {
   const [state, dispatch] = useReducer(segmentReducer, initialState);
-  const { loadModels, segment, clearCache } = useSAM3(dispatch);
+  const { loadModels, segment, clearCache, modelInputSize } = useSAM3(dispatch);
 
   const handleImageDrop = useCallback(
-    async (file: File) => {
+    async (file: File | null) => {
       if (!file) {
         clearCache();
         dispatch({ type: "CLEAR_IMAGE" });
@@ -52,17 +52,20 @@ export default function SegmentAnythingPage() {
       if (!state.imageEncoded) {
         // Need to encode image first
         const img = await loadImage(state.imageFile);
-        const imageRgb = preprocessImage(img);
-        await segment(
+        const imageRgb = preprocessImage(img, modelInputSize);
+        await segment({
           tokens,
-          state.textPrompt.trim(),
           imageRgb,
-          state.originalWidth!,
-          state.originalHeight!,
-        );
+          originalWidth: state.originalWidth!,
+          originalHeight: state.originalHeight!,
+          boxPrompt: state.boxPrompt,
+        });
       } else {
         // Image already encoded, just run text + decoder
-        await segment(tokens, state.textPrompt.trim());
+        await segment({
+          tokens,
+          boxPrompt: state.boxPrompt,
+        });
       }
     } catch (e) {
       console.error("Segment Anything failed", e);
@@ -83,6 +86,8 @@ export default function SegmentAnythingPage() {
     state.imageEncoded,
     state.originalWidth,
     state.originalHeight,
+    state.boxPrompt,
+    modelInputSize,
     segment,
   ]);
 
@@ -124,9 +129,13 @@ export default function SegmentAnythingPage() {
               imageUrl={state.imagePreviewUrl}
               originalWidth={state.originalWidth}
               originalHeight={state.originalHeight}
+              boxPrompt={state.boxPrompt}
               results={state.results}
               textPrompt={state.textPrompt}
               onImageDrop={handleImageDrop}
+              onBoxPromptChange={(boxPrompt) =>
+                dispatch({ type: "SET_BOX_PROMPT", boxPrompt })
+              }
               disabled={state.modelsStatus !== "ready"}
             />
           </div>
@@ -139,6 +148,10 @@ export default function SegmentAnythingPage() {
             <h2 className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
               Text Prompt
             </h2>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-3">
+              Add text, then optionally draw a box prompt on the canvas to guide
+              the mask.
+            </p>
             <PromptInput
               value={state.textPrompt}
               onChange={(prompt) =>
@@ -150,7 +163,6 @@ export default function SegmentAnythingPage() {
               modelsReady={state.modelsStatus === "ready"}
               imageReady={!!state.imageFile}
               inferenceStatus={state.inferenceStatus}
-              imageEncoded={state.imageEncoded}
             />
           </div>
 
@@ -163,6 +175,8 @@ export default function SegmentAnythingPage() {
               results={state.results}
               inferenceStatus={state.inferenceStatus}
               imageEncoded={state.imageEncoded}
+              boxPrompt={state.boxPrompt}
+              modelInputSize={modelInputSize}
             />
             {!state.results &&
               state.inferenceStatus === "idle" &&
@@ -196,6 +210,11 @@ export default function SegmentAnythingPage() {
             <p>
               Three quantized ONNX models (888 MB total) are downloaded and
               cached by your browser. This only happens once.
+            </p>
+            <p className="text-xs mt-2 text-neutral-500 dark:text-neutral-500">
+              Current browser upload loads a {modelInputSize}px encoder input.
+              The runtime now adapts to the uploaded model size instead of
+              hardcoding 1008px.
             </p>
           </div>
           <div>

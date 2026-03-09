@@ -20,35 +20,6 @@ interface TokenizerData {
 
 let cachedTokenizer: SimpleTokenizer | null = null;
 
-// ── bytes_to_unicode (inlined from CLIP) ────────────────────────────
-
-function bytesToUnicode(): Record<number, string> {
-  const bs: number[] = [];
-  const cs: number[] = [];
-
-  // Printable ASCII and Latin-1 supplement ranges
-  for (let i = 33; i <= 126; i++) bs.push(i);
-  for (let i = 161; i <= 172; i++) bs.push(i);
-  for (let i = 174; i <= 255; i++) bs.push(i);
-
-  for (const b of bs) cs.push(b);
-
-  let n = 0;
-  for (let b = 0; b < 256; b++) {
-    if (!bs.includes(b)) {
-      bs.push(b);
-      cs.push(256 + n);
-      n++;
-    }
-  }
-
-  const result: Record<number, string> = {};
-  for (let i = 0; i < bs.length; i++) {
-    result[bs[i]] = String.fromCharCode(cs[i]);
-  }
-  return result;
-}
-
 // ── BPE helpers ─────────────────────────────────────────────────────
 
 function getPairs(word: string[]): Set<string> {

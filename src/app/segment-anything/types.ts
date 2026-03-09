@@ -28,11 +28,19 @@ export interface SegmentResult {
   boxes: number[][];
   maskData: Float32Array | null;
   maskDims: number[] | null;
+  boxPromptUsed: boolean;
   timings: {
     imageEncoder: number;
     languageEncoder: number;
     decoder: number;
   };
+}
+
+export interface BoxPrompt {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
 }
 
 export interface DownloadProgress {
@@ -70,6 +78,7 @@ export interface SegmentState {
   originalWidth: number | null;
   originalHeight: number | null;
   imageEncoded: boolean;
+  boxPrompt: BoxPrompt | null;
 
   textPrompt: string;
 
@@ -97,6 +106,7 @@ export type SegmentAction =
       height: number;
     }
   | { type: "CLEAR_IMAGE" }
+  | { type: "SET_BOX_PROMPT"; boxPrompt: BoxPrompt | null }
   | { type: "SET_IMAGE_ENCODED"; encoded: boolean }
   | { type: "SET_TEXT_PROMPT"; prompt: string }
   | { type: "SET_INFERENCE_STATUS"; status: InferenceStatus }
@@ -117,6 +127,7 @@ export const initialState: SegmentState = {
   originalWidth: null,
   originalHeight: null,
   imageEncoded: false,
+  boxPrompt: null,
 
   textPrompt: "",
 
@@ -157,6 +168,7 @@ export function segmentReducer(
         originalWidth: action.width,
         originalHeight: action.height,
         imageEncoded: false,
+        boxPrompt: null,
         results: null,
       };
 
@@ -170,8 +182,12 @@ export function segmentReducer(
         originalWidth: null,
         originalHeight: null,
         imageEncoded: false,
+        boxPrompt: null,
         results: null,
       };
+
+    case "SET_BOX_PROMPT":
+      return { ...state, boxPrompt: action.boxPrompt, results: null };
 
     case "SET_IMAGE_ENCODED":
       return { ...state, imageEncoded: action.encoded };
