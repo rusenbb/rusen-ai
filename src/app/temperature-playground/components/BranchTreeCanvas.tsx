@@ -24,7 +24,7 @@ interface Props {
 const TOKEN_W = 56;
 const TOKEN_H = 28;
 const STRIDE = TOKEN_W + 2;
-const ROW_H = 56;
+const ROW_GAP = 16; // vertical gap between rows (below arrow tip to next token top)
 const PAD = 32;
 
 // --- Layout ---
@@ -42,31 +42,74 @@ interface Arrow {
   y1: number;
   x2: number;
   y2: number;
+  /** Horizontal offset for the departure point when multiple arrows leave the same parent */
+  siblingOffset: number;
 }
 
+/**
+ * Depth-first tree layout: children are placed directly below their parent
+ * with only enough vertical gap for the connecting arrow, keeping the tree
+ * compact and avoiding the long diagonal arrows that cause collisions.
+ */
 function computeLayout(runs: TreeRun[]) {
   const entries: LayoutEntry[] = [];
   const arrows: Arrow[] = [];
   const posMap = new Map<number, { x: number; y: number }>();
-  let row = 0;
 
   const sorted = [...runs].sort((a, b) => a.id - b.id);
 
+  // Build children lookup and count siblings per parent for offset calculation
+  const childrenOf = new Map<number, TreeRun[]>();
   for (const run of sorted) {
+    if (run.parentId !== null) {
+      const list = childrenOf.get(run.parentId) ?? [];
+      list.push(run);
+      childrenOf.set(run.parentId, list);
+    }
+  }
+
+  // Track the next available Y per column-ish region to avoid vertical overlap
+  let nextY = PAD;
+
+  // Process in BFS order so parents are always placed before children
+  const queue: TreeRun[] = sorted.filter((r) => r.parentId === null);
+  const visited = new Set<number>();
+  // BFS with sorted insertion
+  let head = 0;
+  while (head < queue.length) {
+    const run = queue[head++];
+    if (visited.has(run.id)) continue;
+    visited.add(run.id);
+
     let x = PAD;
-    const y = row * ROW_H + PAD;
+    let y = nextY;
 
     if (run.parentId !== null && posMap.has(run.parentId)) {
       const parent = posMap.get(run.parentId)!;
       x = parent.x + run.parentForkTokenIndex * STRIDE;
+      // Place child right below parent row
+      y = Math.max(nextY, parent.y + TOKEN_H + ROW_GAP + 18); // 18 = arrow clearance
+
+      // Compute sibling offset: if multiple children share the same parent,
+      // stagger their departure points horizontally so arrows don't overlap
+      const siblings = childrenOf.get(run.parentId) ?? [];
+      const sibIdx = siblings.indexOf(run);
+      const siblingOffset = siblings.length > 1 ? (sibIdx - (siblings.length - 1) / 2) * 6 : 0;
 
       const forkX =
         parent.x +
         Math.max(0, run.parentForkTokenIndex - 1) * STRIDE +
-        TOKEN_W / 2;
+        TOKEN_W / 2 +
+        siblingOffset;
       const forkY = parent.y + TOKEN_H;
 
-      arrows.push({ x1: forkX, y1: forkY, x2: x + TOKEN_W / 2, y2: y });
+      arrows.push({
+        x1: forkX,
+        y1: forkY,
+        x2: x + TOKEN_W / 2,
+        y2: y,
+        siblingOffset,
+      });
     }
 
     entries.push({
@@ -77,7 +120,13 @@ function computeLayout(runs: TreeRun[]) {
       parentId: run.parentId,
     });
     posMap.set(run.id, { x, y });
-    row += 1;
+    nextY = y + TOKEN_H + ROW_GAP + 18;
+
+    // Enqueue children
+    const children = childrenOf.get(run.id);
+    if (children) {
+      for (const child of children) queue.push(child);
+    }
   }
 
   return { entries, arrows };
@@ -186,31 +235,50 @@ export default function BranchTreeCanvas({
     dragging.current = false;
   }, []);
 
-  // Zoom toward cursor
+  // Zoom helpers
+  const zoomAt = useCallback(
+    (cx: number, cy: number, factor: number) => {
+      setView((prev) => {
+        const newScale = Math.min(Math.max(prev.scale * factor, 0.15), 4);
+        const ratio = newScale / prev.scale;
+        return {
+          x: cx - (cx - prev.x) * ratio,
+          y: cy - (cy - prev.y) * ratio,
+          scale: newScale,
+        };
+      });
+    },
+    []
+  );
+
+  const zoomCenter = useCallback(
+    (factor: number) => {
+      const el = containerRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      zoomAt(rect.width / 2, rect.height / 2, factor);
+    },
+    [zoomAt]
+  );
+
+  // Wheel: pinch-to-zoom (trackpad) + scroll to pan
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     const handler = (e: WheelEvent) => {
       e.preventDefault();
 
-      if (e.ctrlKey || e.metaKey) {
-        // Pinch-to-zoom (trackpad) or ctrl+scroll (mouse)
+      // Trackpad pinch-to-zoom fires with ctrlKey set by the browser
+      if (e.ctrlKey) {
         const rect = el.getBoundingClientRect();
         const mx = e.clientX - rect.left;
         const my = e.clientY - rect.top;
-        const factor = e.deltaY > 0 ? 0.92 : 1.08;
-
-        setView((prev) => {
-          const newScale = Math.min(Math.max(prev.scale * factor, 0.15), 4);
-          const ratio = newScale / prev.scale;
-          return {
-            x: mx - (mx - prev.x) * ratio,
-            y: my - (my - prev.y) * ratio,
-            scale: newScale,
-          };
-        });
+        // Trackpad pinch deltaY is much smaller than mouse scroll, so use
+        // a continuous factor instead of a fixed step
+        const factor = Math.pow(2, -e.deltaY * 0.01);
+        zoomAt(mx, my, factor);
       } else {
-        // Two-finger scroll (trackpad pan) or regular scroll wheel
+        // Two-finger scroll (trackpad pan) or regular mouse scroll
         setView((prev) => ({
           ...prev,
           x: prev.x - e.deltaX,
@@ -220,7 +288,7 @@ export default function BranchTreeCanvas({
     };
     el.addEventListener("wheel", handler, { passive: false });
     return () => el.removeEventListener("wheel", handler);
-  }, []);
+  }, [zoomAt]);
 
   if (runs.length === 0) {
     return (
@@ -260,9 +328,32 @@ export default function BranchTreeCanvas({
           onMouseUp={onMouseUp}
           onMouseLeave={onMouseUp}
         >
-          <div className="absolute top-2 right-2 z-10 text-[10px] text-neutral-500 bg-neutral-100/80 dark:bg-neutral-800/80 px-2 py-1 rounded pointer-events-none">
-            {Math.round(view.scale * 100)}% &middot; drag to pan &middot;
-            scroll to zoom
+          {/* Zoom controls */}
+          <div className="absolute top-2 right-2 z-10 flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => zoomCenter(1.25)}
+              className="w-7 h-7 flex items-center justify-center text-sm rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-100/80 dark:bg-neutral-800/80 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-400"
+              title="Zoom in"
+            >
+              +
+            </button>
+            <button
+              type="button"
+              onClick={() => zoomCenter(0.8)}
+              className="w-7 h-7 flex items-center justify-center text-sm rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-100/80 dark:bg-neutral-800/80 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-400"
+              title="Zoom out"
+            >
+              &minus;
+            </button>
+            <button
+              type="button"
+              onClick={() => setView({ x: 0, y: 0, scale: 1 })}
+              className="h-7 px-2 flex items-center justify-center text-[10px] rounded border border-neutral-300 dark:border-neutral-700 bg-neutral-100/80 dark:bg-neutral-800/80 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-400"
+              title="Reset view"
+            >
+              {Math.round(view.scale * 100)}%
+            </button>
           </div>
 
           <div
@@ -298,16 +389,27 @@ export default function BranchTreeCanvas({
                   />
                 </marker>
               </defs>
-              {arrows.map((a, i) => (
-                <path
-                  key={i}
-                  d={`M ${a.x1} ${a.y1} C ${a.x1} ${a.y1 + 18}, ${a.x2} ${a.y2 - 18}, ${a.x2} ${a.y2}`}
-                  fill="none"
-                  strokeWidth={1.5}
-                  className="stroke-neutral-400 dark:stroke-neutral-500"
-                  markerEnd="url(#tree-arrow)"
-                />
-              ))}
+              {arrows.map((a, i) => {
+                const dy = a.y2 - a.y1;
+                const dx = a.x2 - a.x1;
+                // Scale control point offset with distance so short arrows
+                // curve gently and long arrows don't clip through nodes
+                const cpY = Math.min(Math.max(dy * 0.4, 12), 60);
+                // For arrows with significant horizontal distance, add a
+                // horizontal component to the control points to create an
+                // S-curve that routes around intermediate nodes
+                const cpX = dx * 0.15;
+                return (
+                  <path
+                    key={i}
+                    d={`M ${a.x1} ${a.y1} C ${a.x1 + cpX} ${a.y1 + cpY}, ${a.x2 - cpX} ${a.y2 - cpY}, ${a.x2} ${a.y2}`}
+                    fill="none"
+                    strokeWidth={1.5}
+                    className="stroke-neutral-400 dark:stroke-neutral-500"
+                    markerEnd="url(#tree-arrow)"
+                  />
+                );
+              })}
             </svg>
 
             {/* Branch labels */}
