@@ -24,6 +24,7 @@ import {
   readExplorerState,
   type ExplorerUrlState,
 } from "./utils/urlState";
+import { Alert, DemoHeader, DemoPage, DemoPanel } from "@/components/ui";
 
 const DEFAULT_WORDS = [
   "king",
@@ -825,9 +826,13 @@ export default function EmbeddingExplorerPage() {
 
   if (!isModelReady) {
     return (
-      <div className="max-w-5xl mx-auto px-4 py-10 sm:py-12 md:py-16">
-        <h1 className="text-3xl sm:text-4xl font-bold mb-3 sm:mb-4">Embedding Explorer</h1>
-        <div className="space-y-4">
+      <DemoPage width="lg">
+        <DemoHeader title="Embedding Explorer" description="Load a local embedding model and inspect semantic geometry in a shareable workspace." />
+        <DemoPanel
+          title="Model Loading"
+          description="The embedding runtime needs a short initialization before the explorer becomes interactive."
+        >
+          <div className="space-y-4">
           <div className="flex items-center gap-3 text-neutral-500">
             <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
             <span>
@@ -848,51 +853,51 @@ export default function EmbeddingExplorerPage() {
           </p>
 
           {modelError && (
-            <div className="p-4 bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-400 rounded-lg">
-              {modelError}
-            </div>
+            <Alert variant="error">{modelError}</Alert>
           )}
-        </div>
-      </div>
+          </div>
+        </DemoPanel>
+      </DemoPage>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-10 sm:py-12 md:py-16">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-6 sm:mb-8">
-        <div className="max-w-3xl">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2">Embedding Explorer</h1>
-          <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 text-pretty">
+    <DemoPage>
+      <DemoHeader
+        title="Embedding Explorer"
+        actions={
+          <button
+            onClick={handleCopyLink}
+            className="inline-flex items-center justify-center px-3 py-2 text-sm rounded-full border border-neutral-300 dark:border-neutral-700 bg-white/80 dark:bg-neutral-900/80 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+          >
+            {copyStatus === "copied" ? "Link copied" : copyStatus === "error" ? "Copy failed" : "Copy share link"}
+          </button>
+        }
+        description={
+          <>
             Explore semantic geometry in two ways: define interpretable axes by hand or switch to a true UMAP manifold view.
             Run analogies, inspect nearest neighbors, and share the exact explorer state with one link.
-          </p>
-          <p className="text-xs text-neutral-500 mt-2">
-            Model: mxbai-embed-xsmall | {backend?.toUpperCase()} | {cacheSize} cached embeddings
-          </p>
-        </div>
-
-        <button
-          onClick={handleCopyLink}
-          className="inline-flex items-center justify-center px-3 py-2 text-sm rounded-full border border-neutral-300 dark:border-neutral-700 bg-white/80 dark:bg-neutral-900/80 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-        >
-          {copyStatus === "copied" ? "Link copied" : copyStatus === "error" ? "Copy failed" : "Copy share link"}
-        </button>
-      </div>
+          </>
+        }
+      />
+      <p className="mb-6 -mt-4 text-xs text-neutral-500">
+        Model: mxbai-embed-xsmall | {backend?.toUpperCase()} | {cacheSize} cached embeddings
+      </p>
 
       {isEmbedding && (
-        <div className="mb-4 p-3 bg-indigo-50 dark:bg-indigo-950 rounded-lg flex items-center gap-3">
+        <Alert variant="info" className="mb-4">
           <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-          <span className="text-sm text-indigo-700 dark:text-indigo-300">
-            {embeddingLabel}... {embeddingProgress}%
-          </span>
-        </div>
+          {" "}
+          {embeddingLabel}... {embeddingProgress}%
+        </Alert>
       )}
 
       {isProjecting && (
-        <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-950 rounded-lg flex items-center gap-3">
+        <Alert variant="warning" className="mb-4">
           <div className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
-          <span className="text-sm text-amber-700 dark:text-amber-300">{projectionNotice}</span>
-        </div>
+          {" "}
+          {projectionNotice}
+        </Alert>
       )}
 
       <div className="grid lg:grid-cols-[320px_1fr] gap-4 sm:gap-6">
@@ -1293,6 +1298,6 @@ export default function EmbeddingExplorerPage() {
           </p>
         </div>
       </div>
-    </div>
+    </DemoPage>
   );
 }
