@@ -420,7 +420,7 @@ function RusenizerPageInner() {
     }
 
     let rusenTokens: TokenInfo[] = [];
-    let gpt4Tokens: GPT4TokenInfo[] = [];
+    const gpt4Tokens: GPT4TokenInfo[] = [];
 
     // Rusenizer tokenization
     if (tokenizerRef.current) {

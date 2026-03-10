@@ -1,7 +1,6 @@
 import type { DQNAgent, SerializedDQNWeights } from "./dqn";
 import {
   chooseAction as dqnChooseAction,
-  forward as dqnForward,
   pushTransition,
 } from "./dqn";
 
@@ -779,7 +778,7 @@ function tickPickups(pickups: Pickup[]): Pickup[] {
   );
 }
 
-function getZone(position: Position): string {
+function getZone(position: Position): ZoneName {
   if (
     position.x >= 11 &&
     position.x <= 18 &&
@@ -799,8 +798,9 @@ function getZone(position: Position): string {
 
 export const STATE_DIM = 68;
 
-const ZONE_NAMES = ["west", "east", "north", "south", "center", "mid"] as const;
-const ZONE_INDEX: Record<(typeof ZONE_NAMES)[number], number> = {
+type ZoneName = "west" | "east" | "north" | "south" | "center" | "mid";
+
+const ZONE_INDEX: Record<ZoneName, number> = {
   west: 0,
   east: 1,
   north: 2,
@@ -934,12 +934,12 @@ function fillEncodedState(
 
   // One-hot: bot zone (6)
   const botZone = getZone(bot.position);
-  out[i + ZONE_INDEX[botZone as (typeof ZONE_NAMES)[number]]] = 1; // 20-25
+  out[i + ZONE_INDEX[botZone]] = 1; // 20-25
   i += 6;
 
   // One-hot: player zone (6)
   const playerZone = getZone(player.position);
-  out[i + ZONE_INDEX[playerZone as (typeof ZONE_NAMES)[number]]] = 1; // 26-31
+  out[i + ZONE_INDEX[playerZone]] = 1; // 26-31
   i += 6;
 
   // One-hot: bot last action (8)

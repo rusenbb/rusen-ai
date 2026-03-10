@@ -861,8 +861,8 @@ export default function GameOfLifeExperience() {
       {/* Loading indicator */}
       {!clearBgMode && !loaded && !initError && (
         <div className="fixed inset-0 z-[5] flex items-center justify-center pointer-events-none">
-          <div className="inline-flex items-center gap-3 rounded-lg border border-neutral-300/65 dark:border-neutral-600/70 bg-white/26 dark:bg-neutral-900/32 px-4 py-2 text-sm font-medium tracking-wide text-neutral-800 dark:text-neutral-100 backdrop-blur-[2px]">
-            <span className="w-4 h-4 border-2 border-neutral-500/70 dark:border-neutral-300/70 border-t-transparent rounded-full animate-spin" />
+          <div className="inline-flex items-center gap-3 rounded-lg border border-neutral-800/70 bg-neutral-950/72 px-4 py-2 text-sm font-medium tracking-wide text-neutral-50 shadow-lg backdrop-blur-[6px]">
+            <span className="w-4 h-4 border-2 border-neutral-200/80 border-t-transparent rounded-full animate-spin" />
             <span>Initializing Life...</span>
           </div>
         </div>
@@ -870,7 +870,7 @@ export default function GameOfLifeExperience() {
 
       {/* Init error indicator */}
       {initError && (
-        <div className="fixed bottom-4 left-4 z-[60] text-[10px] text-neutral-500 dark:text-neutral-500 bg-white/70 dark:bg-neutral-900/70 border border-neutral-200 dark:border-neutral-800 rounded px-2 py-1 backdrop-blur pointer-events-none">
+        <div className="fixed bottom-4 left-4 z-[60] text-[10px] text-neutral-700 dark:text-neutral-300 bg-white/88 dark:bg-neutral-900/80 border border-neutral-300 dark:border-neutral-700 rounded px-2 py-1 shadow-sm backdrop-blur pointer-events-none">
           Life background unavailable: {initError}
         </div>
       )}

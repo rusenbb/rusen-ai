@@ -172,10 +172,6 @@ export default function TemperaturePlaygroundPage() {
     setSelectedTokens((prev) => new Map(prev).set(temp, tokenIndex));
   }, []);
 
-  const handleExploreTokenSelect = useCallback((runId: number, tokenIndex: number) => {
-    setExploreSelectedTokens((prev) => new Map(prev).set(runId, tokenIndex));
-  }, []);
-
   const updateExploreRun = useCallback((runId: number, updater: (run: ExploreRun) => ExploreRun) => {
     setExploreRuns((prev) => prev.map((run) => (run.id === runId ? updater(run) : run)));
   }, []);

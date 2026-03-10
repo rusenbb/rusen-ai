@@ -24,7 +24,6 @@ import {
   type DQNCheckpointManifest,
   type MatchState,
   type MoveAction,
-  type TrainingMetricPoint,
 } from "./game";
 import { createDQNAgent, deserializeDQNWeights } from "./dqn";
 import { ADAPTIVE_ARENA_CHECKPOINTS } from "./checkpoints.generated";
@@ -108,10 +107,6 @@ const ARENA_LEGEND = [
     swatch: "bg-amber-900",
   },
 ] as const;
-
-function formatPercent(value: number): string {
-  return `${Math.round(value * 100)}%`;
-}
 
 function getTileColor(tile: ArenaTile): string {
   switch (tile) {
@@ -397,75 +392,6 @@ function StatBlock({
   );
 }
 
-function formatSigned(value: number, digits = 2): string {
-  const rounded = value.toFixed(digits);
-  return value > 0 ? `+${rounded}` : rounded;
-}
-
-function TrainingMetricChart(props: {
-  label: string;
-  color: string;
-  points: TrainingMetricPoint[];
-  valueKey: "averageReward" | "averageBotWinRate" | "averageHealthDelta";
-  formatValue: (value: number) => string;
-}) {
-  const { label, color, points, valueKey, formatValue } = props;
-
-  if (points.length === 0) return null;
-
-  const width = 220;
-  const height = 64;
-  const padding = 6;
-  const values = points.map((point) => point[valueKey]);
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const range = max - min || 1;
-  const path = points
-    .map((point, index) => {
-      const x =
-        padding +
-        (index / Math.max(1, points.length - 1)) * (width - padding * 2);
-      const y =
-        height -
-        padding -
-        ((point[valueKey] - min) / range) * (height - padding * 2);
-      return `${index === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(" ");
-  const latest = values.at(-1) ?? 0;
-  const first = values[0] ?? 0;
-
-  return (
-    <div className="rounded-2xl border border-white/8 bg-black/20 p-3">
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-[10px] uppercase tracking-[0.22em] text-neutral-500">
-          {label}
-        </span>
-        <span className="text-sm font-medium" style={{ color }}>
-          {formatValue(latest)}
-        </span>
-      </div>
-      <svg
-        viewBox={`0 0 ${width} ${height}`}
-        className="mt-2 h-16 w-full overflow-visible"
-      >
-        <path
-          d={path}
-          fill="none"
-          stroke={color}
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-      <div className="mt-1 flex items-center justify-between text-[11px] text-neutral-500">
-        <span>start {formatValue(first)}</span>
-        <span>end {formatValue(latest)}</span>
-      </div>
-    </div>
-  );
-}
-
 function FullscreenCornersIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4">
@@ -712,7 +638,7 @@ export default function AdaptiveArenaPage() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     drawArena(canvas, arena, match, BOT_ACCENT);
-  }, [arena, match, BOT_ACCENT]);
+  }, [arena, match]);
 
   // Re-draw at native resolution when canvas container resizes
   useEffect(() => {
@@ -818,7 +744,7 @@ export default function AdaptiveArenaPage() {
     : "min(100%, calc(100vh - 12rem), 1080px)";
 
   return (
-    <div className="min-h-screen bg-[#05070a] text-neutral-100">
+    <div className="min-h-screen py-6 text-neutral-900 dark:text-neutral-100 sm:py-8">
       <div className="mx-auto max-w-[1500px] px-4 py-8 sm:px-6 lg:px-8">
         <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(103,232,249,0.12),transparent_28%),radial-gradient(circle_at_top_right,rgba(249,115,22,0.14),transparent_26%),linear-gradient(135deg,#05070a_0%,#0a1118_48%,#070b10_100%)] p-5 sm:p-8">
           <div
@@ -862,11 +788,11 @@ export default function AdaptiveArenaPage() {
                     className={`relative ${isFullscreen ? "p-2" : "border-b border-white/10 p-4 sm:p-5 xl:border-b-0 xl:border-r xl:border-white/10"}`}
                   >
                     {isFullscreen && (
-                      <div className="absolute left-6 top-6 z-10 flex w-40 flex-col gap-2">
+                      <div className="absolute left-3 top-3 z-10 flex w-32 flex-col gap-2 sm:left-6 sm:top-6 sm:w-40">
                         <button
                           type="button"
                           onClick={() => setIsRunning((current) => !current)}
-                          className="rounded-full border border-white/10 bg-[#02060b]/80 px-4 py-2 text-[11px] uppercase tracking-[0.22em] text-neutral-100 backdrop-blur transition hover:bg-[#0a1118]"
+                          className="rounded-full border border-white/10 bg-[#02060b]/80 px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-neutral-100 backdrop-blur transition hover:bg-[#0a1118] sm:px-4 sm:text-[11px] sm:tracking-[0.22em]"
                         >
                           {isRunning ? "Pause" : primaryActionLabel}
                         </button>
@@ -875,7 +801,7 @@ export default function AdaptiveArenaPage() {
                           onClick={() =>
                             setAutoRunRounds((current) => !current)
                           }
-                          className={`rounded-full border px-4 py-2 text-[11px] uppercase tracking-[0.22em] backdrop-blur transition ${
+                          className={`rounded-full border px-3 py-2 text-[10px] uppercase tracking-[0.18em] backdrop-blur transition sm:px-4 sm:text-[11px] sm:tracking-[0.22em] ${
                             autoRunRounds
                               ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-200"
                               : "border-white/10 bg-[#02060b]/80 text-neutral-200 hover:bg-[#0a1118]"
@@ -886,7 +812,7 @@ export default function AdaptiveArenaPage() {
                         <button
                           type="button"
                           onClick={resetSession}
-                          className="rounded-full border border-white/10 bg-[#02060b]/80 px-4 py-2 text-[11px] uppercase tracking-[0.22em] text-neutral-200 backdrop-blur transition hover:bg-[#0a1118]"
+                          className="rounded-full border border-white/10 bg-[#02060b]/80 px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-neutral-200 backdrop-blur transition hover:bg-[#0a1118] sm:px-4 sm:text-[11px] sm:tracking-[0.22em]"
                         >
                           Reset
                         </button>
@@ -895,7 +821,7 @@ export default function AdaptiveArenaPage() {
                     <button
                       type="button"
                       onClick={() => void toggleFullscreen()}
-                      className="absolute right-6 top-6 z-10 inline-flex items-center justify-center rounded-full border border-white/10 bg-[#02060b]/80 p-2 text-neutral-200 backdrop-blur transition hover:bg-[#0a1118]"
+                      className="absolute right-3 top-3 z-10 inline-flex items-center justify-center rounded-full border border-white/10 bg-[#02060b]/80 p-2 text-neutral-200 backdrop-blur transition hover:bg-[#0a1118] sm:right-6 sm:top-6"
                       aria-label={
                         isFullscreen ? "Exit fullscreen" : "Go fullscreen"
                       }

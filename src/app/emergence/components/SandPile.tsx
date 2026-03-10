@@ -55,10 +55,6 @@ const TOPPLE_COLOR = "#ffffff"; // white flash during cascade
 // Sandpile logic
 // ---------------------------------------------------------------------------
 
-function createGrid(): Uint8Array {
-  return new Uint8Array(GRID_W * GRID_H);
-}
-
 /**
  * Create a grid pre-loaded near criticality.
  * Each cell gets a random value 0-3, then we resolve all unstable cells.
@@ -157,64 +153,62 @@ function createHistogram(): AvalancheHistogram {
 // Topple rule diagram
 // ---------------------------------------------------------------------------
 
-function ToppleDiagram(): React.ReactElement {
-  const cellSz = 32;
-  const gap = 3;
+const MINI_GRID_CELL_SIZE = 32;
+const MINI_GRID_GAP = 3;
 
-  /** Render a small 3x3 grid of grain counts */
-  function MiniGrid({
-    cells,
-    highlight,
-  }: {
-    cells: (number | null)[];
-    highlight?: Set<number>;
-  }): React.ReactElement {
-    return (
-      <div
-        className="inline-grid"
-        style={{
-          gridTemplateColumns: `repeat(3, ${cellSz}px)`,
-          gap: `${gap}px`,
-        }}
-      >
-        {cells.map((val, i) => {
-          const isHighlighted = highlight?.has(i);
-          const bg =
-            val === null
-              ? "transparent"
-              : isHighlighted
-                ? TOPPLE_COLOR
-                : GRAIN_COLORS[Math.min(val, 3)];
-          const textColor =
-            val === null
-              ? "transparent"
-              : isHighlighted
+interface MiniGridProps {
+  cells: (number | null)[];
+  highlight?: Set<number>;
+}
+
+function MiniGrid({ cells, highlight }: MiniGridProps): React.ReactElement {
+  return (
+    <div
+      className="inline-grid"
+      style={{
+        gridTemplateColumns: `repeat(3, ${MINI_GRID_CELL_SIZE}px)`,
+        gap: `${MINI_GRID_GAP}px`,
+      }}
+    >
+      {cells.map((val, i) => {
+        const isHighlighted = highlight?.has(i);
+        const bg =
+          val === null
+            ? "transparent"
+            : isHighlighted
+              ? TOPPLE_COLOR
+              : GRAIN_COLORS[Math.min(val, 3)];
+        const textColor =
+          val === null
+            ? "transparent"
+            : isHighlighted
+              ? "#171717"
+              : val >= 3
                 ? "#171717"
-                : val >= 3
-                  ? "#171717"
-                  : "#a3a3a3";
+                : "#a3a3a3";
 
-          return (
-            <div
-              key={i}
-              className="flex items-center justify-center rounded text-xs font-mono font-bold"
-              style={{
-                width: cellSz,
-                height: cellSz,
-                backgroundColor: bg,
-                color: textColor,
-                border:
-                  val === null ? "1px dashed #404040" : "1px solid #404040",
-              }}
-            >
-              {val !== null ? val : ""}
-            </div>
-          );
-        })}
-      </div>
-    );
-  }
+        return (
+          <div
+            key={i}
+            className="flex items-center justify-center rounded text-xs font-mono font-bold"
+            style={{
+              width: MINI_GRID_CELL_SIZE,
+              height: MINI_GRID_CELL_SIZE,
+              backgroundColor: bg,
+              color: textColor,
+              border:
+                val === null ? "1px dashed #404040" : "1px solid #404040",
+            }}
+          >
+            {val !== null ? val : ""}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
+function ToppleDiagram(): React.ReactElement {
   return (
     <div className="p-4 sm:p-6 rounded-lg border border-neutral-800 bg-neutral-900/50">
       <div className="text-xs text-neutral-500 mb-4 text-center tracking-wide uppercase">
@@ -630,7 +624,7 @@ export default function SandPile(): React.ReactElement {
   }, [dropAtRandom, flushStats, drawGrid]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 rounded-3xl border border-neutral-800 bg-neutral-950/92 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.22)] sm:p-8">
       {/* Heading */}
       <div>
         <h2 className="font-mono text-2xl sm:text-3xl font-semibold text-neutral-100 mb-2">

@@ -2,12 +2,12 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import type { GeneratedToken, TokenProbability } from "../types";
+import type { Tensor } from "@huggingface/transformers";
 
 // Browser-friendly ONNX causal LM for next-word prediction
 const MODEL_NAME = "onnx-community/Qwen3-0.6B-ONNX";
 const TOP_K = 100; // Number of top tokens to show in visualization
 type Backend = "webgpu" | "wasm" | "unknown";
-
 export interface GenerationCallbacks {
   onToken: (token: GeneratedToken) => Promise<void> | void;
   onComplete: () => void;
@@ -233,23 +233,22 @@ export function useLocalLLM(): UseLocalLLMReturn {
 
           const inputs = tokenizer(prompt);
 
-          const { TextStreamer, LogitsProcessor, LogitsProcessorList, Tensor } =
+          const { TextStreamer, LogitsProcessor, LogitsProcessorList } =
             await import("@huggingface/transformers");
 
           const stepInfos: { top: TokenProbability[] }[] = [];
 
-          const captureProcessor = new (class extends LogitsProcessor {
-            _call(
-              _input_ids: bigint[][],
-              logits: InstanceType<typeof Tensor>
-            ): InstanceType<typeof Tensor> {
-              const row = logits.data as Float32Array;
-              const probs = softmax(row);
-              const top = getTopKTokens(probs, tokenizer, topK);
-              stepInfos.push({ top });
-              return logits;
-            }
-          })();
+              const captureProcessor = new (class extends LogitsProcessor {
+                _call(
+                  _input_ids: bigint[][],
+                  logits: Tensor
+                ): void {
+                  const row = logits.data as Float32Array;
+                  const probs = softmax(row);
+                  const top = getTopKTokens(probs, tokenizer, topK);
+                  stepInfos.push({ top });
+                }
+              })();
 
           const processorList = new LogitsProcessorList();
           processorList.push(captureProcessor);
@@ -354,7 +353,7 @@ export function useLocalLLM(): UseLocalLLMReturn {
             throw new Error("Model not loaded");
           }
 
-          const { TextStreamer, LogitsProcessor, LogitsProcessorList, Tensor } = await import(
+          const { TextStreamer, LogitsProcessor, LogitsProcessorList } = await import(
             "@huggingface/transformers"
           );
 
@@ -399,7 +398,7 @@ export function useLocalLLM(): UseLocalLLMReturn {
               const forceSecondBestForFirstStep = branch.forceSecondBestNext;
 
               const dynamicProcessor = new (class extends LogitsProcessor {
-                _call(_input_ids: bigint[][], logits: InstanceType<typeof Tensor>): InstanceType<typeof Tensor> {
+                _call(_input_ids: bigint[][], logits: Tensor): void {
                   const row = logits.data as Float32Array;
                   const probs = softmax(row);
                   const top = getTopKTokens(probs, tokenizer, Math.max(2, topK));
@@ -413,7 +412,6 @@ export function useLocalLLM(): UseLocalLLMReturn {
                     row[forcedId] = 0;
                   }
                   stepIndex += 1;
-                  return logits;
                 }
               })();
 

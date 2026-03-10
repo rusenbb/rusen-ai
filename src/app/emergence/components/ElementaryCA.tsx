@@ -76,7 +76,6 @@ const NOTABLE_RULES: NotableRule[] = [
 
 const BG_COLOR = "#171717"; // neutral-900
 const CELL_ON_COLOR = "#22d3ee"; // cyan-400
-const CELL_OFF_COLOR = "#171717";
 const CELL_ON_RULE_TABLE = "#22d3ee";
 const CELL_OFF_RULE_TABLE = "#404040"; // neutral-600
 
@@ -246,23 +245,6 @@ export default function ElementaryCA(): React.ReactElement {
     ruleTableRef.current = decodeRule(rule);
   }, [rule]);
 
-  // Initialize grid
-  const initializeGrid = useCallback(() => {
-    const initial = createInitialGrid(GRID_WIDTH);
-    gridRef.current = initial.grid;
-    setGeneration(0);
-
-    // Center the view so the initial cell is in the middle of the canvas
-    const container = containerRef.current;
-    if (container) {
-      const containerW = container.clientWidth;
-      const centerX = containerW / 2 - (GRID_WIDTH / 2) * 3;
-      setView({ x: centerX, y: 0, scale: 3 });
-    }
-
-    redraw();
-  }, []);
-
   // Redraw canvas from grid + view
   const redraw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -283,9 +265,28 @@ export default function ElementaryCA(): React.ReactElement {
     drawFullGrid(canvas, gridRef.current, GRID_WIDTH, viewRef.current);
   }, []);
 
+  // Initialize grid
+  const initializeGrid = useCallback(() => {
+    const initial = createInitialGrid(GRID_WIDTH);
+    gridRef.current = initial.grid;
+    setGeneration(0);
+
+    // Center the view so the initial cell is in the middle of the canvas
+    const container = containerRef.current;
+    if (container) {
+      const containerW = container.clientWidth;
+      const centerX = containerW / 2 - (GRID_WIDTH / 2) * 3;
+      setView({ x: centerX, y: 0, scale: 3 });
+    }
+
+    redraw();
+  }, [redraw]);
+
   // Initialize on mount
   useEffect(() => {
-    initializeGrid();
+    queueMicrotask(() => {
+      initializeGrid();
+    });
   }, [initializeGrid]);
 
   // Redraw when view changes
@@ -443,7 +444,7 @@ export default function ElementaryCA(): React.ReactElement {
   }, [customRuleInput, handleRuleChange]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 rounded-3xl border border-neutral-800 bg-neutral-950/92 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.22)] sm:p-8">
       {/* Heading */}
       <div>
         <h2 className="font-mono text-2xl sm:text-3xl font-semibold text-neutral-100 mb-2">

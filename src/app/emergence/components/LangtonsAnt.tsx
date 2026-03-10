@@ -507,7 +507,7 @@ export default function LangtonsAnt(): React.ReactElement {
   const phaseText = getPhaseText(phase);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 rounded-3xl border border-neutral-800 bg-neutral-950/92 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.22)] sm:p-8">
       {/* Heading */}
       <div>
         <h2 className="font-mono text-2xl sm:text-3xl font-semibold text-neutral-100 mb-2">

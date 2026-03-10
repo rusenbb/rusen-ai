@@ -4,11 +4,6 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { SiBitcoin, SiEthereum, SiSolana, SiChainlink } from "react-icons/si";
 
 // Types
-interface CryptoData {
-  bitcoin: { usd: number; usd_24h_change: number };
-  ethereum: { usd: number; usd_24h_change: number };
-}
-
 interface FearGreedData {
   value: string;
   value_classification: string;
@@ -98,7 +93,7 @@ const WEATHER_CODES: Record<number, { desc: string; icon: string }> = {
 };
 
 // Weather icon component
-function WeatherIcon({ code, isDay }: { code: number; isDay: boolean }) {
+function WeatherIcon({ code }: { code: number; isDay: boolean }) {
   const weather = WEATHER_CODES[code] || { desc: "Unknown", icon: "cloud" };
   const iconType = weather.icon;
 
@@ -191,9 +186,9 @@ function LiveBadge({ connected, updateCount }: { connected: boolean; updateCount
 }
 
 // Relative time helper
-function formatTimeAgo(date: Date | null): string {
+function formatTimeAgo(date: Date | null, nowMs: number): string {
   if (!date) return "";
-  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+  const seconds = Math.floor((nowMs - date.getTime()) / 1000);
   if (seconds < 60) return `${seconds}s ago`;
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
   return `${Math.floor(seconds / 3600)}h ago`;
@@ -214,6 +209,26 @@ const WIDGET_ORDER = [
   "github-trending",
   "hacker-news",
 ] as const;
+
+const AVIATION_REGIONS = {
+  nyc: { name: "New York", bbox: { lamin: 40.4, lomin: -74.5, lamax: 41.0, lomax: -73.5 } },
+  london: { name: "London", bbox: { lamin: 51.2, lomin: -0.6, lamax: 51.7, lomax: 0.4 } },
+  tokyo: { name: "Tokyo", bbox: { lamin: 35.4, lomin: 139.4, lamax: 35.9, lomax: 140.0 } },
+} as const;
+
+function useRelativeTimeTicker(intervalMs = 1000): number {
+  const [nowMs, setNowMs] = useState(() => Date.now());
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setNowMs(Date.now());
+    }, intervalMs);
+
+    return () => window.clearInterval(interval);
+  }, [intervalMs]);
+
+  return nowMs;
+}
 
 // Keyboard shortcuts modal
 function ShortcutsModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
@@ -424,7 +439,7 @@ function CryptoHubWidget() {
           setFearGreed(fgData.data[0]);
         }
       }
-    } catch (err) {
+    } catch {
       console.error("Failed to fetch market data");
     }
   }, []);
@@ -464,14 +479,16 @@ function CryptoHubWidget() {
       const gasPrice = gasData.result ? Number(BigInt(gasData.result)) / 1e9 : 0;
 
       setChainlink({ btc: btcPrice, eth: ethPrice, gas: gasPrice });
-    } catch (err) {
+    } catch {
       console.error("Failed to fetch Chainlink data");
     }
   }, []);
 
   useEffect(() => {
-    fetchMarketData();
-    fetchChainlink();
+    queueMicrotask(() => {
+      void fetchMarketData();
+      void fetchChainlink();
+    });
     const marketInterval = setInterval(fetchMarketData, 60000);
     const chainlinkInterval = setInterval(fetchChainlink, 30000);
     return () => {
@@ -632,6 +649,7 @@ function WeatherWidget() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastFetched, setLastFetched] = useState<Date | null>(null);
+  const nowMs = useRelativeTimeTicker();
 
   const fetchWeather = useCallback(async () => {
     setLoading(true);
@@ -647,7 +665,7 @@ function WeatherWidget() {
       } else {
         setError("Failed to fetch weather");
       }
-    } catch (err) {
+    } catch {
       setError("Failed to fetch weather");
     } finally {
       setLoading(false);
@@ -669,7 +687,7 @@ function WeatherWidget() {
           <span className="text-xl">&#9728;&#65039;</span> Weather
         </h2>
         {lastFetched && (
-          <span className="text-xs text-neutral-500">{formatTimeAgo(lastFetched)}</span>
+          <span className="text-xs text-neutral-500">{formatTimeAgo(lastFetched, nowMs)}</span>
         )}
       </div>
       <select
@@ -737,7 +755,7 @@ function HackerNewsWidget() {
       const fetchedStories = await Promise.all(storyPromises);
       setStories(fetchedStories);
       setError(null);
-    } catch (err) {
+    } catch {
       setError("Failed to fetch Hacker News");
     } finally {
       setLoading(false);
@@ -794,6 +812,7 @@ function EarthquakeWidget() {
   const [quakes, setQuakes] = useState<Earthquake[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const nowMs = useRelativeTimeTicker();
 
   const fetchQuakes = useCallback(async () => {
     try {
@@ -814,7 +833,7 @@ function EarthquakeWidget() {
 
       setQuakes(earthquakes);
       setError(null);
-    } catch (err) {
+    } catch {
       setError("Failed to fetch earthquake data");
     } finally {
       setLoading(false);
@@ -835,7 +854,7 @@ function EarthquakeWidget() {
   };
 
   const timeAgo = (timestamp: number) => {
-    const seconds = Math.floor((Date.now() - timestamp) / 1000);
+    const seconds = Math.floor((nowMs - timestamp) / 1000);
     if (seconds < 60) return `${seconds}s ago`;
     const minutes = Math.floor(seconds / 60);
     if (minutes < 60) return `${minutes}m ago`;
@@ -925,7 +944,7 @@ function GithubTrendingWidget() {
 
       setRepos(trending);
       setError(null);
-    } catch (err) {
+    } catch {
       setError("Failed to fetch GitHub trending");
     } finally {
       setLoading(false);
@@ -1026,6 +1045,7 @@ function WikipediaLiveWidget() {
   }>>([]);
   const [connected, setConnected] = useState(false);
   const [editCount, setEditCount] = useState(0);
+  const nowMs = useRelativeTimeTicker();
 
   useEffect(() => {
     // Wikimedia uses Server-Sent Events (SSE), not WebSocket
@@ -1050,7 +1070,7 @@ function WikipediaLiveWidget() {
           setEdits((prev) => [edit, ...prev].slice(0, 8));
           setEditCount((c) => c + 1);
         }
-      } catch (e) {
+      } catch {
         // Skip malformed messages
       }
     };
@@ -1077,7 +1097,7 @@ function WikipediaLiveWidget() {
   };
 
   const timeAgo = (timestamp: number) => {
-    const seconds = Math.floor((Date.now() - timestamp) / 1000);
+    const seconds = Math.floor((nowMs - timestamp) / 1000);
     if (seconds < 60) return `${seconds}s`;
     return `${Math.floor(seconds / 60)}m`;
   };
@@ -1147,15 +1167,9 @@ function AviationWidget() {
     return "nyc";
   });
 
-  const regions = {
-    nyc: { name: "New York", bbox: { lamin: 40.4, lomin: -74.5, lamax: 41.0, lomax: -73.5 } },
-    london: { name: "London", bbox: { lamin: 51.2, lomin: -0.6, lamax: 51.7, lomax: 0.4 } },
-    tokyo: { name: "Tokyo", bbox: { lamin: 35.4, lomin: 139.4, lamax: 35.9, lomax: 140.0 } },
-  };
-
   const fetchAircraft = useCallback(async () => {
     try {
-      const r = regions[region];
+      const r = AVIATION_REGIONS[region];
       const res = await fetch(
         `https://opensky-network.org/api/states/all?lamin=${r.bbox.lamin}&lomin=${r.bbox.lomin}&lamax=${r.bbox.lamax}&lomax=${r.bbox.lomax}`
       );
@@ -1175,7 +1189,7 @@ function AviationWidget() {
         setAircraft(planes);
         setError(null);
       }
-    } catch (err) {
+    } catch {
       setError("Rate limited - try again in 10s");
     } finally {
       setLoading(false);
@@ -1213,7 +1227,7 @@ function AviationWidget() {
         }}
         className="w-full mb-4 p-2 border border-neutral-200 dark:border-neutral-700 rounded bg-white dark:bg-neutral-900 text-sm"
       >
-        {Object.entries(regions).map(([key, val]) => (
+        {Object.entries(AVIATION_REGIONS).map(([key, val]) => (
           <option key={key} value={key}>{val.name} Area</option>
         ))}
       </select>
@@ -1278,7 +1292,7 @@ function ISSTrackerWidget() {
         velocity: Math.round(data.velocity),
       });
       setError(null);
-    } catch (err) {
+    } catch {
       setError("Failed to fetch ISS position");
     } finally {
       setLoading(false);
@@ -1489,7 +1503,7 @@ function RocketLaunchesWidget() {
 
       setLaunches(upcoming);
       setError(null);
-    } catch (err) {
+    } catch {
       setError("Failed to fetch launch data");
     } finally {
       setLoading(false);
@@ -1616,6 +1630,7 @@ function GitHubActivityWidget() {
   const [lastFetch, setLastFetch] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
   const seenIdsRef = useRef<Set<string>>(new Set());
+  const nowMs = useRelativeTimeTicker();
 
   const fetchEvents = useCallback(async () => {
     try {
@@ -1646,7 +1661,7 @@ function GitHubActivityWidget() {
       setEvents(newEvents);
       setLastFetch(new Date());
       setError(null);
-    } catch (err) {
+    } catch {
       setError("Failed to fetch");
     } finally {
       setLoading(false);
@@ -1672,7 +1687,7 @@ function GitHubActivityWidget() {
   };
 
   const timeAgo = (timestamp: number) => {
-    const seconds = Math.floor((Date.now() - timestamp) / 1000);
+    const seconds = Math.floor((nowMs - timestamp) / 1000);
     if (seconds < 60) return `${seconds}s`;
     if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
     return `${Math.floor(seconds / 3600)}h`;
@@ -1685,17 +1700,10 @@ function GitHubActivityWidget() {
 
   const formatLastFetch = () => {
     if (!lastFetch) return "";
-    const seconds = Math.floor((Date.now() - lastFetch.getTime()) / 1000);
+    const seconds = Math.floor((nowMs - lastFetch.getTime()) / 1000);
     if (seconds < 60) return `${seconds}s ago`;
     return `${Math.floor(seconds / 60)}m ago`;
   };
-
-  // Update the "ago" display every second
-  const [, setTick] = useState(0);
-  useEffect(() => {
-    const interval = setInterval(() => setTick((t) => t + 1), 1000);
-    return () => clearInterval(interval);
-  }, []);
 
   return (
     <Card className="col-span-1 md:col-span-2">

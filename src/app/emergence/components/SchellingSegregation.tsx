@@ -447,7 +447,7 @@ export default function SchellingSegregation() {
             same-type neighbors falls below the threshold, the agent is unhappy
             and will relocate.
             <br />
-            <span className="text-neutral-500 dark:text-neutral-500">
+            <span className="text-neutral-600 dark:text-neutral-400">
               Edge and corner cells have fewer neighbors (5 or 3).
             </span>
           </div>
@@ -614,7 +614,7 @@ export default function SchellingSegregation() {
           Nobody wanted segregation. Every agent just wanted 1 in 3 neighbors to
           be similar.
         </p>
-        <p className="text-neutral-500 dark:text-neutral-500">
+        <p className="text-neutral-600 dark:text-neutral-400">
           Thomas Schelling won the Nobel Prize in Economics for this model in
           2005.
         </p>

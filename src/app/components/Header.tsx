@@ -55,9 +55,10 @@ export default function Header() {
             <button
               type="button"
               onClick={() => setMobileNavOpen((v) => !v)}
-              className="inline-flex items-center justify-center w-9 h-9 rounded-md border border-neutral-300/70 dark:border-neutral-700/70 text-neutral-700 dark:text-neutral-200"
+              className="inline-flex items-center justify-center w-11 h-11 rounded-md border border-neutral-300/70 dark:border-neutral-700/70 text-neutral-700 dark:text-neutral-200"
               aria-label="Toggle menu"
               aria-expanded={mobileNavOpen}
+              aria-controls="mobile-nav"
             >
               <svg
                 width="18"
@@ -88,7 +89,7 @@ export default function Header() {
         </div>
 
         {mobileNavOpen && (
-          <div className="md:hidden mt-3 pt-3 border-t border-neutral-200/70 dark:border-neutral-800/70 space-y-2">
+          <div id="mobile-nav" className="md:hidden mt-3 pt-3 border-t border-neutral-200/70 dark:border-neutral-800/70 space-y-2">
             {links.map((item) => (
               <Link
                 key={item.href}

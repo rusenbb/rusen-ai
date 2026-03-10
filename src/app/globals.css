@@ -3,6 +3,7 @@
 :root {
   --background: #fafafa;
   --foreground: #171717;
+  color-scheme: light dark;
 }
 
 @theme inline {

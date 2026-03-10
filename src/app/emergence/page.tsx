@@ -34,7 +34,7 @@ export default function EmergencePage() {
         <div className="mt-4">
           <Link
             href="/game-of-life"
-            className="text-sm text-neutral-500 hover:text-neutral-300 underline underline-offset-4 transition"
+            className="text-sm text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-200 underline underline-offset-4 transition"
           >
             See the full Game of Life experience &rarr;
           </Link>
@@ -58,7 +58,7 @@ export default function EmergencePage() {
 
       {/* Closing */}
       <footer className="border-t border-neutral-200 dark:border-neutral-800 pt-10 pb-6">
-        <p className="text-neutral-500 text-sm leading-relaxed max-w-2xl">
+        <p className="text-neutral-600 dark:text-neutral-400 text-sm leading-relaxed max-w-2xl">
           Five systems. Rules you can fit on an index card. Behavior that
           surprises, disturbs, and remains unexplained. Emergence is not a
           special case. It is the default. The question is not why

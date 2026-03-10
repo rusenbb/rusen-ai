@@ -614,11 +614,6 @@ export function numericalGradientCheck(
   targetQ: number,
   epsilon = 1e-4,
 ): { maxRelError: number; passed: boolean } {
-  // Compute analytical gradient
-  const cache = forwardWithCache(weights, input);
-  const predicted = cache.activations[weights.layers.length][actionIndex];
-  const error = predicted - targetQ;
-
   const fakeTransition: Transition = {
     state: input,
     action: actionIndex,
