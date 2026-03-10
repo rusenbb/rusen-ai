@@ -3,5 +3,7 @@ name = "rusen-ai-python"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
+  "mlx>=0.31.0",
+  "mlx-lm>=0.31.0",
   "numpy>=2.1",
 ]

@@ -9,9 +9,6 @@ type CommandResult = {
 };
 
 const DEMOS = [
-  { key: "paper-pilot", name: "Paper Pilot", desc: "Summarize and explain academic papers from DOI input." },
-  { key: "data-forge", name: "Data Forge", desc: "Generate realistic relational fake datasets from schema prompts." },
-  { key: "query-craft", name: "Query Craft", desc: "Generate SQL from plain-language intents." },
   { key: "classify-anything", name: "Classify Anything", desc: "Zero-shot text classification in the browser." },
   { key: "pulse-board", name: "Pulse Board", desc: "Live multi-signal dashboard (crypto, weather, quakes, etc.)." },
 ];
