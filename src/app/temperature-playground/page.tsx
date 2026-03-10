@@ -11,6 +11,7 @@ import { useLocalLLM } from "./hooks/useLocalLLM";
 import ProbabilityTable from "./components/ProbabilityTable";
 import TokenStream from "./components/TokenStream";
 import BranchTreeCanvas from "./components/BranchTreeCanvas";
+import { Alert, DemoHeader, DemoPage, DemoPanel } from "@/components/ui";
 
 const TEMP_LABELS: Record<number, { label: string; description: string }> = {
   0.0: { label: "Precise", description: "Deterministic, always picks the most likely token" },
@@ -284,17 +285,24 @@ export default function TemperaturePlaygroundPage() {
 
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-10 sm:py-12 md:py-16">
-      <div className="mb-8">
-        <h1 className="text-3xl sm:text-4xl font-bold mb-3 sm:mb-4">Temperature Playground</h1>
-        <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 max-w-3xl text-pretty">
+    <DemoPage width="2xl">
+      <DemoHeader
+        title="Temperature Playground"
+        description={
+          <>
           Compare sampling behavior across temperatures, or stream a branching tree that expands when
           perplexity crosses your threshold.
-        </p>
-      </div>
+          </>
+        }
+      />
 
       {state.isModelLoading && (
-        <div className="mb-8 p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg bg-neutral-50 dark:bg-neutral-900/50">
+        <DemoPanel
+          className="mb-8"
+          padding="md"
+          title="Model Loading"
+          description="The first session downloads and caches the local inference model in your browser."
+        >
           <div className="flex justify-between items-center mb-2">
             <span className="font-medium">Loading {modelName}...</span>
             <span className="text-sm text-neutral-500">{state.modelProgress}%</span>
@@ -308,25 +316,29 @@ export default function TemperaturePlaygroundPage() {
           <p className="text-xs text-neutral-500 mt-2">
             First load downloads ~270MB (cached in browser for future visits)
           </p>
-        </div>
+        </DemoPanel>
       )}
 
       {state.modelError && (
-        <div className="mb-8 p-4 border border-red-300 dark:border-red-700 rounded-lg bg-red-50 dark:bg-red-900/20">
-          <p className="text-red-600 dark:text-red-400">{state.modelError}</p>
-        </div>
+        <Alert variant="error" className="mb-8">
+          {state.modelError}
+        </Alert>
       )}
 
       {state.isModelReady && !state.isModelLoading && (
-        <div className="mb-8 p-3 border border-green-300 dark:border-green-700 rounded-lg bg-green-50 dark:bg-green-900/20 flex items-center gap-2">
+        <Alert variant="success" className="mb-8">
           <span className="text-green-500">✓</span>
-          <span className="text-sm text-green-700 dark:text-green-300">
-            {modelName} loaded and ready ({backend.toUpperCase()})
-          </span>
-        </div>
+          {" "}
+          {modelName} loaded and ready ({backend.toUpperCase()})
+        </Alert>
       )}
 
-      <div className="mb-8 p-4 sm:p-6 border border-neutral-200 dark:border-neutral-800 rounded-lg">
+      <DemoPanel
+        className="mb-8"
+        padding="lg"
+        title="Controls"
+        description="Tune sampling parameters, switch modes, and launch a comparison run or branching exploration."
+      >
         <div className="mb-5">
           <label className="block text-sm font-medium mb-2">Mode</label>
           <div className="grid sm:grid-cols-2 gap-2">
@@ -546,7 +558,7 @@ export default function TemperaturePlaygroundPage() {
             </>
           )}
         </div>
-      </div>
+      </DemoPanel>
 
       {mode === "compare" ? (
         <div className="space-y-6">
@@ -657,6 +669,6 @@ export default function TemperaturePlaygroundPage() {
           }}
         />
       )}
-    </div>
+    </DemoPage>
   );
 }

@@ -9,6 +9,7 @@ import ModelLoader from "./components/ModelLoader";
 import ImageCanvas from "./components/ImageCanvas";
 import PromptInput from "./components/PromptInput";
 import ResultsPanel from "./components/ResultsPanel";
+import { Alert, DemoFootnote, DemoHeader, DemoMutedSection, DemoPage, DemoPanel } from "@/components/ui";
 
 export default function SegmentAnythingPage() {
   const [state, dispatch] = useReducer(segmentReducer, initialState);
@@ -98,19 +99,19 @@ export default function SegmentAnythingPage() {
     state.inferenceStatus === "decoding";
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Segment Anything</h1>
-        <p className="text-neutral-600 dark:text-neutral-400">
+    <DemoPage width="lg">
+      <DemoHeader
+        title="Segment Anything"
+        description={
+          <>
           Type what you see in the image. Get pixel-perfect segmentation masks.
           SAM3 running entirely in your browser with capability-aware WebGPU
           and WASM fallback.
-        </p>
-      </div>
+          </>
+        }
+      />
 
-      {/* Model loader */}
-      <div className="mb-6 p-4 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800">
+      <DemoPanel className="mb-6" padding="md" title="Runtime" description="Load the best available model profile for this browser and hardware.">
         <ModelLoader
           status={state.modelsStatus}
           progress={state.downloadProgress}
@@ -119,13 +120,11 @@ export default function SegmentAnythingPage() {
           error={state.modelsStatus === "error" ? state.error : null}
           onLoad={loadModels}
         />
-      </div>
+      </DemoPanel>
 
-      {/* Main content */}
       <div className="grid lg:grid-cols-3 gap-6">
-        {/* Canvas — 2 columns */}
         <div className="lg:col-span-2">
-          <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-4">
+          <DemoPanel padding="md" title="Canvas" description="Upload an image, inspect the scene, and optionally draw a guiding box prompt.">
             <ImageCanvas
               imageUrl={state.imagePreviewUrl}
               originalWidth={state.originalWidth}
@@ -139,20 +138,15 @@ export default function SegmentAnythingPage() {
               }
               disabled={state.modelsStatus !== "ready"}
             />
-          </div>
+          </DemoPanel>
         </div>
 
-        {/* Sidebar — 1 column */}
         <div className="space-y-4">
-          {/* Prompt input */}
-          <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-4">
-            <h2 className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
-              Text Prompt
-            </h2>
-            <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-3">
-              Add text, then optionally draw a box prompt on the canvas to guide
-              the mask.
-            </p>
+          <DemoPanel
+            padding="md"
+            title="Text Prompt"
+            description="Add text, then optionally draw a box prompt on the canvas to guide the mask."
+          >
             <PromptInput
               value={state.textPrompt}
               onChange={(prompt) =>
@@ -165,13 +159,9 @@ export default function SegmentAnythingPage() {
               imageReady={!!state.imageFile}
               inferenceStatus={state.inferenceStatus}
             />
-          </div>
+          </DemoPanel>
 
-          {/* Results */}
-          <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-4">
-            <h2 className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
-              Results
-            </h2>
+          <DemoPanel padding="md" title="Results">
             <ResultsPanel
               results={state.results}
               inferenceStatus={state.inferenceStatus}
@@ -187,22 +177,15 @@ export default function SegmentAnythingPage() {
                   results.
                 </p>
               )}
-          </div>
+          </DemoPanel>
 
-          {/* Error */}
           {state.error && state.modelsStatus !== "error" && (
-            <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-xl p-4">
-              <p className="text-sm text-red-600 dark:text-red-400">
-                {state.error}
-              </p>
-            </div>
+            <Alert variant="error">{state.error}</Alert>
           )}
         </div>
       </div>
 
-      {/* How it works */}
-      <div className="mt-8 p-6 bg-neutral-50 dark:bg-neutral-800/50 rounded-xl">
-        <h2 className="text-lg font-semibold mb-3">How it works</h2>
+      <DemoMutedSection className="mt-8" title="How it works">
         <div className="grid md:grid-cols-3 gap-4 text-sm text-neutral-600 dark:text-neutral-400">
           <div>
             <h3 className="font-medium text-neutral-900 dark:text-neutral-100 mb-1">
@@ -239,10 +222,9 @@ export default function SegmentAnythingPage() {
             </p>
           </div>
         </div>
-      </div>
+      </DemoMutedSection>
 
-      {/* Technical note */}
-      <div className="mt-4 text-xs text-neutral-500 dark:text-neutral-400 text-center">
+      <DemoFootnote>
         SAM3 (Segment Anything Model 3) by Meta, via ONNX Runtime Web with
         quantized and mixed-precision browser variants.
         {state.executionProvider === "wasm" && (
@@ -252,7 +234,7 @@ export default function SegmentAnythingPage() {
             runtime.
           </span>
         )}
-      </div>
-    </div>
+      </DemoFootnote>
+    </DemoPage>
   );
 }
