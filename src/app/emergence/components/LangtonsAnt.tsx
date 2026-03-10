@@ -33,6 +33,7 @@ interface SimState {
 }
 
 type Phase = "symmetric" | "chaos" | "pre-highway" | "highway";
+type SeedPresetId = "blank" | "dot" | "plus" | "ring" | "stairs" | "scatter";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -42,9 +43,86 @@ const GRID_SIZE = 200; // logical grid dimension (200x200)
 const HIGHWAY_STEP = 10_500; // step threshold for highway detection
 const FAST_FORWARD_TARGET = 11_000;
 
-const BG_COLOR = "#171717"; // neutral-900
-const CELL_COLOR = "#525252"; // neutral-600 for black cells
+const BG_COLOR = "#f7f3eb"; // warm paper-like white cells
+const CELL_COLOR = "#111827"; // deep slate for black cells
 const ANT_COLOR = "#ef4444"; // red-500
+const GRID_LINE_COLOR = "rgba(17, 24, 39, 0.12)";
+
+const SEED_PRESETS: Array<{
+  id: SeedPresetId;
+  label: string;
+  description: string;
+  cells: Array<[number, number]>;
+}> = [
+  {
+    id: "blank",
+    label: "Blank",
+    description: "Classic empty white plane.",
+    cells: [],
+  },
+  {
+    id: "dot",
+    label: "Dot",
+    description: "A single black cell at the start.",
+    cells: [[0, 0]],
+  },
+  {
+    id: "plus",
+    label: "Plus",
+    description: "Five black cells centered on the ant.",
+    cells: [
+      [0, 0],
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+    ],
+  },
+  {
+    id: "ring",
+    label: "Ring",
+    description: "A small finite loop around the ant.",
+    cells: [
+      [-1, -1],
+      [0, -1],
+      [1, -1],
+      [-1, 0],
+      [1, 0],
+      [-1, 1],
+      [0, 1],
+      [1, 1],
+    ],
+  },
+  {
+    id: "stairs",
+    label: "Stairs",
+    description: "A tiny staircase of black cells.",
+    cells: [
+      [-1, 0],
+      [0, 0],
+      [0, 1],
+      [1, 1],
+      [1, 2],
+      [2, 2],
+    ],
+  },
+  {
+    id: "scatter",
+    label: "Scatter-9",
+    description: "A finite scattered seed with nine black cells.",
+    cells: [
+      [-3, -1],
+      [-2, 2],
+      [-1, 0],
+      [0, -2],
+      [0, 1],
+      [1, 3],
+      [2, -1],
+      [3, 1],
+      [4, -2],
+    ],
+  },
+];
 
 /** Direction vectors: [dx, dy] for up, right, down, left */
 const DIR_DELTA: [number, number][] = [
@@ -58,17 +136,34 @@ const DIR_DELTA: [number, number][] = [
 // Simulation logic
 // ---------------------------------------------------------------------------
 
-function createInitialState(): SimState {
+function createInitialState(seedId: SeedPresetId = "blank"): SimState {
   const cx = Math.floor(GRID_SIZE / 2);
   const cy = Math.floor(GRID_SIZE / 2);
+  const seed = SEED_PRESETS.find((preset) => preset.id === seedId) ?? SEED_PRESETS[0];
+  const cells = new Set<string>();
+  let minX = cx;
+  let maxX = cx;
+  let minY = cy;
+  let maxY = cy;
+
+  seed.cells.forEach(([dx, dy]) => {
+    const x = cx + dx;
+    const y = cy + dy;
+    cells.add(cellKey(x, y));
+    if (x < minX) minX = x;
+    if (x > maxX) maxX = x;
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+  });
+
   return {
-    cells: new Set<string>(),
+    cells,
     ant: { x: cx, y: cy, dir: 0 as Direction },
     step: 0,
-    minX: cx,
-    maxX: cx,
-    minY: cy,
-    maxY: cy,
+    minX,
+    maxX,
+    minY,
+    maxY,
   };
 }
 
@@ -278,6 +373,7 @@ function RuleDiagram(): React.ReactElement {
 
 export default function LangtonsAnt(): React.ReactElement {
   // State
+  const [selectedSeed, setSelectedSeed] = useState<SeedPresetId>("blank");
   const [stepCount, setStepCount] = useState<number>(0);
   const [playing, setPlaying] = useState<boolean>(false);
   const [stepsPerFrame, setStepsPerFrame] = useState<number>(1);
@@ -286,7 +382,7 @@ export default function LangtonsAnt(): React.ReactElement {
   // Refs
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const simRef = useRef<SimState>(createInitialState());
+  const simRef = useRef<SimState>(createInitialState("blank"));
   const animFrameRef = useRef<number>(0);
   const playingRef = useRef<boolean>(false);
   const stepsPerFrameRef = useRef<number>(1);
@@ -345,6 +441,26 @@ export default function LangtonsAnt(): React.ReactElement {
     const centerY = (sim.minY + sim.maxY) / 2;
     const offsetX = displayW / 2 - (centerX - sim.minX + padding) * cellPixelSize;
     const offsetY = displayH / 2 - (centerY - sim.minY + padding) * cellPixelSize;
+
+    if (cellPixelSize >= 5) {
+      ctx.strokeStyle = GRID_LINE_COLOR;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+
+      const startX = ((offsetX % cellPixelSize) + cellPixelSize) % cellPixelSize;
+      for (let x = startX; x <= displayW; x += cellPixelSize) {
+        ctx.moveTo(Math.round(x) + 0.5, 0);
+        ctx.lineTo(Math.round(x) + 0.5, displayH);
+      }
+
+      const startY = ((offsetY % cellPixelSize) + cellPixelSize) % cellPixelSize;
+      for (let y = startY; y <= displayH; y += cellPixelSize) {
+        ctx.moveTo(0, Math.round(y) + 0.5);
+        ctx.lineTo(displayW, Math.round(y) + 0.5);
+      }
+
+      ctx.stroke();
+    }
 
     // Draw black cells
     ctx.fillStyle = CELL_COLOR;
@@ -494,10 +610,22 @@ export default function LangtonsAnt(): React.ReactElement {
   const handleReset = useCallback(() => {
     setPlaying(false);
     setFastForwarding(false);
-    simRef.current = createInitialState();
+    simRef.current = createInitialState(selectedSeed);
     setStepCount(0);
     drawState();
-  }, [drawState]);
+  }, [drawState, selectedSeed]);
+
+  const handleSeedChange = useCallback(
+    (seedId: SeedPresetId) => {
+      setSelectedSeed(seedId);
+      setPlaying(false);
+      setFastForwarding(false);
+      simRef.current = createInitialState(seedId);
+      setStepCount(0);
+      drawState();
+    },
+    [drawState],
+  );
 
   // -----------------------------------------------------------------------
   // Derived state
@@ -535,6 +663,13 @@ export default function LangtonsAnt(): React.ReactElement {
           </li>
         </ol>
 
+        <p className="text-neutral-400">
+          The conjecture is stronger than the classic empty-grid story: the
+          highway appears to emerge from <strong className="text-neutral-200">any finite starting set of black cells</strong>.
+          Try a few seeds below and the plane stays finite, but the long-run
+          behavior still appears to settle into the same kind of highway.
+        </p>
+
         <RuleDiagram />
       </div>
 
@@ -561,6 +696,44 @@ export default function LangtonsAnt(): React.ReactElement {
 
       {/* Canvas */}
       <div className="space-y-3">
+        <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4 space-y-3">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <div className="text-xs font-mono uppercase tracking-[0.2em] text-neutral-500">
+                Finite Black Seed
+              </div>
+              <p className="mt-1 text-sm text-neutral-400">
+                Swap the starting black-cell configuration and reset the ant on the same finite plane.
+              </p>
+            </div>
+            <div className="text-xs font-mono text-neutral-500">
+              White grid = infinite background, dark cells = finite seed
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {SEED_PRESETS.map((preset) => {
+              const active = preset.id === selectedSeed;
+              return (
+                <button
+                  key={preset.id}
+                  type="button"
+                  onClick={() => handleSeedChange(preset.id)}
+                  className={`rounded-full border px-3 py-1.5 text-xs font-mono transition ${
+                    active
+                      ? "border-cyan-500 bg-cyan-500/10 text-cyan-300"
+                      : "border-neutral-700 text-neutral-400 hover:border-neutral-500 hover:text-neutral-200"
+                  }`}
+                  title={preset.description}
+                >
+                  {preset.label}
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-xs text-neutral-500">
+            {SEED_PRESETS.find((preset) => preset.id === selectedSeed)?.description}
+          </p>
+        </div>
         <div
           ref={containerRef}
           className="w-full rounded-lg border border-neutral-800 overflow-hidden"
