@@ -765,11 +765,9 @@ export default function GameOfLifeDemo() {
           memory, clocks. All from four rules applied to a grid.
         </p>
         <p className="text-neutral-300 leading-relaxed max-w-2xl">
-          The background of this website is a Game of Life simulation running an{" "}
-          <span className="text-neutral-100 font-medium">
-            OTCA metapixel
-          </span>{" "}
-          ... a Game of Life inside a Game of Life.
+          Earlier versions of this website used a Game of Life-based background.
+          The standalone experience remains here because it shows how a tiny local
+          rule set can scale into moving structure and machine-like behavior.
         </p>
         <p className="text-neutral-500 max-w-2xl">
           What to take away: the same tiny rule set can produce stillness, repetition, locomotion, and computation depending only on the seed.

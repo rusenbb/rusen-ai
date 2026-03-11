@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { getResolvedTheme } from "./theme";
 
 const letterPatterns: Record<string, number[][]> = {
   D: [
@@ -191,7 +192,7 @@ export default function LegacyDataGridBackground() {
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const isDark = getResolvedTheme() === "dark";
       const dotColor = isDark ? "255, 255, 255" : "0, 0, 0";
 
       for (const dot of dots) {
