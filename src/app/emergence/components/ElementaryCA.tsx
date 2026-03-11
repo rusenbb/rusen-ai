@@ -464,6 +464,33 @@ export default function ElementaryCA(): React.ReactElement {
           That&rsquo;s it. Apply the rule to every cell, simultaneously, to produce the next generation.
         </p>
 
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
+              What It Is
+            </div>
+            <p className="mt-2 text-sm text-neutral-300">
+              A one-dimensional universe where each cell only sees three cells at a time.
+            </p>
+          </div>
+          <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
+              Why It Matters
+            </div>
+            <p className="mt-2 text-sm text-neutral-300">
+              This is the cleanest proof that complexity does not require complicated ingredients.
+            </p>
+          </div>
+          <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
+              What To Notice
+            </div>
+            <p className="mt-2 text-sm text-neutral-300">
+              Switch between rules and watch how tiny local changes flip the whole system from order to noise to fractal structure.
+            </p>
+          </div>
+        </div>
+
         {/* Rule table */}
         <div className="p-4 sm:p-6 rounded-lg border border-neutral-800 bg-neutral-900/50">
           <div className="text-xs text-neutral-500 mb-4 text-center tracking-wide uppercase">
@@ -637,7 +664,7 @@ export default function ElementaryCA(): React.ReactElement {
           particles that conserve density.
         </p>
         <p className="text-neutral-500">
-          All from a lookup table with 8 entries.
+          All from a lookup table with 8 entries. The claim of emergence starts here: local rules can already outrun intuition.
         </p>
       </div>
     </div>

@@ -670,6 +670,33 @@ export default function LangtonsAnt(): React.ReactElement {
           behavior still appears to settle into the same kind of highway.
         </p>
 
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
+              What It Is
+            </div>
+            <p className="mt-2 text-sm text-neutral-300">
+              One moving agent that writes to the grid as it walks.
+            </p>
+          </div>
+          <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
+              Why It Matters
+            </div>
+            <p className="mt-2 text-sm text-neutral-300">
+              It is a reminder that deterministic systems can remain opaque long after they stop feeling simple.
+            </p>
+          </div>
+          <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
+              What To Notice
+            </div>
+            <p className="mt-2 text-sm text-neutral-300">
+              The key event is not the early symmetry. It is the abrupt transition from wandering chaos to a stable diagonal highway.
+            </p>
+          </div>
+        </div>
+
         <RuleDiagram />
       </div>
 
@@ -842,6 +869,9 @@ export default function LangtonsAnt(): React.ReactElement {
           Emergence doesn&rsquo;t just mean &ldquo;complex behavior from simple
           rules.&rdquo; Sometimes it means behavior we can observe but cannot
           explain.
+        </p>
+        <p className="text-neutral-500">
+          That is why this demo matters: it separates seeing a pattern from understanding why the pattern had to appear.
         </p>
       </div>
     </div>

@@ -581,6 +581,33 @@ export default function GameOfLifeDemo() {
           to every cell:
         </p>
 
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
+              What It Is
+            </div>
+            <p className="mt-2 text-sm text-neutral-300">
+              A two-dimensional world where cells are only born, survive, or die depending on nearby neighbors.
+            </p>
+          </div>
+          <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
+              Why It Matters
+            </div>
+            <p className="mt-2 text-sm text-neutral-300">
+              This is where emergence stops looking decorative and starts looking computational.
+            </p>
+          </div>
+          <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
+              What To Notice
+            </div>
+            <p className="mt-2 text-sm text-neutral-300">
+              Small seeds do not just expand. They stabilize, oscillate, travel, and sometimes build larger machinery.
+            </p>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {RULE_DIAGRAMS.map((rd, i) => {
             const afterHasHighlight =
@@ -650,7 +677,7 @@ export default function GameOfLifeDemo() {
         </h3>
         <p className="text-neutral-400 text-sm">
           Click or drag on the grid to draw cells. Load a preset pattern and
-          press Play to watch it evolve.
+          press Play to watch it evolve. Start with a glider or blinker, then try the gun and watch persistent structure emerge from local rules alone.
         </p>
 
         {/* Controls row */}
@@ -743,6 +770,9 @@ export default function GameOfLifeDemo() {
             OTCA metapixel
           </span>{" "}
           ... a Game of Life inside a Game of Life.
+        </p>
+        <p className="text-neutral-500 max-w-2xl">
+          What to take away: the same tiny rule set can produce stillness, repetition, locomotion, and computation depending only on the seed.
         </p>
       </div>
     </section>
