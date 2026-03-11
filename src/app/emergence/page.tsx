@@ -50,7 +50,7 @@ export default function EmergencePage() {
           nobody can fully explain. This page lets you see it happen.
         </p>
 
-        <div className="mt-8 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/50 p-5">
+        <div className="mt-8 rounded-2xl border border-neutral-300 dark:border-neutral-800 bg-white/90 dark:bg-neutral-900/50 p-5 shadow-[0_12px_32px_rgba(15,23,42,0.05)]">
           <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
             How to read this essay
           </p>
@@ -78,7 +78,7 @@ export default function EmergencePage() {
             <a
               key={section.id}
               href={`#${section.id}`}
-              className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white/60 dark:bg-neutral-950/40 p-4"
+              className="rounded-xl border border-neutral-300 dark:border-neutral-800 bg-white/92 dark:bg-neutral-950/40 p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]"
             >
               <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
                 {String(index + 1).padStart(2, "0")}
@@ -86,7 +86,7 @@ export default function EmergencePage() {
               <h2 className="mt-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
                 {section.title}
               </h2>
-              <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+              <p className="mt-1 text-sm text-neutral-700 dark:text-neutral-400">
                 {section.summary}
               </p>
             </a>

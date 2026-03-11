@@ -1,9 +1,10 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
   --background: #fafafa;
   --foreground: #171717;
-  color-scheme: light dark;
+  color-scheme: light;
 }
 
 @theme inline {
@@ -13,7 +14,7 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* System preference dark mode (default) */
+/* System preference fallback */
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0c0c0f;
@@ -33,6 +34,10 @@ html[data-theme="dark"] {
   color-scheme: dark;
 }
 
+html.dark {
+  color-scheme: dark;
+}
+
 
 body {
   background: var(--background);
@@ -40,6 +45,7 @@ body {
   font-family: var(--font-geist-sans), "Segoe UI", sans-serif;
   line-height: 1.5;
   overflow-x: hidden;
+  transition: background-color 220ms ease, color 220ms ease;
 }
 
 .content-shell {
@@ -60,11 +66,11 @@ body {
 }
 
 .ui-surface {
-  background: rgb(255 255 255 / 0.74);
+  background: rgb(255 255 255 / 0.88);
 }
 
 .ui-card {
-  background: rgb(255 255 255 / 0.82);
+  background: rgb(255 255 255 / 0.94);
   border-color: rgb(226 232 240 / 0.72);
   backdrop-filter: saturate(1.1);
 }
@@ -143,11 +149,11 @@ html[data-theme="light"] .content-shell::before {
 }
 
 html[data-theme="light"] .ui-surface {
-  background: rgb(255 255 255 / 0.74);
+  background: rgb(255 255 255 / 0.88);
 }
 
 html[data-theme="light"] .ui-card {
-  background: rgb(255 255 255 / 0.82);
+  background: rgb(255 255 255 / 0.94);
   border-color: rgb(226 232 240 / 0.72);
 }
 

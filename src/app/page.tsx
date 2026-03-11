@@ -9,7 +9,7 @@ export default function Home() {
     <div className="max-w-6xl mx-auto px-4 py-10 sm:py-12 md:py-16">
       {/* Hero Section */}
       <section className="text-center mb-12 sm:mb-16 md:mb-20">
-        <p className="text-xs sm:text-sm font-mono text-neutral-500 dark:text-neutral-500 mb-3 sm:mb-4 tracking-[0.18em]">
+        <p className="text-xs sm:text-sm font-mono text-neutral-600 dark:text-neutral-500 mb-3 sm:mb-4 tracking-[0.18em]">
           DATA, DATA EVERYWHERE
         </p>
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 leading-tight text-balance">
@@ -37,7 +37,7 @@ export default function Home() {
       {/* Featured Demos */}
       <section className="mb-12 sm:mb-16 md:mb-20">
         <h2 className="text-xl sm:text-2xl font-bold mb-2">Featured Demos</h2>
-        <p className="text-sm sm:text-base text-neutral-500 dark:text-neutral-500 mb-5 sm:mb-8">Tools that transform data into insights</p>
+        <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-500 mb-5 sm:mb-8">Tools that transform data into insights</p>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {featuredDemos.map((project) => (
             <DemoPreview
@@ -54,7 +54,7 @@ export default function Home() {
       {/* Nerdy Stuff Preview */}
       <section className="mb-4 sm:mb-8">
         <h2 className="text-xl sm:text-2xl font-bold mb-2">Under The Hood</h2>
-        <p className="text-sm sm:text-base text-neutral-500 dark:text-neutral-500 mb-5 sm:mb-8">See how the data sausage is made</p>
+        <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-500 mb-5 sm:mb-8">See how the data sausage is made</p>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {featuredNerdy.map((project) => (
             <DemoPreview
