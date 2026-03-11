@@ -49,6 +49,7 @@ export const PROJECTS: ProjectMeta[] = [
     capabilities: ["Classification"],
     tech: ["Transformers.js", "MobileBERT"],
     order: 40,
+    featuredHome: true,
   },
   {
     id: "vision-anything",
@@ -79,6 +80,7 @@ export const PROJECTS: ProjectMeta[] = [
     capabilities: ["Streaming", "Visualization"],
     tech: ["WebSockets", "Chainlink", "Public APIs"],
     order: 60,
+    featuredHome: true,
   },
   {
     id: "voice-morph",

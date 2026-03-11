@@ -504,23 +504,7 @@ export default function SchellingSegregation() {
             step={1}
             value={Math.round(threshold * 100)}
             onChange={(e) => handleThresholdChange(Number(e.target.value) / 100)}
-            className="w-full h-3 rounded-full appearance-none cursor-pointer
-              bg-gradient-to-r from-neutral-300 via-yellow-400 to-red-500
-              dark:from-neutral-700 dark:via-yellow-500 dark:to-red-500
-              [&::-webkit-slider-thumb]:appearance-none
-              [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6
-              [&::-webkit-slider-thumb]:rounded-full
-              [&::-webkit-slider-thumb]:bg-white
-              [&::-webkit-slider-thumb]:border-2
-              [&::-webkit-slider-thumb]:border-neutral-400
-              [&::-webkit-slider-thumb]:shadow-md
-              [&::-webkit-slider-thumb]:cursor-pointer
-              [&::-moz-range-thumb]:w-6 [&::-moz-range-thumb]:h-6
-              [&::-moz-range-thumb]:rounded-full
-              [&::-moz-range-thumb]:bg-white
-              [&::-moz-range-thumb]:border-2
-              [&::-moz-range-thumb]:border-neutral-400
-              [&::-moz-range-thumb]:cursor-pointer"
+            className="w-full h-3 rounded-full appearance-none cursor-pointer bg-gradient-to-r from-neutral-300 via-yellow-400 to-red-500 dark:from-neutral-700 dark:via-yellow-500 dark:to-red-500 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-neutral-400 [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:w-6 [&::-moz-range-thumb]:h-6 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-neutral-400 [&::-moz-range-thumb]:cursor-pointer"
           />
           <div className="flex justify-between text-[10px] font-mono text-neutral-500 mt-1">
             <span>0% (no preference)</span>
@@ -587,18 +571,7 @@ export default function SchellingSegregation() {
                 step={10}
                 value={310 - speed}
                 onChange={(e) => setSpeed(310 - Number(e.target.value))}
-                className="w-20 h-1.5 rounded-full appearance-none cursor-pointer
-                  bg-neutral-300 dark:bg-neutral-700
-                  [&::-webkit-slider-thumb]:appearance-none
-                  [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3
-                  [&::-webkit-slider-thumb]:rounded-full
-                  [&::-webkit-slider-thumb]:bg-neutral-600
-                  [&::-webkit-slider-thumb]:dark:bg-neutral-300
-                  [&::-webkit-slider-thumb]:cursor-pointer
-                  [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3
-                  [&::-moz-range-thumb]:rounded-full
-                  [&::-moz-range-thumb]:bg-neutral-600
-                  [&::-moz-range-thumb]:cursor-pointer"
+                className="w-20 h-1.5 rounded-full appearance-none cursor-pointer bg-neutral-300 dark:bg-neutral-700 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-neutral-600 [&::-webkit-slider-thumb]:dark:bg-neutral-300 [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-neutral-600 [&::-moz-range-thumb]:cursor-pointer"
               />
             </div>
           </div>

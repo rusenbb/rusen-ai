@@ -194,8 +194,8 @@ export default function LegacyDataGridBackground() {
 
       const isDark = getResolvedTheme() === "dark";
       const dotColor = isDark ? "255, 255, 255" : "71, 85, 105";
-      const baseOpacity = isDark ? 0.08 : 0.035;
-      const pulseOpacity = isDark ? 0.5 : 0.18;
+      const baseOpacity = isDark ? 0.08 : 0.1;
+      const pulseOpacity = isDark ? 0.5 : 0.35;
 
       for (const dot of dots) {
         let opacity = baseOpacity;
@@ -213,7 +213,7 @@ export default function LegacyDataGridBackground() {
         for (const ripple of ripplesRef.current) {
           rippleBoost += calculateRippleOpacity(dot, ripple, currentTime);
         }
-        opacity = Math.min(1, opacity + rippleBoost * (isDark ? 1 : 0.65));
+        opacity = Math.min(1, opacity + rippleBoost * (isDark ? 1 : 0.8));
 
         ctx.beginPath();
         ctx.arc(dot.screenX, dot.screenY, 2, 0, Math.PI * 2);

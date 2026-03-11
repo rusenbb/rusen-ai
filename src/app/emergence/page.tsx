@@ -95,7 +95,11 @@ export default function EmergencePage() {
       </header>
 
       {/* Section 1 */}
-      <section id="elementary-ca" className="mb-20 sm:mb-28 scroll-mt-24">
+      <section id="elementary-ca" className="scroll-mt-24">
+        <div className="flex items-center gap-4 mb-8">
+          <span className="text-sm font-mono tracking-[0.22em] text-neutral-400 dark:text-neutral-500 shrink-0">01</span>
+          <hr className="flex-1 border-neutral-200 dark:border-neutral-800" />
+        </div>
         <p className="mb-6 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400 max-w-2xl">
           We start with the smallest possible canvas: one row of cells and a lookup table.
           If emergence is real, we should be able to see it even here.
@@ -103,8 +107,14 @@ export default function EmergencePage() {
         <ElementaryCA />
       </section>
 
+      <div className="h-20 sm:h-28" />
+
       {/* Section 2 */}
-      <section id="game-of-life" className="mb-20 sm:mb-28 scroll-mt-24">
+      <section id="game-of-life" className="scroll-mt-24">
+        <div className="flex items-center gap-4 mb-8">
+          <span className="text-sm font-mono tracking-[0.22em] text-neutral-400 dark:text-neutral-500 shrink-0">02</span>
+          <hr className="flex-1 border-neutral-200 dark:border-neutral-800" />
+        </div>
         <p className="mb-6 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400 max-w-2xl">
           Next, move from a line to a plane. With one extra dimension, stable structures,
           moving organisms, and computation begin to emerge from the same local logic.
@@ -120,8 +130,14 @@ export default function EmergencePage() {
         </div>
       </section>
 
+      <div className="h-20 sm:h-28" />
+
       {/* Section 3 */}
-      <section id="schelling" className="mb-20 sm:mb-28 scroll-mt-24">
+      <section id="schelling" className="scroll-mt-24">
+        <div className="flex items-center gap-4 mb-8">
+          <span className="text-sm font-mono tracking-[0.22em] text-neutral-400 dark:text-neutral-500 shrink-0">03</span>
+          <hr className="flex-1 border-neutral-200 dark:border-neutral-800" />
+        </div>
         <p className="mb-6 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400 max-w-2xl">
           Now the idea leaves pure mathematics and enters social behavior.
           The rule is still local and mild. The outcome is not.
@@ -129,8 +145,14 @@ export default function EmergencePage() {
         <SchellingSegregation />
       </section>
 
+      <div className="h-20 sm:h-28" />
+
       {/* Section 4 */}
-      <section id="langtons-ant" className="mb-20 sm:mb-28 scroll-mt-24">
+      <section id="langtons-ant" className="scroll-mt-24">
+        <div className="flex items-center gap-4 mb-8">
+          <span className="text-sm font-mono tracking-[0.22em] text-neutral-400 dark:text-neutral-500 shrink-0">04</span>
+          <hr className="flex-1 border-neutral-200 dark:border-neutral-800" />
+        </div>
         <p className="mb-6 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400 max-w-2xl">
           Then comes a harsher lesson: some systems look chaotic for a very long time
           before they reveal any order at all.
@@ -138,8 +160,14 @@ export default function EmergencePage() {
         <LangtonsAnt />
       </section>
 
+      <div className="h-20 sm:h-28" />
+
       {/* Section 5 */}
-      <section id="sandpile" className="mb-20 sm:mb-28 scroll-mt-24">
+      <section id="sandpile" className="scroll-mt-24">
+        <div className="flex items-center gap-4 mb-8">
+          <span className="text-sm font-mono tracking-[0.22em] text-neutral-400 dark:text-neutral-500 shrink-0">05</span>
+          <hr className="flex-1 border-neutral-200 dark:border-neutral-800" />
+        </div>
         <p className="mb-6 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400 max-w-2xl">
           Finally, move from pattern to shock. The same local threshold that keeps a system stable
           can also make it catastrophically sensitive.

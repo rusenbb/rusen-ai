@@ -293,7 +293,7 @@ function MiniGrid({
 
   return (
     <div
-      className="inline-grid border border-neutral-700 rounded-sm"
+      className="inline-grid border border-neutral-300 dark:border-neutral-700 rounded-sm"
       style={{
         gridTemplateColumns: `repeat(${size}, ${cellSize}px)`,
         gap: `${gap}px`,
@@ -309,9 +309,9 @@ function MiniGrid({
         const isHighlight =
           highlight && highlight[0] === r && highlight[1] === c;
 
-        let bg = "bg-neutral-800";
+        let bg = "bg-neutral-200 dark:bg-neutral-800";
         if (alive) bg = "bg-cyan-400";
-        if (isHighlight && !highlightAlive && !alive) bg = "bg-neutral-600";
+        if (isHighlight && !highlightAlive && !alive) bg = "bg-neutral-400 dark:bg-neutral-600";
         if (isHighlight && alive && !highlightAlive) bg = "bg-red-400/70";
 
         return (
@@ -559,20 +559,20 @@ export default function GameOfLifeDemo() {
   }, []);
 
   return (
-    <section className="space-y-12 rounded-3xl border border-neutral-800 bg-neutral-950/92 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.22)] sm:p-8">
+    <section className="w-full max-w-4xl mx-auto space-y-12">
       {/* Header */}
       <div>
-        <h2 className="font-mono text-2xl sm:text-3xl font-semibold text-neutral-100 mb-2">
+        <h2 className="font-mono text-2xl sm:text-3xl font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
           Conway&apos;s Game of Life
         </h2>
-        <p className="text-neutral-500 text-lg font-mono">
+        <p className="text-neutral-500 dark:text-neutral-400 text-lg font-mono">
           Four rules. Infinite complexity.
         </p>
       </div>
 
       {/* Rules explanation */}
       <div className="space-y-8">
-        <p className="text-neutral-300 leading-relaxed max-w-2xl">
+        <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed max-w-2xl">
           The Game of Life is a cellular automaton devised by mathematician John
           Conway in 1970. It has no players. Its evolution is determined
           entirely by its initial state. The universe is an infinite
@@ -582,27 +582,27 @@ export default function GameOfLifeDemo() {
         </p>
 
         <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-4">
             <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
               What It Is
             </div>
-            <p className="mt-2 text-sm text-neutral-300">
+            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
               A two-dimensional world where cells are only born, survive, or die depending on nearby neighbors.
             </p>
           </div>
-          <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-4">
             <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
               Why It Matters
             </div>
-            <p className="mt-2 text-sm text-neutral-300">
+            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
               This is where emergence stops looking decorative and starts looking computational.
             </p>
           </div>
-          <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-4">
             <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
               What To Notice
             </div>
-            <p className="mt-2 text-sm text-neutral-300">
+            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
               Small seeds do not just expand. They stabilize, oscillate, travel, and sometimes build larger machinery.
             </p>
           </div>
@@ -619,22 +619,22 @@ export default function GameOfLifeDemo() {
             return (
               <div
                 key={i}
-                className="border border-neutral-800 rounded-lg p-4 space-y-3"
+                className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-4 space-y-3"
               >
                 <div>
                   <span className="text-xs font-mono text-neutral-500 uppercase tracking-wider">
                     Rule {i + 1}
                   </span>
-                  <h3 className="font-mono text-sm font-semibold text-neutral-200 mt-0.5">
+                  <h3 className="font-mono text-sm font-semibold text-neutral-800 dark:text-neutral-200 mt-0.5">
                     {rd.title}
                   </h3>
                 </div>
-                <p className="text-neutral-400 text-sm leading-relaxed">
+                <p className="text-neutral-600 dark:text-neutral-400 text-sm leading-relaxed">
                   {rd.rule}
                 </p>
                 <div className="flex items-center gap-4">
                   <div className="text-center">
-                    <div className="text-[10px] text-neutral-600 mb-1 font-mono">
+                    <div className="text-[10px] text-neutral-500 dark:text-neutral-600 mb-1 font-mono">
                       Before
                     </div>
                     <MiniGrid
@@ -651,9 +651,9 @@ export default function GameOfLifeDemo() {
                       }
                     />
                   </div>
-                  <div className="text-neutral-600 text-lg font-mono">&rarr;</div>
+                  <div className="text-neutral-400 dark:text-neutral-600 text-lg font-mono">&rarr;</div>
                   <div className="text-center">
-                    <div className="text-[10px] text-neutral-600 mb-1 font-mono">
+                    <div className="text-[10px] text-neutral-500 dark:text-neutral-600 mb-1 font-mono">
                       After
                     </div>
                     <MiniGrid
@@ -672,10 +672,10 @@ export default function GameOfLifeDemo() {
 
       {/* Interactive demo */}
       <div className="space-y-4">
-        <h3 className="font-mono text-lg text-neutral-200">
+        <h3 className="font-mono text-lg text-neutral-800 dark:text-neutral-200">
           Try it yourself
         </h3>
-        <p className="text-neutral-400 text-sm">
+        <p className="text-neutral-600 dark:text-neutral-400 text-sm">
           Click or drag on the grid to draw cells. Load a preset pattern and
           press Play to watch it evolve. Start with a glider or blinker, then try the gun and watch persistent structure emerge from local rules alone.
         </p>
@@ -686,17 +686,17 @@ export default function GameOfLifeDemo() {
             <button
               key={p.label}
               onClick={() => handlePreset(p)}
-              className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-700 text-neutral-300 hover:border-neutral-500 hover:text-neutral-100 transition-colors"
+              className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
             >
               {p.label}
             </button>
           ))}
 
-          <div className="w-px h-6 bg-neutral-800 mx-1" />
+          <div className="w-px h-6 bg-neutral-200 dark:bg-neutral-800 mx-1" />
 
           <button
             onClick={handleStep}
-            className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-700 text-neutral-300 hover:border-neutral-500 hover:text-neutral-100 transition-colors"
+            className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
           >
             Step
           </button>
@@ -704,20 +704,20 @@ export default function GameOfLifeDemo() {
             onClick={() => setPlaying((p) => !p)}
             className={`px-3 py-1.5 text-xs font-mono rounded border transition-colors ${
               playing
-                ? "border-cyan-600 text-cyan-400 hover:border-cyan-500"
-                : "border-neutral-700 text-neutral-300 hover:border-neutral-500 hover:text-neutral-100"
+                ? "border-cyan-500 dark:border-cyan-600 text-cyan-700 dark:text-cyan-400 hover:border-cyan-400 dark:hover:border-cyan-500"
+                : "border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100"
             }`}
           >
             {playing ? "Pause" : "Play"}
           </button>
           <button
             onClick={handleClear}
-            className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-700 text-neutral-300 hover:border-neutral-500 hover:text-neutral-100 transition-colors"
+            className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
           >
             Clear
           </button>
 
-          <div className="w-px h-6 bg-neutral-800 mx-1" />
+          <div className="w-px h-6 bg-neutral-200 dark:bg-neutral-800 mx-1" />
 
           <span className="text-xs font-mono text-neutral-500">
             Gen {generation}
@@ -747,7 +747,7 @@ export default function GameOfLifeDemo() {
           <canvas
             ref={canvasRef}
             style={{ width: canvasWidth, height: CANVAS_HEIGHT }}
-            className="rounded-lg border border-neutral-800 cursor-crosshair"
+            className="rounded-lg border border-neutral-200 dark:border-neutral-800 cursor-crosshair"
             onMouseDown={handleCanvasMouseDown}
             onMouseMove={handleCanvasMouseMove}
             onMouseUp={handleCanvasMouseUp}
@@ -757,19 +757,19 @@ export default function GameOfLifeDemo() {
       </div>
 
       {/* Takeaway */}
-      <div className="space-y-4 border-t border-neutral-800 pt-8">
-        <p className="text-neutral-300 leading-relaxed max-w-2xl">
+      <div className="space-y-4 border-t border-neutral-200 dark:border-neutral-800 pt-8">
+        <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed max-w-2xl">
           The Game of Life is{" "}
-          <span className="text-neutral-100 font-medium">Turing complete</span>{" "}
+          <span className="text-neutral-900 dark:text-neutral-100 font-medium">Turing complete</span>{" "}
           ... you can build entire computers inside it. Logic gates,
           memory, clocks. All from four rules applied to a grid.
         </p>
-        <p className="text-neutral-300 leading-relaxed max-w-2xl">
+        <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed max-w-2xl">
           Earlier versions of this website used a Game of Life-based background.
           The standalone experience remains here because it shows how a tiny local
           rule set can scale into moving structure and machine-like behavior.
         </p>
-        <p className="text-neutral-500 max-w-2xl">
+        <p className="text-neutral-500 dark:text-neutral-400 max-w-2xl">
           What to take away: the same tiny rule set can produce stillness, repetition, locomotion, and computation depending only on the seed.
         </p>
       </div>

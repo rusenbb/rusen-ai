@@ -210,7 +210,7 @@ function MiniGrid({ cells, highlight }: MiniGridProps): React.ReactElement {
 
 function ToppleDiagram(): React.ReactElement {
   return (
-    <div className="p-4 sm:p-6 rounded-lg border border-neutral-800 bg-neutral-900/50">
+    <div className="p-4 sm:p-6 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50">
       <div className="text-xs text-neutral-500 mb-4 text-center tracking-wide uppercase">
         The Toppling Rule
       </div>
@@ -225,7 +225,7 @@ function ToppleDiagram(): React.ReactElement {
             highlight={new Set([4])}
           />
           <div className="text-[10px] text-neutral-500">
-            center = 3 + 1 = <strong className="text-amber-400">4</strong>
+            center = 3 + 1 = <strong className="text-amber-600 dark:text-amber-400">4</strong>
           </div>
         </div>
 
@@ -285,7 +285,7 @@ function HistogramBar({
       <span className="text-neutral-500 w-16 sm:w-20 text-right shrink-0">
         {label}
       </span>
-      <div className="flex-1 h-3 bg-neutral-800 rounded-sm overflow-hidden">
+      <div className="flex-1 h-3 bg-neutral-200 dark:bg-neutral-800 rounded-sm overflow-hidden">
         <div
           className="h-full rounded-sm transition-all duration-150"
           style={{
@@ -624,23 +624,23 @@ export default function SandPile(): React.ReactElement {
   }, [dropAtRandom, flushStats, drawGrid]);
 
   return (
-    <div className="space-y-8 rounded-3xl border border-neutral-800 bg-neutral-950/92 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.22)] sm:p-8">
+    <div className="w-full max-w-4xl mx-auto space-y-8">
       {/* Heading */}
       <div>
-        <h2 className="font-mono text-2xl sm:text-3xl font-semibold text-neutral-100 mb-2">
+        <h2 className="font-mono text-2xl sm:text-3xl font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
           Self-Organized Criticality
         </h2>
-        <p className="text-neutral-500 text-base sm:text-lg">
+        <p className="text-neutral-500 dark:text-neutral-400 text-base sm:text-lg">
           Drop a grain. Trigger a catastrophe.
         </p>
       </div>
 
       {/* Rules explanation */}
-      <div className="space-y-4 text-neutral-300 text-sm sm:text-base leading-relaxed">
+      <div className="space-y-4 text-neutral-700 dark:text-neutral-300 text-sm sm:text-base leading-relaxed">
         <p>
           A grid of cells. Each cell holds 0&ndash;3 grains of sand. Drop one
           grain on a random cell (or wherever you click). When a cell
-          reaches <strong className="text-amber-400">4 grains</strong>, it{" "}
+          reaches <strong className="text-amber-600 dark:text-amber-400">4 grains</strong>, it{" "}
           <em>topples</em>: loses 4 grains, each of its 4 neighbors gains 1. If
           a neighbor now has 4+, it topples too. Chain reaction.
         </p>
@@ -649,27 +649,27 @@ export default function SandPile(): React.ReactElement {
         </p>
 
         <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-4">
             <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
               What It Is
             </div>
-            <p className="mt-2 text-sm text-neutral-300">
+            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
               A threshold system where stability is local and collapse spreads through neighbors.
             </p>
           </div>
-          <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-4">
             <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
               Why It Matters
             </div>
-            <p className="mt-2 text-sm text-neutral-300">
+            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
               It explains how calm systems can organize themselves into a state where rare giant shocks are inevitable.
             </p>
           </div>
-          <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-4">
             <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
               What To Notice
             </div>
-            <p className="mt-2 text-sm text-neutral-300">
+            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
               Most grains do very little. A few trigger huge cascades. The point is the imbalance between tiny input and system-wide response.
             </p>
           </div>
@@ -678,7 +678,7 @@ export default function SandPile(): React.ReactElement {
         {/* Topple diagram */}
         <ToppleDiagram />
 
-        <p className="text-neutral-500">
+        <p className="text-neutral-500 dark:text-neutral-400">
           That&rsquo;s the entire system. No agents. No decisions. Just gravity
           and counting to four. The grid below starts pre-loaded near its
           critical state so you can see the avalanche dynamics immediately.
@@ -689,7 +689,7 @@ export default function SandPile(): React.ReactElement {
       <div className="space-y-3">
         <div
           ref={containerRef}
-          className="w-full rounded-lg border border-neutral-800 overflow-hidden cursor-crosshair"
+          className="w-full rounded-lg border border-neutral-200 dark:border-neutral-800 overflow-hidden cursor-crosshair"
           style={{ height: CANVAS_HEIGHT, background: BG_COLOR }}
         >
           <canvas
@@ -704,7 +704,7 @@ export default function SandPile(): React.ReactElement {
         <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-xs font-mono">
           <div className="text-neutral-500">
             Grains dropped:{" "}
-            <span className="text-neutral-300 tabular-nums">
+            <span className="text-neutral-700 dark:text-neutral-300 tabular-nums">
               {stats.totalDropped.toLocaleString()}
             </span>
           </div>
@@ -733,28 +733,28 @@ export default function SandPile(): React.ReactElement {
             <button
               onClick={handleDropOne}
               disabled={playing}
-              className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-700 text-neutral-400 hover:border-neutral-500 hover:text-neutral-300 transition disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-300 transition disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Drop 1
             </button>
             <button
               onClick={() => dropMany(100)}
               disabled={playing}
-              className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-700 text-neutral-400 hover:border-neutral-500 hover:text-neutral-300 transition disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-300 transition disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Drop 100
             </button>
             <button
               onClick={() => dropMany(1000)}
               disabled={playing}
-              className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-700 text-neutral-400 hover:border-neutral-500 hover:text-neutral-300 transition disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-300 transition disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Drop 1000
             </button>
           </div>
 
           {/* Divider */}
-          <div className="w-px h-6 bg-neutral-800 hidden sm:block" />
+          <div className="w-px h-6 bg-neutral-200 dark:bg-neutral-800 hidden sm:block" />
 
           {/* Playback controls */}
           <div className="flex gap-1.5">
@@ -762,22 +762,22 @@ export default function SandPile(): React.ReactElement {
               onClick={() => setPlaying((p) => !p)}
               className={`px-3 py-1.5 text-xs font-mono rounded border transition ${
                 playing
-                  ? "border-amber-600 bg-amber-600/10 text-amber-400"
-                  : "border-cyan-700 bg-cyan-700/10 text-cyan-400 hover:border-cyan-500"
+                  ? "border-amber-500 dark:border-amber-600 bg-amber-50 dark:bg-amber-600/10 text-amber-700 dark:text-amber-400"
+                  : "border-cyan-500 dark:border-cyan-700 bg-cyan-50 dark:bg-cyan-700/10 text-cyan-700 dark:text-cyan-400 hover:border-cyan-400 dark:hover:border-cyan-500"
               }`}
             >
               {playing ? "Pause" : "Play"}
             </button>
             <button
               onClick={handleReset}
-              className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-700 text-neutral-400 hover:border-neutral-500 hover:text-neutral-300 transition"
+              className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-300 transition"
             >
               Reset
             </button>
           </div>
 
           {/* Divider */}
-          <div className="w-px h-6 bg-neutral-800 hidden sm:block" />
+          <div className="w-px h-6 bg-neutral-200 dark:bg-neutral-800 hidden sm:block" />
 
           {/* Speed slider */}
           <div className="flex items-center gap-2">
@@ -806,12 +806,12 @@ export default function SandPile(): React.ReactElement {
       </div>
 
       {/* Avalanche histogram */}
-      <div className="p-4 rounded-lg border border-neutral-800 bg-neutral-900/50">
+      <div className="p-4 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50">
         <AvalancheHistogramDisplay histogram={stats.histogram} />
       </div>
 
       {/* Takeaway */}
-      <div className="text-neutral-300 text-sm sm:text-base leading-relaxed space-y-3 border-l-2 border-amber-800 pl-4">
+      <div className="text-neutral-700 dark:text-neutral-300 text-sm sm:text-base leading-relaxed space-y-3 border-l-2 border-amber-300 dark:border-amber-800 pl-4">
         <p>
           The sandpile tuned itself to criticality. You didn&rsquo;t set any
           parameters. It just got there.
@@ -825,11 +825,11 @@ export default function SandPile(): React.ReactElement {
           His claim: catastrophe isn&rsquo;t a bug in these systems. It&rsquo;s
           a feature they create for themselves.
         </p>
-        <p className="text-neutral-500">
+        <p className="text-neutral-500 dark:text-neutral-400">
           The next grain is always potentially the one that brings everything
           down.
         </p>
-        <p className="text-neutral-500">
+        <p className="text-neutral-500 dark:text-neutral-400">
           That is the lesson of criticality: danger is not stored in one special event, but in the state the system has organized for itself.
         </p>
       </div>

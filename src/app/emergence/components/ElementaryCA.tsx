@@ -444,55 +444,55 @@ export default function ElementaryCA(): React.ReactElement {
   }, [customRuleInput, handleRuleChange]);
 
   return (
-    <div className="space-y-8 rounded-3xl border border-neutral-800 bg-neutral-950/92 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.22)] sm:p-8">
+    <div className="w-full max-w-4xl mx-auto space-y-8">
       {/* Heading */}
       <div>
-        <h2 className="font-mono text-2xl sm:text-3xl font-semibold text-neutral-100 mb-2">
+        <h2 className="font-mono text-2xl sm:text-3xl font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
           Elementary Cellular Automata
         </h2>
-        <p className="text-neutral-500 text-base sm:text-lg">
+        <p className="text-neutral-500 dark:text-neutral-400 text-base sm:text-lg">
           The simplest possible system. The most surprising behavior.
         </p>
       </div>
 
       {/* Rules explanation */}
-      <div className="space-y-4 text-neutral-300 text-sm sm:text-base leading-relaxed">
+      <div className="space-y-4 text-neutral-700 dark:text-neutral-300 text-sm sm:text-base leading-relaxed">
         <p>
-          A one-dimensional row of cells, each either <strong className="text-cyan-400">on</strong> or off.
+          A one-dimensional row of cells, each either <strong className="text-cyan-600 dark:text-cyan-400">on</strong> or off.
           Each cell looks at itself and its two neighbors: three cells, eight possible patterns.
           A <em>rule number</em> from 0 to 255 encodes what the output should be for each pattern.
           That&rsquo;s it. Apply the rule to every cell, simultaneously, to produce the next generation.
         </p>
 
         <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-4">
             <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
               What It Is
             </div>
-            <p className="mt-2 text-sm text-neutral-300">
+            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
               A one-dimensional universe where each cell only sees three cells at a time.
             </p>
           </div>
-          <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-4">
             <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
               Why It Matters
             </div>
-            <p className="mt-2 text-sm text-neutral-300">
+            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
               This is the cleanest proof that complexity does not require complicated ingredients.
             </p>
           </div>
-          <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-4">
             <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
               What To Notice
             </div>
-            <p className="mt-2 text-sm text-neutral-300">
+            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
               Switch between rules and watch how tiny local changes flip the whole system from order to noise to fractal structure.
             </p>
           </div>
         </div>
 
         {/* Rule table */}
-        <div className="p-4 sm:p-6 rounded-lg border border-neutral-800 bg-neutral-900/50">
+        <div className="p-4 sm:p-6 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50">
           <div className="text-xs text-neutral-500 mb-4 text-center tracking-wide uppercase">
             Rule {rule} / Lookup Table
           </div>
@@ -504,7 +504,7 @@ export default function ElementaryCA(): React.ReactElement {
       <div className="space-y-3">
         <div
           ref={containerRef}
-          className="relative w-full rounded-lg border border-neutral-800 overflow-hidden select-none cursor-grab active:cursor-grabbing"
+          className="relative w-full rounded-lg border border-neutral-200 dark:border-neutral-800 overflow-hidden select-none cursor-grab active:cursor-grabbing"
           style={{ height: CANVAS_HEIGHT, background: BG_COLOR }}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
@@ -521,7 +521,7 @@ export default function ElementaryCA(): React.ReactElement {
             <button
               type="button"
               onClick={() => zoomCenter(1.4)}
-              className="w-7 h-7 flex items-center justify-center text-sm rounded border border-neutral-700 bg-neutral-800/80 hover:bg-neutral-700 text-neutral-400"
+              className="w-7 h-7 flex items-center justify-center text-sm rounded border border-neutral-300 dark:border-neutral-700 bg-white/80 dark:bg-neutral-800/80 hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-400"
               title="Zoom in"
             >
               +
@@ -529,7 +529,7 @@ export default function ElementaryCA(): React.ReactElement {
             <button
               type="button"
               onClick={() => zoomCenter(0.7)}
-              className="w-7 h-7 flex items-center justify-center text-sm rounded border border-neutral-700 bg-neutral-800/80 hover:bg-neutral-700 text-neutral-400"
+              className="w-7 h-7 flex items-center justify-center text-sm rounded border border-neutral-300 dark:border-neutral-700 bg-white/80 dark:bg-neutral-800/80 hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-400"
               title="Zoom out"
             >
               &minus;
@@ -542,7 +542,7 @@ export default function ElementaryCA(): React.ReactElement {
                 const containerW = container.clientWidth;
                 setView({ x: containerW / 2 - (GRID_WIDTH / 2) * 3, y: 0, scale: 3 });
               }}
-              className="h-7 px-2 flex items-center justify-center text-[10px] font-mono rounded border border-neutral-700 bg-neutral-800/80 hover:bg-neutral-700 text-neutral-400"
+              className="h-7 px-2 flex items-center justify-center text-[10px] font-mono rounded border border-neutral-300 dark:border-neutral-700 bg-white/80 dark:bg-neutral-800/80 hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-400"
               title="Reset view"
             >
               {Math.round(view.scale * 100)}%
@@ -565,8 +565,8 @@ export default function ElementaryCA(): React.ReactElement {
                 onClick={() => handleRuleChange(r.number)}
                 className={`px-3 py-1.5 text-xs font-mono rounded border transition ${
                   rule === r.number
-                    ? "border-cyan-500 bg-cyan-500/10 text-cyan-400"
-                    : "border-neutral-700 text-neutral-400 hover:border-neutral-500 hover:text-neutral-300"
+                    ? "border-cyan-500 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400"
+                    : "border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-300"
                 }`}
               >
                 {r.label}
@@ -587,26 +587,26 @@ export default function ElementaryCA(): React.ReactElement {
               onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                 if (e.key === "Enter") handleCustomRuleSubmit();
               }}
-              className="w-16 px-2 py-1.5 text-xs font-mono bg-neutral-800 border border-neutral-700 rounded text-neutral-300 focus:outline-none focus:border-cyan-600"
+              className="w-16 px-2 py-1.5 text-xs font-mono bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded text-neutral-700 dark:text-neutral-300 focus:outline-none focus:border-cyan-600"
               placeholder="0-255"
             />
             <button
               onClick={handleCustomRuleSubmit}
-              className="px-2.5 py-1.5 text-xs font-mono rounded border border-neutral-700 text-neutral-400 hover:border-neutral-500 hover:text-neutral-300 transition"
+              className="px-2.5 py-1.5 text-xs font-mono rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-300 transition"
             >
               Set
             </button>
           </div>
 
           {/* Divider */}
-          <div className="w-px h-6 bg-neutral-800 hidden sm:block" />
+          <div className="w-px h-6 bg-neutral-200 dark:bg-neutral-800 hidden sm:block" />
 
           {/* Playback controls */}
           <div className="flex gap-1.5">
             <button
               onClick={stepOnce}
               disabled={playing}
-              className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-700 text-neutral-400 hover:border-neutral-500 hover:text-neutral-300 transition disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-300 transition disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Step
             </button>
@@ -614,15 +614,15 @@ export default function ElementaryCA(): React.ReactElement {
               onClick={() => setPlaying((p) => !p)}
               className={`px-3 py-1.5 text-xs font-mono rounded border transition ${
                 playing
-                  ? "border-amber-600 bg-amber-600/10 text-amber-400"
-                  : "border-cyan-700 bg-cyan-700/10 text-cyan-400 hover:border-cyan-500"
+                  ? "border-amber-500 dark:border-amber-600 bg-amber-50 dark:bg-amber-600/10 text-amber-700 dark:text-amber-400"
+                  : "border-cyan-500 dark:border-cyan-700 bg-cyan-50 dark:bg-cyan-700/10 text-cyan-700 dark:text-cyan-400 hover:border-cyan-400 dark:hover:border-cyan-500"
               }`}
             >
               {playing ? "Pause" : "Play"}
             </button>
             <button
               onClick={handleReset}
-              className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-700 text-neutral-400 hover:border-neutral-500 hover:text-neutral-300 transition"
+              className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-300 transition"
             >
               Reset
             </button>
@@ -652,18 +652,18 @@ export default function ElementaryCA(): React.ReactElement {
       </div>
 
       {/* Takeaway */}
-      <div className="text-neutral-300 text-sm sm:text-base leading-relaxed space-y-3 border-l-2 border-cyan-800 pl-4">
+      <div className="text-neutral-700 dark:text-neutral-300 text-sm sm:text-base leading-relaxed space-y-3 border-l-2 border-cyan-300 dark:border-cyan-800 pl-4">
         <p>
-          <strong className="text-neutral-100">Rule 30</strong> produces apparent randomness.
+          <strong className="text-neutral-900 dark:text-neutral-100">Rule 30</strong> produces apparent randomness.
           Wolfram used it as a pseudorandom number generator in Mathematica.{" "}
-          <strong className="text-neutral-100">Rule 110</strong> is proven Turing complete: it can
+          <strong className="text-neutral-900 dark:text-neutral-100">Rule 110</strong> is proven Turing complete: it can
           compute anything a general-purpose computer can.{" "}
-          <strong className="text-neutral-100">Rule 90</strong> produces the Sierpinski triangle, a
+          <strong className="text-neutral-900 dark:text-neutral-100">Rule 90</strong> produces the Sierpinski triangle, a
           fractal with infinite self-similarity.{" "}
-          <strong className="text-neutral-100">Rule 184</strong> models basic traffic flow,
+          <strong className="text-neutral-900 dark:text-neutral-100">Rule 184</strong> models basic traffic flow,
           particles that conserve density.
         </p>
-        <p className="text-neutral-500">
+        <p className="text-neutral-500 dark:text-neutral-400">
           All from a lookup table with 8 entries. The claim of emergence starts here: local rules can already outrun intuition.
         </p>
       </div>

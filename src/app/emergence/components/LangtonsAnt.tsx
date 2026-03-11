@@ -33,7 +33,7 @@ interface SimState {
 }
 
 type Phase = "symmetric" | "chaos" | "pre-highway" | "highway";
-type SeedPresetId = "blank" | "dot" | "plus" | "ring" | "stairs" | "scatter";
+type SeedPresetId = "blank" | "dot" | "plus" | "ring" | "stairs" | "scatter" | "random";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -122,6 +122,12 @@ const SEED_PRESETS: Array<{
       [4, -2],
     ],
   },
+  {
+    id: "random",
+    label: "Random",
+    description: "20\u201360 random black cells within a 20\u00d720 area around the ant.",
+    cells: [], // generated dynamically
+  },
 ];
 
 /** Direction vectors: [dx, dy] for up, right, down, left */
@@ -136,17 +142,37 @@ const DIR_DELTA: [number, number][] = [
 // Simulation logic
 // ---------------------------------------------------------------------------
 
+function generateRandomCells(): Array<[number, number]> {
+  const RADIUS = 10;
+  const count = 20 + Math.floor(Math.random() * 41); // 20–60
+  const used = new Set<string>();
+  const result: Array<[number, number]> = [];
+
+  while (result.length < count) {
+    const dx = Math.floor(Math.random() * (RADIUS * 2 + 1)) - RADIUS;
+    const dy = Math.floor(Math.random() * (RADIUS * 2 + 1)) - RADIUS;
+    const key = `${dx},${dy}`;
+    if (!used.has(key)) {
+      used.add(key);
+      result.push([dx, dy]);
+    }
+  }
+
+  return result;
+}
+
 function createInitialState(seedId: SeedPresetId = "blank"): SimState {
   const cx = Math.floor(GRID_SIZE / 2);
   const cy = Math.floor(GRID_SIZE / 2);
   const seed = SEED_PRESETS.find((preset) => preset.id === seedId) ?? SEED_PRESETS[0];
+  const seedCells = seedId === "random" ? generateRandomCells() : seed.cells;
   const cells = new Set<string>();
   let minX = cx;
   let maxX = cx;
   let minY = cy;
   let maxY = cy;
 
-  seed.cells.forEach(([dx, dy]) => {
+  seedCells.forEach(([dx, dy]) => {
     const x = cx + dx;
     const y = cy + dy;
     cells.add(cellKey(x, y));
@@ -348,7 +374,7 @@ function RuleDiagramPanel({
 
 function RuleDiagram(): React.ReactElement {
   return (
-    <div className="flex flex-wrap justify-center gap-8 sm:gap-12 p-4 sm:p-6 rounded-lg border border-neutral-800 bg-neutral-900/50">
+    <div className="flex flex-wrap justify-center gap-8 sm:gap-12 p-4 sm:p-6 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50">
       <RuleDiagramPanel
         label="White cell"
         startColor={BG_COLOR}
@@ -635,63 +661,63 @@ export default function LangtonsAnt(): React.ReactElement {
   const phaseText = getPhaseText(phase);
 
   return (
-    <div className="space-y-8 rounded-3xl border border-neutral-800 bg-neutral-950/92 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.22)] sm:p-8">
+    <div className="w-full max-w-4xl mx-auto space-y-8">
       {/* Heading */}
       <div>
-        <h2 className="font-mono text-2xl sm:text-3xl font-semibold text-neutral-100 mb-2">
+        <h2 className="font-mono text-2xl sm:text-3xl font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
           Langton&rsquo;s Ant
         </h2>
-        <p className="text-neutral-500 text-base sm:text-lg">
+        <p className="text-neutral-500 dark:text-neutral-400 text-base sm:text-lg">
           Two rules. One unexplained mystery.
         </p>
       </div>
 
       {/* Rules explanation */}
-      <div className="space-y-4 text-neutral-300 text-sm sm:text-base leading-relaxed">
+      <div className="space-y-4 text-neutral-700 dark:text-neutral-300 text-sm sm:text-base leading-relaxed">
         <p>
           A single ant on an infinite grid. Every cell is either white or black.
           The ant follows two rules, and only two:
         </p>
-        <ol className="list-decimal list-inside space-y-1 text-neutral-400">
+        <ol className="list-decimal list-inside space-y-1 text-neutral-600 dark:text-neutral-400">
           <li>
-            On a <strong className="text-neutral-200">white</strong> cell: turn
+            On a <strong className="text-neutral-800 dark:text-neutral-200">white</strong> cell: turn
             90° right, flip the cell to black, move forward.
           </li>
           <li>
-            On a <strong className="text-neutral-200">black</strong> cell: turn
+            On a <strong className="text-neutral-800 dark:text-neutral-200">black</strong> cell: turn
             90° left, flip the cell to white, move forward.
           </li>
         </ol>
 
-        <p className="text-neutral-400">
+        <p className="text-neutral-600 dark:text-neutral-400">
           The conjecture is stronger than the classic empty-grid story: the
-          highway appears to emerge from <strong className="text-neutral-200">any finite starting set of black cells</strong>.
+          highway appears to emerge from <strong className="text-neutral-800 dark:text-neutral-200">any finite starting set of black cells</strong>.
           Try a few seeds below and the plane stays finite, but the long-run
           behavior still appears to settle into the same kind of highway.
         </p>
 
         <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-4">
             <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
               What It Is
             </div>
-            <p className="mt-2 text-sm text-neutral-300">
+            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
               One moving agent that writes to the grid as it walks.
             </p>
           </div>
-          <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-4">
             <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
               Why It Matters
             </div>
-            <p className="mt-2 text-sm text-neutral-300">
+            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
               It is a reminder that deterministic systems can remain opaque long after they stop feeling simple.
             </p>
           </div>
-          <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-4">
             <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
               What To Notice
             </div>
-            <p className="mt-2 text-sm text-neutral-300">
+            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
               The key event is not the early symmetry. It is the abrupt transition from wandering chaos to a stable diagonal highway.
             </p>
           </div>
@@ -702,9 +728,9 @@ export default function LangtonsAnt(): React.ReactElement {
 
       {/* Step counter and phase */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6">
-        <div className="font-mono text-3xl sm:text-4xl text-neutral-100 tabular-nums tracking-tight">
+        <div className="font-mono text-3xl sm:text-4xl text-neutral-900 dark:text-neutral-100 tabular-nums tracking-tight">
           {stepCount.toLocaleString()}
-          <span className="text-sm sm:text-base text-neutral-600 ml-2">
+          <span className="text-sm sm:text-base text-neutral-500 dark:text-neutral-600 ml-2">
             steps
           </span>
         </div>
@@ -723,13 +749,13 @@ export default function LangtonsAnt(): React.ReactElement {
 
       {/* Canvas */}
       <div className="space-y-3">
-        <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4 space-y-3">
+        <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-4 space-y-3">
           <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <div className="text-xs font-mono uppercase tracking-[0.2em] text-neutral-500">
                 Finite Black Seed
               </div>
-              <p className="mt-1 text-sm text-neutral-400">
+              <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
                 Swap the starting black-cell configuration and reset the ant on the same finite plane.
               </p>
             </div>
@@ -747,8 +773,8 @@ export default function LangtonsAnt(): React.ReactElement {
                   onClick={() => handleSeedChange(preset.id)}
                   className={`rounded-full border px-3 py-1.5 text-xs font-mono transition ${
                     active
-                      ? "border-cyan-500 bg-cyan-500/10 text-cyan-300"
-                      : "border-neutral-700 text-neutral-400 hover:border-neutral-500 hover:text-neutral-200"
+                      ? "border-cyan-500 bg-cyan-500/10 text-cyan-700 dark:text-cyan-300"
+                      : "border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200"
                   }`}
                   title={preset.description}
                 >
@@ -763,7 +789,7 @@ export default function LangtonsAnt(): React.ReactElement {
         </div>
         <div
           ref={containerRef}
-          className="w-full rounded-lg border border-neutral-800 overflow-hidden"
+          className="w-full rounded-lg border border-neutral-200 dark:border-neutral-800 overflow-hidden"
           style={{ background: BG_COLOR }}
         >
           <canvas
@@ -780,7 +806,7 @@ export default function LangtonsAnt(): React.ReactElement {
             <button
               onClick={doStep}
               disabled={playing || fastForwarding}
-              className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-700 text-neutral-400 hover:border-neutral-500 hover:text-neutral-300 transition disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-300 transition disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Step
             </button>
@@ -789,22 +815,22 @@ export default function LangtonsAnt(): React.ReactElement {
               disabled={fastForwarding}
               className={`px-3 py-1.5 text-xs font-mono rounded border transition disabled:opacity-40 disabled:cursor-not-allowed ${
                 playing
-                  ? "border-amber-600 bg-amber-600/10 text-amber-400"
-                  : "border-cyan-700 bg-cyan-700/10 text-cyan-400 hover:border-cyan-500"
+                  ? "border-amber-500 dark:border-amber-600 bg-amber-50 dark:bg-amber-600/10 text-amber-700 dark:text-amber-400"
+                  : "border-cyan-500 dark:border-cyan-700 bg-cyan-50 dark:bg-cyan-700/10 text-cyan-700 dark:text-cyan-400 hover:border-cyan-400 dark:hover:border-cyan-500"
               }`}
             >
               {playing ? "Pause" : "Play"}
             </button>
             <button
               onClick={handleReset}
-              className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-700 text-neutral-400 hover:border-neutral-500 hover:text-neutral-300 transition"
+              className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-300 transition"
             >
               Reset
             </button>
           </div>
 
           {/* Divider */}
-          <div className="w-px h-6 bg-neutral-800 hidden sm:block" />
+          <div className="w-px h-6 bg-neutral-200 dark:bg-neutral-800 hidden sm:block" />
 
           {/* Speed slider */}
           <div className="flex items-center gap-2">
@@ -831,7 +857,7 @@ export default function LangtonsAnt(): React.ReactElement {
           </div>
 
           {/* Divider */}
-          <div className="w-px h-6 bg-neutral-800 hidden sm:block" />
+          <div className="w-px h-6 bg-neutral-200 dark:bg-neutral-800 hidden sm:block" />
 
           {/* Fast-forward button */}
           <button
@@ -841,10 +867,10 @@ export default function LangtonsAnt(): React.ReactElement {
             }
             className={`px-4 py-1.5 text-xs font-mono rounded border transition ${
               fastForwarding
-                ? "border-amber-600 bg-amber-600/10 text-amber-400 animate-pulse"
+                ? "border-amber-500 dark:border-amber-600 bg-amber-50 dark:bg-amber-600/10 text-amber-700 dark:text-amber-400 animate-pulse"
                 : stepCount >= FAST_FORWARD_TARGET
-                  ? "border-neutral-800 text-neutral-700 cursor-not-allowed"
-                  : "border-red-700 bg-red-700/10 text-red-400 hover:border-red-500 hover:bg-red-700/20"
+                  ? "border-neutral-300 dark:border-neutral-800 text-neutral-400 dark:text-neutral-700 cursor-not-allowed"
+                  : "border-red-400 dark:border-red-700 bg-red-50 dark:bg-red-700/10 text-red-600 dark:text-red-400 hover:border-red-500 hover:bg-red-100 dark:hover:bg-red-700/20"
             } disabled:cursor-not-allowed`}
           >
             {fastForwarding
@@ -855,7 +881,7 @@ export default function LangtonsAnt(): React.ReactElement {
       </div>
 
       {/* Takeaway */}
-      <div className="text-neutral-300 text-sm sm:text-base leading-relaxed space-y-3 border-l-2 border-red-800 pl-4">
+      <div className="text-neutral-700 dark:text-neutral-300 text-sm sm:text-base leading-relaxed space-y-3 border-l-2 border-red-300 dark:border-red-800 pl-4">
         <p>
           After approximately 10,000 steps of seemingly random behavior, the ant
           always builds a diagonal highway. A perfectly regular, repeating
@@ -865,12 +891,12 @@ export default function LangtonsAnt(): React.ReactElement {
           This has been verified computationally for millions of starting
           configurations. But no one has proven it must always happen.
         </p>
-        <p className="text-neutral-500">
+        <p className="text-neutral-500 dark:text-neutral-400">
           Emergence doesn&rsquo;t just mean &ldquo;complex behavior from simple
           rules.&rdquo; Sometimes it means behavior we can observe but cannot
           explain.
         </p>
-        <p className="text-neutral-500">
+        <p className="text-neutral-500 dark:text-neutral-400">
           That is why this demo matters: it separates seeing a pattern from understanding why the pattern had to appear.
         </p>
       </div>
