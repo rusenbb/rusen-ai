@@ -33,7 +33,7 @@ export default function ThemeToggle() {
       onClick={handleToggle}
       aria-label={`Switch to ${isDark ? "light" : "dark"} theme`}
       title={`Switch to ${isDark ? "light" : "dark"} theme`}
-      className="relative inline-flex items-center justify-center font-mono tabular-nums hover:opacity-80 transition overflow-hidden h-[1.4em] w-[1em]"
+      className="relative inline-flex items-center justify-center font-mono tabular-nums hover:opacity-80 transition overflow-hidden h-7 w-7 rounded border border-neutral-300 dark:border-neutral-700 text-sm"
     >
       <span
         className="absolute inset-0 flex items-center justify-center transition-transform duration-300 ease-out"
