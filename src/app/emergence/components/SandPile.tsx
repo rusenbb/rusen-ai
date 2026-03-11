@@ -648,6 +648,33 @@ export default function SandPile(): React.ReactElement {
           Grains that fall off the edge are lost forever.
         </p>
 
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
+              What It Is
+            </div>
+            <p className="mt-2 text-sm text-neutral-300">
+              A threshold system where stability is local and collapse spreads through neighbors.
+            </p>
+          </div>
+          <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
+              Why It Matters
+            </div>
+            <p className="mt-2 text-sm text-neutral-300">
+              It explains how calm systems can organize themselves into a state where rare giant shocks are inevitable.
+            </p>
+          </div>
+          <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
+              What To Notice
+            </div>
+            <p className="mt-2 text-sm text-neutral-300">
+              Most grains do very little. A few trigger huge cascades. The point is the imbalance between tiny input and system-wide response.
+            </p>
+          </div>
+        </div>
+
         {/* Topple diagram */}
         <ToppleDiagram />
 
@@ -801,6 +828,9 @@ export default function SandPile(): React.ReactElement {
         <p className="text-neutral-500">
           The next grain is always potentially the one that brings everything
           down.
+        </p>
+        <p className="text-neutral-500">
+          That is the lesson of criticality: danger is not stored in one special event, but in the state the system has organized for itself.
         </p>
       </div>
     </div>

@@ -439,6 +439,33 @@ export default function SchellingSegregation() {
           for similarity.
         </p>
 
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-4">
+            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
+              What It Is
+            </div>
+            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
+              A relocation model where unhappy agents move until their neighborhood feels acceptable.
+            </p>
+          </div>
+          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-4">
+            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
+              Why It Matters
+            </div>
+            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
+              It shows how systems can become polarized without any single agent aiming for a polarized outcome.
+            </p>
+          </div>
+          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-4">
+            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
+              What To Notice
+            </div>
+            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
+              Raise the threshold only a little and watch global clustering appear much faster than intuition says it should.
+            </p>
+          </div>
+        </div>
+
         {/* Neighbor explanation */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 p-4 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50">
           <NeighborDiagram threshold={threshold} />
@@ -621,6 +648,9 @@ export default function SchellingSegregation() {
         <p>
           Emergence isn&apos;t always beautiful. Sometimes simple rules produce
           outcomes nobody intended.
+        </p>
+        <p className="text-neutral-500 dark:text-neutral-400">
+          The important shift is from motives to outcomes: local comfort can still generate global separation.
         </p>
       </div>
     </section>
