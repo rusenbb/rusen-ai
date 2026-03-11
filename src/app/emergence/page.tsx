@@ -63,20 +63,21 @@ export default function EmergencePage() {
 
         <nav className="mt-8 flex flex-wrap gap-2" aria-label="Emergence sections">
           {ESSAY_SECTIONS.map((section) => (
-            <Link
+            <a
               key={section.id}
               href={`#${section.id}`}
               className="rounded-full border border-neutral-300 px-3 py-1.5 text-xs font-mono text-neutral-600 transition hover:border-neutral-900 hover:text-neutral-900 dark:border-neutral-700 dark:text-neutral-300 dark:hover:border-neutral-300 dark:hover:text-neutral-100"
             >
               {section.title}
-            </Link>
+            </a>
           ))}
         </nav>
 
         <div className="mt-8 grid gap-3 sm:grid-cols-2">
           {ESSAY_SECTIONS.map((section, index) => (
-            <div
+            <a
               key={section.id}
+              href={`#${section.id}`}
               className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white/60 dark:bg-neutral-950/40 p-4"
             >
               <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
@@ -88,7 +89,7 @@ export default function EmergencePage() {
               <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
                 {section.summary}
               </p>
-            </div>
+            </a>
           ))}
         </div>
       </header>
