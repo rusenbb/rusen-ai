@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { getResolvedTheme } from "./theme";
 
 // Speed slider space retained for the Oimo speed mapping curve.
 const DEFAULT_SPEED = 0.3;
@@ -240,12 +241,15 @@ export default function GameOfLifeExperience() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    let isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const onSchemeChange = (e: MediaQueryListEvent) => {
-      isDark = e.matches;
+    let isDark = getResolvedTheme() === "dark";
+    const onThemeChange = () => {
+      isDark = getResolvedTheme() === "dark";
     };
-    mq.addEventListener("change", onSchemeChange);
+    const observer = new MutationObserver(onThemeChange);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
 
     const render = () => {
       const renderer = rendererRef.current;
@@ -294,11 +298,11 @@ export default function GameOfLifeExperience() {
 
     animationRef.current = requestAnimationFrame(render);
 
-    return () => {
-      cancelAnimationFrame(animationRef.current);
-      lastStepTimeRef.current = null;
-      mq.removeEventListener("change", onSchemeChange);
-    };
+      return () => {
+        cancelAnimationFrame(animationRef.current);
+        lastStepTimeRef.current = null;
+        observer.disconnect();
+      };
   }, [loaded, initError, autoZoomEnabled, animationPaused, clearBgMode]);
 
   useEffect(() => {

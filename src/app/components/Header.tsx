@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Header() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -43,15 +44,17 @@ export default function Header() {
             rusen.ai
           </Link>
 
-          <div className="hidden md:flex gap-6 items-center">
+          <div className="hidden md:flex gap-4 items-center">
             {links.map((item) => (
               <Link key={item.href} href={item.href} className="hover:opacity-80 transition">
                 {item.label}
               </Link>
             ))}
+            <ThemeToggle />
           </div>
 
           <div className="md:hidden flex items-center gap-1">
+            <ThemeToggle />
             <button
               type="button"
               onClick={() => setMobileNavOpen((v) => !v)}

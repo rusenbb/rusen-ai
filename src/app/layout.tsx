@@ -5,6 +5,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import DataBackground from "./components/DataBackground";
 import SiteTerminal from "./components/SiteTerminal";
+import { THEME_STORAGE_KEY } from "./components/theme";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -61,11 +62,27 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="preload" as="image" href="/game-of-life/graph.png" fetchPriority="high" />
         <link rel="preload" as="image" href="/game-of-life/anim.png" fetchPriority="high" />
         <link rel="preload" as="image" href="/game-of-life/loc.png" fetchPriority="high" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (() => {
+                try {
+                  const stored = localStorage.getItem("${THEME_STORAGE_KEY}");
+                  const resolved = stored === "light" || stored === "dark"
+                    ? stored
+                    : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+                  document.documentElement.dataset.theme = resolved;
+                  document.documentElement.style.colorScheme = resolved;
+                } catch (_) {}
+              })();
+            `,
+          }}
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
