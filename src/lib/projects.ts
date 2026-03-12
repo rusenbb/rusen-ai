@@ -165,7 +165,7 @@ export const PROJECTS: ProjectMeta[] = [
     id: "adaptive-arena",
     title: "RL-Arena",
     slug: "adaptive-arena",
-    collection: "nerdy-stuff",
+    collection: "demos",
     status: "live",
     summary:
       "Fight trained bots in a full 30x30 tactical arena with checkpoint-based difficulties.",
@@ -175,7 +175,24 @@ export const PROJECTS: ProjectMeta[] = [
     domains: ["RL", "Computational Tools"],
     capabilities: ["Simulation", "Inference"],
     tech: ["React", "Canvas", "DQN"],
-    order: 40,
+    order: 80,
+  },
+  {
+    id: "optimization",
+    title: "Optimization",
+    slug: "optimization",
+    collection: "nerdy-stuff",
+    status: "live",
+    summary:
+      "One interactive lab for gradient descent, black-box search, and why high-dimensional optimization breaks the 2D cartoon.",
+    description:
+      "Unified optimization experience with 3D surfaces, contour mode, gradient-based methods, zeroth-order search, and a high-dimensional explainer.",
+    tags: ["Optimization", "Interactive Essay", "3D"],
+    domains: ["Optimization", "Computational Tools"],
+    capabilities: ["Simulation", "Visualization"],
+    tech: ["TypeScript", "Three.js", "Canvas"],
+    order: 15,
+    featuredHome: true,
   },
   {
     id: "attention-heatmap",
