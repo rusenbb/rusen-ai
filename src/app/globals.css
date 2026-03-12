@@ -104,6 +104,11 @@ body[data-bg-clear="on"] .content-shell::before {
   backdrop-filter: none !important;
 }
 
+body[data-game-life-page="on"] .content-shell::before {
+  background: transparent !important;
+  backdrop-filter: none !important;
+}
+
 body[data-game-life-page="on"] main {
   padding-bottom: 0;
 }
