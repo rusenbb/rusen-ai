@@ -680,6 +680,38 @@ export default function GameOfLifeDemo() {
           press Play to watch it evolve. Start with a glider or blinker, then try the gun and watch persistent structure emerge from local rules alone.
         </p>
 
+        <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/50 p-3">
+          <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
+            Visual key
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-neutral-600 dark:text-neutral-300">
+            <div className="flex items-center gap-2">
+              <span
+                className="h-4 w-4 rounded-sm border border-black/10 dark:border-white/10"
+                style={{ backgroundColor: cellColor(1) }}
+              />
+              <span>newborn cell</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span
+                className="h-4 w-4 rounded-sm border border-black/10 dark:border-white/10"
+                style={{ backgroundColor: cellColor(Math.floor(MAX_AGE / 2)) }}
+              />
+              <span>surviving cell</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span
+                className="h-4 w-4 rounded-sm border border-black/10 dark:border-white/10"
+                style={{ backgroundColor: cellColor(MAX_AGE) }}
+              />
+              <span>long-lived cell</span>
+            </div>
+          </div>
+          <p className="mt-2 text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">
+            In this mini-demo, color shows cell age. Bright cyan means newly born; dimmer cells have survived for many generations. This is a visualization aid, not an extra Conway rule.
+          </p>
+        </div>
+
         {/* Controls row */}
         <div className="flex flex-wrap items-center gap-2">
           {PATTERNS.map((p) => (

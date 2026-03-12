@@ -47,10 +47,32 @@ function stepRow(row: Uint8Array, table: Uint8Array): Uint8Array {
   return next;
 }
 
-/** Create an initial grid: single cell in the center. */
-function createInitialGrid(width: number): CellState {
+function createSeededRandomRow(width: number, density: number, seed: number): Uint8Array {
   const row = new Uint8Array(width);
-  row[Math.floor(width / 2)] = 1;
+  let state = seed >>> 0;
+
+  for (let i = 0; i < width; i++) {
+    state = (state * 1664525 + 1013904223) >>> 0;
+    const value = state / 0xffffffff;
+    row[i] = value < density ? 1 : 0;
+  }
+
+  return row;
+}
+
+/** Create an initial grid. Most rules start from a single center cell.
+ * Rule 184 starts from a denser traffic-like row so the interesting behavior appears immediately.
+ */
+function createInitialGrid(width: number, rule: RuleNumber): CellState {
+  const row = new Uint8Array(width);
+
+  if (rule === 184) {
+    const seeded = createSeededRandomRow(width, 0.56, 184);
+    row.set(seeded);
+  } else {
+    row[Math.floor(width / 2)] = 1;
+  }
+
   return { grid: [row], width, generation: 0 };
 }
 
@@ -267,7 +289,7 @@ export default function ElementaryCA(): React.ReactElement {
 
   // Initialize grid
   const initializeGrid = useCallback(() => {
-    const initial = createInitialGrid(GRID_WIDTH);
+    const initial = createInitialGrid(GRID_WIDTH, rule);
     gridRef.current = initial.grid;
     setGeneration(0);
 
@@ -280,7 +302,7 @@ export default function ElementaryCA(): React.ReactElement {
     }
 
     redraw();
-  }, [redraw]);
+  }, [redraw, rule]);
 
   // Initialize on mount
   useEffect(() => {
@@ -554,6 +576,14 @@ export default function ElementaryCA(): React.ReactElement {
         <div className="text-xs text-neutral-500 font-mono">
           Generation {generation}
         </div>
+
+        {rule === 184 ? (
+          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-3 text-sm text-neutral-600 dark:text-neutral-400">
+            Rule 184 starts from a denser seeded row here so the traffic-like
+            dynamics show up immediately. A single-cell seed is technically
+            valid, but visually much less informative for this rule.
+          </div>
+        ) : null}
 
         {/* Controls */}
         <div className="flex flex-wrap items-center gap-3">

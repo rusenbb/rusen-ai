@@ -34,6 +34,7 @@ interface SimState {
 
 type Phase = "symmetric" | "chaos" | "pre-highway" | "highway";
 type SeedPresetId = "blank" | "dot" | "plus" | "ring" | "stairs" | "scatter" | "random";
+type EditTool = "draw" | "erase";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -195,6 +196,101 @@ function createInitialState(seedId: SeedPresetId = "blank"): SimState {
 
 function cellKey(x: number, y: number): string {
   return `${x},${y}`;
+}
+
+function parseCellKey(key: string): [number, number] {
+  const commaIdx = key.indexOf(",");
+  return [
+    parseInt(key.substring(0, commaIdx), 10),
+    parseInt(key.substring(commaIdx + 1), 10),
+  ];
+}
+
+function recomputeBounds(state: SimState): void {
+  let minX = state.ant.x;
+  let maxX = state.ant.x;
+  let minY = state.ant.y;
+  let maxY = state.ant.y;
+
+  for (const key of state.cells) {
+    const [x, y] = parseCellKey(key);
+    if (x < minX) minX = x;
+    if (x > maxX) maxX = x;
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+  }
+
+  state.minX = minX;
+  state.maxX = maxX;
+  state.minY = minY;
+  state.maxY = maxY;
+}
+
+function updateBoundsForCell(state: SimState, x: number, y: number): void {
+  if (x < state.minX) state.minX = x;
+  if (x > state.maxX) state.maxX = x;
+  if (y < state.minY) state.minY = y;
+  if (y > state.maxY) state.maxY = y;
+}
+
+type ViewportTransform = {
+  cellPixelSize: number;
+  padding: number;
+  offsetX: number;
+  offsetY: number;
+};
+
+function computeViewport(
+  sim: SimState,
+  displayW: number,
+  displayH: number,
+): ViewportTransform {
+  const spanX = sim.maxX - sim.minX + 1;
+  const spanY = sim.maxY - sim.minY + 1;
+  const span = Math.max(spanX, spanY, 20);
+  const padding = Math.max(10, Math.floor(span * 0.15));
+  const totalSpan = span + padding * 2;
+  const cellPixelSize = Math.min(displayW, displayH) / totalSpan;
+  const centerX = (sim.minX + sim.maxX) / 2;
+  const centerY = (sim.minY + sim.maxY) / 2;
+  const offsetX =
+    displayW / 2 - (centerX - sim.minX + padding) * cellPixelSize;
+  const offsetY =
+    displayH / 2 - (centerY - sim.minY + padding) * cellPixelSize;
+
+  return { cellPixelSize, padding, offsetX, offsetY };
+}
+
+function rasterizeLine(
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+): Array<[number, number]> {
+  const cells: Array<[number, number]> = [];
+  let currentX = x0;
+  let currentY = y0;
+  const dx = Math.abs(x1 - x0);
+  const sx = x0 < x1 ? 1 : -1;
+  const dy = -Math.abs(y1 - y0);
+  const sy = y0 < y1 ? 1 : -1;
+  let error = dx + dy;
+
+  while (true) {
+    cells.push([currentX, currentY]);
+    if (currentX === x1 && currentY === y1) break;
+    const doubled = error * 2;
+    if (doubled >= dy) {
+      error += dy;
+      currentX += sx;
+    }
+    if (doubled <= dx) {
+      error += dx;
+      currentY += sy;
+    }
+  }
+
+  return cells;
 }
 
 /** Advance the simulation by one step. Mutates state in place for performance. */
@@ -404,6 +500,7 @@ export default function LangtonsAnt(): React.ReactElement {
   const [playing, setPlaying] = useState<boolean>(false);
   const [stepsPerFrame, setStepsPerFrame] = useState<number>(1);
   const [fastForwarding, setFastForwarding] = useState<boolean>(false);
+  const [editTool, setEditTool] = useState<EditTool>("draw");
 
   // Refs
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -412,6 +509,8 @@ export default function LangtonsAnt(): React.ReactElement {
   const animFrameRef = useRef<number>(0);
   const playingRef = useRef<boolean>(false);
   const stepsPerFrameRef = useRef<number>(1);
+  const pointerDrawingRef = useRef<boolean>(false);
+  const lastPaintCellRef = useRef<[number, number] | null>(null);
 
   // Keep refs in sync
   useEffect(() => {
@@ -453,20 +552,11 @@ export default function LangtonsAnt(): React.ReactElement {
     ctx.fillStyle = BG_COLOR;
     ctx.fillRect(0, 0, displayW, displayH);
 
-    // Compute viewport: fit all visited cells with padding
-    const spanX = sim.maxX - sim.minX + 1;
-    const spanY = sim.maxY - sim.minY + 1;
-    const span = Math.max(spanX, spanY, 20); // minimum zoom level
-    const padding = Math.max(10, Math.floor(span * 0.15));
-    const totalSpan = span + padding * 2;
-
-    const cellPixelSize = Math.min(displayW, displayH) / totalSpan;
-
-    // Center the viewport on the bounding box center
-    const centerX = (sim.minX + sim.maxX) / 2;
-    const centerY = (sim.minY + sim.maxY) / 2;
-    const offsetX = displayW / 2 - (centerX - sim.minX + padding) * cellPixelSize;
-    const offsetY = displayH / 2 - (centerY - sim.minY + padding) * cellPixelSize;
+    const { cellPixelSize, padding, offsetX, offsetY } = computeViewport(
+      sim,
+      displayW,
+      displayH,
+    );
 
     if (cellPixelSize >= 5) {
       ctx.strokeStyle = GRID_LINE_COLOR;
@@ -491,9 +581,7 @@ export default function LangtonsAnt(): React.ReactElement {
     // Draw black cells
     ctx.fillStyle = CELL_COLOR;
     for (const key of sim.cells) {
-      const commaIdx = key.indexOf(",");
-      const cx = parseInt(key.substring(0, commaIdx), 10);
-      const cy = parseInt(key.substring(commaIdx + 1), 10);
+      const [cx, cy] = parseCellKey(key);
       const px = offsetX + (cx - sim.minX + padding) * cellPixelSize;
       const py = offsetY + (cy - sim.minY + padding) * cellPixelSize;
 
@@ -547,6 +635,104 @@ export default function LangtonsAnt(): React.ReactElement {
     observer.observe(container);
     return () => observer.disconnect();
   }, [drawState]);
+
+  const getCellFromPointerEvent = useCallback(
+    (event: React.PointerEvent<HTMLCanvasElement>): [number, number] | null => {
+      const canvas = canvasRef.current;
+      const container = containerRef.current;
+      if (!canvas || !container) return null;
+
+      const rect = canvas.getBoundingClientRect();
+      const pointerX = event.clientX - rect.left;
+      const pointerY = event.clientY - rect.top;
+      const sim = simRef.current;
+      const viewport = computeViewport(sim, container.clientWidth, canvas.clientHeight);
+
+      const cellX = Math.floor(
+        (pointerX - viewport.offsetX) / viewport.cellPixelSize +
+          sim.minX -
+          viewport.padding,
+      );
+      const cellY = Math.floor(
+        (pointerY - viewport.offsetY) / viewport.cellPixelSize +
+          sim.minY -
+          viewport.padding,
+      );
+
+      return [cellX, cellY];
+    },
+    [],
+  );
+
+  const applyEditToCell = useCallback(
+    (x: number, y: number) => {
+      const sim = simRef.current;
+      const key = cellKey(x, y);
+
+      if (editTool === "draw") {
+        if (!sim.cells.has(key)) {
+          sim.cells.add(key);
+          updateBoundsForCell(sim, x, y);
+        }
+      } else if (sim.cells.delete(key)) {
+        recomputeBounds(sim);
+      }
+    },
+    [editTool],
+  );
+
+  const handleCanvasPointerDown = useCallback(
+    (event: React.PointerEvent<HTMLCanvasElement>) => {
+      if (playingRef.current || fastForwarding) return;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      const cell = getCellFromPointerEvent(event);
+      if (!cell) return;
+
+      pointerDrawingRef.current = true;
+      lastPaintCellRef.current = cell;
+      canvas.setPointerCapture?.(event.pointerId);
+      applyEditToCell(cell[0], cell[1]);
+      drawState();
+    },
+    [applyEditToCell, drawState, fastForwarding, getCellFromPointerEvent],
+  );
+
+  const handleCanvasPointerMove = useCallback(
+    (event: React.PointerEvent<HTMLCanvasElement>) => {
+      if (!pointerDrawingRef.current || playingRef.current || fastForwarding) return;
+
+      const cell = getCellFromPointerEvent(event);
+      if (!cell) return;
+
+      const previous = lastPaintCellRef.current;
+      if (!previous) {
+        lastPaintCellRef.current = cell;
+        applyEditToCell(cell[0], cell[1]);
+        drawState();
+        return;
+      }
+
+      for (const [x, y] of rasterizeLine(previous[0], previous[1], cell[0], cell[1])) {
+        applyEditToCell(x, y);
+      }
+      lastPaintCellRef.current = cell;
+      drawState();
+    },
+    [applyEditToCell, drawState, fastForwarding, getCellFromPointerEvent],
+  );
+
+  const endPointerDrawing = useCallback(
+    (event?: React.PointerEvent<HTMLCanvasElement>) => {
+      pointerDrawingRef.current = false;
+      lastPaintCellRef.current = null;
+      if (event) {
+        event.currentTarget.releasePointerCapture?.(event.pointerId);
+      }
+    },
+    [],
+  );
 
   // -----------------------------------------------------------------------
   // Step & animation
@@ -756,7 +942,7 @@ export default function LangtonsAnt(): React.ReactElement {
                 Finite Black Seed
               </div>
               <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-                Swap the starting black-cell configuration and reset the ant on the same finite plane.
+                Swap the starting black-cell configuration, then manually paint or erase black cells to make your own finite seed.
               </p>
             </div>
             <div className="text-xs font-mono text-neutral-500">
@@ -786,6 +972,31 @@ export default function LangtonsAnt(): React.ReactElement {
           <p className="text-xs text-neutral-500">
             {SEED_PRESETS.find((preset) => preset.id === selectedSeed)?.description}
           </p>
+          <div className="flex flex-wrap items-center gap-2 border-t border-neutral-200 pt-3 dark:border-neutral-800">
+            <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500">
+              Manual edit
+            </span>
+            {(["draw", "erase"] as const).map((tool) => {
+              const active = editTool === tool;
+              return (
+                <button
+                  key={tool}
+                  type="button"
+                  onClick={() => setEditTool(tool)}
+                  className={`rounded-full border px-3 py-1.5 text-xs font-mono transition ${
+                    active
+                      ? "border-cyan-500 bg-cyan-500/10 text-cyan-700 dark:text-cyan-300"
+                      : "border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200"
+                  }`}
+                >
+                  {tool === "draw" ? "Draw black cells" : "Erase black cells"}
+                </button>
+              );
+            })}
+            <span className="text-xs text-neutral-500 dark:text-neutral-400">
+              Pause first, then click or drag on the canvas.
+            </span>
+          </div>
         </div>
         <div
           ref={containerRef}
@@ -794,8 +1005,13 @@ export default function LangtonsAnt(): React.ReactElement {
         >
           <canvas
             ref={canvasRef}
-            className="block w-full"
+            className={`block w-full ${playing || fastForwarding ? "cursor-default" : editTool === "erase" ? "cursor-cell" : "cursor-crosshair"}`}
             style={{ height: 480, imageRendering: "pixelated" }}
+            onPointerDown={handleCanvasPointerDown}
+            onPointerMove={handleCanvasPointerMove}
+            onPointerUp={endPointerDrawing}
+            onPointerLeave={endPointerDrawing}
+            onPointerCancel={endPointerDrawing}
           />
         </div>
 
