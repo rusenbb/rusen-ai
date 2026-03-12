@@ -245,7 +245,7 @@ export default function FireflySynchronization(): React.ReactElement {
   const [selectedScene, setSelectedScene] = useState<SceneId>(initialScene.id);
   const [coupling, setCoupling] = useState<number>(initialScene.coupling);
   const [radius, setRadius] = useState<number>(initialScene.radius);
-  const [playing, setPlaying] = useState<boolean>(true);
+  const [playing, setPlaying] = useState<boolean>(false);
   const [autoRestart, setAutoRestart] = useState<boolean>(true);
   const [canvasWidth, setCanvasWidth] = useState<number>(DEFAULT_CANVAS_WIDTH);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
@@ -263,7 +263,7 @@ export default function FireflySynchronization(): React.ReactElement {
   const sceneRef = useRef<SceneId>(initialScene.id);
   const couplingRef = useRef<number>(initialScene.coupling);
   const radiusRef = useRef<number>(initialScene.radius);
-  const playingRef = useRef<boolean>(true);
+  const playingRef = useRef<boolean>(false);
   const autoRestartRef = useRef<boolean>(true);
   const animationRef = useRef<number>(0);
   const lastTimeRef = useRef<number>(0);
@@ -672,7 +672,8 @@ export default function FireflySynchronization(): React.ReactElement {
               </p>
             </div>
             <p className="max-w-md text-sm leading-relaxed text-neutral-600 dark:text-neutral-300">
-              The transition loops automatically. If you want to restart it, hit
+              Press <span className="font-mono">Play</span> to start the
+              transition. If you want to replay it from the beginning, hit
               <span className="font-mono"> Restart transition</span>.
             </p>
           </div>
