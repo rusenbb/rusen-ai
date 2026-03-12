@@ -104,9 +104,9 @@ export const PROJECTS: ProjectMeta[] = [
     collection: "nerdy-stuff",
     status: "live",
     summary:
-      "Simple rules, complex behavior. An interactive essay on cellular automata, segregation, and unexplained highways.",
+      "Simple rules, complex behavior. An interactive essay on cellular automata, synchrony, segregation, highways, and critical cascades.",
     description:
-      "A guided, interactive exploration of emergence through four systems: Elementary CA, Game of Life, Schelling's Segregation, and Langton's Ant.",
+      "A guided, interactive exploration of emergence through six systems: Elementary CA, Game of Life, firefly synchronization, Schelling's Segregation, Langton's Ant, and self-organized criticality.",
     tags: ["Emergence", "Interactive Essay", "Simulation"],
     domains: ["Computational Tools"],
     capabilities: ["Simulation", "Visualization"],

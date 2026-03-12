@@ -1,9 +1,11 @@
 import Link from "next/link";
 import ElementaryCA from "./components/ElementaryCA";
 import GameOfLifeDemo from "./components/GameOfLifeDemo";
+import FireflySynchronization from "./components/FireflySynchronization";
 import SchellingSegregation from "./components/SchellingSegregation";
 import LangtonsAnt from "./components/LangtonsAnt";
 import SandPile from "./components/SandPile";
+import EmergenceSectionDirectory from "./components/EmergenceSectionDirectory";
 
 const ESSAY_SECTIONS = [
   {
@@ -15,6 +17,11 @@ const ESSAY_SECTIONS = [
     id: "game-of-life",
     title: "Game of Life",
     summary: "Simple birth-death rules can support moving structures and logic.",
+  },
+  {
+    id: "firefly-sync",
+    title: "Firefly Synchronization",
+    summary: "Local flashes can pull a whole population into one shared rhythm.",
   },
   {
     id: "schelling",
@@ -61,37 +68,7 @@ export default function EmergencePage() {
           </p>
         </div>
 
-        <nav className="mt-8 flex flex-wrap gap-2" aria-label="Emergence sections">
-          {ESSAY_SECTIONS.map((section) => (
-            <a
-              key={section.id}
-              href={`#${section.id}`}
-              className="rounded-full border border-neutral-300 px-3 py-1.5 text-xs font-mono text-neutral-600 transition hover:border-neutral-900 hover:text-neutral-900 dark:border-neutral-700 dark:text-neutral-300 dark:hover:border-neutral-300 dark:hover:text-neutral-100"
-            >
-              {section.title}
-            </a>
-          ))}
-        </nav>
-
-        <div className="mt-8 grid gap-3 sm:grid-cols-2">
-          {ESSAY_SECTIONS.map((section, index) => (
-            <a
-              key={section.id}
-              href={`#${section.id}`}
-              className="rounded-xl border border-neutral-300 dark:border-neutral-800 bg-white/92 dark:bg-neutral-950/40 p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]"
-            >
-              <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
-                {String(index + 1).padStart(2, "0")}
-              </div>
-              <h2 className="mt-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                {section.title}
-              </h2>
-              <p className="mt-1 text-sm text-neutral-700 dark:text-neutral-400">
-                {section.summary}
-              </p>
-            </a>
-          ))}
-        </div>
+        <EmergenceSectionDirectory sections={ESSAY_SECTIONS} />
       </header>
 
       {/* Section 1 */}
@@ -133,9 +110,24 @@ export default function EmergencePage() {
       <div className="h-20 sm:h-28" />
 
       {/* Section 3 */}
-      <section id="schelling" className="scroll-mt-24">
+      <section id="firefly-sync" className="scroll-mt-24">
         <div className="flex items-center gap-4 mb-8">
           <span className="text-sm font-mono tracking-[0.22em] text-neutral-400 dark:text-neutral-500 shrink-0">03</span>
+          <hr className="flex-1 border-neutral-200 dark:border-neutral-800" />
+        </div>
+        <p className="mb-6 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400 max-w-2xl">
+          Keep the agents independent, but let them communicate through time.
+          Order can emerge not as shape, but as a shared beat.
+        </p>
+        <FireflySynchronization />
+      </section>
+
+      <div className="h-20 sm:h-28" />
+
+      {/* Section 4 */}
+      <section id="schelling" className="scroll-mt-24">
+        <div className="flex items-center gap-4 mb-8">
+          <span className="text-sm font-mono tracking-[0.22em] text-neutral-400 dark:text-neutral-500 shrink-0">04</span>
           <hr className="flex-1 border-neutral-200 dark:border-neutral-800" />
         </div>
         <p className="mb-6 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400 max-w-2xl">
@@ -147,10 +139,10 @@ export default function EmergencePage() {
 
       <div className="h-20 sm:h-28" />
 
-      {/* Section 4 */}
+      {/* Section 5 */}
       <section id="langtons-ant" className="scroll-mt-24">
         <div className="flex items-center gap-4 mb-8">
-          <span className="text-sm font-mono tracking-[0.22em] text-neutral-400 dark:text-neutral-500 shrink-0">04</span>
+          <span className="text-sm font-mono tracking-[0.22em] text-neutral-400 dark:text-neutral-500 shrink-0">05</span>
           <hr className="flex-1 border-neutral-200 dark:border-neutral-800" />
         </div>
         <p className="mb-6 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400 max-w-2xl">
@@ -162,10 +154,10 @@ export default function EmergencePage() {
 
       <div className="h-20 sm:h-28" />
 
-      {/* Section 5 */}
+      {/* Section 6 */}
       <section id="sandpile" className="scroll-mt-24">
         <div className="flex items-center gap-4 mb-8">
-          <span className="text-sm font-mono tracking-[0.22em] text-neutral-400 dark:text-neutral-500 shrink-0">05</span>
+          <span className="text-sm font-mono tracking-[0.22em] text-neutral-400 dark:text-neutral-500 shrink-0">06</span>
           <hr className="flex-1 border-neutral-200 dark:border-neutral-800" />
         </div>
         <p className="mb-6 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400 max-w-2xl">
@@ -178,7 +170,7 @@ export default function EmergencePage() {
       {/* Closing */}
       <footer className="border-t border-neutral-200 dark:border-neutral-800 pt-10 pb-6">
         <p className="text-neutral-600 dark:text-neutral-400 text-sm leading-relaxed max-w-2xl">
-          Five systems. Rules you can fit on an index card. Behavior that
+          Six systems. Rules you can fit on an index card. Behavior that
           surprises, disturbs, and remains unexplained. Emergence is not a
           special case. It is the default. The question is not why
           complex things are complex, but why simple rules refuse to stay
