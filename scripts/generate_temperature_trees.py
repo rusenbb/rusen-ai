@@ -29,6 +29,9 @@ TOP_K_STORE = 100
 MAX_TOKENS = 50
 BRANCH_THRESHOLD = 0.10  # branch when runner-up prob > 10%
 MAX_BRANCHES = 12
+MIN_FORK_SPACING = 5  # minimum tokens between fork points on the same branch
+MAX_FORKS_PER_BRANCH = 3  # max fork points selected per branch
+MAX_GENERATION = 3  # main=0, child=1, grandchild=2
 
 # fmt: off
 PROMPTS = [
@@ -136,10 +139,15 @@ def build_prompt_ids(tokenizer, prompt_config: dict) -> list[int]:
     if not prompt_config["system"]:
         return tokenizer.encode(prompt_config["prefill"], add_special_tokens=False)
 
-    # Build manually to avoid <think></think> and trailing <|im_end|>
+    # Build manually: user turn + assistant turn with closed thinking block + prefill.
+    # Qwen3.5 expects <think>...</think> before response content. Without it,
+    # the model outputs <|im_end|> immediately because it's in an untrained state.
     im_start = tokenizer.convert_tokens_to_ids("<|im_start|>")
     im_end = tokenizer.convert_tokens_to_ids("<|im_end|>")
+    think_open = tokenizer.convert_tokens_to_ids("<think>")
+    think_close = tokenizer.convert_tokens_to_ids("</think>")
     nl = tokenizer.encode("\n", add_special_tokens=False)
+    nl2 = tokenizer.encode("\n\n", add_special_tokens=False)
 
     user_text_ids = tokenizer.encode(
         prompt_config["system"], add_special_tokens=False
@@ -152,22 +160,24 @@ def build_prompt_ids(tokenizer, prompt_config: dict) -> list[int]:
 
     ids = (
         [im_start] + user_label + nl + user_text_ids + [im_end] + nl
-        + [im_start] + asst_label + nl + prefill_ids
+        + [im_start] + asst_label + nl
+        + [think_open] + nl2 + [think_close] + nl2
+        + prefill_ids
     )
     return ids
 
 
 def generate_single_branch(
     model, tokenizer, prompt_tokens: list[int], temperature: float
-) -> tuple[list[TokenData], list[tuple[int, int]]]:
+) -> tuple[list[TokenData], list[tuple[int, int, float]]]:
     """Generate one branch, return tokens and branching candidates.
 
     Returns:
         tokens: list of TokenData for this branch
-        candidates: list of (token_index, runner_up_token_id) for possible branches
+        candidates: list of (token_index, runner_up_token_id, runner_up_prob)
     """
     tokens: list[TokenData] = []
-    candidates: list[tuple[int, int]] = []
+    candidates: list[tuple[int, int, float]] = []
 
     eos_ids = set()
     if tokenizer.eos_token_id is not None:
@@ -216,7 +226,7 @@ def generate_single_branch(
             )
             if len(probs) >= 2 and probs[1] > BRANCH_THRESHOLD:
                 runner_up_id = top_logprobs[1][0]
-                candidates.append((len(tokens) - 1, runner_up_id))
+                candidates.append((len(tokens) - 1, runner_up_id, probs[1]))
 
         if token_id in eos_ids:
             break
@@ -224,21 +234,57 @@ def generate_single_branch(
     return tokens, candidates
 
 
+def select_fork_points(
+    candidates: list[tuple[int, int, float]],
+) -> list[tuple[int, int]]:
+    """Pick the best fork points from candidates, spaced apart.
+
+    candidates: list of (token_index, runner_up_id, runner_up_prob)
+    Returns: list of (token_index, runner_up_id), up to MAX_FORKS_PER_BRANCH,
+             sorted by token index, with at least MIN_FORK_SPACING between them.
+    """
+    # Sort by probability descending — pick the most interesting ones first
+    ranked = sorted(candidates, key=lambda c: c[2], reverse=True)
+
+    selected: list[tuple[int, int]] = []
+    used_positions: list[int] = []
+
+    for tok_idx, runner_up_id, _prob in ranked:
+        if len(selected) >= MAX_FORKS_PER_BRANCH:
+            break
+        # Check spacing against already-selected positions
+        too_close = any(abs(tok_idx - pos) < MIN_FORK_SPACING for pos in used_positions)
+        if too_close:
+            continue
+        selected.append((tok_idx, runner_up_id))
+        used_positions.append(tok_idx)
+
+    return selected
+
+
 def generate_tree(
     model, tokenizer, prompt_config: dict, temperature: float
 ) -> list[Branch]:
-    """Generate a branching tree at a given temperature."""
+    """Generate a branching tree at a given temperature.
+
+    Strategy:
+    1. Generate the full main branch, collecting all branching candidates.
+    2. Select spaced-out, high-interest fork points (not every candidate).
+    3. Generate child branches from those forks (depth 1).
+    4. Repeat for grandchildren (depth 2), but no deeper.
+    """
     prompt_token_ids = build_prompt_ids(tokenizer, prompt_config)
     branches: list[Branch] = []
     branch_id_counter = 0
 
-    # Queue entries: (parent_branch_id | None, fork_index, token_ids)
-    queue: list[tuple[int | None, int, list[int]]] = [
-        (None, 0, prompt_token_ids)
+    # Queue entries: (parent_branch_id | None, fork_index, context_ids, generation)
+    # generation: 0=main, 1=child, 2=grandchild
+    queue: list[tuple[int | None, int, list[int], int]] = [
+        (None, 0, prompt_token_ids, 0)
     ]
 
     while queue and len(branches) < MAX_BRANCHES:
-        parent_id, fork_index, context_ids = queue.pop(0)
+        parent_id, fork_index, context_ids, generation = queue.pop(0)
 
         tokens, candidates = generate_single_branch(
             model, tokenizer, context_ids, temperature
@@ -253,17 +299,22 @@ def generate_tree(
         branches.append(branch)
         branch_id_counter += 1
 
-        # Queue child branches for interesting fork points
-        for tok_idx, runner_up_id in candidates:
+        # Don't branch beyond grandchildren
+        if generation >= MAX_GENERATION:
+            continue
+
+        # Select spaced-out, high-interest fork points
+        selected = select_fork_points(candidates)
+
+        for tok_idx, runner_up_id in selected:
             if len(branches) + len(queue) >= MAX_BRANCHES:
                 break
-            # Context = original prompt + tokens up to fork + runner-up token
             child_ids = (
                 context_ids
                 + [t.token_id for t in tokens[:tok_idx]]
                 + [runner_up_id]
             )
-            queue.append((branch.id, tok_idx, child_ids))
+            queue.append((branch.id, tok_idx, child_ids, generation + 1))
 
     return branches
 
@@ -326,11 +377,14 @@ def main():
             total_tokens = sum(len(b.tokens) for b in branches)
             print(f"{len(branches)} branches, {total_tokens} tokens")
 
-        # Store prefill tokens for greyed-out display
-        prefill_ids = build_prompt_ids(tokenizer, prompt_config)
+        # Store only the user-visible prefill tokens for greyed-out display
+        # (not the chat template / thinking block tokens)
+        visible_prefill_ids = tokenizer.encode(
+            prompt_config["prefill"], add_special_tokens=False
+        )
         prefill_tokens = []
-        for tid in prefill_ids:
-            prefill_tokens.append({"id": tid, "text": tokenizer.decode([tid])})
+        for tid in visible_prefill_ids:
+            prefill_tokens.append({"id": tid, "text": get_token_text(tokenizer, tid)})
 
         all_data.append(
             {
