@@ -50,6 +50,10 @@ export default function Header() {
                 {item.label}
               </Link>
             ))}
+            <span
+              aria-hidden="true"
+              className="h-4 w-px bg-neutral-300/60 dark:bg-neutral-700/60"
+            />
             <ThemeToggle />
           </div>
 
