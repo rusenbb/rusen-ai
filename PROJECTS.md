@@ -16,6 +16,7 @@ Status legend:
 | Classify Anything | `live` | `/demos/classify-anything` | Zero-shot text classification in the browser. |
 | Vision Anything | `to-do` | `/demos/vision-anything` | Zero-shot image classification with custom labels. |
 | Pulse Board | `live` | `/demos/pulse-board` | Live multi-signal dashboard with streaming data sources. |
+| Adaptive Arena | `live` | `/adaptive-arena` | 30x30 tactical arena where a seeded bot learns the player's habits and adapts online. |
 | Voice Morph | `to-do` | `/demos/voice-morph` | Prompt-guided voice transformation. |
 
 ## Nerdy Stuff
@@ -25,7 +26,7 @@ Status legend:
 | Game of Life | `live` | `/nerdy-stuff/game-of-life` | Interactive cellular automata world and camera controls. |
 | Embedding Explorer | `live` | `/nerdy-stuff/embedding-explorer` | Visual semantic geometry with embeddings, UMAP, and steering-style arithmetic. |
 | Rusenizer | `live` | `/nerdy-stuff/rusenizer` | Turkish-focused tokenizer experimentation playground. |
-| Adaptive Arena | `live` | `/nerdy-stuff/adaptive-arena` | 30x30 tactical arena where a seeded bot learns the player's habits and adapts online. |
+| Optimization | `live` | `/optimization` | One unified optimization lab for gradient methods, black-box search, and high-dimensional training intuition. |
 | Attention Heatmap | `to-do` | `/nerdy-stuff/attention-heatmap` | Transformer attention visualization toolkit. |
 | Temperature Playground | `live` | `/nerdy-stuff/temperature-playground` | Prompt sampling behavior across temperature values. |
 | RuseN-Gram | `to-do` | `/nerdy-stuff/rusen-gram` | Classic N-gram language modeling playground. |
