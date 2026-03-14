@@ -9,7 +9,7 @@ Usage:
     uv run scripts/generate_temperature_trees.py
 
 Output:
-    public/data/temperature-trees.json
+    generated/temperature-playground/temperature-trees.json
 """
 
 import json
@@ -357,7 +357,11 @@ def main():
         _vocab_cache[tid] = tokenizer.decode([tid])
     print("done.\n")
 
-    output_dir = Path(__file__).parent.parent / "public" / "data"
+    output_dir = (
+        Path(__file__).parent.parent
+        / "generated"
+        / "temperature-playground"
+    )
     output_dir.mkdir(parents=True, exist_ok=True)
 
     all_data = []
