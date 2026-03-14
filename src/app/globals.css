@@ -117,6 +117,10 @@ body[data-game-life-page="on"] footer {
   display: none !important;
 }
 
+body[data-not-found-page="on"] footer {
+  display: none !important;
+}
+
 body[data-game-life-fullscreen="on"] header {
   display: none !important;
 }
