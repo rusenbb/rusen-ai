@@ -1,13 +1,34 @@
 "use client";
 
+import { useState } from "react";
 import { getCvData } from "@/lib/cv";
+import CVPdfDocument from "./CVPdfDocument";
 import styles from "./cv.module.css";
 
 const cv = getCvData();
 
 export default function CVPage() {
-  const handlePrint = () => {
-    window.print();
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+
+  const handlePdfDownload = async () => {
+    try {
+      setDownloadingPdf(true);
+
+      const { pdf } = await import("@react-pdf/renderer");
+      const blob = await pdf(<CVPdfDocument cv={cv} />).toBlob();
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = objectUrl;
+      link.download = "rusen-birben-cv.pdf";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+    } finally {
+      setDownloadingPdf(false);
+    }
   };
 
   return (
@@ -52,8 +73,9 @@ export default function CVPage() {
               <span className={styles.linkArrow}>→</span> {link.label.toUpperCase()}
             </a>
           ))}
-          <button type="button" onClick={handlePrint} className={styles.printBtn}>
-            <span className={styles.linkArrow}>↓</span> PDF
+          <button type="button" onClick={handlePdfDownload} className={styles.printBtn} disabled={downloadingPdf}>
+            <span className={styles.linkArrow}>{downloadingPdf ? "…" : "↓"}</span>
+            {downloadingPdf ? "PREPARING" : "PDF"}
           </button>
         </div>
       </header>
