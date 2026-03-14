@@ -32,21 +32,13 @@ export default function ThemeToggle() {
       onClick={handleToggle}
       aria-label={`Switch to ${isDark ? "light" : "dark"} theme`}
       title={`Switch to ${isDark ? "light" : "dark"} theme`}
-      className="relative inline-flex items-center justify-center font-mono tabular-nums hover:opacity-80 transition overflow-hidden h-7 w-7 rounded border border-neutral-300 dark:border-neutral-700 text-sm"
+      className="group inline-flex items-center justify-center self-center font-mono tabular-nums leading-none text-neutral-700 transition hover:text-neutral-950 dark:text-neutral-300 dark:hover:text-neutral-50"
     >
-      <span
-        className="absolute inset-0 flex items-center justify-center transition-transform duration-300 ease-out"
-        style={{ transform: isDark ? "translateY(0)" : "translateY(-100%)" }}
-        aria-hidden={!isDark}
-      >
-        0
+      <span className="text-[1.15rem] font-medium tracking-[-0.08em] transition-transform duration-200 group-hover:-translate-y-px">
+        {isDark ? "0" : "1"}
       </span>
-      <span
-        className="absolute inset-0 flex items-center justify-center transition-transform duration-300 ease-out"
-        style={{ transform: isDark ? "translateY(100%)" : "translateY(0)" }}
-        aria-hidden={isDark}
-      >
-        1
+      <span className="sr-only">
+        Current theme: {isDark ? "dark" : "light"}
       </span>
     </button>
   );
