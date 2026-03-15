@@ -41,7 +41,7 @@ uniform vec2 uResolution;
 uniform vec4 uCamera;
 uniform bool uPreRendering;
 uniform float uTransition;
-uniform float uCellColor; // 1.0 = white (dark mode), 0.0 = black (light mode)
+uniform float uCellColor; // 1.0 = light cells for dark mode, 0.0 = dark cells for light mode
 
 out vec4 fragColor;
 
@@ -292,8 +292,11 @@ void main() {
     int level9Index = getTileNodeIndex(innerTileIndex, outerPattern);
     float pop = sampleBitDensity(level9Index, ivec2(fract(insidePixelCoord) * 512.0), innerRes * 0.25, cellState);
 
-    vec3 color = vec3(uCellColor) * (pop * 0.45);
-    fragColor = vec4(color, 1.0);
+    vec3 lightModeCell = vec3(0.06, 0.09, 0.14);
+    vec3 darkModeCell = vec3(0.94, 0.97, 1.0);
+    vec3 color = mix(lightModeCell, darkModeCell, uCellColor);
+    float alpha = pop * 0.58;
+    fragColor = vec4(color, alpha);
   }
 }
 `;

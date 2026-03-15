@@ -18,16 +18,14 @@
   --font-sans: var(--font-geist-sans), system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --cbg: #0a0a0a;
-    --csurface: #141414;
-    --cborder: #ffffff;
-    --ctext: #ffffff;
-    --ctext-muted: #888888;
-    --ctext-sub: #666666;
-    --caccent: #ffffff;
-  }
+:global(html[data-theme="dark"]) {
+  --cbg: #0a0a0a;
+  --csurface: #141414;
+  --cborder: #ffffff;
+  --ctext: #ffffff;
+  --ctext-muted: #888888;
+  --ctext-sub: #666666;
+  --caccent: #ffffff;
 }
 
 /* Container */

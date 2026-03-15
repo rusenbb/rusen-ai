@@ -1,202 +1,98 @@
 "use client";
 
+import { useState } from "react";
+import { getCvData } from "@/lib/cv";
+import CVPdfDocument from "./CVPdfDocument";
 import styles from "./cv.module.css";
-import { SiGithub, SiHuggingface, SiYoutube } from "react-icons/si";
 
-// Data for both web and PDF views
-const experience = [
-  {
-    role: "Co-Founder",
-    company: "Fiction Studios",
-    period: "10/2025 — Present",
-    location: "Ankara, TR",
-    description:
-      "Founded an AI lab working on natural language, speech and LLM technologies to democratize AI systems for humanity.",
-    link: "https://fictionstudios.ai",
-  },
-  {
-    role: "Junior AI Engineer",
-    company: "CyberQuote",
-    period: "03/2025 — 07/2025",
-    location: "Istanbul, TR",
-    description:
-      "Built AI automations and agentic LLM implementations for Phillip Capital subsidiary. Intelligent systems for operations and customer-facing platforms.",
-    link: "https://cyberquote.com/tk/",
-  },
-  {
-    role: "NLP Research Intern",
-    company: "ITU NLP Lab",
-    period: "07/2024 — 08/2024",
-    location: "Istanbul, TR",
-    description:
-      "Researched LLMs for financial applications: forecasting, sentiment analysis, tool usage, reasoning, and RAG implementations.",
-    link: "https://nlp.itu.edu.tr/",
-  },
-  {
-    role: "AIOps Research Intern",
-    company: "Havelsan",
-    period: "08/2024 — 09/2024",
-    location: "Istanbul, TR",
-    description:
-      "AIOps research using software log data for predictive maintenance. Generated demos on HDFS logs.",
-    link: "https://havelsan.com/tr",
-  },
-];
-
-const projects = [
-  {
-    title: "Tobor",
-    subtitle: "Amazon Warehouse Robot",
-    period: "2024 — 2025",
-    description:
-      "Autonomous warehouse robot simulating Amazon logistics. Pathfinding, obstacle avoidance, task scheduling. Human/cargo detection with custom YOLO.",
-    tags: ["Python", "ROS2", "YOLO", "Robotics"],
-    links: [
-      { label: "GH", url: "https://github.com/rusenbb/Amazon-Warehouse-Robot" },
-      { label: "▶", url: "https://youtu.be/h-Jxs_y9kNA" },
-    ],
-  },
-  {
-    title: "Biting The Bytes",
-    subtitle: "Turkish Diacritic Restoration",
-    period: "2024",
-    description:
-      "T5-based transformer for restoring Turkish diacritics. Automatically adds accent marks and special characters for enhanced readability.",
-    tags: ["NLP", "T5", "Transformers", "Turkish"],
-    links: [
-      { label: "GH", url: "https://github.com/rusenbb/Biting-The-Bytes" },
-      { label: "HF", url: "https://huggingface.co/spaces/rusen/diacritizeTR" },
-    ],
-  },
-  {
-    title: "AIZheimer",
-    subtitle: "Machine Unlearning on SD",
-    period: "2024",
-    description:
-      "Selectively removed concepts from Stable Diffusion 2.1 while preserving other capabilities. Content moderation and AI output customization.",
-    tags: ["Stable Diffusion", "Unlearning", "CV"],
-    links: [{ label: "GH", url: "https://github.com/rusenbb/AIzheimer" }],
-  },
-  {
-    title: "To-AI-or-Not-to-AI",
-    subtitle: "GPT Detector",
-    period: "2023",
-    description:
-      "Ensemble method to detect AI-generated text using three fine-tuned models. Addresses academic integrity and misinformation concerns.",
-    tags: ["NLP", "Ensemble", "Classification"],
-    links: [
-      { label: "GH", url: "https://github.com/rusenbb/To-AI-or-Not-to-AI" },
-      { label: "HF", url: "https://huggingface.co/spaces/rusen/gpt_detector" },
-    ],
-  },
-  {
-    title: "Anime Recommender",
-    subtitle: "Collaborative Filtering",
-    period: "2022 — 2023",
-    description:
-      "Personalized anime recommendations combining collaborative filtering and content-based approaches. RMSE: 0.289, MAE: 0.213.",
-    tags: ["RecSys", "Matrix Factorization"],
-    links: [{ label: "GH", url: "https://github.com/rusenbb/Anime-Recommender" }],
-  },
-];
-
-const education = [
-  {
-    degree: "M.Sc. Computer Engineering (Thesis)",
-    school: "Middle East Technical University",
-    period: "2026 — Present",
-  },
-  {
-    degree: "B.Sc. AI and Data Engineering",
-    school: "Istanbul Technical University",
-    period: "2022 — 2025",
-    gpa: "3.61 / 4.00",
-  },
-  {
-    degree: "B.Sc. Electronics & Communication",
-    school: "Istanbul Technical University",
-    period: "2020 — 2022",
-    note: "Transferred to AI & Data Engineering",
-  },
-];
-
-const interests = [
-  { title: "Coffee", desc: "V60 • Aeropress • Moka Pot" },
-  { title: "Books", desc: "Philosophy • AI/CS • Finance" },
-  { title: "Anime & Manga", desc: "Watcher • Reader • Collector" },
-  { title: "Fitness", desc: "Lifting • Running • Calisthenics" },
-];
+const cv = getCvData();
 
 export default function CVPage() {
-  const handlePrint = () => {
-    window.print();
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+
+  const handlePdfDownload = async () => {
+    try {
+      setDownloadingPdf(true);
+
+      const { pdf } = await import("@react-pdf/renderer");
+      const blob = await pdf(<CVPdfDocument cv={cv} />).toBlob();
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = objectUrl;
+      link.download = "rusen-birben-cv.pdf";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+    } finally {
+      setDownloadingPdf(false);
+    }
   };
 
   return (
     <div className={styles.container}>
-      {/* Grid Background */}
       <div className={styles.gridBg} />
 
-      {/* Header / Identity Card */}
       <header className={styles.hero}>
         <div className={styles.heroMain}>
           <div className={styles.heroNameSection}>
             <span className={styles.heroLabel}>IDENTITY</span>
-            <h1 className={styles.heroName}>RUSEN BIRBEN</h1>
+            <h1 className={styles.heroName}>{cv.basics.name}</h1>
             <div className={styles.heroRole}>
               <span className={styles.roleIndicator}>►</span>
-              AI & DATA ENGINEER
+              {cv.basics.role.toUpperCase()}
             </div>
           </div>
           <div className={styles.heroMeta}>
             <div className={styles.metaItem}>
               <span className={styles.metaLabel}>LOC</span>
-              <span className={styles.metaValue}>ANKARA, TR</span>
+              <span className={styles.metaValue}>{cv.basics.location}</span>
             </div>
             <div className={styles.metaItem}>
               <span className={styles.metaLabel}>STATUS</span>
-              <span className={styles.metaValue}>AVAILABLE</span>
+              <span className={styles.metaValue}>{cv.basics.status}</span>
             </div>
           </div>
         </div>
-        
+
         <div className={styles.heroBio}>
-          <p>
-            AI & Data Engineering graduate from Istanbul Technical University. 
-            Building intelligent systems with NLP, LLMs, and agentic AI applications.
-          </p>
+          <p>{cv.basics.summary}</p>
         </div>
 
         <div className={styles.heroLinks}>
-          <a href="https://github.com/rusenbb" target="_blank" rel="noopener noreferrer" className={styles.linkBtn}>
-            <span className={styles.linkArrow}>→</span> GITHUB
-          </a>
-          <a href="https://linkedin.com/in/rusenbirben" target="_blank" rel="noopener noreferrer" className={styles.linkBtn}>
-            <span className={styles.linkArrow}>→</span> LINKEDIN
-          </a>
-          <a href="mailto:contact@rusen.ai" className={styles.linkBtn}>
-            <span className={styles.linkArrow}>→</span> EMAIL
-          </a>
-          <button onClick={handlePrint} className={styles.printBtn}>
-            <span className={styles.linkArrow}>↓</span> PDF
+          {cv.heroLinks.map((link) => (
+            <a
+              key={link.label}
+              href={link.url}
+              target={link.url.startsWith("mailto:") ? undefined : "_blank"}
+              rel={link.url.startsWith("mailto:") ? undefined : "noopener noreferrer"}
+              className={styles.linkBtn}
+            >
+              <span className={styles.linkArrow}>→</span> {link.label.toUpperCase()}
+            </a>
+          ))}
+          <button type="button" onClick={handlePdfDownload} className={styles.printBtn} disabled={downloadingPdf}>
+            <span className={styles.linkArrow}>{downloadingPdf ? "…" : "↓"}</span>
+            {downloadingPdf ? "PREPARING" : "PDF"}
           </button>
         </div>
       </header>
 
-      {/* Section 01: Experience */}
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
           <span className={styles.sectionNumber}>01</span>
           <h2 className={styles.sectionTitle}>EXPERIENCE</h2>
           <div className={styles.sectionLine} />
         </div>
-        
+
         <div className={styles.timeline}>
-          {experience.map((item, index) => (
-            <div key={index} className={styles.timelineItem}>
+          {cv.experience.map((item, index) => (
+            <div key={`${item.company}-${item.period}`} className={styles.timelineItem}>
               <div className={styles.timelineMarker}>
                 <div className={styles.markerDot} />
-                {index !== experience.length - 1 && <div className={styles.markerLine} />}
+                {index !== cv.experience.length - 1 && <div className={styles.markerLine} />}
               </div>
               <div className={styles.timelineCard}>
                 <div className={styles.cardHeader}>
@@ -221,17 +117,16 @@ export default function CVPage() {
         </div>
       </section>
 
-      {/* Section 02: Projects */}
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
           <span className={styles.sectionNumber}>02</span>
           <h2 className={styles.sectionTitle}>PROJECTS</h2>
           <div className={styles.sectionLine} />
         </div>
-        
+
         <div className={styles.projectsGrid}>
-          {projects.map((project, index) => (
-            <div key={index} className={styles.projectCard}>
+          {cv.projects.map((project) => (
+            <div key={`${project.title}-${project.period}`} className={styles.projectCard}>
               <div className={styles.projectCardHeader}>
                 <div className={styles.projectTitleGroup}>
                   <h3 className={styles.projectTitle}>{project.title}</h3>
@@ -239,19 +134,19 @@ export default function CVPage() {
                 </div>
                 <span className={styles.projectPeriod}>{project.period}</span>
               </div>
-              
+
               <p className={styles.projectDesc}>{project.description}</p>
-              
+
               <div className={styles.projectTags}>
                 {project.tags.map((tag) => (
                   <span key={tag} className={styles.projectTag}>{tag}</span>
                 ))}
               </div>
-              
+
               <div className={styles.projectLinks}>
                 {project.links.map((link) => (
                   <a
-                    key={link.label}
+                    key={`${project.title}-${link.label}`}
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -266,17 +161,16 @@ export default function CVPage() {
         </div>
       </section>
 
-      {/* Section 03: Education */}
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
           <span className={styles.sectionNumber}>03</span>
           <h2 className={styles.sectionTitle}>EDUCATION</h2>
           <div className={styles.sectionLine} />
         </div>
-        
+
         <div className={styles.educationList}>
-          {education.map((item, index) => (
-            <div key={index} className={styles.educationCard}>
+          {cv.education.map((item) => (
+            <div key={`${item.degree}-${item.period}`} className={styles.educationCard}>
               <div className={styles.eduHeader}>
                 <div className={styles.eduMain}>
                   <h3 className={styles.eduDegree}>{item.degree}</h3>
@@ -293,18 +187,17 @@ export default function CVPage() {
         </div>
       </section>
 
-      {/* Section 04: Interests */}
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
           <span className={styles.sectionNumber}>04</span>
           <h2 className={styles.sectionTitle}>INTERESTS</h2>
           <div className={styles.sectionLine} />
         </div>
-        
+
         <div className={styles.interestsGrid}>
-          {interests.map((item, index) => (
-            <div key={index} className={styles.interestCard}>
-              <div className={styles.interestIcon}>{["☕", "📚", "📺", "💪"][index]}</div>
+          {cv.interests.map((item) => (
+            <div key={item.title} className={styles.interestCard}>
+              <div className={styles.interestIcon}>{item.icon}</div>
               <div className={styles.interestContent}>
                 <h4 className={styles.interestTitle}>{item.title}</h4>
                 <p className={styles.interestDesc}>{item.desc}</p>
@@ -314,132 +207,17 @@ export default function CVPage() {
         </div>
       </section>
 
-      {/* Footer / Contact Bar */}
       <footer className={styles.footer}>
         <div className={styles.footerLine} />
         <div className={styles.footerContent}>
           <span className={styles.footerText}>RUSEN.AI / CV / 2025</span>
           <div className={styles.footerLinks}>
-            <a href="https://rusen.ai" className={styles.footerLink}>rusen.ai</a>
+            <a href={cv.basics.websiteUrl} className={styles.footerLink}>{cv.basics.website}</a>
             <span className={styles.footerDivider}>│</span>
-            <a href="mailto:contact@rusen.ai" className={styles.footerLink}>contact@rusen.ai</a>
+            <a href={`mailto:${cv.basics.email}`} className={styles.footerLink}>{cv.basics.email}</a>
           </div>
         </div>
       </footer>
-
-      {/* ========================================
-          PRINT-ONLY RESUME (Simple & Direct)
-          ======================================== */}
-      <div className={styles.printResume}>
-        {/* Header */}
-        <header className={styles.printHeader}>
-          <h1 className={styles.printName}>RUSEN BIRBEN</h1>
-          <p className={styles.printTitle}>AI & Data Engineer</p>
-          <div className={styles.printContact}>
-            <span>Ankara, Turkey</span>
-            <span>•</span>
-            <span>contact@rusen.ai</span>
-            <span>•</span>
-            <span>rusen.ai</span>
-            <span>•</span>
-            <span>linkedin.com/in/rusenbirben</span>
-            <span>•</span>
-            <span>github.com/rusenbb</span>
-          </div>
-        </header>
-
-        {/* Summary */}
-        <section className={styles.printSection}>
-          <h2 className={styles.printSectionTitle}>SUMMARY</h2>
-          <p className={styles.printText}>
-            AI & Data Engineering graduate from Istanbul Technical University with experience in NLP, LLMs, 
-            and agentic AI applications. Co-founder of Fiction Studios, an AI lab focused on democratizing 
-            AI systems through natural language, speech, and LLM technologies.
-          </p>
-        </section>
-
-        {/* Experience */}
-        <section className={styles.printSection}>
-          <h2 className={styles.printSectionTitle}>EXPERIENCE</h2>
-          {experience.map((item, index) => (
-            <div key={index} className={styles.printExperienceItem}>
-              <div className={styles.printExpHeader}>
-                <div className={styles.printExpRole}>{item.role}</div>
-                <div className={styles.printExpPeriod}>{item.period}</div>
-              </div>
-              <div className={styles.printExpCompany}>{item.company} — {item.location}</div>
-              <p className={styles.printExpDesc}>{item.description}</p>
-            </div>
-          ))}
-        </section>
-
-        {/* Projects */}
-        <section className={styles.printSection}>
-          <h2 className={styles.printSectionTitle}>PROJECTS</h2>
-          {projects.map((project, index) => (
-            <div key={index} className={styles.printProjectItem}>
-              <div className={styles.printProjectHeader}>
-                <span className={styles.printProjectName}>{project.title}</span>
-                <span className={styles.printProjectPeriod}>{project.period}</span>
-              </div>
-              <p className={styles.printProjectDesc}>{project.description}</p>
-              <div className={styles.printProjectMeta}>
-                <div className={styles.printProjectTags}>
-                  {project.tags.join(" • ")}
-                </div>
-                {project.links.length > 0 && (
-                  <div className={styles.printProjectLogos}>
-                    {project.links.map((link) => (
-                      <a 
-                        key={link.label} 
-                        href={link.url} 
-                        className={styles.printLogoLink}
-                        title={`${link.label}: ${link.url}`}
-                      >
-                        {link.label === "GH" && <SiGithub className={styles.printLogo} />}
-                        {link.label === "HF" && <SiHuggingface className={styles.printLogo} />}
-                        {link.label === "▶" && <SiYoutube className={styles.printLogo} />}
-                      </a>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </section>
-
-        {/* Education */}
-        <section className={styles.printSection}>
-          <h2 className={styles.printSectionTitle}>EDUCATION</h2>
-          {education.map((item, index) => (
-            <div key={index} className={styles.printEducationItem}>
-              <div className={styles.printEduHeader}>
-                <div>
-                  <div className={styles.printEduDegree}>{item.degree}</div>
-                  <div className={styles.printEduSchool}>{item.school}</div>
-                </div>
-                <div className={styles.printEduPeriod}>{item.period}</div>
-              </div>
-              {item.gpa && <div className={styles.printEduGpa}>GPA: {item.gpa}</div>}
-            </div>
-          ))}
-        </section>
-
-        {/* Skills */}
-        <section className={styles.printSection}>
-          <h2 className={styles.printSectionTitle}>SKILLS</h2>
-          <p className={styles.printSkillsText}>
-            <strong>Languages:</strong> Python, JavaScript/TypeScript, SQL, C/C++<br />
-            <strong>Frameworks & Tools:</strong> PyTorch, TensorFlow, ROS2, YOLO, Transformers, Scikit-learn, Pandas, NumPy<br />
-            <strong>Specialties:</strong> NLP, LLMs, Computer Vision, RAG, MLOps, Agentic AI, Data Engineering
-          </p>
-        </section>
-
-        {/* Footer */}
-        <footer className={styles.printFooter}>
-          References available upon request • rusen.ai/cv
-        </footer>
-      </div>
     </div>
   );
 }

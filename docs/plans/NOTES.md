@@ -1,0 +1,6 @@
+- work on segment anything more
+- add ammo in RL-Arena
+- make bots in RL-Arena a bit better
+- Re-train rusenizer and train RuseN-Gram on top of that (find a gimmick)
+- make temperature playground better
+- find ideas for demos (now that your openrouter thing is gone)

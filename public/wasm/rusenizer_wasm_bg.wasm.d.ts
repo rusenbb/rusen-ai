@@ -1,5 +1,4 @@
 /* tslint:disable */
-/* eslint-disable */
 export const memory: WebAssembly.Memory;
 export const __wbg_tokenizer_free: (a: number, b: number) => void;
 export const tokenizer_decode: (a: number, b: number, c: number) => [number, number];
