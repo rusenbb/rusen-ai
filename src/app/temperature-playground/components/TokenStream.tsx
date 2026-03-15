@@ -47,13 +47,30 @@ export default function TokenStream({
 
   return (
     <div className="font-mono text-sm leading-relaxed">
-      {/* System prompt (user instruction) */}
-      {data.system && (
-        <div className="mb-2 rounded border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
-          <span className="font-semibold text-neutral-600 dark:text-neutral-300">User: </span>
-          {data.system}
+      {/* User-visible generation prompt setup */}
+      <div className="mb-3 rounded border border-neutral-200 bg-neutral-50 px-3 py-2 dark:border-neutral-800 dark:bg-neutral-900">
+        <div className="text-[10px] font-mono uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+          Generation Prompt
         </div>
-      )}
+        {data.system && (
+          <div className="mt-2">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+              Instruction
+            </div>
+            <p className="mt-1 text-xs leading-relaxed text-neutral-600 dark:text-neutral-300">
+              {data.system}
+            </p>
+          </div>
+        )}
+        <div className={data.system ? "mt-2" : "mt-1.5"}>
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+            Prefill
+          </div>
+          <p className="mt-1 whitespace-pre-wrap break-words text-xs leading-relaxed text-neutral-600 dark:text-neutral-300">
+            {data.prefill}
+          </p>
+        </div>
+      </div>
 
       {/* Prefill tokens (greyed out) */}
       <span className="flex flex-wrap items-baseline gap-0.5">
