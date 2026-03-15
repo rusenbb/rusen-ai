@@ -1,0 +1,42 @@
+{
+  "basePath": "src/content/rusen-gram/base-corpus.tr.jsonl",
+  "assistantPath": "src/content/rusen-gram/assistant-corpus.tr.jsonl",
+  "counts": {
+    "base": 1600,
+    "assistant": 1035
+  },
+  "bySource": {
+    "atasoglu/instruction-turkish": {
+      "train": 208,
+      "test": 26,
+      "validation": 21
+    },
+    "bezir/turkish_exam_instructions": {
+      "test": 34,
+      "train": 285,
+      "validation": 41
+    },
+    "sixfingerdev/turkish-qa-multi-dialog-dataset": {
+      "train": 329,
+      "validation": 44,
+      "test": 47
+    },
+    "wikimedia/wikipedia": {
+      "train": 1291,
+      "test": 145,
+      "validation": 164
+    }
+  },
+  "byDomainSplit": {
+    "assistant": {
+      "train": 822,
+      "validation": 106,
+      "test": 107
+    },
+    "base": {
+      "train": 1291,
+      "test": 145,
+      "validation": 164
+    }
+  }
+}

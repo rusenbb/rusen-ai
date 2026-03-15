@@ -10,6 +10,18 @@ Build two connected projects:
 - `Rusenizer v2`: a retrained tokenizer with better corpus coverage and more
   rigorous evaluation than the current Wikipedia-only v1 story
 
+## Current Branch Status
+
+- external corpus builder now writes deterministic train/validation/test JSONL
+  splits with source provenance
+- browser artifact now uses a learned BPE tokenizer plus exported discounted
+  n-gram models for base and assistant corpora
+- Rusenizer v2 has a real shared foundation artifact and held-out metrics,
+  surfaced on the site
+- remaining limitation: the currently accessible assistant corpora still produce
+  noisy response starts, so the branch is honest about the model being real but
+  still weak in prompt-sensitive generation quality
+
 ## Product Thesis
 
 The point is not to imitate a transformer with a weak baseline. The point is to

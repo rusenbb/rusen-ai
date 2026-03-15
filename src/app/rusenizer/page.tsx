@@ -1,6 +1,13 @@
 "use client";
 
-import { useReducer, useEffect, useCallback, useRef, Suspense } from "react";
+import {
+  useReducer,
+  useEffect,
+  useCallback,
+  useRef,
+  useState,
+  Suspense,
+} from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import type { Tiktoken } from "tiktoken";
 
@@ -94,6 +101,36 @@ interface BatchResult {
   rusenTokens: number;
   gptTokens: number;
   savings: number;
+}
+
+interface RusenizerFoundationSummary {
+  version: string;
+  tokenizer: {
+    base: Record<
+      string,
+      { documents: number; charsPerToken: number; tokensPerDocument: number }
+    >;
+    assistant: Record<
+      string,
+      { documents: number; charsPerToken: number; tokensPerDocument: number }
+    >;
+    vocabSize: number;
+    mergeCount: number;
+  };
+  corpus: {
+    base: Record<"train" | "validation" | "test", number>;
+    assistant: Record<"train" | "validation" | "test", number>;
+  };
+  evaluation: {
+    baseHeldoutPerplexity: number;
+    assistantHeldoutPerplexity: number;
+    assistantHeldoutTop5: number;
+    tunedValidationPerplexity: number;
+    blendedAssistantHeldoutPerplexity: number;
+    blendedAssistantHeldoutTop5: number;
+    defaultAssistantBlend: number;
+    promptFeatureScale: number;
+  };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -359,6 +396,9 @@ function EfficiencySparkline({ history }: { history: number[] }) {
 function RusenizerPageInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const [foundation, setFoundation] = useState<RusenizerFoundationSummary | null>(
+    null,
+  );
 
   // Get initial text from URL or default
   const urlText = searchParams.get("text");
@@ -386,6 +426,29 @@ function RusenizerPageInner() {
     }, 500);
     return () => clearTimeout(timeout);
   }, [state.inputText, router]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadFoundation() {
+      try {
+        const response = await fetch("/rusenizer/foundation-v2.json");
+        if (!response.ok) return;
+        const payload = (await response.json()) as RusenizerFoundationSummary;
+        if (!cancelled) {
+          setFoundation(payload);
+        }
+      } catch {
+        // Keep the page functional even if the foundation summary is missing.
+      }
+    }
+
+    void loadFoundation();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // ─────────────────────────────────────────────────────────────────────────
   // Keyboard Shortcuts
@@ -1086,12 +1149,11 @@ function RusenizerPageInner() {
           generic tokenizers inefficient.
         </p>
         <p>
-          By training on Turkish text, Rusenizer learns common Turkish morphemes
-          and word patterns, resulting in significantly fewer tokens for the
-          same text compared to multilingual tokenizers like GPT-4&apos;s
-          cl100k_base. The next version will broaden the corpus and make the
-          tokenizer&apos;s training and evaluation provenance much more
-          explicit.
+          Rusenizer v2 now has a real shared foundation: externally sourced
+          train/validation/test corpora, a learned BPE artifact used by
+          RuseN-Gram, and held-out evaluation metadata instead of hand-wavy
+          promises. The tokenizer UI here still showcases v1, but the v2 data
+          and training path are now grounded in real corpora and real splits.
         </p>
       </div>
 
@@ -1101,9 +1163,9 @@ function RusenizerPageInner() {
             Rusenizer v2 corpus
           </h3>
           <p className="mt-2 text-neutral-500">
-            Planned sources include Turkish Wikipedia plus broader cleaned web
-            text so the tokenizer sees more morphology, register, and domain
-            variation.
+            {foundation
+              ? `Current shared corpus splits: base ${foundation.corpus.base.train}/${foundation.corpus.base.validation}/${foundation.corpus.base.test} and assistant ${foundation.corpus.assistant.train}/${foundation.corpus.assistant.validation}/${foundation.corpus.assistant.test}.`
+              : "The new training path uses external Turkish base and assistant corpora with explicit held-out splits."}
           </p>
         </div>
         <div className="rounded-xl border border-neutral-200/80 p-4 dark:border-neutral-800">
@@ -1111,8 +1173,9 @@ function RusenizerPageInner() {
             Better evaluation
           </h3>
           <p className="mt-2 text-neutral-500">
-            v2 will be judged on batch benchmarks by domain, not only on a few
-            showcase examples.
+            {foundation
+              ? `Held-out metrics are now exported with the artifact: base perplexity ${foundation.evaluation.baseHeldoutPerplexity}, blended assistant perplexity ${foundation.evaluation.blendedAssistantHeldoutPerplexity}, and assistant top-5 accuracy ${Math.round(foundation.evaluation.blendedAssistantHeldoutTop5 * 100)}%.`
+              : "v2 is evaluated with explicit held-out metrics instead of only qualitative examples."}
           </p>
         </div>
         <div className="rounded-xl border border-neutral-200/80 p-4 dark:border-neutral-800">
@@ -1120,8 +1183,9 @@ function RusenizerPageInner() {
             Shared foundation
           </h3>
           <p className="mt-2 text-neutral-500">
-            The retrain also supports RuseN-Gram, where better Turkish token
-            units should improve skip-gram feature quality and artifact size.
+            {foundation
+              ? `The shared tokenizer currently exports ${foundation.tokenizer.vocabSize} learned pieces and ${foundation.tokenizer.mergeCount} merges for browser-side use in RuseN-Gram.`
+              : "The tokenizer retrain and RuseN-Gram now share the same learned token units and corpus provenance."}
           </p>
         </div>
       </div>

@@ -9,6 +9,8 @@
     "lint": "eslint",
     "test": "vitest",
     "test:run": "vitest run",
+    "build:ruse-ngram-corpus": "uv run python scripts/build_ruse_ngram_corpus.py",
+    "train:ruse-ngram": "uv run python scripts/train_ruse_ngram.py",
     "train:adaptive-arena": "uv run python scripts/train_adaptive_arena.py",
     "train:adaptive-arena:deps": "uv sync && uv pip install --reinstall torch==2.10.0 --torch-backend=cu128",
     "train:adaptive-arena:ts": "tsx scripts/train-adaptive-arena.ts",

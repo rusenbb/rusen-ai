@@ -7,5 +7,5 @@ dependencies = [
   "transformers>=4.48",
   "accelerate>=1.2",
   "numpy>=2.1",
+  "datasets>=3.6",
 ]
-

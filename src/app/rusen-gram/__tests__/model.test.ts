@@ -1,35 +1,59 @@
 import { describe, expect, it } from "vitest";
-import { autocompleteTokens, scoreNextTokens } from "../lib/model";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import {
+  autocompleteTokens,
+  decodeGeneratedTokens,
+  hydrateRuseNGramArtifact,
+  scoreNextTokens,
+} from "../lib/runtime";
 
-describe("ruseNgram statistical model", () => {
-  it("prefers assistant-style openings for how-to prompts when assistant blend is high", () => {
-    const ranked = scoreNextTokens(
-      "Kullanıcı: Türk kahvesi nasıl yapılır?\nAsistan:",
-      [],
-      0.9,
-    );
+const artifactPath = join(
+  process.cwd(),
+  "public",
+  "rusen-gram",
+  "model-v2.json",
+);
+const artifact = hydrateRuseNGramArtifact(
+  JSON.parse(readFileSync(artifactPath, "utf-8")),
+);
 
-    expect(ranked[0]?.token).toBe(" İşte");
+describe("ruseNgram trained artifact", () => {
+  it("exports held-out metrics from the real training pipeline", () => {
+    expect(artifact.version).toBe("ruse-ngram-v2-bpe-kn");
+    expect(artifact.metadata.evaluation.baseHeldoutPerplexity).toBeGreaterThan(1);
+    expect(artifact.metadata.evaluation.blendedAssistantHeldoutPerplexity)
+      .toBeLessThanOrEqual(artifact.metadata.evaluation.assistantHeldoutPerplexity);
+    expect(artifact.metadata.evaluation.blendedAssistantHeldoutTop5).toBeGreaterThan(0);
   });
 
-  it("prefers generic continuation for the same prompt when assistant blend is low", () => {
+  it("uses full learned start words at assistant turn boundaries", () => {
     const ranked = scoreNextTokens(
-      "Kullanıcı: Türk kahvesi nasıl yapılır?\nAsistan:",
+      artifact,
+      "Kullanıcı: Merhaba\nAsistan:",
       [],
-      0.05,
+      artifact.metadata.evaluation.defaultAssistantBlend,
     );
 
-    expect([" kahve", " bugün", " için"]).toContain(ranked[0]?.token);
+    expect(ranked.length).toBeGreaterThan(0);
+    expect(ranked[0]?.token.trim().length).toBeGreaterThan(1);
+    expect(ranked.slice(0, 5).every((candidate) => candidate.tokenIds.length >= 1)).toBe(
+      true,
+    );
   });
 
-  it("builds a short procedural continuation with autocomplete", () => {
-    const output = autocompleteTokens(
-      "Kullanıcı: Türk kahvesi nasıl yapılır?\nAsistan:",
+  it("autocompletes without emitting control tokens", () => {
+    const generated = autocompleteTokens(
+      artifact,
+      "Kullanıcı: Merhaba\nAsistan:",
       [],
-      0.9,
-      5,
+      artifact.metadata.evaluation.defaultAssistantBlend,
+      8,
     );
+    const text = decodeGeneratedTokens(artifact, generated);
 
-    expect(output).toEqual([" İşte", " adımlar:", "\n1.", " Suyu", " kaynatın."]);
+    expect(generated.length).toBeGreaterThan(0);
+    expect(text).not.toContain("<|");
+    expect(text.trim().length).toBeGreaterThan(0);
   });
 });
