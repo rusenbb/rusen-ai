@@ -61,6 +61,9 @@ CLAUDE.md
 # adaptive arena local training caches
 /scripts/.arena_bfs_cache.pt
 
+# generated local data artifacts
+/generated/
+
 # syncthing
 *.sync-conflict-*
 .syncthing.*.tmp

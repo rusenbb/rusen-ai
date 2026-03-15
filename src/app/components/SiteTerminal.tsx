@@ -9,9 +9,6 @@ type CommandResult = {
 };
 
 const DEMOS = [
-  { key: "paper-pilot", name: "Paper Pilot", desc: "Summarize and explain academic papers from DOI input." },
-  { key: "data-forge", name: "Data Forge", desc: "Generate realistic relational fake datasets from schema prompts." },
-  { key: "query-craft", name: "Query Craft", desc: "Generate SQL from plain-language intents." },
   { key: "classify-anything", name: "Classify Anything", desc: "Zero-shot text classification in the browser." },
   { key: "pulse-board", name: "Pulse Board", desc: "Live multi-signal dashboard (crypto, weather, quakes, etc.)." },
 ];
@@ -19,8 +16,8 @@ const DEMOS = [
 const NERDY_PROJECTS = [
   { key: "game-of-life", name: "Game of Life Background Lab", desc: "Interactive cellular automata world and camera controls." },
   { key: "embedding-explorer", name: "Embedding Explorer", desc: "Visual semantic geometry with embedding vectors + UMAP." },
+  { key: "optimization", name: "Optimization", desc: "Unified optimization lab for gradient descent, black-box search, and high-dimensional intuition." },
   { key: "rusenizer", name: "Rusenizer", desc: "Turkish-focused tokenizer experimentation playground." },
-  { key: "temperature-playground", name: "Temperature Playground", desc: "Prompt sampling behavior across temperature values." },
 ];
 
 export default function SiteTerminal() {

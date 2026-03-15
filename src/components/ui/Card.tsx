@@ -5,7 +5,7 @@
 
 import { type ReactNode, type HTMLAttributes, forwardRef } from "react";
 
-type CardPadding = "none" | "sm" | "md" | "lg";
+export type CardPadding = "none" | "sm" | "md" | "lg";
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
   /** Card content */

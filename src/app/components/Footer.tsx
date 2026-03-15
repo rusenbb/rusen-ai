@@ -67,7 +67,7 @@ export default function Footer() {
           </a>
 
           {/* Copyright */}
-          <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-500">
+          <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-500">
             &copy; {new Date().getFullYear()} Rusen Birben
           </p>
         </div>

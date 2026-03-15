@@ -1,8 +1,10 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
   --background: #fafafa;
   --foreground: #171717;
+  color-scheme: light;
 }
 
 @theme inline {
@@ -12,12 +14,28 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* System preference dark mode (default) */
+/* System preference fallback */
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0c0c0f;
     --foreground: #ededed;
   }
+}
+
+html[data-theme="light"] {
+  --background: #fafafa;
+  --foreground: #171717;
+  color-scheme: light;
+}
+
+html[data-theme="dark"] {
+  --background: #0c0c0f;
+  --foreground: #ededed;
+  color-scheme: dark;
+}
+
+html.dark {
+  color-scheme: dark;
 }
 
 
@@ -27,6 +45,7 @@ body {
   font-family: var(--font-geist-sans), "Segoe UI", sans-serif;
   line-height: 1.5;
   overflow-x: hidden;
+  transition: background-color 220ms ease, color 220ms ease;
 }
 
 .content-shell {
@@ -47,11 +66,11 @@ body {
 }
 
 .ui-surface {
-  background: rgb(255 255 255 / 0.74);
+  background: rgb(255 255 255 / 0.88);
 }
 
 .ui-card {
-  background: rgb(255 255 255 / 0.82);
+  background: rgb(255 255 255 / 0.94);
   border-color: rgb(226 232 240 / 0.72);
   backdrop-filter: saturate(1.1);
 }
@@ -85,11 +104,20 @@ body[data-bg-clear="on"] .content-shell::before {
   backdrop-filter: none !important;
 }
 
+body[data-game-life-page="on"] .content-shell::before {
+  background: transparent !important;
+  backdrop-filter: none !important;
+}
+
 body[data-game-life-page="on"] main {
   padding-bottom: 0;
 }
 
 body[data-game-life-page="on"] footer {
+  display: none !important;
+}
+
+body[data-not-found-page="on"] footer {
   display: none !important;
 }
 
@@ -120,6 +148,52 @@ body[data-game-life-fullscreen="on"] header {
       radial-gradient(900px 500px at 85% 100%, rgb(0 0 0 / 0.34), transparent 50%),
       rgb(9 9 12 / 0.58);
   }
+}
+
+html[data-theme="light"] .content-shell::before {
+  background:
+    radial-gradient(1200px 600px at 15% 0%, rgb(255 255 255 / 0.2), transparent 55%),
+    radial-gradient(900px 500px at 85% 100%, rgb(255 255 255 / 0.14), transparent 52%),
+    rgb(250 250 250 / 0.36);
+}
+
+html[data-theme="light"] .ui-surface {
+  background: rgb(255 255 255 / 0.88);
+}
+
+html[data-theme="light"] .ui-card {
+  background: rgb(255 255 255 / 0.94);
+  border-color: rgb(226 232 240 / 0.72);
+}
+
+html[data-theme="light"] body[data-bg-focus="on"] .content-shell::before {
+  background:
+    radial-gradient(1200px 600px at 15% 0%, rgb(255 255 255 / 0.26), transparent 52%),
+    radial-gradient(900px 500px at 85% 100%, rgb(255 255 255 / 0.2), transparent 50%),
+    rgb(250 250 250 / 0.52);
+}
+
+html[data-theme="dark"] .content-shell::before {
+  background:
+    radial-gradient(1200px 600px at 15% 0%, rgb(0 0 0 / 0.34), transparent 55%),
+    radial-gradient(900px 500px at 85% 100%, rgb(0 0 0 / 0.28), transparent 52%),
+    rgb(12 12 15 / 0.44);
+}
+
+html[data-theme="dark"] .ui-surface {
+  background: rgb(9 9 12 / 0.72);
+}
+
+html[data-theme="dark"] .ui-card {
+  background: rgb(11 11 14 / 0.82);
+  border-color: rgb(64 64 74 / 0.72);
+}
+
+html[data-theme="dark"] body[data-bg-focus="on"] .content-shell::before {
+  background:
+    radial-gradient(1200px 600px at 15% 0%, rgb(0 0 0 / 0.42), transparent 52%),
+    radial-gradient(900px 500px at 85% 100%, rgb(0 0 0 / 0.34), transparent 50%),
+    rgb(9 9 12 / 0.58);
 }
 
 /* Pulse Board Animations */

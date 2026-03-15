@@ -1,4 +1,3 @@
-/* eslint-disable */
 import type { DQNCheckpointManifest } from "./game"
 
 export const ADAPTIVE_ARENA_CHECKPOINTS: DQNCheckpointManifest[] = [

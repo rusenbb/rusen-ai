@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Header() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -43,21 +44,28 @@ export default function Header() {
             rusen.ai
           </Link>
 
-          <div className="hidden md:flex gap-6 items-center">
+          <div className="hidden md:flex gap-4 items-center">
             {links.map((item) => (
               <Link key={item.href} href={item.href} className="hover:opacity-80 transition">
                 {item.label}
               </Link>
             ))}
+            <span
+              aria-hidden="true"
+              className="h-4 w-px bg-neutral-300/60 dark:bg-neutral-700/60"
+            />
+            <ThemeToggle />
           </div>
 
           <div className="md:hidden flex items-center gap-1">
+            <ThemeToggle />
             <button
               type="button"
               onClick={() => setMobileNavOpen((v) => !v)}
-              className="inline-flex items-center justify-center w-9 h-9 rounded-md border border-neutral-300/70 dark:border-neutral-700/70 text-neutral-700 dark:text-neutral-200"
+              className="inline-flex items-center justify-center w-11 h-11 rounded-md border border-neutral-300/70 dark:border-neutral-700/70 text-neutral-700 dark:text-neutral-200"
               aria-label="Toggle menu"
               aria-expanded={mobileNavOpen}
+              aria-controls="mobile-nav"
             >
               <svg
                 width="18"
@@ -88,7 +96,7 @@ export default function Header() {
         </div>
 
         {mobileNavOpen && (
-          <div className="md:hidden mt-3 pt-3 border-t border-neutral-200/70 dark:border-neutral-800/70 space-y-2">
+          <div id="mobile-nav" className="md:hidden mt-3 pt-3 border-t border-neutral-200/70 dark:border-neutral-800/70 space-y-2">
             {links.map((item) => (
               <Link
                 key={item.href}

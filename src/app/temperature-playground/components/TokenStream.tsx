@@ -1,159 +1,121 @@
 "use client";
 
-import { useRef, useEffect } from "react";
-import type { GeneratedToken } from "../types";
+import { Fragment, useMemo } from "react";
+import type { PromptData, TemperatureKey } from "../types";
+import { buildForkMap, getForkKey } from "../lib/branches";
+import { logprobsToProbs } from "../lib/softmax";
+import TokenChip, { describeToken } from "./TokenChip";
+import BranchSection from "./BranchSection";
 
 interface TokenStreamProps {
-  tokens: GeneratedToken[];
-  currentIndex: number;
-  showProbabilities: boolean;
-  onTokenClick?: (index: number) => void;
-}
-
-// Get background color based on probability
-function getProbabilityColor(probability: number, isSelected: boolean): string {
-  if (isSelected) return "bg-blue-200 dark:bg-blue-800";
-  if (probability > 0.5) return "bg-green-100 dark:bg-green-900/40";
-  if (probability > 0.2) return "bg-emerald-100 dark:bg-emerald-900/40";
-  if (probability > 0.1) return "bg-yellow-100 dark:bg-yellow-900/40";
-  if (probability > 0.05) return "bg-orange-100 dark:bg-orange-900/40";
-  return "bg-red-100 dark:bg-red-900/40";
-}
-
-// Get border color based on probability
-function getProbabilityBorder(probability: number, isSelected: boolean): string {
-  if (isSelected) return "border-blue-500 dark:border-blue-400";
-  if (probability > 0.5) return "border-green-400 dark:border-green-600";
-  if (probability > 0.2) return "border-emerald-400 dark:border-emerald-600";
-  if (probability > 0.1) return "border-yellow-400 dark:border-yellow-600";
-  if (probability > 0.05) return "border-orange-400 dark:border-orange-600";
-  return "border-red-400 dark:border-red-600";
+  data: PromptData;
+  temperature: TemperatureKey;
+  selectedBranchId: number;
+  selectedTokenIndex: number | null;
+  expandedForks: string[];
+  onTokenSelect: (branchId: number, tokenIndex: number) => void;
+  onToggleFork: (forkKey: string) => void;
 }
 
 export default function TokenStream({
-  tokens,
-  currentIndex,
-  showProbabilities,
-  onTokenClick,
+  data,
+  temperature,
+  selectedBranchId,
+  selectedTokenIndex,
+  expandedForks,
+  onTokenSelect,
+  onToggleFork,
 }: TokenStreamProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const selectedRef = useRef<HTMLDivElement>(null);
+  const trees = data.trees[temperature];
 
-  // Auto-scroll to keep selected token visible
-  useEffect(() => {
-    if (selectedRef.current) {
-      selectedRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-        inline: "center",
-      });
-    }
-  }, [currentIndex]);
+  const { mainBranch, forkMap } = useMemo(() => {
+    const branchList = trees ?? [];
+    const main = branchList.find((b) => b.parentId === null) ?? null;
+    const map = buildForkMap(branchList);
+    return { mainBranch: main, forkMap: map };
+  }, [trees]);
 
-  if (tokens.length === 0) {
+  if (!mainBranch) {
     return (
-      <div className="flex-1 flex items-center justify-center text-neutral-400 text-sm">
-        Tokens will appear here...
+      <div className="text-sm text-neutral-400 dark:text-neutral-500 py-8 text-center">
+        No data available for this temperature.
       </div>
     );
   }
 
-  // Combine tokens into full text for display
-  const fullText = tokens.map((t) => t.token).join("");
-
-  const handlePrev = () => {
-    if (onTokenClick && currentIndex > 0) {
-      onTokenClick(currentIndex - 1);
-    }
-  };
-
-  const handleNext = () => {
-    if (onTokenClick && currentIndex < tokens.length - 1) {
-      onTokenClick(currentIndex + 1);
-    }
-  };
+  const tempNum = parseFloat(temperature);
 
   return (
-    <div className="flex-1 flex flex-col">
-      {/* Full text preview */}
-      <div className="mb-3 p-3 bg-neutral-100 dark:bg-neutral-800 rounded-lg">
-        <div className="text-xs text-neutral-500 mb-1">Generated text:</div>
-        <div className="font-mono text-sm text-neutral-900 dark:text-neutral-100 whitespace-pre-wrap">
-          {fullText}
+    <div className="font-mono text-sm leading-relaxed">
+      {/* System prompt (user instruction) */}
+      {data.system && (
+        <div className="mb-2 rounded border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
+          <span className="font-semibold text-neutral-600 dark:text-neutral-300">User: </span>
+          {data.system}
         </div>
-      </div>
+      )}
 
-      {/* Navigation controls */}
-      <div className="flex items-center gap-2 mb-2">
-        <button
-          onClick={handlePrev}
-          disabled={currentIndex <= 0}
-          className="px-3 py-1 text-sm border border-neutral-300 dark:border-neutral-600 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 disabled:opacity-30 disabled:cursor-not-allowed"
-        >
-          ← Prev
-        </button>
-        <span className="text-sm text-neutral-500">
-          Token {currentIndex + 1} of {tokens.length}
-        </span>
-        <button
-          onClick={handleNext}
-          disabled={currentIndex >= tokens.length - 1}
-          className="px-3 py-1 text-sm border border-neutral-300 dark:border-neutral-600 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 disabled:opacity-30 disabled:cursor-not-allowed"
-        >
-          Next →
-        </button>
-      </div>
-
-      {/* Token stream - clickable tokens */}
-      <div
-        ref={containerRef}
-        className="flex flex-wrap gap-1 max-h-[150px] overflow-y-auto p-2 border border-neutral-200 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-900"
-      >
-        {tokens.map((token, idx) => {
-          const isSelected = idx === currentIndex;
-          const displayToken = token.token.replace(/\n/g, "↵").replace(/\t/g, "→");
-
+      {/* Prefill tokens (greyed out) */}
+      <span className="flex flex-wrap items-baseline gap-0.5">
+        {data.prefillTokens.map((pt, i) => {
+          const { display, isSpecial } = describeToken(pt.text);
           return (
-            <div
-              key={idx}
-              ref={isSelected ? selectedRef : null}
-              data-token
-              onClick={() => onTokenClick?.(idx)}
-              className={`
-                px-1.5 py-0.5 rounded text-xs font-mono cursor-pointer
-                border-2 transition-all
-                ${getProbabilityColor(token.selectedProbability, isSelected)}
-                ${getProbabilityBorder(token.selectedProbability, isSelected)}
-                ${isSelected ? "ring-2 ring-offset-1 ring-blue-500 scale-110 z-10" : ""}
-                hover:scale-105 hover:z-10
-              `}
+            <span
+              key={`prefill-${i}`}
+              className={`inline-block rounded px-1 py-0.5 bg-neutral-50 dark:bg-neutral-900 ${isSpecial ? "italic text-neutral-300 dark:text-neutral-600 text-[11px]" : "text-neutral-400 dark:text-neutral-500"}`}
             >
-              <span>{displayToken.trim() || "⎵"}</span>
-              {showProbabilities && (
-                <span className="ml-1 text-[10px] opacity-60">
-                  {(token.selectedProbability * 100).toFixed(0)}%
-                </span>
-              )}
-            </div>
+              {display}
+            </span>
           );
         })}
-      </div>
+      </span>
 
-      {/* Legend */}
-      <div className="mt-2 flex flex-wrap gap-3 text-[10px] text-neutral-500">
-        <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded bg-green-100 dark:bg-green-900/40 border border-green-400" />
-          &gt;50%
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded bg-yellow-100 dark:bg-yellow-900/40 border border-yellow-400" />
-          10-20%
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded bg-red-100 dark:bg-red-900/40 border border-red-400" />
-          &lt;5%
-        </span>
-        <span className="ml-auto text-neutral-400">Click any token or use ← →</span>
+      {/* Main branch tokens with inline fork expansion */}
+      <div className="mt-1 flex flex-wrap items-baseline gap-0.5">
+        {mainBranch.tokens.map((token, idx) => {
+          const lps = token.logprobs.map((lp) => lp.logprob);
+          const probs = logprobsToProbs(lps, tempNum);
+          const sampledIdx = token.logprobs.findIndex(
+            (lp) => lp.id === token.id,
+          );
+          const prob = sampledIdx >= 0 ? probs[sampledIdx] : 0;
+
+          const forkKey = getForkKey(mainBranch.id, idx);
+          const childBranches = forkMap.get(forkKey);
+          const hasBranches = !!childBranches && childBranches.length > 0;
+          const isExpanded = expandedForks.includes(forkKey);
+
+          return (
+            <Fragment key={idx}>
+              <TokenChip
+                text={token.text}
+                probability={prob}
+                isSelected={
+                  selectedBranchId === mainBranch.id &&
+                  selectedTokenIndex === idx
+                }
+                hasBranches={hasBranches}
+                onClick={() => {
+                  onTokenSelect(mainBranch.id, idx);
+                  if (hasBranches) onToggleFork(forkKey);
+                }}
+              />
+              {hasBranches && isExpanded && childBranches && (
+                <BranchSection
+                  branches={childBranches}
+                  forkToken={token}
+                  forkMap={forkMap}
+                  temperature={tempNum}
+                  selectedBranchId={selectedBranchId}
+                  selectedTokenIndex={selectedTokenIndex}
+                  expandedForks={expandedForks}
+                  onTokenSelect={onTokenSelect}
+                  onToggleFork={onToggleFork}
+                />
+              )}
+            </Fragment>
+          );
+        })}
       </div>
     </div>
   );

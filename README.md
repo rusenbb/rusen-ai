@@ -33,7 +33,6 @@ Full-stack AI demo platform showcasing LLM integrations, browser-based ML, and i
 |------|-------------|
 | [Classify Anything](https://rusen.ai/demos/classify-anything) | Zero-shot text classification with custom labels, runs entirely in browser (MobileBERT) |
 | [Embedding Explorer](https://rusen.ai/nerdy-stuff/embedding-explorer) | Word embedding visualization with vector arithmetic (king - man + woman = queen) |
-| [Temperature Playground](https://rusen.ai/nerdy-stuff/temperature-playground) | LLM sampling visualization showing token probabilities at different temperatures |
 | [Rusenizer](https://rusen.ai/nerdy-stuff/rusenizer) | Turkish-optimized tokenizer comparison (~45% fewer tokens than GPT-4) |
 
 ## Project Structure
@@ -48,7 +47,6 @@ src/
 │   │   └── classify-anything/
 │   ├── nerdy-stuff/           # Browser ML demos
 │   │   ├── embedding-explorer/
-│   │   ├── temperature-playground/
 │   │   └── rusenizer/
 │   └── components/            # Page-level components (Header, DemoCard)
 ├── components/ui/             # Shared UI library (Button, Alert, Card, Spinner)

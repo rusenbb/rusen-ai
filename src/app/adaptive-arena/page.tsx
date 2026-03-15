@@ -2,12 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ACTION_LABELS,
-  ARENA_SIZE,
   BOT_ACCENT,
   BOT_CONFIG,
   BOT_DIFFICULTIES,
-  MAX_HEALTH,
   TICK_MS,
   advanceMatch,
   buildArenaMap,
@@ -17,17 +14,24 @@ import {
   getDifficultyConfig,
   type AbilityAction,
   type ArenaAction,
-  type ArenaTile,
   type BotBrain,
   type BotDifficulty,
   type DQNCheckpointAsset,
   type DQNCheckpointManifest,
   type MatchState,
   type MoveAction,
-  type TrainingMetricPoint,
 } from "./game";
 import { createDQNAgent, deserializeDQNWeights } from "./dqn";
 import { ADAPTIVE_ARENA_CHECKPOINTS } from "./checkpoints.generated";
+import { drawArena } from "./rendering";
+import {
+  ABILITY_BUTTONS,
+  ARENA_LEGEND,
+  CONTROL_BUTTONS,
+  FullscreenCornersIcon,
+  StatBlock,
+  getKeycapClass,
+} from "./presentation";
 
 type ControlState = {
   move: MoveAction | null;
@@ -53,433 +57,6 @@ const ABILITY_KEYS: Record<string, AbilityAction> = {
   k: "guard",
   l: "dash",
 };
-
-const CONTROL_BUTTONS: Array<{
-  label: string;
-  action: MoveAction;
-}> = [
-  { label: "W / ↑", action: "move-up" },
-  { label: "S / ↓", action: "move-down" },
-  { label: "A / ←", action: "move-left" },
-  { label: "D / →", action: "move-right" },
-];
-
-const ABILITY_BUTTONS: Array<{
-  label: string;
-  action: AbilityAction;
-  hint: string;
-}> = [
-  { label: "Attack", action: "attack", hint: "J" },
-  { label: "Guard", action: "guard", hint: "K" },
-  { label: "Dash", action: "dash", hint: "L" },
-];
-
-const ARENA_LEGEND = [
-  {
-    label: "You",
-    detail: "Your cyan unit. Stay alive longer than the bot to win the round.",
-    swatch: "bg-cyan-300",
-  },
-  {
-    label: "Bot",
-    detail:
-      "The opponent. Each difficulty loads a different trained checkpoint.",
-    swatch: "bg-orange-400",
-  },
-  {
-    label: "Health",
-    detail: "Orange pickup. Restores health when you step onto it.",
-    swatch: "bg-orange-500",
-  },
-  {
-    label: "Energy",
-    detail: "Green pickup. Refills dash energy so you can reposition harder.",
-    swatch: "bg-lime-400",
-  },
-  {
-    label: "Cover",
-    detail:
-      "Teal cover tile. Breaks line of sight and reduces direct pressure.",
-    swatch: "bg-sky-900",
-  },
-  {
-    label: "Hazard",
-    detail: "The center cross. Standing on it burns health over time.",
-    swatch: "bg-amber-900",
-  },
-] as const;
-
-function formatPercent(value: number): string {
-  return `${Math.round(value * 100)}%`;
-}
-
-function getTileColor(tile: ArenaTile): string {
-  switch (tile) {
-    case "wall":
-      return "#24303c";
-    case "cover":
-      return "#193748";
-    case "hazard":
-      return "#512212";
-    default:
-      return "#091119";
-  }
-}
-
-function getKeycapClass(): string {
-  return "border-white/10 bg-white/[0.04] text-neutral-200";
-}
-
-function drawWrappedText(
-  context: CanvasRenderingContext2D,
-  text: string,
-  centerX: number,
-  startY: number,
-  maxWidth: number,
-  lineHeight: number,
-): number {
-  const words = text.split(/\s+/).filter(Boolean);
-  const lines: string[] = [];
-  let currentLine = "";
-
-  words.forEach((word) => {
-    const candidate = currentLine ? `${currentLine} ${word}` : word;
-    if (currentLine && context.measureText(candidate).width > maxWidth) {
-      lines.push(currentLine);
-      currentLine = word;
-      return;
-    }
-    currentLine = candidate;
-  });
-
-  if (currentLine) {
-    lines.push(currentLine);
-  }
-
-  lines.forEach((line, index) => {
-    context.fillText(line, centerX, startY + index * lineHeight);
-  });
-
-  return lines.length;
-}
-
-function drawArena(
-  canvas: HTMLCanvasElement,
-  arena: ArenaTile[][],
-  match: MatchState,
-  profileAccent: string,
-) {
-  const context = canvas.getContext("2d");
-  if (!context) return;
-
-  const dpr = window.devicePixelRatio || 1;
-  const cssSize = canvas.clientWidth || 900;
-  const size = Math.round(cssSize * dpr);
-  canvas.width = size;
-  canvas.height = size;
-  context.scale(dpr, dpr);
-
-  // All drawing uses CSS pixels from here
-  const drawSize = cssSize;
-  const tileSize = drawSize / ARENA_SIZE;
-  context.clearRect(0, 0, drawSize, drawSize);
-
-  const background = context.createLinearGradient(0, 0, drawSize, drawSize);
-  background.addColorStop(0, "#040608");
-  background.addColorStop(1, "#09121a");
-  context.fillStyle = background;
-  context.fillRect(0, 0, drawSize, drawSize);
-
-  for (let y = 0; y < ARENA_SIZE; y += 1) {
-    for (let x = 0; x < ARENA_SIZE; x += 1) {
-      const px = x * tileSize;
-      const py = y * tileSize;
-      context.fillStyle = getTileColor(arena[y][x]);
-      context.fillRect(px, py, tileSize, tileSize);
-
-      context.strokeStyle = "rgba(255,255,255,0.04)";
-      context.lineWidth = 1;
-      context.strokeRect(px, py, tileSize, tileSize);
-    }
-  }
-
-  match.pickups.forEach((pickup) => {
-    if (pickup.cooldown > 0) return;
-    const px = pickup.position.x * tileSize;
-    const py = pickup.position.y * tileSize;
-    context.fillStyle = pickup.kind === "health" ? "#f97316" : "#a3e635";
-    context.fillRect(
-      px + tileSize * 0.2,
-      py + tileSize * 0.2,
-      tileSize * 0.6,
-      tileSize * 0.6,
-    );
-    context.strokeStyle = "rgba(255,255,255,0.7)";
-    context.lineWidth = 1.5 * (drawSize / 900);
-    context.strokeRect(
-      px + tileSize * 0.2,
-      py + tileSize * 0.2,
-      tileSize * 0.6,
-      tileSize * 0.6,
-    );
-  });
-
-  if (
-    Math.abs(match.player.position.x - match.bot.position.x) +
-      Math.abs(match.player.position.y - match.bot.position.y) <=
-    5
-  ) {
-    context.strokeStyle = "rgba(255,255,255,0.12)";
-    context.setLineDash([8, 8]);
-    context.beginPath();
-    context.moveTo(
-      (match.player.position.x + 0.5) * tileSize,
-      (match.player.position.y + 0.5) * tileSize,
-    );
-    context.lineTo(
-      (match.bot.position.x + 0.5) * tileSize,
-      (match.bot.position.y + 0.5) * tileSize,
-    );
-    context.stroke();
-    context.setLineDash([]);
-  }
-
-  const fighters = [
-    { ...match.player, color: "#67e8f9", label: "You" },
-    { ...match.bot, color: profileAccent, label: "Bot" },
-  ];
-
-  // Scale HUD/label elements proportionally (designed at 900px baseline)
-  const s = drawSize / 900;
-
-  fighters.forEach((fighter) => {
-    const centerX = (fighter.position.x + 0.5) * tileSize;
-    const centerY = (fighter.position.y + 0.5) * tileSize;
-    const radius = tileSize * 0.28;
-
-    context.beginPath();
-    context.fillStyle = fighter.color;
-    context.shadowColor = fighter.color;
-    context.shadowBlur = (fighter.flashTicks > 0 ? 24 : 14) * s;
-    context.arc(centerX, centerY, radius, 0, Math.PI * 2);
-    context.fill();
-    context.shadowBlur = 0;
-
-    if (fighter.guarding) {
-      context.beginPath();
-      context.strokeStyle = "rgba(255,255,255,0.9)";
-      context.lineWidth = 2 * s;
-      context.arc(centerX, centerY, radius + 4 * s, 0, Math.PI * 2);
-      context.stroke();
-    }
-
-    context.fillStyle = "rgba(0,0,0,0.85)";
-    context.fillRect(centerX - 18 * s, centerY - radius - 16 * s, 36 * s, 14 * s);
-    context.fillStyle = "#f8fafc";
-    context.font = `${10 * s}px monospace`;
-    context.textAlign = "center";
-    context.fillText(fighter.label, centerX, centerY - radius - 5 * s);
-  });
-
-  context.fillStyle = "rgba(3,7,12,0.88)";
-  context.fillRect(drawSize / 2 - 74 * s, 4 * s, 148 * s, 28 * s);
-  context.strokeStyle = "rgba(255,255,255,0.14)";
-  context.strokeRect(drawSize / 2 - 74 * s, 4 * s, 148 * s, 28 * s);
-
-  context.fillStyle = "#e5e7eb";
-  context.font = `${12 * s}px monospace`;
-  context.textAlign = "center";
-  context.fillText(
-    `TIMER ${match.timer.toString().padStart(3, "0")}`,
-    drawSize / 2,
-    23 * s,
-  );
-
-  const hudY = 16 * s;
-  const barWidth = 190 * s;
-  const barHeight = 12 * s;
-  const hudMargin = 44 * s;
-
-  context.textAlign = "left";
-  context.fillStyle = "#67e8f9";
-  context.font = `${11 * s}px monospace`;
-  context.fillText("YOU", hudMargin, hudY);
-  context.fillStyle = "rgba(255,255,255,0.12)";
-  context.fillRect(hudMargin, hudY + 10 * s, barWidth, barHeight);
-  context.fillStyle = "#67e8f9";
-  context.fillRect(
-    hudMargin,
-    hudY + 10 * s,
-    barWidth * (match.player.health / MAX_HEALTH),
-    barHeight,
-  );
-  context.fillStyle = "#e5e7eb";
-  context.fillText(
-    `${match.player.health}/${MAX_HEALTH}`,
-    hudMargin,
-    hudY + 38 * s,
-  );
-
-  context.textAlign = "right";
-  context.fillStyle = profileAccent;
-  context.fillText("BOT", drawSize - hudMargin, hudY);
-  context.fillStyle = "rgba(255,255,255,0.12)";
-  context.fillRect(drawSize - hudMargin - barWidth, hudY + 10 * s, barWidth, barHeight);
-  context.fillStyle = profileAccent;
-  context.fillRect(
-    drawSize - hudMargin - barWidth,
-    hudY + 10 * s,
-    barWidth * (match.bot.health / MAX_HEALTH),
-    barHeight,
-  );
-  context.fillStyle = "#e5e7eb";
-  context.fillText(
-    `${match.bot.health}/${MAX_HEALTH}`,
-    drawSize - hudMargin,
-    hudY + 38 * s,
-  );
-  context.fillStyle = "rgba(229,231,235,0.75)";
-  context.font = `${10 * s}px monospace`;
-  context.fillText(
-    `${match.lastDecisionMode.toUpperCase()} / ${ACTION_LABELS[match.botIntent]}`,
-    drawSize - hudMargin,
-    hudY + 56 * s,
-  );
-
-  if (match.phase === "intermission") {
-    context.fillStyle = "rgba(1,4,9,0.72)";
-    context.fillRect(0, 0, drawSize, drawSize);
-    context.fillStyle = "rgba(3,7,12,0.9)";
-    context.fillRect(drawSize / 2 - 220 * s, drawSize / 2 - 92 * s, 440 * s, 144 * s);
-    context.strokeStyle = "rgba(255,255,255,0.14)";
-    context.strokeRect(drawSize / 2 - 220 * s, drawSize / 2 - 92 * s, 440 * s, 144 * s);
-    context.fillStyle = "#f8fafc";
-    context.font = `700 ${32 * s}px monospace`;
-    context.textAlign = "center";
-    const lineCount = drawWrappedText(
-      context,
-      match.statusMessage,
-      drawSize / 2,
-      drawSize / 2 - 40 * s,
-      380 * s,
-      36 * s,
-    );
-    context.font = `${14 * s}px monospace`;
-    context.fillText(
-      `next round in ${match.intermissionTicks}  |  press space to continue`,
-      drawSize / 2,
-      drawSize / 2 + 14 * s + Math.max(0, lineCount - 1) * 18 * s,
-    );
-  }
-}
-
-function StatBlock({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: string;
-  tone?: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
-      <div className="text-[10px] uppercase tracking-[0.24em] text-neutral-500">
-        {label}
-      </div>
-      <div
-        className="mt-2 text-xl font-semibold text-neutral-100"
-        style={tone ? { color: tone } : undefined}
-      >
-        {value}
-      </div>
-    </div>
-  );
-}
-
-function formatSigned(value: number, digits = 2): string {
-  const rounded = value.toFixed(digits);
-  return value > 0 ? `+${rounded}` : rounded;
-}
-
-function TrainingMetricChart(props: {
-  label: string;
-  color: string;
-  points: TrainingMetricPoint[];
-  valueKey: "averageReward" | "averageBotWinRate" | "averageHealthDelta";
-  formatValue: (value: number) => string;
-}) {
-  const { label, color, points, valueKey, formatValue } = props;
-
-  if (points.length === 0) return null;
-
-  const width = 220;
-  const height = 64;
-  const padding = 6;
-  const values = points.map((point) => point[valueKey]);
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const range = max - min || 1;
-  const path = points
-    .map((point, index) => {
-      const x =
-        padding +
-        (index / Math.max(1, points.length - 1)) * (width - padding * 2);
-      const y =
-        height -
-        padding -
-        ((point[valueKey] - min) / range) * (height - padding * 2);
-      return `${index === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(" ");
-  const latest = values.at(-1) ?? 0;
-  const first = values[0] ?? 0;
-
-  return (
-    <div className="rounded-2xl border border-white/8 bg-black/20 p-3">
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-[10px] uppercase tracking-[0.22em] text-neutral-500">
-          {label}
-        </span>
-        <span className="text-sm font-medium" style={{ color }}>
-          {formatValue(latest)}
-        </span>
-      </div>
-      <svg
-        viewBox={`0 0 ${width} ${height}`}
-        className="mt-2 h-16 w-full overflow-visible"
-      >
-        <path
-          d={path}
-          fill="none"
-          stroke={color}
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-      <div className="mt-1 flex items-center justify-between text-[11px] text-neutral-500">
-        <span>start {formatValue(first)}</span>
-        <span>end {formatValue(latest)}</span>
-      </div>
-    </div>
-  );
-}
-
-function FullscreenCornersIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4">
-      <path
-        d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
 
 export default function AdaptiveArenaPage() {
   const arena = useMemo(() => buildArenaMap(), []);
@@ -516,7 +93,6 @@ export default function AdaptiveArenaPage() {
   const [isRunning, setIsRunning] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [, setCanvasSize] = useState(0);
-  const [isBotReadoutOpen, setIsBotReadoutOpen] = useState(false);
   const [checkpointManifest, setCheckpointManifest] =
     useState<DQNCheckpointManifest | null>(null);
   const [checkpointLoading, setCheckpointLoading] = useState(true);
@@ -713,7 +289,7 @@ export default function AdaptiveArenaPage() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     drawArena(canvas, arena, match, BOT_ACCENT);
-  }, [arena, match, BOT_ACCENT]);
+  }, [arena, match]);
 
   // Re-draw at native resolution when canvas container resizes
   useEffect(() => {
@@ -819,7 +395,7 @@ export default function AdaptiveArenaPage() {
     : "min(100%, calc(100vh - 12rem), 1080px)";
 
   return (
-    <div className="min-h-screen bg-[#05070a] text-neutral-100">
+    <div className="min-h-screen py-6 text-neutral-900 dark:text-neutral-100 sm:py-8">
       <div className="mx-auto max-w-[1500px] px-4 py-8 sm:px-6 lg:px-8">
         <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(103,232,249,0.12),transparent_28%),radial-gradient(circle_at_top_right,rgba(249,115,22,0.14),transparent_26%),linear-gradient(135deg,#05070a_0%,#0a1118_48%,#070b10_100%)] p-5 sm:p-8">
           <div
@@ -863,11 +439,11 @@ export default function AdaptiveArenaPage() {
                     className={`relative ${isFullscreen ? "p-2" : "border-b border-white/10 p-4 sm:p-5 xl:border-b-0 xl:border-r xl:border-white/10"}`}
                   >
                     {isFullscreen && (
-                      <div className="absolute left-6 top-6 z-10 flex w-40 flex-col gap-2">
+                      <div className="absolute left-3 top-3 z-10 flex w-32 flex-col gap-2 sm:left-6 sm:top-6 sm:w-40">
                         <button
                           type="button"
                           onClick={() => setIsRunning((current) => !current)}
-                          className="rounded-full border border-white/10 bg-[#02060b]/80 px-4 py-2 text-[11px] uppercase tracking-[0.22em] text-neutral-100 backdrop-blur transition hover:bg-[#0a1118]"
+                          className="rounded-full border border-white/10 bg-[#02060b]/80 px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-neutral-100 backdrop-blur transition hover:bg-[#0a1118] sm:px-4 sm:text-[11px] sm:tracking-[0.22em]"
                         >
                           {isRunning ? "Pause" : primaryActionLabel}
                         </button>
@@ -876,7 +452,7 @@ export default function AdaptiveArenaPage() {
                           onClick={() =>
                             setAutoRunRounds((current) => !current)
                           }
-                          className={`rounded-full border px-4 py-2 text-[11px] uppercase tracking-[0.22em] backdrop-blur transition ${
+                          className={`rounded-full border px-3 py-2 text-[10px] uppercase tracking-[0.18em] backdrop-blur transition sm:px-4 sm:text-[11px] sm:tracking-[0.22em] ${
                             autoRunRounds
                               ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-200"
                               : "border-white/10 bg-[#02060b]/80 text-neutral-200 hover:bg-[#0a1118]"
@@ -887,7 +463,7 @@ export default function AdaptiveArenaPage() {
                         <button
                           type="button"
                           onClick={resetSession}
-                          className="rounded-full border border-white/10 bg-[#02060b]/80 px-4 py-2 text-[11px] uppercase tracking-[0.22em] text-neutral-200 backdrop-blur transition hover:bg-[#0a1118]"
+                          className="rounded-full border border-white/10 bg-[#02060b]/80 px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-neutral-200 backdrop-blur transition hover:bg-[#0a1118] sm:px-4 sm:text-[11px] sm:tracking-[0.22em]"
                         >
                           Reset
                         </button>
@@ -896,7 +472,7 @@ export default function AdaptiveArenaPage() {
                     <button
                       type="button"
                       onClick={() => void toggleFullscreen()}
-                      className="absolute right-6 top-6 z-10 inline-flex items-center justify-center rounded-full border border-white/10 bg-[#02060b]/80 p-2 text-neutral-200 backdrop-blur transition hover:bg-[#0a1118]"
+                      className="absolute right-3 top-3 z-10 inline-flex items-center justify-center rounded-full border border-white/10 bg-[#02060b]/80 p-2 text-neutral-200 backdrop-blur transition hover:bg-[#0a1118] sm:right-6 sm:top-6"
                       aria-label={
                         isFullscreen ? "Exit fullscreen" : "Go fullscreen"
                       }
@@ -1074,113 +650,6 @@ export default function AdaptiveArenaPage() {
                         </div>
                       </div>
 
-                      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setIsBotReadoutOpen((current) => !current)
-                          }
-                          className="flex w-full items-center justify-between gap-3 text-left"
-                        >
-                          <div>
-                            <div className="text-[10px] uppercase tracking-[0.24em] text-neutral-500">
-                              Bot Readout
-                            </div>
-                            <div
-                              className="mt-2 text-lg font-semibold"
-                              style={{ color: BOT_ACCENT }}
-                            >
-                              {checkpointManifest?.label ??
-                                selectedDifficulty.charAt(0).toUpperCase() +
-                                  selectedDifficulty.slice(1)}
-                            </div>
-                          </div>
-                          <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-[10px] uppercase tracking-[0.18em] text-neutral-300">
-                            {isBotReadoutOpen ? "Hide" : "Show"}
-                          </span>
-                        </button>
-                        {!isBotReadoutOpen ? (
-                          <p className="mt-3 text-sm leading-6 text-neutral-400">
-                            Collapsed by default. Open to inspect checkpoint
-                            metadata and live bot decisions.
-                          </p>
-                        ) : (
-                          <>
-                            <p className="mt-3 text-sm leading-6 text-neutral-400">
-                              {checkpointLoading
-                                ? "Loading checkpoint..."
-                                : checkpointError
-                                  ? checkpointError
-                                  : (checkpointManifest?.summary ??
-                                    "Self-play trained DQN agent.")}
-                            </p>
-                            {checkpointManifest &&
-                              !checkpointLoading &&
-                              !checkpointError && (
-                                <div className="mt-3 rounded-2xl border border-white/10 bg-black/20 px-3 py-3 text-xs leading-5 text-neutral-400">
-                                  {checkpointManifest.trainingRounds} training
-                                  rounds /{" "}
-                                  {formatPercent(
-                                    checkpointManifest.stats.botWinRate,
-                                  )}{" "}
-                                  eval win rate
-                                </div>
-                              )}
-                            {checkpointManifest?.telemetry.points.length ? (
-                              <div className="mt-3 grid gap-3">
-                                <TrainingMetricChart
-                                  label="Training Reward"
-                                  color={BOT_ACCENT}
-                                  points={checkpointManifest.telemetry.points}
-                                  valueKey="averageReward"
-                                  formatValue={(value) => formatSigned(value)}
-                                />
-                                <TrainingMetricChart
-                                  label="Training Win Rate"
-                                  color="#67e8f9"
-                                  points={checkpointManifest.telemetry.points}
-                                  valueKey="averageBotWinRate"
-                                  formatValue={formatPercent}
-                                />
-                              </div>
-                            ) : null}
-                            {checkpointManifest &&
-                              !checkpointLoading &&
-                              !checkpointError && (
-                                <div className="mt-3 grid grid-cols-2 gap-3 text-xs text-neutral-400">
-                                  <div className="rounded-2xl border border-white/8 bg-black/20 px-3 py-3">
-                                    reward window{" "}
-                                    {checkpointManifest.telemetry.rollingWindow}{" "}
-                                    rounds
-                                  </div>
-                                  <div className="rounded-2xl border border-white/8 bg-black/20 px-3 py-3">
-                                    params{" "}
-                                    {checkpointManifest.parameterCount.toLocaleString()}
-                                  </div>
-                                </div>
-                              )}
-                            <div className="mt-4 grid grid-cols-2 gap-3">
-                              <StatBlock
-                                label="Explore"
-                                value={formatPercent(match.explorationRate)}
-                              />
-                              <StatBlock
-                                label="Params"
-                                value={match.qStateCount.toLocaleString()}
-                              />
-                              <StatBlock
-                                label="Intent"
-                                value={ACTION_LABELS[match.botIntent]}
-                                tone={BOT_ACCENT}
-                              />
-                              <StatBlock
-                                label="Mode"
-                                value={match.lastDecisionMode.toUpperCase()}
-                              />
-                            </div>
-                          </>
-                        )}
-                      </div>
                     </aside>
                   )}
                 </div>
