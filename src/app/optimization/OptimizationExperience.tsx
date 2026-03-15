@@ -9,9 +9,10 @@ import type { PlotMode } from "@/components/optimization/OptimizationPlot";
 import BlackBoxScene from "./BlackBoxScene";
 import HighDimensionalScene from "./HighDimensionalScene";
 import MomentumScene from "./MomentumScene";
+import SaddlePointScene from "./SaddlePointScene";
 import WalkDownhillScene from "./WalkDownhillScene";
 
-type SceneId = "walk" | "momentum" | "black-box" | "shadows";
+type SceneId = "walk" | "momentum" | "black-box" | "dimensions" | "saddles";
 
 const SCENES: Array<{
   id: SceneId;
@@ -38,12 +39,31 @@ const SCENES: Array<{
     summary: "How black-box optimizers spend evaluation budget instead of following derivatives.",
   },
   {
-    id: "shadows",
-    kicker: "Break the cartoon",
-    title: "One run, two views",
-    summary: "How the same high-dimensional optimization can look different when you flatten it into 2D.",
+    id: "dimensions",
+    kicker: "Scale up",
+    title: "The curse is in the numbers",
+    summary: "What happens to convergence when you go from 2 dimensions to 500.",
+  },
+  {
+    id: "saddles",
+    kicker: "Geometry",
+    title: "Why saddles outnumber minima",
+    summary: "Combinatorics makes true local minima vanishingly rare in high dimensions.",
   },
 ];
+
+const SCENE_HAS_PLOT_TOGGLE = new Set<SceneId>(["walk", "momentum", "black-box"]);
+
+function sceneDescription(id: SceneId, summary: string): string {
+  switch (id) {
+    case "dimensions":
+      return `${summary} No 2D landscape is shown because no honest one exists at these scales. The loss curves and eigenvalue spectra are the instruments that work.`;
+    case "saddles":
+      return `${summary} The counting argument is the core insight: in 64 dimensions, only 1 out of 18.4 quintillion critical points is a local minimum.`;
+    default:
+      return `${summary} The figures default to contour view because that is the clearest teaching language. Switch to surface view only when you want to inspect the same geometry in 3D.`;
+  }
+}
 
 export default function OptimizationExperience() {
   const [plotMode, setPlotMode] = useState<PlotMode>("contour");
@@ -58,13 +78,13 @@ export default function OptimizationExperience() {
         title="Optimization"
         description="See why optimizers succeed or fail on different landscapes."
         actions={
-          sceneId === "shadows" ? null : (
+          SCENE_HAS_PLOT_TOGGLE.has(sceneId) ? (
             <PlotModeToggle mode={plotMode} onChange={setPlotMode} />
-          )
+          ) : null
         }
       />
 
-      <div className="grid gap-3 lg:grid-cols-4">
+      <div className="grid gap-3 lg:grid-cols-5">
         {SCENES.map((entry, index) => {
           const active = entry.id === sceneId;
           return (
@@ -92,16 +112,15 @@ export default function OptimizationExperience() {
 
       <DemoMutedSection title={scene.title}>
         <p className="text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
-          {sceneId === "shadows"
-            ? `${scene.summary} This scene is not about a 3D surface at all. It is about seeing the same optimization path through two different 2D projections.`
-            : `${scene.summary} The figures default to contour view because that is the clearest teaching language. Switch to surface view only when you want to inspect the same geometry in 3D.`}
+          {sceneDescription(sceneId, scene.summary)}
         </p>
       </DemoMutedSection>
 
       {sceneId === "walk" ? <WalkDownhillScene plotMode={plotMode} /> : null}
       {sceneId === "momentum" ? <MomentumScene plotMode={plotMode} /> : null}
       {sceneId === "black-box" ? <BlackBoxScene plotMode={plotMode} /> : null}
-      {sceneId === "shadows" ? <HighDimensionalScene /> : null}
+      {sceneId === "dimensions" ? <HighDimensionalScene /> : null}
+      {sceneId === "saddles" ? <SaddlePointScene /> : null}
     </DemoPage>
   );
 }
