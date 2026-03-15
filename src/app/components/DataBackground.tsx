@@ -6,7 +6,12 @@ import LegacyDataGridBackground from "./LegacyDataGridBackground";
 export default function DataBackground() {
   const pathname = usePathname();
 
-  if (pathname === "/embedding-explorer") {
+  if (
+    pathname === "/embedding-explorer" ||
+    pathname === "/optimization" ||
+    pathname === "/game-of-life" ||
+    pathname?.startsWith("/game-of-life/")
+  ) {
     return null;
   }
 

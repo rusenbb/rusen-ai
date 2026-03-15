@@ -35,8 +35,7 @@ Detailed architecture documentation for rusen.ai.
 │                                │                                │
 │  Browser ML Demos              │                                │
 │  (Classify Anything,           │                                │
-│   Embedding Explorer,          │                                │
-│   Temperature Playground)      │                                │
+│   Embedding Explorer)          │                                │
 │           │                    │                                │
 │           ▼                    │                                │
 │  ┌─────────────────┐           │                                │
@@ -126,7 +125,6 @@ src/
 │   │   └── classify-anything/
 │   └── nerdy-stuff/              # Browser ML demos
 │       ├── embedding-explorer/
-│       ├── temperature-playground/
 │       └── rusenizer/
 ├── components/
 │   └── ui/                       # Shared UI library
@@ -298,7 +296,6 @@ All browser ML uses `@huggingface/transformers` with WASM backend.
 | Demo | Model | Size | Purpose |
 |------|-------|------|---------|
 | Classify Anything | Xenova/mobilebert-uncased-mnli | ~100MB | Zero-shot classification |
-| Temperature Playground | HuggingFaceTB/SmolLM-135M-Instruct | ~270MB | Token-by-token generation |
 | Embedding Explorer | mixedbread-ai/mxbai-embed-xsmall-v1 | ~50MB | 384-dim embeddings |
 
 ### Hook Implementations
@@ -319,24 +316,6 @@ interface UseClassifierReturn {
 - Loads MobileBERT model on first use
 - Caches in IndexedDB
 - Returns confidence scores for each label
-
-#### `useLocalLLM` (Temperature Playground)
-
-```typescript
-// src/app/nerdy-stuff/temperature-playground/hooks/useLocalLLM.ts
-
-generateTokenByToken(prompt, options, callbacks): void
-
-callbacks: {
-  onToken: ({ token, tokenId, selectedProbability, topProbabilities }) => void;
-  onComplete: () => void;
-  onError: (error: Error) => void;
-}
-```
-
-- Generates tokens one at a time
-- Exposes full probability distribution
-- Custom softmax with temperature scaling
 
 #### `useEmbedding` (Embedding Explorer)
 

@@ -1,241 +1,188 @@
-// Types for Temperature Playground state management
+// ── Data shapes (from generated JSON) ────────────────────────────────
 
-// Token probability for visualization
-export interface TokenProbability {
-  token: string;
-  tokenId: number;
-  probability: number;
+export interface TokenLogprob {
+  /** Token ID in the model vocabulary */
+  id: number;
+  /** Decoded text of this token */
+  text: string;
+  /** Log-probability at T=1 (log of softmax of raw logits) */
+  logprob: number;
 }
 
-// A single generated token with its sampling context
-export interface GeneratedToken {
-  token: string;
-  tokenId: number;
-  selectedProbability: number;
-  topProbabilities: TokenProbability[]; // Top-k for wheel visualization
+export interface TokenData {
+  /** Token ID of the actually-sampled token */
+  id: number;
+  /** Decoded text of the sampled token */
+  text: string;
+  /** Top-K alternative tokens with their log-probabilities */
+  logprobs: TokenLogprob[];
 }
 
-export interface TemperatureOutput {
-  temperature: number;
-  tokens: GeneratedToken[]; // Token-by-token history
-  content: string; // Full text (joined tokens)
-  isGenerating: boolean;
-  currentTokenIndex: number; // For animation sync
-  error: string | null;
+export interface BranchData {
+  /** Unique branch ID within this tree */
+  id: number;
+  /** Parent branch ID (null for the main/root branch) */
+  parentId: number | null;
+  /** Token index in the parent branch where this branch forks */
+  forkIndex: number;
+  /** The alternative token that was chosen instead of the parent's sampled token */
+  forkTokenId?: number;
+  /** Decoded text of the fork token */
+  forkTokenText?: string;
+  /** Sequence of tokens in this branch */
+  tokens: TokenData[];
 }
 
-export type AnimationSpeed = "slow" | "normal" | "fast";
-
-export interface TemperaturePlaygroundState {
-  prompt: string;
-  temperatures: number[];
-  outputs: Map<number, TemperatureOutput>;
-  isAnyGenerating: boolean;
-  // Model loading state
-  isModelLoading: boolean;
-  modelProgress: number;
-  modelError: string | null;
-  isModelReady: boolean;
-  // UI settings
-  animationSpeed: AnimationSpeed;
+export interface PromptData {
+  category: string;
+  level: "deterministic" | "medium" | "creative";
+  label: string;
+  /** The user instruction / system message (empty string for code-only prompts) */
+  system: string;
+  /** Raw prefill text shown greyed-out before generated tokens */
+  prefill: string;
+  /** Tokenized prefill for display */
+  prefillTokens: { id: number; text: string }[];
+  /** Trees keyed by temperature string: "0.0", "0.3", "0.6", "1.0" */
+  trees: Record<string, BranchData[]>;
 }
 
-export type TemperaturePlaygroundAction =
-  | { type: "SET_PROMPT"; prompt: string }
-  | { type: "SET_TEMPERATURES"; temperatures: number[] }
-  | { type: "START_GENERATION" }
-  | { type: "ADD_TOKEN"; temperature: number; token: GeneratedToken }
-  | { type: "ADVANCE_TOKEN_INDEX"; temperature: number }
-  | { type: "FINISH_GENERATION"; temperature: number }
-  | { type: "SET_ERROR"; temperature: number; error: string }
-  | { type: "CLEAR_OUTPUTS" }
-  | { type: "SET_MODEL_LOADING"; isLoading: boolean; progress: number }
-  | { type: "SET_MODEL_ERROR"; error: string }
-  | { type: "SET_MODEL_READY" }
-  | { type: "SET_ANIMATION_SPEED"; speed: AnimationSpeed };
-
-// Default temperatures to compare
-export const DEFAULT_TEMPERATURES = [0.0, 0.7, 1.5];
-
-// Example prompts optimized for showing temperature effects
-export const EXAMPLE_PROMPTS = [
-  {
-    label: "Story",
-    prompt: "Once upon a time",
-  },
-  {
-    label: "Code",
-    prompt: "function hello() {",
-  },
-  {
-    label: "Poem",
-    prompt: "Roses are red,",
-  },
-  {
-    label: "Open",
-    prompt: "The best way to",
-  },
-];
-
-// Animation duration in ms based on speed setting
-export function getAnimationDuration(speed: AnimationSpeed): number {
-  switch (speed) {
-    case "slow":
-      return 2000;
-    case "normal":
-      return 1000;
-    case "fast":
-      return 500;
-  }
+export interface PromptManifestEntry {
+  category: string;
+  level: string;
+  label: string;
+  file: string;
 }
 
-function createEmptyOutput(temperature: number): TemperatureOutput {
-  return {
-    temperature,
-    tokens: [],
-    content: "",
-    isGenerating: false,
-    currentTokenIndex: 0,
-    error: null,
-  };
+// ── Temperature values ───────────────────────────────────────────────
+
+export const TEMPERATURES = ["0.0", "0.3", "0.6", "1.0"] as const;
+export type TemperatureKey = (typeof TEMPERATURES)[number];
+
+// ── UI state ─────────────────────────────────────────────────────────
+
+export interface PlaygroundState {
+  /** Index into the manifest for the selected prompt */
+  promptIndex: number;
+  /** Currently viewed temperature */
+  temperature: TemperatureKey;
+  /** Index of the selected token within the active branch (for inspector) */
+  selectedTokenIndex: number | null;
+  /** ID of the branch the selected token belongs to */
+  selectedBranchId: number;
+  /** Expanded fork points keyed by `${branchId}-${tokenIndex}` */
+  expandedForks: string[];
+  /** Continuous temperature value for the inspector's probability slider (0–2) */
+  inspectorTemperature: number;
+  /** Whether prompt data is currently loading */
+  dataLoading: boolean;
 }
 
-export function createInitialState(): TemperaturePlaygroundState {
-  const outputs = new Map<number, TemperatureOutput>();
-  for (const temp of DEFAULT_TEMPERATURES) {
-    outputs.set(temp, createEmptyOutput(temp));
-  }
+export const initialPlaygroundState: PlaygroundState = {
+  promptIndex: 0,
+  temperature: "0.6",
+  selectedTokenIndex: 0,
+  selectedBranchId: 0,
+  expandedForks: [],
+  inspectorTemperature: 0.6,
+  dataLoading: true,
+};
 
-  return {
-    prompt: "",
-    temperatures: DEFAULT_TEMPERATURES,
-    outputs,
-    isAnyGenerating: false,
-    isModelLoading: false,
-    modelProgress: 0,
-    modelError: null,
-    isModelReady: false,
-    animationSpeed: "normal",
-  };
-}
+// ── Actions ──────────────────────────────────────────────────────────
 
-export function temperatureReducer(
-  state: TemperaturePlaygroundState,
-  action: TemperaturePlaygroundAction
-): TemperaturePlaygroundState {
+export type PlaygroundAction =
+  | { type: "SET_PROMPT"; index: number }
+  | { type: "SET_TEMPERATURE"; temperature: TemperatureKey }
+  | { type: "SELECT_TOKEN"; branchId: number; tokenIndex: number }
+  | { type: "NAVIGATE_TOKEN"; delta: -1 | 1; branchLength: number }
+  | { type: "CLEAR_SELECTION" }
+  | { type: "TOGGLE_FORK"; forkKey: string }
+  | { type: "SET_INSPECTOR_TEMPERATURE"; value: number }
+  | { type: "SET_DATA_LOADING"; loading: boolean };
+
+// ── Reducer ──────────────────────────────────────────────────────────
+
+export function playgroundReducer(
+  state: PlaygroundState,
+  action: PlaygroundAction,
+): PlaygroundState {
   switch (action.type) {
     case "SET_PROMPT":
-      return { ...state, prompt: action.prompt };
-
-    case "SET_TEMPERATURES": {
-      const outputs = new Map<number, TemperatureOutput>();
-      for (const temp of action.temperatures) {
-        const existing = state.outputs.get(temp);
-        outputs.set(temp, existing || createEmptyOutput(temp));
-      }
-      return { ...state, temperatures: action.temperatures, outputs };
-    }
-
-    case "START_GENERATION": {
-      const outputs = new Map(state.outputs);
-      for (const temp of state.temperatures) {
-        outputs.set(temp, {
-          ...createEmptyOutput(temp),
-          isGenerating: true,
-        });
-      }
-      return { ...state, outputs, isAnyGenerating: true };
-    }
-
-    case "ADD_TOKEN": {
-      const outputs = new Map(state.outputs);
-      const current = outputs.get(action.temperature);
-      if (current) {
-        const newTokens = [...current.tokens, action.token];
-        outputs.set(action.temperature, {
-          ...current,
-          tokens: newTokens,
-          content: newTokens.map((t) => t.token).join(""),
-        });
-      }
-      return { ...state, outputs };
-    }
-
-    case "ADVANCE_TOKEN_INDEX": {
-      const outputs = new Map(state.outputs);
-      const current = outputs.get(action.temperature);
-      if (current) {
-        outputs.set(action.temperature, {
-          ...current,
-          currentTokenIndex: current.currentTokenIndex + 1,
-        });
-      }
-      return { ...state, outputs };
-    }
-
-    case "FINISH_GENERATION": {
-      const outputs = new Map(state.outputs);
-      const current = outputs.get(action.temperature);
-      if (current) {
-        outputs.set(action.temperature, {
-          ...current,
-          isGenerating: false,
-        });
-      }
-      const isAnyGenerating = Array.from(outputs.values()).some(
-        (o) => o.isGenerating
-      );
-      return { ...state, outputs, isAnyGenerating };
-    }
-
-    case "SET_ERROR": {
-      const outputs = new Map(state.outputs);
-      const current = outputs.get(action.temperature);
-      if (current) {
-        outputs.set(action.temperature, {
-          ...current,
-          isGenerating: false,
-          error: action.error,
-        });
-      }
-      const isAnyGenerating = Array.from(outputs.values()).some(
-        (o) => o.isGenerating
-      );
-      return { ...state, outputs, isAnyGenerating };
-    }
-
-    case "CLEAR_OUTPUTS": {
-      const outputs = new Map<number, TemperatureOutput>();
-      for (const temp of state.temperatures) {
-        outputs.set(temp, createEmptyOutput(temp));
-      }
-      return { ...state, outputs };
-    }
-
-    case "SET_MODEL_LOADING":
       return {
         ...state,
-        isModelLoading: action.isLoading,
-        modelProgress: action.progress,
+        promptIndex: action.index,
+        selectedTokenIndex: 0,
+        selectedBranchId: 0,
+        expandedForks: [],
+        dataLoading: true,
       };
 
-    case "SET_MODEL_ERROR":
+    case "SET_TEMPERATURE":
       return {
         ...state,
-        isModelLoading: false,
-        modelError: action.error,
+        temperature: action.temperature,
+        selectedTokenIndex: 0,
+        selectedBranchId: 0,
+        expandedForks: [],
+        inspectorTemperature: parseFloat(action.temperature),
       };
 
-    case "SET_MODEL_READY":
+    case "SELECT_TOKEN":
       return {
         ...state,
-        isModelLoading: false,
-        modelProgress: 100,
-        isModelReady: true,
+        selectedTokenIndex: action.tokenIndex,
+        selectedBranchId: action.branchId,
       };
 
-    case "SET_ANIMATION_SPEED":
-      return { ...state, animationSpeed: action.speed };
+    case "NAVIGATE_TOKEN": {
+      const maxIdx = action.branchLength - 1;
+      if (maxIdx < 0) return state;
+
+      // If nothing is selected, start at the first or last token
+      // on the main branch (id 0)
+      if (state.selectedTokenIndex === null) {
+        return {
+          ...state,
+          selectedTokenIndex: action.delta === 1 ? 0 : maxIdx,
+        };
+      }
+
+      const next = state.selectedTokenIndex + action.delta;
+      if (next < 0 || next > maxIdx) return state;
+
+      return {
+        ...state,
+        selectedTokenIndex: next,
+      };
+    }
+
+    case "CLEAR_SELECTION":
+      return {
+        ...state,
+        selectedTokenIndex: null,
+      };
+
+    case "TOGGLE_FORK": {
+      const has = state.expandedForks.includes(action.forkKey);
+      return {
+        ...state,
+        expandedForks: has
+          ? state.expandedForks.filter((f) => f !== action.forkKey)
+          : [...state.expandedForks, action.forkKey],
+      };
+    }
+
+    case "SET_INSPECTOR_TEMPERATURE":
+      return {
+        ...state,
+        inspectorTemperature: action.value,
+      };
+
+    case "SET_DATA_LOADING":
+      return {
+        ...state,
+        dataLoading: action.loading,
+      };
 
     default:
       return state;

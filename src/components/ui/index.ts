@@ -15,4 +15,5 @@ export { Spinner } from "./Spinner";
 export { Button } from "./Button";
 export { Alert } from "./Alert";
 export { Card, CardHeader, CardTitle } from "./Card";
+export { DemoPage, DemoHeader, DemoPanel, DemoMutedSection, DemoFootnote } from "./DemoLayout";
 export { EmptyState, EmptyStateIcon } from "./EmptyState";

@@ -1,212 +1,157 @@
-// ── ORT types (loaded from CDN, not bundled) ────────────────────────
+// ── State machine phases ─────────────────────────────────────────────
+//   idle → loading → ready → encoding → encoded ↔ (clicks)
+//                      ↑         ↓
+//                      └── error ←┘
 
-export interface OrtTensor {
-  data: Float32Array | Int32Array | BigInt64Array | Uint8Array;
-  dims: readonly number[];
-  type: string;
-}
-
-export interface OrtValueMetadata {
-  name: string;
-  isTensor: boolean;
-  type?: string;
-  shape?: readonly (number | string)[];
-}
-
-export interface OrtInferenceSession {
-  inputNames: readonly string[];
-  outputNames: readonly string[];
-  inputMetadata: readonly OrtValueMetadata[];
-  run(feeds: Record<string, OrtTensor>): Promise<Record<string, OrtTensor>>;
-  release(): Promise<void>;
-}
-
-// ── Domain types ────────────────────────────────────────────────────
-
-export interface SegmentResult {
-  scores: number[];
-  boxes: number[][];
-  maskData: Float32Array | null;
-  maskDims: number[] | null;
-  boxPromptUsed: boolean;
-  timings: {
-    imageEncoder: number;
-    languageEncoder: number;
-    decoder: number;
-  };
-}
-
-export interface BoxPrompt {
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-}
-
-export interface DownloadProgress {
-  imageEncoder: number;
-  languageEncoder: number;
-  decoder: number;
-}
-
-export type ModelsStatus =
+export type ModelPhase =
   | "idle"
-  | "downloading"
-  | "creating-sessions"
+  | "loading"
   | "ready"
+  | "encoding"
+  | "encoded"
   | "error";
 
-export type InferenceStatus =
-  | "idle"
-  | "preparing"
-  | "encoding-image"
-  | "encoding-text"
-  | "decoding"
-  | "done"
-  | "error";
+// ── Domain types ─────────────────────────────────────────────────────
 
-// ── State ───────────────────────────────────────────────────────────
+export type PointMode = "include" | "exclude";
 
-export interface SegmentState {
-  modelsStatus: ModelsStatus;
-  downloadProgress: DownloadProgress;
-  executionProvider: "webgpu" | "wasm" | null;
-  gpuDevice: string | null;
+export type ExportBackground = "transparent" | "black" | "white";
 
-  imageFile: File | null;
-  imagePreviewUrl: string | null;
-  originalWidth: number | null;
-  originalHeight: number | null;
-  imageEncoded: boolean;
-  boxPrompt: BoxPrompt | null;
-
-  textPrompt: string;
-
-  inferenceStatus: InferenceStatus;
-  results: SegmentResult | null;
-
-  error: string | null;
+export interface SegmentPoint {
+  id: string;
+  /** Normalized x coordinate [0,1] relative to displayed image */
+  x: number;
+  /** Normalized y coordinate [0,1] relative to displayed image */
+  y: number;
+  /** 1 = positive (include), 0 = negative (exclude) */
+  label: 1 | 0;
 }
 
-// ── Actions ─────────────────────────────────────────────────────────
+export interface MaskCandidate {
+  index: 0 | 1 | 2;
+  iouScore: number;
+}
 
-export type SegmentAction =
-  | { type: "SET_MODELS_STATUS"; status: ModelsStatus }
-  | { type: "SET_DOWNLOAD_PROGRESS"; progress: Partial<DownloadProgress> }
-  | {
-      type: "SET_EXECUTION_PROVIDER";
-      provider: "webgpu" | "wasm";
-      device?: string;
-    }
-  | {
-      type: "SET_IMAGE";
-      file: File;
-      previewUrl: string;
-      width: number;
-      height: number;
-    }
-  | { type: "CLEAR_IMAGE" }
-  | { type: "SET_BOX_PROMPT"; boxPrompt: BoxPrompt | null }
-  | { type: "SET_IMAGE_ENCODED"; encoded: boolean }
-  | { type: "SET_TEXT_PROMPT"; prompt: string }
-  | { type: "SET_INFERENCE_STATUS"; status: InferenceStatus }
-  | { type: "SET_RESULTS"; results: SegmentResult }
-  | { type: "SET_ERROR"; error: string | null }
-  | { type: "RESET" };
+// ── Reducer state ────────────────────────────────────────────────────
 
-// ── Initial state ───────────────────────────────────────────────────
+export interface SAMState {
+  phase: ModelPhase;
+  loadProgress: number;
+  error: string | null;
+  imageUrl: string | null;
+  encoderMs: number | null;
+  decoderMs: number | null;
+  points: SegmentPoint[];
+  pointMode: PointMode;
+  maskCandidates: MaskCandidate[];
+  activeMaskIndex: 0 | 1 | 2;
+  maskOpacity: number;
+}
 
-export const initialState: SegmentState = {
-  modelsStatus: "idle",
-  downloadProgress: { imageEncoder: 0, languageEncoder: 0, decoder: 0 },
-  executionProvider: null,
-  gpuDevice: null,
-
-  imageFile: null,
-  imagePreviewUrl: null,
-  originalWidth: null,
-  originalHeight: null,
-  imageEncoded: false,
-  boxPrompt: null,
-
-  textPrompt: "",
-
-  inferenceStatus: "idle",
-  results: null,
-
+export const initialSAMState: SAMState = {
+  phase: "idle",
+  loadProgress: 0,
   error: null,
+  imageUrl: null,
+  encoderMs: null,
+  decoderMs: null,
+  points: [],
+  pointMode: "include",
+  maskCandidates: [],
+  activeMaskIndex: 0,
+  maskOpacity: 0.4,
 };
 
-// ── Reducer ─────────────────────────────────────────────────────────
+// ── Actions ──────────────────────────────────────────────────────────
 
-export function segmentReducer(
-  state: SegmentState,
-  action: SegmentAction,
-): SegmentState {
+export type SAMAction =
+  | { type: "MODEL_LOADING" }
+  | { type: "MODEL_PROGRESS"; progress: number }
+  | { type: "MODEL_READY" }
+  | { type: "MODEL_ERROR"; error: string }
+  | { type: "IMAGE_SELECTED"; url: string }
+  | { type: "ENCODE_START" }
+  | { type: "ENCODE_DONE"; encoderMs: number }
+  | { type: "DECODE_DONE"; decoderMs: number; candidates: MaskCandidate[] }
+  | { type: "ADD_POINT"; point: SegmentPoint }
+  | { type: "REMOVE_POINT"; id: string }
+  | { type: "CLEAR_POINTS" }
+  | { type: "SET_ACTIVE_MASK"; index: 0 | 1 | 2 }
+  | { type: "SET_OPACITY"; opacity: number }
+  | { type: "SET_POINT_MODE"; mode: PointMode };
+
+// ── Reducer ──────────────────────────────────────────────────────────
+
+export function samReducer(state: SAMState, action: SAMAction): SAMState {
   switch (action.type) {
-    case "SET_MODELS_STATUS":
-      return { ...state, modelsStatus: action.status };
+    case "MODEL_LOADING":
+      return { ...state, phase: "loading", error: null, loadProgress: 0 };
 
-    case "SET_DOWNLOAD_PROGRESS":
+    case "MODEL_PROGRESS":
+      return { ...state, loadProgress: action.progress };
+
+    case "MODEL_READY":
+      return { ...state, phase: "ready", loadProgress: 100 };
+
+    case "MODEL_ERROR":
+      return { ...state, phase: "error", error: action.error };
+
+    case "IMAGE_SELECTED":
       return {
         ...state,
-        downloadProgress: { ...state.downloadProgress, ...action.progress },
+        imageUrl: action.url,
+        points: [],
+        maskCandidates: [],
+        activeMaskIndex: 0,
+        encoderMs: null,
+        decoderMs: null,
       };
 
-    case "SET_EXECUTION_PROVIDER":
+    case "ENCODE_START":
+      return { ...state, phase: "encoding" };
+
+    case "ENCODE_DONE":
+      return { ...state, phase: "encoded", encoderMs: action.encoderMs };
+
+    case "DECODE_DONE": {
+      // Auto-select the mask with the highest IoU
+      const best = action.candidates.reduce((a, b) =>
+        b.iouScore > a.iouScore ? b : a
+      );
       return {
         ...state,
-        executionProvider: action.provider,
-        gpuDevice: action.device ?? null,
+        decoderMs: action.decoderMs,
+        maskCandidates: action.candidates,
+        activeMaskIndex: best.index,
       };
+    }
 
-    case "SET_IMAGE":
+    case "ADD_POINT":
+      return { ...state, points: [...state.points, action.point] };
+
+    case "REMOVE_POINT":
       return {
         ...state,
-        imageFile: action.file,
-        imagePreviewUrl: action.previewUrl,
-        originalWidth: action.width,
-        originalHeight: action.height,
-        imageEncoded: false,
-        boxPrompt: null,
-        results: null,
+        points: state.points.filter((p) => p.id !== action.id),
       };
 
-    case "CLEAR_IMAGE":
+    case "CLEAR_POINTS":
       return {
         ...state,
-        imageFile: null,
-        imagePreviewUrl: state.imagePreviewUrl
-          ? (URL.revokeObjectURL(state.imagePreviewUrl), null)
-          : null,
-        originalWidth: null,
-        originalHeight: null,
-        imageEncoded: false,
-        boxPrompt: null,
-        results: null,
+        points: [],
+        maskCandidates: [],
+        activeMaskIndex: 0,
+        decoderMs: null,
       };
 
-    case "SET_BOX_PROMPT":
-      return { ...state, boxPrompt: action.boxPrompt, results: null };
+    case "SET_ACTIVE_MASK":
+      return { ...state, activeMaskIndex: action.index };
 
-    case "SET_IMAGE_ENCODED":
-      return { ...state, imageEncoded: action.encoded };
+    case "SET_OPACITY":
+      return { ...state, maskOpacity: action.opacity };
 
-    case "SET_TEXT_PROMPT":
-      return { ...state, textPrompt: action.prompt };
-
-    case "SET_INFERENCE_STATUS":
-      return { ...state, inferenceStatus: action.status };
-
-    case "SET_RESULTS":
-      return { ...state, results: action.results, inferenceStatus: "done" };
-
-    case "SET_ERROR":
-      return { ...state, error: action.error, inferenceStatus: "error" };
-
-    case "RESET":
-      if (state.imagePreviewUrl) URL.revokeObjectURL(state.imagePreviewUrl);
-      return initialState;
+    case "SET_POINT_MODE":
+      return { ...state, pointMode: action.mode };
 
     default:
       return state;

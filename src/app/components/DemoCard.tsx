@@ -22,7 +22,7 @@ export default function DemoCard({ title, description, href, tags = [], status =
           <span className="text-[11px] px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded shrink-0">Live</span>
         )}
       </div>
-      <p className="text-neutral-600 dark:text-neutral-400 text-sm leading-relaxed mb-3">{description}</p>
+      <p className="text-neutral-700 dark:text-neutral-400 text-sm leading-relaxed mb-3">{description}</p>
       {tags.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {tags.map((tag) => (

@@ -6,6 +6,7 @@ import ClassInput from "./components/ClassInput";
 import TextInput from "./components/TextInput";
 import ResultsPanel from "./components/ResultsPanel";
 import { classifyReducer, initialState } from "./types";
+import { DemoFootnote, DemoHeader, DemoMutedSection, DemoPage, DemoPanel } from "@/components/ui";
 
 export default function ClassifyAnythingPage() {
   const [state, dispatch] = useReducer(classifyReducer, initialState);
@@ -45,21 +46,21 @@ export default function ClassifyAnythingPage() {
   }, []);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Classify Anything</h1>
-        <p className="text-neutral-600 dark:text-neutral-400">
+    <DemoPage>
+      <DemoHeader
+        eyebrow="NLP / Zero-Shot Classification"
+        title="Classify Anything"
+        description={
+          <>
           Zero-shot text classification. Define your own classes, paste any text, get predictions.
           All processing happens locally in your browser.
-        </p>
-      </div>
+          </>
+        }
+      />
 
-      {/* Main content */}
       <div className="grid lg:grid-cols-3 gap-6">
-        {/* Left column - Labels */}
         <div className="lg:col-span-1">
-          <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-6">
+          <DemoPanel title="Labels" description="Create the classes your prompt should be sorted into.">
             <ClassInput
               labels={state.labels}
               onAddLabel={handleAddLabel}
@@ -67,12 +68,11 @@ export default function ClassifyAnythingPage() {
               onSetLabels={handleSetLabels}
               disabled={state.isClassifying}
             />
-          </div>
+          </DemoPanel>
         </div>
 
-        {/* Middle column - Input */}
         <div className="lg:col-span-1">
-          <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-6">
+          <DemoPanel title="Input Text" description="Paste any sentence, paragraph, or document excerpt.">
             <TextInput
               value={state.inputText}
               onChange={handleSetInputText}
@@ -81,12 +81,11 @@ export default function ClassifyAnythingPage() {
               isModelReady={isModelReady}
               disabled={state.isClassifying}
             />
-          </div>
+          </DemoPanel>
         </div>
 
-        {/* Right column - Results */}
         <div className="lg:col-span-1">
-          <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-6">
+          <DemoPanel title="Results" description="Review the predicted label distribution and model status.">
             <ResultsPanel
               results={state.results}
               isClassifying={state.isClassifying}
@@ -94,13 +93,11 @@ export default function ClassifyAnythingPage() {
               loadProgress={loadProgress}
               error={state.error || modelError}
             />
-          </div>
+          </DemoPanel>
         </div>
       </div>
 
-      {/* Info section */}
-      <div className="mt-8 p-6 bg-neutral-50 dark:bg-neutral-800/50 rounded-xl">
-        <h2 className="text-lg font-semibold mb-3">How it works</h2>
+      <DemoMutedSection className="mt-8" title="How it works">
         <div className="grid md:grid-cols-3 gap-4 text-sm text-neutral-600 dark:text-neutral-400">
           <div>
             <h3 className="font-medium text-neutral-900 dark:text-neutral-100 mb-1">
@@ -130,12 +127,11 @@ export default function ClassifyAnythingPage() {
             </p>
           </div>
         </div>
-      </div>
+      </DemoMutedSection>
 
-      {/* Technical details */}
-      <div className="mt-4 text-xs text-neutral-500 dark:text-neutral-400 text-center">
+      <DemoFootnote>
         Using MobileBERT-uncased-MNLI via Transformers.js. Model runs entirely in your browser using WebAssembly.
-      </div>
-    </div>
+      </DemoFootnote>
+    </DemoPage>
   );
 }
