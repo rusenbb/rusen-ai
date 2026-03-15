@@ -247,14 +247,15 @@ export const PROJECTS: ProjectMeta[] = [
     title: "RuseN-Gram",
     slug: "rusen-gram",
     collection: "nerdy-stuff",
-    status: "coming-soon",
+    status: "live",
     summary:
-      "My personal N-Gram model. Old school meets new school language modeling.",
-    description: "Classic N-gram language modeling playground.",
-    tags: ["N-Gram", "Classic ML"],
+      "A Turkish-first skip-gram language modeling playground that blends a base LM with an assistant-tuned statistical LM.",
+    description:
+      "Interactive statistical language modeling playground for skip-grams, interpolation, and assistant-style behavior.",
+    tags: ["Skip-gram", "Statistical LM", "Interactive"],
     domains: ["NLP"],
-    capabilities: ["Language Modeling"],
-    tech: ["N-grams"],
+    capabilities: ["Language Modeling", "Interpretability"],
+    tech: ["Skip-grams", "Interpolation", "Browser inference"],
     order: 80,
   },
 ];
