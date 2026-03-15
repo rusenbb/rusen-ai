@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   DemoFootnote,
   DemoHeader,
@@ -8,14 +8,18 @@ import {
   DemoPage,
   DemoPanel,
   Button,
+  Spinner,
 } from "@/components/ui";
 import {
   autocompleteTokens,
+  decodeGeneratedTokens,
+  loadRuseNGramArtifact,
   RUSEN_GRAM_EXAMPLES,
   scoreNextTokens,
   type CandidatePrediction,
+  type RuseNGramArtifact,
   type RuseNGramExampleId,
-} from "./lib/model";
+} from "./lib/runtime";
 
 function formatPercent(value: number): string {
   return `${(value * 100).toFixed(1)}%`;
@@ -42,33 +46,100 @@ export default function RuseNGramExperience() {
   const [assistantBlend, setAssistantBlend] = useState(
     initialExample.recommendedBlend,
   );
-  const [generatedTokens, setGeneratedTokens] = useState<string[]>([]);
+  const [generatedTokens, setGeneratedTokens] = useState<number[]>([]);
   const [selectedToken, setSelectedToken] = useState<string | null>(null);
+  const [artifact, setArtifact] = useState<RuseNGramArtifact | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const model = await loadRuseNGramArtifact();
+        if (cancelled) return;
+        setArtifact(model);
+      } catch (error) {
+        if (cancelled) return;
+        setLoadError(
+          error instanceof Error
+            ? error.message
+            : "Failed to load model artifact",
+        );
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const rankedCandidates = useMemo(
-    () => scoreNextTokens(prompt, generatedTokens, assistantBlend),
-    [assistantBlend, generatedTokens, prompt],
+    () =>
+      artifact
+        ? scoreNextTokens(artifact, prompt, generatedTokens, assistantBlend)
+        : [],
+    [artifact, assistantBlend, generatedTokens, prompt],
   );
 
   const selectedCandidate =
-    rankedCandidates.find((candidate) => candidate.token === selectedToken) ??
+    rankedCandidates.find((candidate) => candidate.tokenKey === selectedToken) ??
     rankedCandidates[0] ??
     null;
 
-  const generatedText = `${prompt}${generatedTokens.join("")}`;
+  const generatedText = `${prompt}${
+    artifact ? decodeGeneratedTokens(artifact, generatedTokens) : ""
+  }`;
   const topThree = rankedCandidates.slice(0, 3);
 
   const appendToken = (candidate: CandidatePrediction) => {
-    setGeneratedTokens((current) => [...current, candidate.token]);
-    setSelectedToken(candidate.token);
+    setGeneratedTokens((current) => [...current, ...candidate.tokenIds]);
+    setSelectedToken(candidate.tokenKey);
   };
+
+  if (!artifact && !loadError) {
+    return (
+      <DemoPage width="2xl">
+        <DemoHeader
+          eyebrow="NLP / Statistical Language Modeling"
+          title="RuseN-Gram"
+          description="Loading the trained statistical language model artifact..."
+        />
+        <div className="flex items-center justify-center gap-3 py-20">
+          <Spinner size="md" />
+          <span className="text-sm text-neutral-500 dark:text-neutral-400">
+            Loading trained tokenizer + n-gram artifact&hellip;
+          </span>
+        </div>
+      </DemoPage>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <DemoPage width="2xl">
+        <DemoHeader
+          eyebrow="NLP / Statistical Language Modeling"
+          title="RuseN-Gram"
+          description="The browser could not load the exported model artifact."
+        />
+        <DemoMutedSection title="Load Error">
+          <p className="text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
+            {loadError}
+          </p>
+        </DemoMutedSection>
+      </DemoPage>
+    );
+  }
+
+  const loadedArtifact = artifact!;
 
   return (
     <DemoPage width="2xl" className="space-y-8">
       <DemoHeader
         eyebrow="NLP / Statistical Language Modeling"
         title="RuseN-Gram"
-        description="A skip-gram-flavored statistical language model playground. Explore how a base Turkish LM, an instruction-tuned assistant LM, and their blend shift the next-token distribution."
+        description="A browser-side playground for a learned Turkish BPE tokenizer, interpolated base and assistant n-gram models, and prompt-conditioned lexical features trained from external corpora."
         actions={
           <div className="flex items-center gap-2 rounded-full border border-neutral-200/80 bg-white/80 px-3 py-2 text-xs font-medium dark:border-neutral-800/80 dark:bg-neutral-950/50">
             <span className="text-neutral-500 dark:text-neutral-400">Mode</span>
@@ -156,7 +227,15 @@ export default function RuseNGramExperience() {
               size="sm"
               onClick={() =>
                 setGeneratedTokens((current) =>
-                  autocompleteTokens(prompt, current, assistantBlend, 6),
+                  artifact
+                    ? autocompleteTokens(
+                        artifact,
+                        prompt,
+                        current,
+                        assistantBlend,
+                        6,
+                      )
+                    : current,
                 )
               }
             >
@@ -186,7 +265,7 @@ export default function RuseNGramExperience() {
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
             {topThree.map((candidate, index) => (
               <button
-                key={candidate.token}
+                key={candidate.tokenKey}
                 type="button"
                 onClick={() => appendToken(candidate)}
                 className={`rounded-[1rem] border p-3 text-left transition ${
@@ -274,10 +353,10 @@ export default function RuseNGramExperience() {
           </div>
 
           <DemoFootnote align="left" className="mt-4">
-            This MVP uses compact hand-authored statistical weights to prove out
-            the inference and explanation interface. The full project will
-            replace them with trained skip-gram artifacts exported for browser
-            use.
+            This artifact is trained from split external corpora with a learned
+            tokenizer, discounted n-gram models, and held-out validation.
+            Nothing in the ranking path relies on preserved vocab lists or
+            prompt buckets.
           </DemoFootnote>
         </DemoPanel>
       </div>
@@ -290,12 +369,12 @@ export default function RuseNGramExperience() {
         >
           <div className="space-y-2">
             {rankedCandidates.slice(0, 10).map((candidate, index) => {
-              const active = candidate.token === selectedCandidate?.token;
+              const active = candidate.tokenKey === selectedCandidate?.tokenKey;
               return (
                 <button
-                  key={candidate.token}
+                  key={candidate.tokenKey}
                   type="button"
-                  onClick={() => setSelectedToken(candidate.token)}
+                  onClick={() => setSelectedToken(candidate.tokenKey)}
                   className={`w-full rounded-xl border p-3 text-left transition ${
                     active
                       ? "border-neutral-900 bg-neutral-900 text-white dark:border-neutral-100 dark:bg-neutral-100 dark:text-neutral-950"
@@ -307,9 +386,7 @@ export default function RuseNGramExperience() {
                       <div className="text-[10px] font-mono uppercase tracking-[0.2em] opacity-70">
                         Rank {index + 1}
                       </div>
-                      <div className="mt-1 font-mono text-sm">
-                        {formatToken(candidate.token)}
-                      </div>
+                      <div className="mt-1 font-mono text-sm">{formatToken(candidate.token)}</div>
                     </div>
                     <div className="text-right text-xs tabular-nums opacity-80">
                       {formatPercent(candidate.probability)}
@@ -326,9 +403,9 @@ export default function RuseNGramExperience() {
                     />
                   </div>
                   <div className="mt-3 flex items-center justify-between text-[11px] opacity-70">
-                    <span>base {candidate.baseScore.toFixed(2)}</span>
-                    <span>assistant {candidate.assistantScore.toFixed(2)}</span>
-                    <span>blend {candidate.blendedScore.toFixed(2)}</span>
+                    <span>base {formatPercent(candidate.baseProbability)}</span>
+                    <span>assistant {formatPercent(candidate.assistantProbability)}</span>
+                    <span>mix {formatPercent(candidate.blendedProbability)}</span>
                   </div>
                 </button>
               );
@@ -338,7 +415,7 @@ export default function RuseNGramExperience() {
 
         <DemoPanel
           title="Why This Token"
-          description="The feature trace below is the heart of the product: show exactly which skip-grams and style priors fired."
+          description="The trace shows the interpolated LM probabilities plus any prompt-conditioned lexical lift learned from assistant data."
           padding="lg"
         >
           {selectedCandidate ? (
@@ -371,7 +448,8 @@ export default function RuseNGramExperience() {
                           {contribution.kind}
                         </span>
                         <span className="ml-auto text-xs font-semibold tabular-nums text-neutral-700 dark:text-neutral-200">
-                          +{contribution.weight.toFixed(2)}
+                          {contribution.weight >= 0 ? "+" : ""}
+                          {contribution.weight.toFixed(2)}
                         </span>
                       </div>
                       <div className="mt-2 text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
@@ -397,8 +475,9 @@ export default function RuseNGramExperience() {
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
               The goal is not to cosplay an LLM. It is to show how much
-              assistant-like behavior you can recover from pure statistics once
-              skip features and response-style data are introduced.
+              assistant-like behavior you can recover from learned token units,
+              real held-out evaluation, and response data grounded in external
+              corpora.
             </p>
           </div>
           <div>
@@ -407,8 +486,8 @@ export default function RuseNGramExperience() {
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
               Morphologically rich languages make classical baselines more
-              relevant, not less. Rusenizer v2 and RuseN-Gram are being designed
-              together for that reason.
+              relevant, not less. This artifact already uses the shared BPE
+              tokenizer foundation that Rusenizer v2 will build on.
             </p>
           </div>
           <div>
@@ -416,17 +495,63 @@ export default function RuseNGramExperience() {
               Browser explainability
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
-              The long-term implementation keeps inference static-site friendly:
-              compact artifacts, explicit feature traces, and instant
-              counterfactual inspection.
+              The implementation stays static-export friendly: a compact browser
+              artifact, explicit traces, and no server-side generation path.
+            </p>
+          </div>
+        </div>
+      </DemoMutedSection>
+
+      <DemoMutedSection title="Artifact Status">
+        <div className="grid gap-4 md:grid-cols-4">
+          <div>
+            <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-neutral-700 dark:text-neutral-200">
+              Version
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
+              {loadedArtifact.version}
+            </p>
+          </div>
+          <div>
+            <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-neutral-700 dark:text-neutral-200">
+              Tokenizer
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
+              {loadedArtifact.metadata.tokenizerEvaluation.vocabSize} pieces /{" "}
+              {loadedArtifact.metadata.tokenizerEvaluation.mergeCount} merges
+            </p>
+          </div>
+          <div>
+            <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-neutral-700 dark:text-neutral-200">
+              Corpus Splits
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
+              Base {loadedArtifact.metadata.corpus.base.train}/
+              {loadedArtifact.metadata.corpus.base.validation}/
+              {loadedArtifact.metadata.corpus.base.test}
+              <br />
+              Assistant {loadedArtifact.metadata.corpus.assistant.train}/
+              {loadedArtifact.metadata.corpus.assistant.validation}/
+              {loadedArtifact.metadata.corpus.assistant.test}
+            </p>
+          </div>
+          <div>
+            <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-neutral-700 dark:text-neutral-200">
+              Validation
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
+              Base ppl {loadedArtifact.metadata.evaluation.baseHeldoutPerplexity}
+              <br />
+              Blend ppl{" "}
+              {loadedArtifact.metadata.evaluation.blendedAssistantHeldoutPerplexity}
             </p>
           </div>
         </div>
       </DemoMutedSection>
 
       <DemoFootnote>
-        Skip-gram MVP · Turkish-first statistical LM · full trained artifacts to
-        follow in this branch
+        Learned BPE foundation · discounted n-gram interpolation · prompt lexical
+        features from real external corpora
       </DemoFootnote>
     </DemoPage>
   );

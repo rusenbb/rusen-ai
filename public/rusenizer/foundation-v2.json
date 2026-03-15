@@ -1,0 +1,80 @@
+{
+  "version": "ruse-ngram-v2-bpe-kn",
+  "tokenizer": {
+    "base": {
+      "validation": {
+        "documents": 164,
+        "charsPerToken": 2.0537,
+        "tokensPerDocument": 303.58
+      },
+      "test": {
+        "documents": 145,
+        "charsPerToken": 2.0325,
+        "tokensPerDocument": 304.77
+      }
+    },
+    "assistant": {
+      "validation": {
+        "documents": 106,
+        "charsPerToken": 2.1448,
+        "tokensPerDocument": 226.93
+      },
+      "test": {
+        "documents": 107,
+        "charsPerToken": 2.1447,
+        "tokensPerDocument": 223.57
+      }
+    },
+    "vocabSize": 640,
+    "mergeCount": 288
+  },
+  "corpus": {
+    "base": {
+      "train": 1291,
+      "validation": 164,
+      "test": 145
+    },
+    "assistant": {
+      "train": 822,
+      "validation": 106,
+      "test": 107
+    },
+    "sources": {
+      "base": {
+        "wikimedia/wikipedia": {
+          "train": 1291,
+          "validation": 164,
+          "test": 145
+        }
+      },
+      "assistant": {
+        "atasoglu/instruction-turkish": {
+          "train": 208,
+          "validation": 21,
+          "test": 26
+        },
+        "bezir/turkish_exam_instructions": {
+          "train": 285,
+          "validation": 41,
+          "test": 34
+        },
+        "sixfingerdev/turkish-qa-multi-dialog-dataset": {
+          "train": 329,
+          "validation": 44,
+          "test": 47
+        }
+      }
+    }
+  },
+  "evaluation": {
+    "baseHeldoutPerplexity": 18.7114,
+    "assistantHeldoutPerplexity": 27.6671,
+    "assistantHeldoutTop5": 0.5766,
+    "tunedValidationPerplexity": 55577325.42,
+    "blendedAssistantHeldoutPerplexity": 21.789,
+    "blendedAssistantHeldoutTop5": 0.5963,
+    "defaultAssistantBlend": 0.7,
+    "promptFeatureScale": 0.0
+  },
+  "artifactPath": "/rusen-gram/model-v2.json"
+}
