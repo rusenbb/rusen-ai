@@ -42,23 +42,41 @@ interface TokenizerInterface {
 
 type ExampleCategory = "turkish" | "english" | "code" | "mixed";
 
-const EXAMPLE_CATEGORIES: Record<ExampleCategory, { text: string; label: string }[]> = {
+const EXAMPLE_CATEGORIES: Record<
+  ExampleCategory,
+  { text: string; label: string }[]
+> = {
   turkish: [
     { text: "Merhaba dünya!", label: "Merhaba dünya!" },
     { text: "kitaplarımdan", label: "kitaplarımdan" },
     { text: "evlerimizden", label: "evlerimizden" },
     { text: "göremeyecekmişsiniz", label: "göremeyecek..." },
-    { text: "Türkiye'nin başkenti Ankara'dır.", label: "Türkiye'nin başkenti..." },
-    { text: "Yapay zeka günümüzde hızla gelişmektedir.", label: "Yapay zeka..." },
+    {
+      text: "Türkiye'nin başkenti Ankara'dır.",
+      label: "Türkiye'nin başkenti...",
+    },
+    {
+      text: "Yapay zeka günümüzde hızla gelişmektedir.",
+      label: "Yapay zeka...",
+    },
   ],
   english: [
     { text: "Hello world!", label: "Hello world!" },
-    { text: "The quick brown fox jumps over the lazy dog.", label: "Quick brown fox..." },
-    { text: "Artificial intelligence is rapidly evolving.", label: "AI is evolving..." },
+    {
+      text: "The quick brown fox jumps over the lazy dog.",
+      label: "Quick brown fox...",
+    },
+    {
+      text: "Artificial intelligence is rapidly evolving.",
+      label: "AI is evolving...",
+    },
     { text: "tokenization", label: "tokenization" },
   ],
   code: [
-    { text: "function tokenize(text) { return text.split(' '); }", label: "JS function" },
+    {
+      text: "function tokenize(text) { return text.split(' '); }",
+      label: "JS function",
+    },
     { text: "SELECT * FROM users WHERE id = 1", label: "SQL query" },
     { text: "const API_KEY = process.env.OPENAI_KEY;", label: "API key" },
   ],
@@ -106,7 +124,10 @@ type RusenizerAction =
   | { type: "ADD_EFFICIENCY_POINT"; value: number }
   | { type: "CLEAR_EFFICIENCY_HISTORY" };
 
-function rusenizerReducer(state: RusenizerState, action: RusenizerAction): RusenizerState {
+function rusenizerReducer(
+  state: RusenizerState,
+  action: RusenizerAction,
+): RusenizerState {
   switch (action.type) {
     case "SET_INPUT":
       return {
@@ -129,7 +150,10 @@ function rusenizerReducer(state: RusenizerState, action: RusenizerAction): Rusen
     case "ADD_EFFICIENCY_POINT":
       return {
         ...state,
-        efficiencyHistory: [...state.efficiencyHistory.slice(-19), action.value],
+        efficiencyHistory: [
+          ...state.efficiencyHistory.slice(-19),
+          action.value,
+        ],
       };
     case "CLEAR_EFFICIENCY_HISTORY":
       return { ...state, efficiencyHistory: [] };
@@ -163,7 +187,8 @@ function detectLanguage(text: string): DetectedLanguage {
   const ratio = turkishMatches / text.length;
 
   if (ratio > 0.02) return "turkish";
-  if (ratio === 0 && /^[a-zA-Z0-9\s.,!?'"():;\-_]+$/.test(text)) return "english";
+  if (ratio === 0 && /^[a-zA-Z0-9\s.,!?'"():;\-_]+$/.test(text))
+    return "english";
   if (turkishMatches > 0) return "mixed";
   return "unknown";
 }
@@ -180,7 +205,7 @@ function computeTokenBoundaries(tokens: { text: string }[]): Set<number> {
 
 function findDivergentBoundaries(
   rusenTokens: TokenInfo[],
-  gpt4Tokens: GPT4TokenInfo[]
+  gpt4Tokens: GPT4TokenInfo[],
 ): { rusenDivergent: Set<number>; gptDivergent: Set<number> } {
   const rusenBoundaries = computeTokenBoundaries(rusenTokens);
   const gptBoundaries = computeTokenBoundaries(gpt4Tokens);
@@ -212,14 +237,20 @@ function SkeletonLoader() {
       {/* Category tabs skeleton */}
       <div className="flex gap-2 mb-6">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="h-8 w-20 bg-neutral-200 dark:bg-neutral-800 rounded-full" />
+          <div
+            key={i}
+            className="h-8 w-20 bg-neutral-200 dark:bg-neutral-800 rounded-full"
+          />
         ))}
       </div>
 
       {/* Example buttons skeleton */}
       <div className="flex flex-wrap gap-2 mb-6">
         {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div key={i} className="h-8 w-32 bg-neutral-200 dark:bg-neutral-800 rounded-full" />
+          <div
+            key={i}
+            className="h-8 w-32 bg-neutral-200 dark:bg-neutral-800 rounded-full"
+          />
         ))}
       </div>
 
@@ -235,7 +266,10 @@ function SkeletonLoader() {
           </div>
           <div className="flex flex-wrap gap-1 min-h-[60px]">
             {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="h-8 w-16 bg-neutral-200 dark:bg-neutral-800 rounded" />
+              <div
+                key={i}
+                className="h-8 w-16 bg-neutral-200 dark:bg-neutral-800 rounded"
+              />
             ))}
           </div>
         </div>
@@ -246,7 +280,10 @@ function SkeletonLoader() {
           </div>
           <div className="flex flex-wrap gap-1 min-h-[60px]">
             {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-              <div key={i} className="h-8 w-12 bg-neutral-200 dark:bg-neutral-800 rounded" />
+              <div
+                key={i}
+                className="h-8 w-12 bg-neutral-200 dark:bg-neutral-800 rounded"
+              />
             ))}
           </div>
         </div>
@@ -255,7 +292,10 @@ function SkeletonLoader() {
       {/* Stats skeleton */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
         {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-4 text-center">
+          <div
+            key={i}
+            className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-4 text-center"
+          >
             <div className="h-8 w-12 mx-auto bg-neutral-200 dark:bg-neutral-800 rounded mb-2" />
             <div className="h-4 w-20 mx-auto bg-neutral-200 dark:bg-neutral-800 rounded" />
           </div>
@@ -298,7 +338,14 @@ function EfficiencySparkline({ history }: { history: number[] }) {
           );
         })}
         {/* Zero line */}
-        <line x1="0" y1="12" x2="100" y2="12" stroke="currentColor" strokeOpacity="0.2" />
+        <line
+          x1="0"
+          y1="12"
+          x2="100"
+          y2="12"
+          stroke="currentColor"
+          strokeOpacity="0.2"
+        />
       </svg>
       <span className="text-xs text-neutral-400">efficiency over time</span>
     </div>
@@ -332,7 +379,9 @@ function RusenizerPageInner() {
       if (state.inputText && state.inputText !== initialState.inputText) {
         params.set("text", state.inputText);
       }
-      const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
+      const newUrl = params.toString()
+        ? `?${params.toString()}`
+        : window.location.pathname;
       router.replace(newUrl, { scroll: false });
     }, 500);
     return () => clearTimeout(timeout);
@@ -344,7 +393,10 @@ function RusenizerPageInner() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ignore if typing in an input/textarea
-      if (e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement) {
+      if (
+        e.target instanceof HTMLTextAreaElement ||
+        e.target instanceof HTMLInputElement
+      ) {
         return;
       }
 
@@ -401,7 +453,8 @@ function RusenizerPageInner() {
         console.error("Failed to initialize tokenizer:", err);
         dispatch({
           type: "SET_ERROR",
-          error: err instanceof Error ? err.message : "Failed to load tokenizer",
+          error:
+            err instanceof Error ? err.message : "Failed to load tokenizer",
         });
         dispatch({ type: "SET_LOADING", loading: false });
       }
@@ -438,7 +491,9 @@ function RusenizerPageInner() {
         const ids = gpt4EncoderRef.current.encode(text);
         for (const id of ids) {
           const bytes = gpt4EncoderRef.current.decode_single_token_bytes(id);
-          const tokenText = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+          const tokenText = new TextDecoder("utf-8", { fatal: false }).decode(
+            bytes,
+          );
           gpt4Tokens.push({ text: tokenText, id });
         }
       } catch (err) {
@@ -450,7 +505,8 @@ function RusenizerPageInner() {
 
     // Update efficiency history
     if (gpt4Tokens.length > 0) {
-      const efficiency = ((gpt4Tokens.length - rusenTokens.length) / gpt4Tokens.length) * 100;
+      const efficiency =
+        ((gpt4Tokens.length - rusenTokens.length) / gpt4Tokens.length) * 100;
       dispatch({ type: "ADD_EFFICIENCY_POINT", value: efficiency });
     }
   }, []);
@@ -485,8 +541,14 @@ function RusenizerPageInner() {
             } catch {}
           }
 
-          const savings = gptCount > 0 ? ((gptCount - rusenCount) / gptCount) * 100 : 0;
-          return { text: trimmed, rusenTokens: rusenCount, gptTokens: gptCount, savings };
+          const savings =
+            gptCount > 0 ? ((gptCount - rusenCount) / gptCount) * 100 : 0;
+          return {
+            text: trimmed,
+            rusenTokens: rusenCount,
+            gptTokens: gptCount,
+            savings,
+          };
         })
     : [];
 
@@ -500,7 +562,10 @@ function RusenizerPageInner() {
       ? (((gpt4TokenCount - rusenTokenCount) / gpt4TokenCount) * 100).toFixed(1)
       : null;
   const detectedLanguage = detectLanguage(state.inputText);
-  const { rusenDivergent, gptDivergent } = findDivergentBoundaries(state.tokens, state.gpt4Tokens);
+  const { rusenDivergent, gptDivergent } = findDivergentBoundaries(
+    state.tokens,
+    state.gpt4Tokens,
+  );
 
   // Calculate cumulative character positions for diff highlighting
   let rusenCumulativePos = 0;
@@ -545,10 +610,31 @@ function RusenizerPageInner() {
       {/* Header */}
       <h1 className="text-3xl sm:text-4xl font-bold mb-3 sm:mb-4">Rusenizer</h1>
       <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 mb-6 sm:mb-8 max-w-2xl text-pretty">
-        A Turkish-optimized BPE tokenizer trained on Turkish Wikipedia. Uses{" "}
-        <span className="font-mono text-sm">{state.vocabSize.toLocaleString()}</span> tokens
-        and achieves ~45% fewer tokens than GPT-4 on Turkish text.
+        Rusenizer v1 is a Turkish-optimized BPE tokenizer trained on Turkish
+        Wikipedia. Uses{" "}
+        <span className="font-mono text-sm">
+          {state.vocabSize.toLocaleString()}
+        </span>{" "}
+        tokens and achieves ~45% fewer tokens than GPT-4 on Turkish text. A
+        broader Rusenizer v2 retrain is now planned on cleaner and more diverse
+        Turkish corpora.
       </p>
+
+      <div className="mb-8 rounded-xl border border-neutral-200/80 bg-neutral-50/90 p-5 dark:border-neutral-800 dark:bg-neutral-800/50">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-full bg-neutral-900 px-2.5 py-1 text-[10px] font-mono uppercase tracking-[0.2em] text-white dark:bg-neutral-100 dark:text-neutral-950">
+            v1 live
+          </span>
+          <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-mono uppercase tracking-[0.2em] text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+            v2 planned
+          </span>
+        </div>
+        <p className="mt-3 text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
+          Rusenizer v2 will be evaluated on formal Turkish, colloquial Turkish,
+          mixed Turkish-English text, and code/comment data instead of relying
+          on a Wikipedia-only training story.
+        </p>
+      </div>
 
       {/* Mode Toggle */}
       <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-6">
@@ -596,13 +682,18 @@ function RusenizerPageInner() {
       {/* Example Buttons */}
       <div className="mb-6">
         <div className="text-sm text-neutral-500 mb-2">
-          Try an example: <span className="text-neutral-400">(or press 1-{examples.length})</span>
+          Try an example:{" "}
+          <span className="text-neutral-400">
+            (or press 1-{examples.length})
+          </span>
         </div>
         <div className="flex flex-wrap gap-2">
           {examples.map((example, idx) => (
             <button
               key={example.text}
-              onClick={() => dispatch({ type: "SET_INPUT", text: example.text })}
+              onClick={() =>
+                dispatch({ type: "SET_INPUT", text: example.text })
+              }
               className={`px-3 py-1 text-sm rounded-full border transition ${
                 state.inputText === example.text
                   ? "border-neutral-900 dark:border-neutral-100 bg-neutral-100 dark:bg-neutral-800"
@@ -644,20 +735,28 @@ function RusenizerPageInner() {
         </label>
         <textarea
           value={state.inputText}
-          onChange={(e) => dispatch({ type: "SET_INPUT", text: e.target.value })}
+          onChange={(e) =>
+            dispatch({ type: "SET_INPUT", text: e.target.value })
+          }
           className="w-full h-24 p-4 border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-900 font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-neutral-400"
-          placeholder={state.batchMode ? "Paste multiple sentences to compare..." : "Enter any text to tokenize..."}
+          placeholder={
+            state.batchMode
+              ? "Paste multiple sentences to compare..."
+              : "Enter any text to tokenize..."
+          }
         />
       </div>
 
       {/* Empty State */}
       {!state.inputText && (
         <div className="text-center py-12 mb-8 border border-dashed border-neutral-300 dark:border-neutral-700 rounded-lg">
-          <p className="text-neutral-500 mb-2 text-lg">Type Turkish text to see the magic!</p>
+          <p className="text-neutral-500 mb-2 text-lg">
+            Type Turkish text to see the magic!
+          </p>
           <p className="text-sm text-neutral-400 max-w-md mx-auto">
             Agglutinative languages like Turkish often need 40-50% fewer tokens
-            with a specialized tokenizer. Try &quot;göremeyecekmişsiniz&quot; to see how
-            Rusenizer handles complex suffixes.
+            with a specialized tokenizer. Try &quot;göremeyecekmişsiniz&quot; to
+            see how Rusenizer handles complex suffixes.
           </p>
         </div>
       )}
@@ -666,7 +765,9 @@ function RusenizerPageInner() {
       {state.batchMode && batchResults.length > 0 && (
         <div className="mb-8 border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden">
           <div className="px-4 py-3 bg-neutral-50 dark:bg-neutral-800/50 border-b border-neutral-200 dark:border-neutral-700">
-            <h2 className="font-semibold">Batch Comparison ({batchResults.length} sentences)</h2>
+            <h2 className="font-semibold">
+              Batch Comparison ({batchResults.length} sentences)
+            </h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -680,9 +781,16 @@ function RusenizerPageInner() {
               </thead>
               <tbody>
                 {batchResults.map((result, i) => (
-                  <tr key={i} className="border-b border-neutral-100 dark:border-neutral-900">
-                    <td className="px-4 py-3 max-w-xs truncate" title={result.text}>
-                      {result.text.slice(0, 50)}{result.text.length > 50 ? "..." : ""}
+                  <tr
+                    key={i}
+                    className="border-b border-neutral-100 dark:border-neutral-900"
+                  >
+                    <td
+                      className="px-4 py-3 max-w-xs truncate"
+                      title={result.text}
+                    >
+                      {result.text.slice(0, 50)}
+                      {result.text.length > 50 ? "..." : ""}
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-green-600 dark:text-green-400">
                       {result.rusenTokens}
@@ -690,10 +798,15 @@ function RusenizerPageInner() {
                     <td className="px-4 py-3 text-right font-mono">
                       {result.gptTokens}
                     </td>
-                    <td className={`px-4 py-3 text-right font-mono ${
-                      result.savings > 0 ? "text-green-600 dark:text-green-400" : "text-red-500"
-                    }`}>
-                      {result.savings > 0 ? "-" : "+"}{Math.abs(result.savings).toFixed(1)}%
+                    <td
+                      className={`px-4 py-3 text-right font-mono ${
+                        result.savings > 0
+                          ? "text-green-600 dark:text-green-400"
+                          : "text-red-500"
+                      }`}
+                    >
+                      {result.savings > 0 ? "-" : "+"}
+                      {Math.abs(result.savings).toFixed(1)}%
                     </td>
                   </tr>
                 ))}
@@ -709,9 +822,18 @@ function RusenizerPageInner() {
                   </td>
                   <td className="px-4 py-3 text-right font-mono text-green-600 dark:text-green-400">
                     {(() => {
-                      const totalRusen = batchResults.reduce((sum, r) => sum + r.rusenTokens, 0);
-                      const totalGpt = batchResults.reduce((sum, r) => sum + r.gptTokens, 0);
-                      const totalSavings = totalGpt > 0 ? ((totalGpt - totalRusen) / totalGpt) * 100 : 0;
+                      const totalRusen = batchResults.reduce(
+                        (sum, r) => sum + r.rusenTokens,
+                        0,
+                      );
+                      const totalGpt = batchResults.reduce(
+                        (sum, r) => sum + r.gptTokens,
+                        0,
+                      );
+                      const totalSavings =
+                        totalGpt > 0
+                          ? ((totalGpt - totalRusen) / totalGpt) * 100
+                          : 0;
                       return `${totalSavings > 0 ? "-" : "+"}${Math.abs(totalSavings).toFixed(1)}%`;
                     })()}
                   </td>
@@ -735,7 +857,10 @@ function RusenizerPageInner() {
                   {rusenTokenCount} tokens
                 </span>
               </div>
-              <div className="flex flex-wrap gap-1 min-h-[60px]" key={`rusen-${state.tokenAnimationKey}`}>
+              <div
+                className="flex flex-wrap gap-1 min-h-[60px]"
+                key={`rusen-${state.tokenAnimationKey}`}
+              >
                 {rusenTokensWithPos.map((token, i) => {
                   const isDivergent = rusenDivergent.has(token.endPos);
                   return (
@@ -753,11 +878,19 @@ function RusenizerPageInner() {
                       {token.text.replace(/ /g, "·").replace(/\n/g, "↵")}
                       {/* Enhanced Tooltip */}
                       <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-xs bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20 shadow-lg">
-                        <div><strong>ID:</strong> {token.id}</div>
-                        <div><strong>Bytes:</strong> [{token.bytes.join(", ")}]</div>
-                        <div><strong>Chars:</strong> {token.text.length}</div>
+                        <div>
+                          <strong>ID:</strong> {token.id}
+                        </div>
+                        <div>
+                          <strong>Bytes:</strong> [{token.bytes.join(", ")}]
+                        </div>
+                        <div>
+                          <strong>Chars:</strong> {token.text.length}
+                        </div>
                         {isDivergent && (
-                          <div className="text-amber-400 mt-1">Divergent boundary</div>
+                          <div className="text-amber-400 mt-1">
+                            Divergent boundary
+                          </div>
                         )}
                       </span>
                     </span>
@@ -774,7 +907,10 @@ function RusenizerPageInner() {
                   {gpt4TokenCount} tokens
                 </span>
               </div>
-              <div className="flex flex-wrap gap-1 min-h-[60px]" key={`gpt-${state.tokenAnimationKey}`}>
+              <div
+                className="flex flex-wrap gap-1 min-h-[60px]"
+                key={`gpt-${state.tokenAnimationKey}`}
+              >
                 {gptTokensWithPos.map((token, i) => {
                   const isDivergent = gptDivergent.has(token.endPos);
                   return (
@@ -792,10 +928,16 @@ function RusenizerPageInner() {
                       {token.text.replace(/ /g, "·").replace(/\n/g, "↵")}
                       {/* Tooltip */}
                       <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-xs bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20 shadow-lg">
-                        <div><strong>ID:</strong> {token.id}</div>
-                        <div><strong>Chars:</strong> {token.text.length}</div>
+                        <div>
+                          <strong>ID:</strong> {token.id}
+                        </div>
+                        <div>
+                          <strong>Chars:</strong> {token.text.length}
+                        </div>
                         {isDivergent && (
-                          <div className="text-amber-400 mt-1">Divergent boundary</div>
+                          <div className="text-amber-400 mt-1">
+                            Divergent boundary
+                          </div>
                         )}
                       </span>
                     </span>
@@ -807,12 +949,18 @@ function RusenizerPageInner() {
                   Rusenizer saves {savings}% tokens
                   {/* Why This Matters Tooltip */}
                   <span className="relative group ml-2">
-                    <span className="text-neutral-400 cursor-help text-lg">ⓘ</span>
+                    <span className="text-neutral-400 cursor-help text-lg">
+                      ⓘ
+                    </span>
                     <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 p-3 text-xs bg-neutral-900 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none w-64 z-30 shadow-lg">
                       <strong className="block mb-1">Cost Impact:</strong>
                       Each token costs ~$0.01-0.03 in API calls.
                       {Number(savings) > 0 && (
-                        <span> {savings}% fewer tokens = {savings}% cost reduction for Turkish text.</span>
+                        <span>
+                          {" "}
+                          {savings}% fewer tokens = {savings}% cost reduction
+                          for Turkish text.
+                        </span>
                       )}
                     </span>
                   </span>
@@ -843,11 +991,15 @@ function RusenizerPageInner() {
               <div className="text-sm text-neutral-500">Characters</div>
             </div>
             <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold">{new TextEncoder().encode(state.inputText).length}</div>
+              <div className="text-2xl font-bold">
+                {new TextEncoder().encode(state.inputText).length}
+              </div>
               <div className="text-sm text-neutral-500">Bytes</div>
             </div>
             <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">{rusenTokenCount}</div>
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                {rusenTokenCount}
+              </div>
               <div className="text-sm text-neutral-500">Rusenizer</div>
             </div>
             <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-4 text-center">
@@ -855,8 +1007,12 @@ function RusenizerPageInner() {
               <div className="text-sm text-neutral-500">GPT-4</div>
             </div>
             <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-4 text-center">
-              <div className={`text-2xl font-bold ${Number(savings) > 0 ? "text-green-600 dark:text-green-400" : ""}`}>
-                {savings ? `${Number(savings) > 0 ? "-" : "+"}${Math.abs(Number(savings))}%` : "—"}
+              <div
+                className={`text-2xl font-bold ${Number(savings) > 0 ? "text-green-600 dark:text-green-400" : ""}`}
+              >
+                {savings
+                  ? `${Number(savings) > 0 ? "-" : "+"}${Math.abs(Number(savings))}%`
+                  : "—"}
               </div>
               <div className="text-sm text-neutral-500">Difference</div>
             </div>
@@ -875,7 +1031,9 @@ function RusenizerPageInner() {
           {/* Token Details */}
           {state.tokens.length > 0 && (
             <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-6">
-              <h2 className="text-lg font-semibold mb-4">Rusenizer Token Details</h2>
+              <h2 className="text-lg font-semibold mb-4">
+                Rusenizer Token Details
+              </h2>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm font-mono">
                   <thead>
@@ -888,15 +1046,24 @@ function RusenizerPageInner() {
                   </thead>
                   <tbody>
                     {state.tokens.map((token, i) => (
-                      <tr key={i} className="border-b border-neutral-100 dark:border-neutral-900">
+                      <tr
+                        key={i}
+                        className="border-b border-neutral-100 dark:border-neutral-900"
+                      >
                         <td className="py-2 pr-4 text-neutral-400">{i}</td>
                         <td className="py-2 pr-4">
-                          <span className={`px-2 py-0.5 rounded ${TOKEN_COLORS[i % TOKEN_COLORS.length]}`}>
+                          <span
+                            className={`px-2 py-0.5 rounded ${TOKEN_COLORS[i % TOKEN_COLORS.length]}`}
+                          >
                             {token.text.replace(/ /g, "·").replace(/\n/g, "↵")}
                           </span>
                         </td>
-                        <td className="py-2 pr-4 text-neutral-500">{token.id}</td>
-                        <td className="py-2 text-neutral-500">[{token.bytes.join(", ")}]</td>
+                        <td className="py-2 pr-4 text-neutral-500">
+                          {token.id}
+                        </td>
+                        <td className="py-2 text-neutral-500">
+                          [{token.bytes.join(", ")}]
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -913,15 +1080,50 @@ function RusenizerPageInner() {
           About Rusenizer
         </h3>
         <p className="mb-2">
-          Rusenizer is a BPE (Byte Pair Encoding) tokenizer trained specifically on Turkish
-          Wikipedia (67M words). Turkish is an agglutinative language where words can have
-          many suffixes, making generic tokenizers inefficient.
+          Rusenizer v1 is a BPE (Byte Pair Encoding) tokenizer trained
+          specifically on Turkish Wikipedia (67M words). Turkish is an
+          agglutinative language where words can have many suffixes, making
+          generic tokenizers inefficient.
         </p>
         <p>
-          By training on Turkish text, Rusenizer learns common Turkish morphemes and word
-          patterns, resulting in significantly fewer tokens for the same text compared to
-          multilingual tokenizers like GPT-4&apos;s cl100k_base.
+          By training on Turkish text, Rusenizer learns common Turkish morphemes
+          and word patterns, resulting in significantly fewer tokens for the
+          same text compared to multilingual tokenizers like GPT-4&apos;s
+          cl100k_base. The next version will broaden the corpus and make the
+          tokenizer&apos;s training and evaluation provenance much more
+          explicit.
         </p>
+      </div>
+
+      <div className="mt-8 grid gap-4 md:grid-cols-3 text-sm">
+        <div className="rounded-xl border border-neutral-200/80 p-4 dark:border-neutral-800">
+          <h3 className="font-semibold text-neutral-700 dark:text-neutral-300">
+            Rusenizer v2 corpus
+          </h3>
+          <p className="mt-2 text-neutral-500">
+            Planned sources include Turkish Wikipedia plus broader cleaned web
+            text so the tokenizer sees more morphology, register, and domain
+            variation.
+          </p>
+        </div>
+        <div className="rounded-xl border border-neutral-200/80 p-4 dark:border-neutral-800">
+          <h3 className="font-semibold text-neutral-700 dark:text-neutral-300">
+            Better evaluation
+          </h3>
+          <p className="mt-2 text-neutral-500">
+            v2 will be judged on batch benchmarks by domain, not only on a few
+            showcase examples.
+          </p>
+        </div>
+        <div className="rounded-xl border border-neutral-200/80 p-4 dark:border-neutral-800">
+          <h3 className="font-semibold text-neutral-700 dark:text-neutral-300">
+            Shared foundation
+          </h3>
+          <p className="mt-2 text-neutral-500">
+            The retrain also supports RuseN-Gram, where better Turkish token
+            units should improve skip-gram feature quality and artifact size.
+          </p>
+        </div>
       </div>
     </div>
   );
