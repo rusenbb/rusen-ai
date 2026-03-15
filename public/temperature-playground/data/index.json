@@ -1,0 +1,164 @@
+[
+  {
+    "category": "Code",
+    "level": "deterministic",
+    "label": "def fibonacci(n):",
+    "file": "code-deterministic.json"
+  },
+  {
+    "category": "Code",
+    "level": "medium",
+    "label": "class User:",
+    "file": "code-medium.json"
+  },
+  {
+    "category": "Code",
+    "level": "creative",
+    "label": "def create_",
+    "file": "code-creative.json"
+  },
+  {
+    "category": "Story",
+    "level": "deterministic",
+    "label": "Opening of a mystery novel",
+    "file": "story-deterministic.json"
+  },
+  {
+    "category": "Story",
+    "level": "medium",
+    "label": "Opening of a story",
+    "file": "story-medium.json"
+  },
+  {
+    "category": "Story",
+    "level": "creative",
+    "label": "Write a story",
+    "file": "story-creative.json"
+  },
+  {
+    "category": "Poetry",
+    "level": "deterministic",
+    "label": "Haiku about winter",
+    "file": "poetry-deterministic.json"
+  },
+  {
+    "category": "Poetry",
+    "level": "medium",
+    "label": "Roses are red...",
+    "file": "poetry-medium.json"
+  },
+  {
+    "category": "Poetry",
+    "level": "creative",
+    "label": "Write a poem",
+    "file": "poetry-creative.json"
+  },
+  {
+    "category": "Science",
+    "level": "deterministic",
+    "label": "Speed of light",
+    "file": "science-deterministic.json"
+  },
+  {
+    "category": "Science",
+    "level": "medium",
+    "label": "Why is the sky blue?",
+    "file": "science-medium.json"
+  },
+  {
+    "category": "Science",
+    "level": "creative",
+    "label": "Interesting physics fact",
+    "file": "science-creative.json"
+  },
+  {
+    "category": "History",
+    "level": "deterministic",
+    "label": "When did WW2 end?",
+    "file": "history-deterministic.json"
+  },
+  {
+    "category": "History",
+    "level": "medium",
+    "label": "1960s turning point",
+    "file": "history-medium.json"
+  },
+  {
+    "category": "History",
+    "level": "creative",
+    "label": "Overlooked historical event",
+    "file": "history-creative.json"
+  },
+  {
+    "category": "Cooking",
+    "level": "deterministic",
+    "label": "How to boil an egg",
+    "file": "cooking-deterministic.json"
+  },
+  {
+    "category": "Cooking",
+    "level": "medium",
+    "label": "Pasta recipe",
+    "file": "cooking-medium.json"
+  },
+  {
+    "category": "Cooking",
+    "level": "creative",
+    "label": "Invent a new dish",
+    "file": "cooking-creative.json"
+  },
+  {
+    "category": "Advice",
+    "level": "deterministic",
+    "label": "How to tie a tie",
+    "file": "advice-deterministic.json"
+  },
+  {
+    "category": "Advice",
+    "level": "medium",
+    "label": "Job interview prep",
+    "file": "advice-medium.json"
+  },
+  {
+    "category": "Advice",
+    "level": "creative",
+    "label": "What to do with my life?",
+    "file": "advice-creative.json"
+  },
+  {
+    "category": "Dialogue",
+    "level": "deterministic",
+    "label": "What time is it?",
+    "file": "dialogue-deterministic.json"
+  },
+  {
+    "category": "Dialogue",
+    "level": "medium",
+    "label": "How was your day?",
+    "file": "dialogue-medium.json"
+  },
+  {
+    "category": "Dialogue",
+    "level": "creative",
+    "label": "What do you think about love?",
+    "file": "dialogue-creative.json"
+  },
+  {
+    "category": "Lists",
+    "level": "deterministic",
+    "label": "Planets in order",
+    "file": "lists-deterministic.json"
+  },
+  {
+    "category": "Lists",
+    "level": "medium",
+    "label": "Fun weekend activities",
+    "file": "lists-medium.json"
+  },
+  {
+    "category": "Lists",
+    "level": "creative",
+    "label": "Things that should exist",
+    "file": "lists-creative.json"
+  }
+]

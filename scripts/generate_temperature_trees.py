@@ -1,9 +1,9 @@
 """
 Generate pre-computed temperature trees for the Temperature Playground.
 
-Runs Qwen3.5-4B via mlx-lm, generates branching trees at 3 temperatures
-for 27 prompts (9 categories x 3 determinism levels), stores log-probs
-so the client can compute softmax at any temperature.
+Runs Qwen3-4B-Instruct-2507 via transformers on CUDA, generates branching
+trees at 4 temperatures for 27 prompts (9 categories x 3 determinism levels),
+stores log-probs so the client can compute softmax at any temperature.
 
 Usage:
     uv run scripts/generate_temperature_trees.py
@@ -18,20 +18,19 @@ import time
 from pathlib import Path
 from dataclasses import dataclass, field
 
-import mlx.core as mx
-from mlx_lm import load
-from mlx_lm.generate import generate_step
-from mlx_lm.sample_utils import make_sampler
+import torch
+import torch.nn.functional as F
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
-MODEL_ID = "mlx-community/Qwen3.5-4B-MLX-4bit"
-TEMPERATURES = [0.0, 0.7, 1.5]
+MODEL_ID = "Qwen/Qwen3-4B-Instruct-2507"
+TEMPERATURES = [0.0, 0.3, 0.6, 1.0]
 TOP_K_STORE = 100
 MAX_TOKENS = 50
-BRANCH_THRESHOLD = 0.10  # branch when runner-up prob > 10%
+BRANCH_THRESHOLD = 0.10  # branch when best alternative prob > 10%
 MAX_BRANCHES = 12
 MIN_FORK_SPACING = 5  # minimum tokens between fork points on the same branch
 MAX_FORKS_PER_BRANCH = 3  # max fork points selected per branch
-MAX_GENERATION = 3  # main=0, child=1, grandchild=2
+MAX_GENERATION = 3  # main=0, child=1, grandchild=2, great-grandchild=3
 
 # fmt: off
 PROMPTS = [
@@ -95,6 +94,11 @@ class Branch:
     id: int
     parent_id: int | None
     fork_token_index: int
+    # The token that caused the fork (the runner-up that was chosen
+    # instead of the parent's sampled token at fork_token_index).
+    # None for the main/root branch.
+    fork_token_id: int | None = None
+    fork_token_text: str | None = None
     tokens: list[TokenData] = field(default_factory=list)
 
 
@@ -128,26 +132,48 @@ def logprobs_to_probs(logprobs: list[float], temperature: float) -> list[float]:
     return [e / total for e in exps]
 
 
-def build_prompt_ids(tokenizer, prompt_config: dict) -> list[int]:
-    """Build prompt token IDs manually to avoid chat template closing tags.
+def pick_branch_alternative(
+    top_logprobs: list[tuple[int, str, float]],
+    sampled_token_id: int,
+    temperature: float,
+) -> tuple[int, float] | None:
+    """Pick the best alternative token for branching.
 
+    `top_logprobs` are already sorted by probability descending, so the first
+    token whose ID differs from the sampled token is the best alternative.
+    """
+    candidate_slice = top_logprobs[:10]
+    if len(candidate_slice) < 2:
+        return None
+
+    probs = logprobs_to_probs(
+        [lp for _, _, lp in candidate_slice],
+        temperature,
+    )
+
+    for idx, (token_id, _text, _logprob) in enumerate(candidate_slice):
+        if token_id == sampled_token_id:
+            continue
+        return token_id, probs[idx]
+
+    return None
+
+
+def build_prompt_ids(tokenizer, prompt_config: dict) -> list[int]:
+    """Build prompt token IDs for the chat template.
+
+    For code-only prompts (no system message), encodes the prefill directly.
     For chat prompts, constructs:
         <|im_start|>user\n{instruction}<|im_end|>\n
         <|im_start|>assistant\n{prefill}
-    No thinking block, no closing <|im_end|>, so generation continues.
+    No thinking block needed — Qwen3-4B-Instruct-2507 is the non-thinking variant.
     """
     if not prompt_config["system"]:
         return tokenizer.encode(prompt_config["prefill"], add_special_tokens=False)
 
-    # Build manually: user turn + assistant turn with closed thinking block + prefill.
-    # Qwen3.5 expects <think>...</think> before response content. Without it,
-    # the model outputs <|im_end|> immediately because it's in an untrained state.
     im_start = tokenizer.convert_tokens_to_ids("<|im_start|>")
     im_end = tokenizer.convert_tokens_to_ids("<|im_end|>")
-    think_open = tokenizer.convert_tokens_to_ids("<think>")
-    think_close = tokenizer.convert_tokens_to_ids("</think>")
     nl = tokenizer.encode("\n", add_special_tokens=False)
-    nl2 = tokenizer.encode("\n\n", add_special_tokens=False)
 
     user_text_ids = tokenizer.encode(
         prompt_config["system"], add_special_tokens=False
@@ -161,7 +187,6 @@ def build_prompt_ids(tokenizer, prompt_config: dict) -> list[int]:
     ids = (
         [im_start] + user_label + nl + user_text_ids + [im_end] + nl
         + [im_start] + asst_label + nl
-        + [think_open] + nl2 + [think_close] + nl2
         + prefill_ids
     )
     return ids
@@ -174,7 +199,7 @@ def generate_single_branch(
 
     Returns:
         tokens: list of TokenData for this branch
-        candidates: list of (token_index, runner_up_token_id, runner_up_prob)
+        candidates: list of (token_index, alternative_token_id, alternative_prob)
     """
     tokens: list[TokenData] = []
     candidates: list[tuple[int, int, float]] = []
@@ -187,23 +212,33 @@ def generate_single_branch(
         if tid is not None and isinstance(tid, int):
             eos_ids.add(tid)
 
-    sampler = make_sampler(temp=temperature if temperature > 0 else 0.0)
-    prompt = mx.array(prompt_tokens)
+    device = next(model.parameters()).device
+    input_ids = torch.tensor([prompt_tokens], device=device)
+    past_key_values = None
 
-    for token, logprobs_vec in generate_step(
-        prompt, model, max_tokens=MAX_TOKENS, sampler=sampler
-    ):
-        token_id = token.item() if hasattr(token, "item") else int(token)
-        logprobs_vec = logprobs_vec.squeeze()
+    for _step in range(MAX_TOKENS):
+        with torch.no_grad():
+            outputs = model(
+                input_ids,
+                past_key_values=past_key_values,
+                use_cache=True,
+            )
 
-        # Get top-K by log-prob value
-        top_k_indices = mx.argpartition(logprobs_vec, kth=-TOP_K_STORE)[-TOP_K_STORE:]
-        top_k_logprobs = logprobs_vec[top_k_indices]
+        logits = outputs.logits[:, -1, :]  # (1, vocab_size)
+        past_key_values = outputs.past_key_values
 
-        sort_order = mx.argsort(top_k_logprobs)[::-1]
-        top_k_indices = top_k_indices[sort_order]
-        top_k_logprobs = top_k_logprobs[sort_order]
+        # Log-probabilities over full vocab (at T=1)
+        logprobs_vec = F.log_softmax(logits, dim=-1).squeeze(0)  # (vocab_size,)
 
+        # Sample or greedy
+        if temperature > 0:
+            probs = F.softmax(logits / temperature, dim=-1)
+            token_id = torch.multinomial(probs.squeeze(0), num_samples=1).item()
+        else:
+            token_id = logits.argmax(dim=-1).squeeze().item()
+
+        # Top-K extraction
+        top_k_logprobs, top_k_indices = torch.topk(logprobs_vec, TOP_K_STORE)
         top_k_indices_list = top_k_indices.tolist()
         top_k_logprobs_list = top_k_logprobs.tolist()
 
@@ -221,15 +256,23 @@ def generate_single_branch(
 
         # Check for branching candidates
         if temperature > 0 and len(tokens) > 1:
-            probs = logprobs_to_probs(
-                [lp for _, _, lp in top_logprobs[:10]], temperature
+            alternative = pick_branch_alternative(
+                top_logprobs,
+                token_id,
+                temperature,
             )
-            if len(probs) >= 2 and probs[1] > BRANCH_THRESHOLD:
-                runner_up_id = top_logprobs[1][0]
-                candidates.append((len(tokens) - 1, runner_up_id, probs[1]))
+            if alternative is not None:
+                alternative_id, alternative_prob = alternative
+                if alternative_prob > BRANCH_THRESHOLD:
+                    candidates.append(
+                        (len(tokens) - 1, alternative_id, alternative_prob)
+                    )
 
         if token_id in eos_ids:
             break
+
+        # Next step: feed only the new token (KV cache has the rest)
+        input_ids = torch.tensor([[token_id]], device=device)
 
     return tokens, candidates
 
@@ -239,8 +282,8 @@ def select_fork_points(
 ) -> list[tuple[int, int]]:
     """Pick the best fork points from candidates, spaced apart.
 
-    candidates: list of (token_index, runner_up_id, runner_up_prob)
-    Returns: list of (token_index, runner_up_id), up to MAX_FORKS_PER_BRANCH,
+    candidates: list of (token_index, alternative_id, alternative_prob)
+    Returns: list of (token_index, alternative_id), up to MAX_FORKS_PER_BRANCH,
              sorted by token index, with at least MIN_FORK_SPACING between them.
     """
     # Sort by probability descending — pick the most interesting ones first
@@ -249,14 +292,14 @@ def select_fork_points(
     selected: list[tuple[int, int]] = []
     used_positions: list[int] = []
 
-    for tok_idx, runner_up_id, _prob in ranked:
+    for tok_idx, alternative_id, _prob in ranked:
         if len(selected) >= MAX_FORKS_PER_BRANCH:
             break
         # Check spacing against already-selected positions
         too_close = any(abs(tok_idx - pos) < MIN_FORK_SPACING for pos in used_positions)
         if too_close:
             continue
-        selected.append((tok_idx, runner_up_id))
+        selected.append((tok_idx, alternative_id))
         used_positions.append(tok_idx)
 
     return selected
@@ -271,20 +314,19 @@ def generate_tree(
     1. Generate the full main branch, collecting all branching candidates.
     2. Select spaced-out, high-interest fork points (not every candidate).
     3. Generate child branches from those forks (depth 1).
-    4. Repeat for grandchildren (depth 2), but no deeper.
+    4. Repeat until the configured branch depth limit is reached.
     """
     prompt_token_ids = build_prompt_ids(tokenizer, prompt_config)
     branches: list[Branch] = []
     branch_id_counter = 0
 
-    # Queue entries: (parent_branch_id | None, fork_index, context_ids, generation)
-    # generation: 0=main, 1=child, 2=grandchild
-    queue: list[tuple[int | None, int, list[int], int]] = [
-        (None, 0, prompt_token_ids, 0)
+    # Queue: (parent_id, fork_index, fork_token_id, fork_token_text, context_ids, generation)
+    queue: list[tuple[int | None, int, int | None, str | None, list[int], int]] = [
+        (None, 0, None, None, prompt_token_ids, 0)
     ]
 
     while queue and len(branches) < MAX_BRANCHES:
-        parent_id, fork_index, context_ids, generation = queue.pop(0)
+        parent_id, fork_index, fork_tid, fork_text, context_ids, generation = queue.pop(0)
 
         tokens, candidates = generate_single_branch(
             model, tokenizer, context_ids, temperature
@@ -294,27 +336,39 @@ def generate_tree(
             id=branch_id_counter,
             parent_id=parent_id,
             fork_token_index=fork_index,
+            fork_token_id=fork_tid,
+            fork_token_text=fork_text,
             tokens=tokens,
         )
         branches.append(branch)
         branch_id_counter += 1
 
-        # Don't branch beyond grandchildren
+        # Don't branch beyond the configured depth.
         if generation >= MAX_GENERATION:
             continue
 
         # Select spaced-out, high-interest fork points
         selected = select_fork_points(candidates)
 
-        for tok_idx, runner_up_id in selected:
+        for tok_idx, alternative_id in selected:
             if len(branches) + len(queue) >= MAX_BRANCHES:
                 break
             child_ids = (
                 context_ids
                 + [t.token_id for t in tokens[:tok_idx]]
-                + [runner_up_id]
+                + [alternative_id]
             )
-            queue.append((branch.id, tok_idx, child_ids, generation + 1))
+            alternative_text = get_token_text(tokenizer, alternative_id)
+            queue.append(
+                (
+                    branch.id,
+                    tok_idx,
+                    alternative_id,
+                    alternative_text,
+                    child_ids,
+                    generation + 1,
+                )
+            )
 
     return branches
 
@@ -333,21 +387,30 @@ def serialize_tree(branches: list[Branch]) -> list[dict]:
                     ],
                 }
             )
-        result.append(
-            {
-                "id": b.id,
-                "parentId": b.parent_id,
-                "forkIndex": b.fork_token_index,
-                "tokens": tokens,
-            }
-        )
+        entry: dict = {
+            "id": b.id,
+            "parentId": b.parent_id,
+            "forkIndex": b.fork_token_index,
+            "tokens": tokens,
+        }
+        if b.fork_token_id is not None:
+            entry["forkTokenId"] = b.fork_token_id
+            entry["forkTokenText"] = b.fork_token_text
+        result.append(entry)
     return result
 
 
 def main():
     print(f"Loading model: {MODEL_ID}")
     t0 = time.time()
-    model, tokenizer = load(MODEL_ID)
+
+    model = AutoModelForCausalLM.from_pretrained(
+        MODEL_ID,
+        dtype=torch.bfloat16,
+        device_map="auto",
+    )
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+
     print(f"Model loaded in {time.time() - t0:.1f}s")
 
     # Pre-warm vocab cache
@@ -395,6 +458,7 @@ def main():
                 "category": prompt_config["category"],
                 "level": prompt_config["level"],
                 "label": prompt_config["label"],
+                "system": prompt_config["system"],
                 "prefill": prompt_config["prefill"],
                 "prefillTokens": prefill_tokens,
                 "trees": trees_by_temp,
