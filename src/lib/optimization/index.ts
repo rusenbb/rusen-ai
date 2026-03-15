@@ -5,4 +5,5 @@ export * from "./objectives";
 export * from "./gradient";
 export * from "./zeroth-order";
 export * from "./high-d";
+export * from "./dimension-comparison";
 export * from "./mlp";
