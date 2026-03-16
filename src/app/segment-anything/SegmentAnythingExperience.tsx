@@ -278,6 +278,7 @@ export default function SegmentAnythingExperience() {
           <StatusBar
             phase={state.phase}
             loadProgress={state.loadProgress}
+            loadMessage={state.loadMessage}
             encoderMs={state.encoderMs}
             decoderMs={state.decoderMs}
           />
