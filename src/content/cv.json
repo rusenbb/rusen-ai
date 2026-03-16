@@ -72,7 +72,7 @@
       "description": "Autonomous warehouse robot simulating Amazon logistics. Pathfinding, obstacle avoidance, task scheduling. Human/cargo detection with custom YOLO.",
       "tags": ["Python", "ROS2", "YOLO", "Robotics"],
       "links": [
-        { "label": "GH", "url": "https://github.com/rusenbb/Amazon-Warehouse-Robot" },
+        { "label": "GH", "url": "https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/Amazon-Warehouse-Robot" },
         { "label": "YT", "url": "https://youtu.be/h-Jxs_y9kNA" }
       ]
     },
@@ -83,7 +83,7 @@
       "description": "T5-based transformer for restoring Turkish diacritics. Automatically adds accent marks and special characters for enhanced readability.",
       "tags": ["NLP", "T5", "Transformers", "Turkish"],
       "links": [
-        { "label": "GH", "url": "https://github.com/rusenbb/Biting-The-Bytes" },
+        { "label": "GH", "url": "https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/Biting-The-Bytes" },
         { "label": "HF", "url": "https://huggingface.co/spaces/rusen/diacritizeTR" }
       ]
     },
@@ -94,7 +94,7 @@
       "description": "Selectively removed concepts from Stable Diffusion 2.1 while preserving other capabilities. Content moderation and AI output customization.",
       "tags": ["Stable Diffusion", "Unlearning", "CV"],
       "links": [
-        { "label": "GH", "url": "https://github.com/rusenbb/AIzheimer" }
+        { "label": "GH", "url": "https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/AIzheimer" }
       ]
     },
     {
@@ -104,7 +104,7 @@
       "description": "Ensemble method to detect AI-generated text using three fine-tuned models. Addresses academic integrity and misinformation concerns.",
       "tags": ["NLP", "Ensemble", "Classification"],
       "links": [
-        { "label": "GH", "url": "https://github.com/rusenbb/To-AI-or-Not-to-AI" },
+        { "label": "GH", "url": "https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/To-AI-or-Not-to-AI" },
         { "label": "HF", "url": "https://huggingface.co/spaces/rusen/gpt_detector" }
       ]
     },
@@ -115,7 +115,7 @@
       "description": "Personalized anime recommendations combining collaborative filtering and content-based approaches. RMSE: 0.289, MAE: 0.213.",
       "tags": ["RecSys", "Matrix Factorization"],
       "links": [
-        { "label": "GH", "url": "https://github.com/rusenbb/Anime-Recommender" }
+        { "label": "GH", "url": "https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/Anime-Recommender" }
       ]
     }
   ],
