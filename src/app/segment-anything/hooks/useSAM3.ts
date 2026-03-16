@@ -184,8 +184,24 @@ function getPlanLabel(plan: ModelLoadPlan, gpu: WebGPUCapabilities): string {
 function buildLoadPlans(gpu: WebGPUCapabilities): ModelLoadPlan[] {
   const plans: ModelLoadPlan[] = [];
   const lowMemoryDevice = isLikelyLowMemoryDevice();
+  const supportsBalancedWebGPU = supportsWebGPUPlan(
+    gpu,
+    WEBGPU_BALANCED_LIMITS,
+  );
+  const supportsCompactWebGPU =
+    !!COMPACT_MODEL_VARIANT &&
+    supportsWebGPUPlan(gpu, WEBGPU_COMPACT_LIMITS);
 
-  if (supportsWebGPUPlan(gpu, WEBGPU_BALANCED_LIMITS)) {
+  if (supportsCompactWebGPU && lowMemoryDevice && COMPACT_MODEL_VARIANT) {
+    plans.push({
+      id: "compact-webgpu",
+      provider: "webgpu",
+      variant: COMPACT_MODEL_VARIANT,
+      reason: "using compact WebGPU profile for broader compatibility",
+    });
+  }
+
+  if (supportsBalancedWebGPU) {
     plans.push({
       id: "balanced-672-webgpu",
       provider: "webgpu",
@@ -196,8 +212,8 @@ function buildLoadPlans(gpu: WebGPUCapabilities): ModelLoadPlan[] {
 
   if (
     COMPACT_MODEL_VARIANT &&
-    supportsWebGPUPlan(gpu, WEBGPU_COMPACT_LIMITS) &&
-    (lowMemoryDevice || !supportsWebGPUPlan(gpu, WEBGPU_BALANCED_LIMITS))
+    supportsCompactWebGPU &&
+    (!lowMemoryDevice || !supportsBalancedWebGPU)
   ) {
     plans.push({
       id: "compact-webgpu",
@@ -444,6 +460,10 @@ function normalizeError(error: unknown): Error {
   return new Error(String(error));
 }
 
+function getVariantCacheKey(plan: ModelLoadPlan): string {
+  return `${plan.variant.id}:${plan.variant.baseUrl}`;
+}
+
 // ── Hook ────────────────────────────────────────────────────────────
 
 export function useSAM3(dispatch: React.Dispatch<SegmentAction>) {
@@ -452,6 +472,7 @@ export function useSAM3(dispatch: React.Dispatch<SegmentAction>) {
   const decSession = useRef<OrtInferenceSession | null>(null);
   const ortRef = useRef<OrtAPI | null>(null);
   const modelBuffersRef = useRef<ModelBuffers | null>(null);
+  const downloadedBuffersRef = useRef<Map<string, ModelBuffers>>(new Map());
   const providerRef = useRef<ExecutionProvider | null>(null);
   const gpuDeviceRef = useRef<string | null>(null);
   const activePlanRef = useRef<ModelLoadPlan | null>(null);
@@ -461,6 +482,7 @@ export function useSAM3(dispatch: React.Dispatch<SegmentAction>) {
   const cachedImageWidth = useRef<number>(0);
   const cachedImageHeight = useRef<number>(0);
   const [modelInputSize, setModelInputSize] = useState(1008);
+  const [loadMessage, setLoadMessage] = useState<string | null>(null);
 
   const createSessions = useCallback(
     async (buffers: ModelBuffers, executionProviders: string[]) => {
@@ -486,6 +508,21 @@ export function useSAM3(dispatch: React.Dispatch<SegmentAction>) {
 
   const downloadPlanModels = useCallback(
     async (plan: ModelLoadPlan): Promise<ModelBuffers> => {
+      const cachedBuffers = downloadedBuffersRef.current.get(
+        getVariantCacheKey(plan),
+      );
+      if (cachedBuffers) {
+        dispatch({
+          type: "SET_DOWNLOAD_PROGRESS",
+          progress: {
+            imageEncoder: 100,
+            languageEncoder: 100,
+            decoder: 100,
+          },
+        });
+        return cachedBuffers;
+      }
+
       const imageEncoder = await fetchModel(
         `${plan.variant.baseUrl}/${plan.variant.files.imageEncoder}`,
         (loaded, total) =>
@@ -531,11 +568,13 @@ export function useSAM3(dispatch: React.Dispatch<SegmentAction>) {
         progress: { decoder: 100 },
       });
 
-      return {
+      const buffers = {
         imageEncoder,
         languageEncoder,
         decoder,
       };
+      downloadedBuffersRef.current.set(getVariantCacheKey(plan), buffers);
+      return buffers;
     },
     [dispatch],
   );
@@ -593,6 +632,7 @@ export function useSAM3(dispatch: React.Dispatch<SegmentAction>) {
   const loadModels = useCallback(async () => {
     dispatch({ type: "SET_MODELS_STATUS", status: "downloading" });
     dispatch({ type: "SET_ERROR", error: null });
+    setLoadMessage("Checking browser compatibility...");
 
     try {
       // Load ORT
@@ -616,11 +656,27 @@ export function useSAM3(dispatch: React.Dispatch<SegmentAction>) {
 
       for (const plan of plans) {
         try {
-          resetDownloadProgress(dispatch);
+          const hasCachedVariant = downloadedBuffersRef.current.has(
+            getVariantCacheKey(plan),
+          );
+          if (!hasCachedVariant) {
+            resetDownloadProgress(dispatch);
+            setLoadMessage(
+              `Downloading ${plan.variant.label} for ${plan.provider.toUpperCase()}...`,
+            );
+          } else {
+            setLoadMessage(
+              `Reusing ${plan.variant.label} download for ${plan.provider.toUpperCase()}...`,
+            );
+          }
+
           const buffers = await downloadPlanModels(plan);
           modelBuffersRef.current = buffers;
 
           dispatch({ type: "SET_MODELS_STATUS", status: "creating-sessions" });
+          setLoadMessage(
+            `Creating ${plan.provider.toUpperCase()} sessions for ${plan.variant.label}...`,
+          );
           const sessions = await createSessions(
             buffers,
             plan.provider === "webgpu" ? ["webgpu", "wasm"] : ["wasm"],
@@ -643,9 +699,13 @@ export function useSAM3(dispatch: React.Dispatch<SegmentAction>) {
 
           attachSessions(sessions, plan.provider, getPlanLabel(plan, gpu), plan);
           dispatch({ type: "SET_MODELS_STATUS", status: "ready" });
+          setLoadMessage(null);
           return;
         } catch (error) {
           lastError = normalizeError(error);
+          setLoadMessage(
+            `Retrying with a more compatible runtime after ${plan.variant.label} failed...`,
+          );
           await releaseSessions(
             imgEncSession.current,
             langEncSession.current,
@@ -662,6 +722,7 @@ export function useSAM3(dispatch: React.Dispatch<SegmentAction>) {
       const message = e instanceof Error ? e.message : "Failed to load models";
       dispatch({ type: "SET_ERROR", error: message });
       dispatch({ type: "SET_MODELS_STATUS", status: "error" });
+      setLoadMessage(null);
     }
   }, [attachSessions, createSessions, dispatch, downloadPlanModels]);
 
@@ -862,5 +923,12 @@ export function useSAM3(dispatch: React.Dispatch<SegmentAction>) {
     dispatch({ type: "SET_IMAGE_ENCODED", encoded: false });
   }, [dispatch]);
 
-  return { loadModels, encodeImage, segment, clearCache, modelInputSize };
+  return {
+    loadModels,
+    encodeImage,
+    segment,
+    clearCache,
+    modelInputSize,
+    loadMessage,
+  };
 }

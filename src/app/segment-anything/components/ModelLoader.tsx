@@ -5,6 +5,7 @@ interface ModelLoaderProps {
   progress: DownloadProgress;
   provider: "webgpu" | "wasm" | null;
   gpuDevice: string | null;
+  loadMessage: string | null;
   error: string | null;
   onLoad: () => void;
 }
@@ -31,6 +32,7 @@ export default function ModelLoader({
   progress,
   provider,
   gpuDevice,
+  loadMessage,
   error,
   onLoad,
 }: ModelLoaderProps) {
@@ -71,6 +73,11 @@ export default function ModelLoader({
               : `Loading models (${Math.round(totalProgress)}%)`}
           </span>
         </div>
+        {loadMessage && (
+          <p className="text-xs text-neutral-500 dark:text-neutral-400">
+            {loadMessage}
+          </p>
+        )}
         {status === "downloading" && (
           <div className="space-y-2">
             <ProgressBar value={progress.imageEncoder} label="Image encoder" />

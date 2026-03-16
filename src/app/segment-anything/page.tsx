@@ -13,7 +13,8 @@ import { Alert, DemoFootnote, DemoHeader, DemoMutedSection, DemoPage, DemoPanel 
 
 export default function SegmentAnythingPage() {
   const [state, dispatch] = useReducer(segmentReducer, initialState);
-  const { loadModels, segment, clearCache, modelInputSize } = useSAM3(dispatch);
+  const { loadModels, segment, clearCache, modelInputSize, loadMessage } =
+    useSAM3(dispatch);
 
   const handleImageDrop = useCallback(
     async (file: File | null) => {
@@ -117,6 +118,7 @@ export default function SegmentAnythingPage() {
           progress={state.downloadProgress}
           provider={state.executionProvider}
           gpuDevice={state.gpuDevice}
+          loadMessage={loadMessage}
           error={state.modelsStatus === "error" ? state.error : null}
           onLoad={loadModels}
         />
