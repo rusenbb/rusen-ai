@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import type { ProgressInfo } from "@huggingface/transformers";
 import type { SAMAction, SegmentPoint, MaskCandidate } from "../types";
+import { resolveLoadProgress } from "../utils/loadProgress";
 
 const MODEL_ID = "onnx-community/sam2.1-hiera-tiny-ONNX";
 
@@ -68,6 +69,8 @@ export function useSAM(dispatch: React.Dispatch<SAMAction>): UseSAMResult {
   const embeddingsRef = useRef<Record<string, unknown> | null>(null);
   const reshapedSizesRef = useRef<readonly [number, number] | null>(null);
   const originalSizesRef = useRef<readonly [number, number] | null>(null);
+  const loadProgressRef = useRef(0);
+  const loadMessageRef = useRef<string | null>(null);
 
   // ── Model initialization ─────────────────────────────────────────
 
@@ -78,6 +81,8 @@ export function useSAM(dispatch: React.Dispatch<SAMAction>): UseSAMResult {
     initPromise.current = (async () => {
       try {
         dispatch({ type: "MODEL_LOADING" });
+        loadProgressRef.current = 0;
+        loadMessageRef.current = "Preparing model files...";
 
         const { Sam2Model, AutoProcessor, env, Tensor, RawImage } =
           await import("@huggingface/transformers");
@@ -93,12 +98,18 @@ export function useSAM(dispatch: React.Dispatch<SAMAction>): UseSAMResult {
             dtype: "uint8",
             device: "wasm",
             progress_callback: (p: ProgressInfo) => {
-              if ("progress" in p && typeof p.progress === "number") {
-                dispatch({
-                  type: "MODEL_PROGRESS",
-                  progress: Math.round(p.progress),
-                });
-              }
+              const next = resolveLoadProgress(
+                loadProgressRef.current,
+                loadMessageRef.current,
+                p,
+              );
+              loadProgressRef.current = next.progress;
+              loadMessageRef.current = next.message;
+              dispatch({
+                type: "MODEL_PROGRESS",
+                progress: next.progress,
+                message: next.message,
+              });
             },
           }),
           AutoProcessor.from_pretrained(MODEL_ID),
@@ -106,8 +117,11 @@ export function useSAM(dispatch: React.Dispatch<SAMAction>): UseSAMResult {
 
         modelRef.current = model as unknown as Sam2ModelLike;
         processorRef.current = processor as unknown as ProcessorLike;
+        loadProgressRef.current = 100;
+        loadMessageRef.current = "Model ready.";
         dispatch({ type: "MODEL_READY" });
       } catch (err) {
+        loadMessageRef.current = null;
         dispatch({
           type: "MODEL_ERROR",
           error: err instanceof Error ? err.message : "Failed to load model",
