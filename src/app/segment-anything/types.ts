@@ -37,6 +37,7 @@ export interface MaskCandidate {
 export interface SAMState {
   phase: ModelPhase;
   loadProgress: number;
+  loadMessage: string | null;
   error: string | null;
   imageUrl: string | null;
   encoderMs: number | null;
@@ -51,6 +52,7 @@ export interface SAMState {
 export const initialSAMState: SAMState = {
   phase: "idle",
   loadProgress: 0,
+  loadMessage: null,
   error: null,
   imageUrl: null,
   encoderMs: null,
@@ -66,7 +68,7 @@ export const initialSAMState: SAMState = {
 
 export type SAMAction =
   | { type: "MODEL_LOADING" }
-  | { type: "MODEL_PROGRESS"; progress: number }
+  | { type: "MODEL_PROGRESS"; progress: number; message?: string }
   | { type: "MODEL_READY" }
   | { type: "MODEL_ERROR"; error: string }
   | { type: "IMAGE_SELECTED"; url: string }
@@ -85,16 +87,36 @@ export type SAMAction =
 export function samReducer(state: SAMState, action: SAMAction): SAMState {
   switch (action.type) {
     case "MODEL_LOADING":
-      return { ...state, phase: "loading", error: null, loadProgress: 0 };
+      return {
+        ...state,
+        phase: "loading",
+        error: null,
+        loadProgress: 0,
+        loadMessage: "Preparing model files...",
+      };
 
     case "MODEL_PROGRESS":
-      return { ...state, loadProgress: action.progress };
+      return {
+        ...state,
+        loadProgress: Math.max(state.loadProgress, action.progress),
+        loadMessage: action.message ?? state.loadMessage,
+      };
 
     case "MODEL_READY":
-      return { ...state, phase: "ready", loadProgress: 100 };
+      return {
+        ...state,
+        phase: "ready",
+        loadProgress: 100,
+        loadMessage: "Model ready.",
+      };
 
     case "MODEL_ERROR":
-      return { ...state, phase: "error", error: action.error };
+      return {
+        ...state,
+        phase: "error",
+        error: action.error,
+        loadMessage: null,
+      };
 
     case "IMAGE_SELECTED":
       return {
