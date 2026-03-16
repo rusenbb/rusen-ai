@@ -6,6 +6,7 @@ import type { ModelPhase } from "../types";
 interface StatusBarProps {
   phase: ModelPhase;
   loadProgress: number;
+  loadMessage: string | null;
   encoderMs: number | null;
   decoderMs: number | null;
 }
@@ -13,6 +14,7 @@ interface StatusBarProps {
 export default function StatusBar({
   phase,
   loadProgress,
+  loadMessage,
   encoderMs,
   decoderMs,
 }: StatusBarProps) {
@@ -31,7 +33,7 @@ export default function StatusBar({
         <>
           <Spinner size="sm" color="blue" />
           <span className="text-neutral-600 dark:text-neutral-300">
-            Downloading model&hellip;
+            {loadMessage ?? "Downloading model..."}
           </span>
           <div className="flex-1 h-1.5 rounded-full bg-neutral-200 dark:bg-neutral-700 overflow-hidden">
             <div
