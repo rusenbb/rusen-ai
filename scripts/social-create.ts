@@ -1387,8 +1387,8 @@ function computeGridMetrics(
   const visibleCharacterCount = getVisibleCharacterCount(options.word);
   const lengthFactor = clamp((visibleCharacterCount - 3) / 9, 0, 1);
   const cellSizeScale = lerp(1, 0.72, lengthFactor);
-  const maxLitOpacity = lerp(0.1, 0.055, lengthFactor);
-  const litCellProbability = lerp(0.1, 0.045, lengthFactor);
+  const maxLitOpacity = lerp(0.24, 0.132, lengthFactor);
+  const litCellProbability = lerp(0.15, 0.0675, lengthFactor);
   const cellSize = clamp(
     Math.min(innerWidth / 46, innerHeight / 24) * cellSizeScale,
     12,
@@ -1423,7 +1423,7 @@ function renderBackgroundGrid(options: SocialCreateOptions, inset: number): stri
       const y = inset + row * metrics.actualCellHeight;
       const paddingX = metrics.actualCellWidth * (0.08 + random() * 0.1);
       const paddingY = metrics.actualCellHeight * (0.08 + random() * 0.1);
-      const opacity = lerp(0.015, metrics.maxLitOpacity, Math.pow(random(), 1.4));
+      const opacity = lerp(0.03, metrics.maxLitOpacity, Math.pow(random(), 1.4));
       litCells += `<rect x="${formatFloat(x + paddingX)}" y="${formatFloat(
         y + paddingY,
       )}" width="${formatFloat(metrics.actualCellWidth - paddingX * 2)}" height="${formatFloat(
@@ -1464,9 +1464,29 @@ function renderTileWordGrid(model: SocialGraphModel, inset: number): string {
   const wordCells = new Set(
     layout.cells.map((cell) => `${cell.col + startCol},${cell.row + startRow}`),
   );
+  const exclusionRadius = 1.75;
+  const exclusionCells = new Set<string>();
   let gridPath = "";
   let backgroundCells = "";
   let wordCellRects = "";
+
+  for (const cell of layout.cells) {
+    const baseCol = cell.col + startCol;
+    const baseRow = cell.row + startRow;
+    const minCol = Math.floor(baseCol - exclusionRadius);
+    const maxCol = Math.ceil(baseCol + exclusionRadius);
+    const minRow = Math.floor(baseRow - exclusionRadius);
+    const maxRow = Math.ceil(baseRow + exclusionRadius);
+
+    for (let row = minRow; row <= maxRow; row += 1) {
+      for (let col = minCol; col <= maxCol; col += 1) {
+        if (Math.hypot(col - baseCol, row - baseRow) > exclusionRadius) {
+          continue;
+        }
+        exclusionCells.add(`${col},${row}`);
+      }
+    }
+  }
 
   for (let row = 0; row < metrics.rows; row += 1) {
     for (let col = 0; col < metrics.cols; col += 1) {
@@ -1499,12 +1519,15 @@ function renderTileWordGrid(model: SocialGraphModel, inset: number): string {
         continue;
       }
 
+      if (exclusionCells.has(key)) {
+        continue;
+      }
       if (random() >= metrics.litCellProbability) {
         continue;
       }
       const paddingX = metrics.actualCellWidth * (0.08 + random() * 0.1);
       const paddingY = metrics.actualCellHeight * (0.08 + random() * 0.1);
-      const opacity = lerp(0.015, metrics.maxLitOpacity, Math.pow(random(), 1.4));
+      const opacity = lerp(0.03, metrics.maxLitOpacity, Math.pow(random(), 1.4));
       backgroundCells += `<rect x="${formatFloat(x + paddingX)}" y="${formatFloat(
         y + paddingY,
       )}" width="${formatFloat(metrics.actualCellWidth - paddingX * 2)}" height="${formatFloat(
@@ -1533,14 +1556,17 @@ function renderTileWordGrid(model: SocialGraphModel, inset: number): string {
 }
 
 function renderTrademark(options: SocialCreateOptions, inset: number): string {
-  const fontSize = clamp(Math.min(options.width, options.height) * 0.055, 30, 46);
+  const footerText = "rusen.ai | AI and Data Engineering Portfolio";
+  const sharedSize = clamp(Math.min(options.width, options.height) * 0.045, 24, 32);
   const fillColor = mixHexColors(options.background, "#ffffff", 0.5);
-  const x = options.width - inset * 2.2;
-  const y = options.height - inset * 1.65;
+  const rightEdge = options.width - inset * 2.2;
+  const baselineY = options.height - inset * 1.45;
 
-  return `<text x="${formatFloat(x)}" y="${formatFloat(y)}" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="${formatFloat(
-    fontSize,
-  )}" letter-spacing="0.08em" fill="${fillColor}" fill-opacity="0.4">rusen.ai</text>`;
+  return `<text x="${formatFloat(rightEdge)}" y="${formatFloat(
+    baselineY,
+  )}" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace" font-size="${formatFloat(
+    sharedSize,
+  )}" letter-spacing="0.02em" fill="${fillColor}" fill-opacity="0.4">${footerText}</text>`;
 }
 
 function frameInset(width: number, height: number): number {
