@@ -6,11 +6,12 @@ import { GLYPHS, type Glyph, type GlyphMap } from "./glyphs";
 const BG = "#0a0a0f";
 const FG_PINK = "#f9a8d4";
 const FG_RED = "#ef4444";
-const STEP_MS = 80; // particle step cadence (Manhattan king-step toward target)
-const GEN_MS = 320; // generation cadence — chaos roles advance one generation
+const STEP_MS = 130; // particle step cadence — deliberately slow so formation
+                     // reads as a state transition rather than a sprint
+const GEN_MS = 360; // generation cadence — chaos roles advance one generation
 
-const CHAOS_MS = 6000;
-const BLOOM_MS = 6500;
+const CHAOS_MS = 6500;
+const BLOOM_MS = 7000;
 
 type PhaseName = "chaos" | "rusen" | "heart" | "beyza";
 
