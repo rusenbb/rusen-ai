@@ -94,6 +94,7 @@ export default function Garden() {
     let next = new Uint8Array(cols * rows);
     const heartMask = new Uint8Array(cols * rows);
 
+    const phaseNameRef = { current: PHASES[0].name as PhaseName };
     let phaseIndex = 0;
     enterPhase(PHASES[0].name, current, heartMask, cols, rows);
 
@@ -107,6 +108,7 @@ export default function Garden() {
     let phaseTimeout: ReturnType<typeof setTimeout>;
     const advancePhase = () => {
       phaseIndex = (phaseIndex + 1) % PHASES.length;
+      phaseNameRef.current = PHASES[phaseIndex].name;
       enterPhase(PHASES[phaseIndex].name, current, heartMask, cols, rows);
       phaseTimeout = setTimeout(advancePhase, PHASES[phaseIndex].durationMs);
     };
@@ -147,10 +149,47 @@ export default function Garden() {
     };
     rafHandle = requestAnimationFrame(draw);
 
+    const cellAt = (clientX: number, clientY: number): number | null => {
+      const rect = canvas.getBoundingClientRect();
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+      const c = Math.floor(x / cellSize);
+      const r = Math.floor(y / cellSize);
+      if (r < 0 || r >= rows || c < 0 || c >= cols) return null;
+      return r * cols + c;
+    };
+
+    let pressed = false;
+    const onDown = (e: PointerEvent) => {
+      if (phaseNameRef.current !== "chaos") return;
+      pressed = true;
+      const idx = cellAt(e.clientX, e.clientY);
+      if (idx !== null) current[idx] = 1;
+    };
+    const onMove = (e: PointerEvent) => {
+      if (!pressed || phaseNameRef.current !== "chaos") return;
+      const idx = cellAt(e.clientX, e.clientY);
+      if (idx !== null) current[idx] = 1;
+    };
+    const onUp = () => {
+      pressed = false;
+    };
+
+    canvas.addEventListener("pointerdown", onDown);
+    canvas.addEventListener("pointermove", onMove);
+    canvas.addEventListener("pointerup", onUp);
+    canvas.addEventListener("pointerleave", onUp);
+    canvas.addEventListener("pointercancel", onUp);
+
     return () => {
       clearInterval(tickHandle);
       clearTimeout(phaseTimeout);
       cancelAnimationFrame(rafHandle);
+      canvas.removeEventListener("pointerdown", onDown);
+      canvas.removeEventListener("pointermove", onMove);
+      canvas.removeEventListener("pointerup", onUp);
+      canvas.removeEventListener("pointerleave", onUp);
+      canvas.removeEventListener("pointercancel", onUp);
     };
   }, []);
 
