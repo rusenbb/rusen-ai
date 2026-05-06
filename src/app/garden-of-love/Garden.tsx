@@ -488,10 +488,14 @@ function stepParticle(p: Particle): void {
 export default function Garden() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [speed, setSpeed] = useState<number>(SPEED_DEFAULT);
-  // The simulation reads the current speed off this ref every tick, so the
-  // slider is responsive without re-running the whole effect.
+  const [paused, setPaused] = useState<boolean>(false);
+  // The simulation reads the current speed and pause state off these refs
+  // every tick, so both controls are responsive without re-running the
+  // whole effect (which would rebuild particles and reset chaos roles).
   const speedRef = useRef(speed);
   speedRef.current = speed;
+  const pausedRef = useRef(paused);
+  pausedRef.current = paused;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -514,45 +518,53 @@ export default function Garden() {
     const { particles, chaosRegion } = buildParticles(cols, rows);
 
     let generation = 0;
+    let phaseStartGen = 0;
     const phaseNameRef = { current: PHASES[0].name as PhaseName };
     let phaseIndex = 0;
 
     refreshTargets(particles, PHASES[0].name, generation);
 
-    // All three timers (step, gen, phase) are recursive setTimeouts so each
-    // iteration can read the *current* speed multiplier off speedRef.
-    // setInterval can't change cadence on the fly without being torn down.
+    // Two recursive setTimeouts. Each reads speed and pause state off refs
+    // every iteration, so the slider/pause controls are responsive without
+    // tearing down and rebuilding the whole simulation.
+    //
+    // Phase advancement is folded into the generation tick (counting gens
+    // instead of milliseconds), which means a single `paused` check freezes
+    // everything cleanly: particles don't step, generations don't advance,
+    // phases don't advance. Resume picks up exactly where pause left off.
 
     let stepTimeout: ReturnType<typeof setTimeout>;
     const stepTick = () => {
-      for (const p of particles) stepParticle(p);
+      if (!pausedRef.current) {
+        for (const p of particles) stepParticle(p);
+      }
       stepTimeout = setTimeout(stepTick, STEP_MS / speedRef.current);
     };
     stepTimeout = setTimeout(stepTick, STEP_MS / speedRef.current);
 
     let genTimeout: ReturnType<typeof setTimeout>;
     const genTick = () => {
-      generation++;
-      advanceChaos(particles, chaosRegion);
-      refreshTargets(particles, phaseNameRef.current, generation);
+      if (!pausedRef.current) {
+        generation++;
+        advanceChaos(particles, chaosRegion);
+
+        // Time to advance phase? Compare elapsed gens against the phase's
+        // configured duration converted to gens.
+        const phaseGens = Math.max(
+          1,
+          Math.ceil(PHASES[phaseIndex].durationMs / GEN_MS)
+        );
+        if (generation - phaseStartGen >= phaseGens) {
+          phaseIndex = (phaseIndex + 1) % PHASES.length;
+          phaseNameRef.current = PHASES[phaseIndex].name;
+          phaseStartGen = generation;
+        }
+
+        refreshTargets(particles, phaseNameRef.current, generation);
+      }
       genTimeout = setTimeout(genTick, GEN_MS / speedRef.current);
     };
     genTimeout = setTimeout(genTick, GEN_MS / speedRef.current);
-
-    let phaseTimeout: ReturnType<typeof setTimeout>;
-    const advancePhase = () => {
-      phaseIndex = (phaseIndex + 1) % PHASES.length;
-      phaseNameRef.current = PHASES[phaseIndex].name;
-      refreshTargets(particles, phaseNameRef.current, generation);
-      phaseTimeout = setTimeout(
-        advancePhase,
-        PHASES[phaseIndex].durationMs / speedRef.current
-      );
-    };
-    phaseTimeout = setTimeout(
-      advancePhase,
-      PHASES[0].durationMs / speedRef.current
-    );
 
     let rafHandle = 0;
     const draw = () => {
@@ -582,7 +594,6 @@ export default function Garden() {
     return () => {
       clearTimeout(genTimeout);
       clearTimeout(stepTimeout);
-      clearTimeout(phaseTimeout);
       cancelAnimationFrame(rafHandle);
     };
   }, []);
@@ -617,6 +628,26 @@ export default function Garden() {
           userSelect: "none",
         }}
       >
+        <button
+          type="button"
+          onClick={() => setPaused((p) => !p)}
+          aria-label={paused ? "Resume" : "Pause"}
+          style={{
+            border: 0,
+            background: "rgba(255, 255, 255, 0.1)",
+            color: "white",
+            width: 28,
+            height: 24,
+            borderRadius: 6,
+            cursor: "pointer",
+            fontSize: 11,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {paused ? "▶" : "❚❚"}
+        </button>
         <span style={{ opacity: 0.7 }}>speed</span>
         <input
           type="range"
