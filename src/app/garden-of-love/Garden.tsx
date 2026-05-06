@@ -65,6 +65,11 @@ type Particle = {
   tx: number;
   ty: number;
   red: boolean;
+  /** Skip rendering this frame. Set per-phase by refreshTargets so that
+   *  solo drifters are hidden during blooms — they look like noise around
+   *  the glyph — while structured atmosphere (blinkers, blocks, beehives,
+   *  walker convoys) stays visible to keep the GoL feel. */
+  visible: boolean;
   /** Where this particle lives during each bloom — null if it has no role
    *  in that bloom (in which case it stays in its chaos role). */
   rusenHome: [number, number] | null;
@@ -309,10 +314,11 @@ function buildParticles(
     maxRow: Math.min(rows - 2, maxRow + marginV),
   };
 
-  // Decide pool size and how many of each chaos role we want.
-  // Aim for largest glyph + atmosphere; phones get fewer particles.
+  // Decide pool size. We want enough particles for the largest glyph plus a
+  // small amount of "atmosphere" — but not so much that the bloom looks
+  // surrounded by noise dots. Solo drifters get hidden during blooms anyway.
   const isPhone = typeof window !== "undefined" && window.innerWidth < 768;
-  const targetN = Math.max(rusenCells.length, beyzaCells.length) + (isPhone ? 30 : 50);
+  const targetN = Math.max(rusenCells.length, beyzaCells.length) + (isPhone ? 12 : 20);
   const N = Math.max(targetN, heartCells.length);
 
   // Distribution of chaos roles (rough proportions — fill remainder with drifters).
@@ -423,6 +429,7 @@ function buildParticles(
       tx: initial[0],
       ty: initial[1],
       red: false,
+      visible: true,
       rusenHome: id < rusenCells.length ? rusenCells[id] : null,
       heartHome: id < heartCells.length ? heartCells[id] : null,
       beyzaHome: id < beyzaCells.length ? beyzaCells[id] : null,
@@ -440,6 +447,7 @@ function refreshTargets(
   phase: PhaseName,
   generation: number
 ): void {
+  const isBloom = phase !== "chaos";
   for (const p of particles) {
     let home: [number, number] | null = null;
     let red = false;
@@ -455,11 +463,16 @@ function refreshTargets(
       p.tx = home[0];
       p.ty = home[1];
       p.red = red;
+      p.visible = true;
     } else {
       const [cx, cy] = chaosCellOf(p.chaos, generation);
       p.tx = cx;
       p.ty = cy;
       p.red = false;
+      // During blooms, hide solo drifters (they look like noise around the
+      // shape). Keep structured atmosphere — blinkers, blocks, beehives,
+      // pair/triple walkers — visible so the GoL feel persists.
+      p.visible = !isBloom || p.chaos.type !== "drifter";
     }
   }
 }
@@ -550,14 +563,16 @@ export default function Garden() {
       ctx.shadowColor = FG_PINK;
       ctx.shadowBlur = 3;
       for (const p of particles) {
-        if (!p.red) ctx.fillRect(p.x * cellSize, p.y * cellSize, cellSize, cellSize);
+        if (!p.visible || p.red) continue;
+        ctx.fillRect(p.x * cellSize, p.y * cellSize, cellSize, cellSize);
       }
 
       ctx.fillStyle = FG_HEART;
       ctx.shadowColor = FG_HEART;
       ctx.shadowBlur = 5;
       for (const p of particles) {
-        if (p.red) ctx.fillRect(p.x * cellSize, p.y * cellSize, cellSize, cellSize);
+        if (!p.visible || !p.red) continue;
+        ctx.fillRect(p.x * cellSize, p.y * cellSize, cellSize, cellSize);
       }
 
       rafHandle = requestAnimationFrame(draw);
