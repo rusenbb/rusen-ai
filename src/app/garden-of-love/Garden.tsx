@@ -1,36 +1,19 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import {
-  clearGrid,
-  seedRandom,
-  stampSingleCentered,
-  stampText,
-  step,
-} from "./engine";
-import { GLYPHS } from "./glyphs";
+import { GLYPHS, type Glyph, type GlyphMap } from "./glyphs";
 
 const BG = "#0a0a0f";
 const FG_PINK = "#f9a8d4";
 const FG_RED = "#ef4444";
-const TICK_MS = 100; // 10 generations / second
-const CHAOS_DENSITY = 0.18;
-const FADE_IN_MS = 400; // alpha 0 → 1 on phase entry
+const TICK_MS = 60; // step cadence — particles step one cell per axis per tick
+const FADE_IN_MS = 400;
 
-// Phase timing — every "bloom" gets a long hold (Conway paused) so the glyph
-// is readable, followed by a shorter decay (Conway runs and eats the glyph).
-const CHAOS_MS = 6000;
-const BLOOM_HOLD_MS = 3000;
-const BLOOM_DECAY_MS = 2000;
+const CHAOS_MS = 5000;
+const BLOOM_MS = 5000;
+const CHAOS_DRIFT_MS = 2000; // re-randomize chaos targets at this cadence
 
-type PhaseName =
-  | "chaos"
-  | "rusen-hold"
-  | "rusen-decay"
-  | "heart-hold"
-  | "heart-decay"
-  | "beyza-hold"
-  | "beyza-decay";
+type PhaseName = "chaos" | "rusen" | "heart" | "beyza";
 
 type Phase = {
   name: PhaseName;
@@ -38,74 +21,150 @@ type Phase = {
 };
 
 const PHASES: Phase[] = [
-  { name: "chaos",        durationMs: CHAOS_MS },
-  { name: "rusen-hold",   durationMs: BLOOM_HOLD_MS },
-  { name: "rusen-decay",  durationMs: BLOOM_DECAY_MS },
-  { name: "chaos",        durationMs: CHAOS_MS },
-  { name: "heart-hold",   durationMs: BLOOM_HOLD_MS },
-  { name: "heart-decay",  durationMs: BLOOM_DECAY_MS },
-  { name: "chaos",        durationMs: CHAOS_MS },
-  { name: "beyza-hold",   durationMs: BLOOM_HOLD_MS },
-  { name: "beyza-decay",  durationMs: BLOOM_DECAY_MS },
+  { name: "chaos", durationMs: CHAOS_MS },
+  { name: "rusen", durationMs: BLOOM_MS },
+  { name: "chaos", durationMs: CHAOS_MS },
+  { name: "heart", durationMs: BLOOM_MS },
+  { name: "chaos", durationMs: CHAOS_MS },
+  { name: "beyza", durationMs: BLOOM_MS },
 ];
 
+type Particle = {
+  x: number;
+  y: number;
+  tx: number;
+  ty: number;
+  red: boolean;
+};
+
+/** Cell size: target the bloom (29 glyph-cells wide) at ~60% of viewport. */
 function getCellSize(): number {
-  if (typeof window === "undefined") return 10;
-  return window.innerWidth < 768 ? 8 : 10;
+  if (typeof window === "undefined") return 16;
+  const target = Math.floor((window.innerWidth * 0.6) / 29);
+  return Math.max(8, Math.min(48, target));
 }
 
-/** Conway evolution is paused during hold phases so the glyph remains crisp. */
-function isPaused(name: PhaseName): boolean {
-  return name.endsWith("-hold");
+/** Particle count — enough to fill the largest glyph (RUŞEN ≈ 75 cells)
+ * plus a comfortable chaos cloud, without becoming visually overwhelming. */
+function getParticleCount(): number {
+  if (typeof window === "undefined") return 150;
+  return window.innerWidth < 768 ? 110 : 160;
 }
 
-/** Touch input is allowed only during chaos phases. */
-function isChaos(name: PhaseName): boolean {
-  return name === "chaos";
+/** Return all (col, row) cells lit by a single glyph, centered on the grid. */
+function getSingleCenteredCells(
+  glyph: Glyph,
+  cols: number,
+  rows: number
+): Array<[number, number]> {
+  const w = glyph[0]?.length ?? 0;
+  const h = glyph.length;
+  const startCol = Math.floor((cols - w) / 2);
+  const startRow = Math.floor((rows - h) / 2);
+  const cells: Array<[number, number]> = [];
+  for (let r = 0; r < h; r++) {
+    for (let c = 0; c < w; c++) {
+      if (glyph[r][c] === "1") cells.push([startCol + c, startRow + r]);
+    }
+  }
+  return cells;
 }
 
-function enterPhase(
-  name: PhaseName,
-  grid: Uint8Array,
-  heartMask: Uint8Array,
+/** Return all (col, row) cells lit by a multi-glyph text, centered on the grid. */
+function getTextCells(
+  text: string,
+  glyphs: GlyphMap,
+  cols: number,
+  rows: number,
+  gap: number = 1
+): Array<[number, number]> {
+  let totalWidth = 0;
+  let maxHeight = 0;
+  for (const ch of text) {
+    const g = glyphs[ch];
+    if (!g) continue;
+    totalWidth += (g[0]?.length ?? 0) + gap;
+    if (g.length > maxHeight) maxHeight = g.length;
+  }
+  if (totalWidth > 0) totalWidth -= gap;
+
+  const startCol = Math.floor((cols - totalWidth) / 2);
+  const startRow = Math.floor((rows - maxHeight) / 2);
+
+  const cells: Array<[number, number]> = [];
+  let col = startCol;
+  for (const ch of text) {
+    const g = glyphs[ch];
+    if (!g) continue;
+    const w = g[0]?.length ?? 0;
+    for (let r = 0; r < g.length; r++) {
+      for (let c = 0; c < w; c++) {
+        if (g[r][c] === "1") cells.push([col + c, startRow + r]);
+      }
+    }
+    col += w + gap;
+  }
+  return cells;
+}
+
+/**
+ * Assign each particle a target. The first `cells.length` particles get
+ * exact glyph cells (in red if `red` is true). Particles beyond that scatter
+ * randomly across the grid as ambient atmosphere.
+ *
+ * The cells array is shuffled lightly so the same particle doesn't always
+ * occupy the top-left of the glyph — gives a nicer wandering feel.
+ */
+function assignGlyphTargets(
+  particles: Particle[],
+  cells: Array<[number, number]>,
+  cols: number,
+  rows: number,
+  red: boolean
+): void {
+  // Light Fisher-Yates partial shuffle — assigning the first N is enough.
+  const shuffled = cells.slice();
+  for (let i = 0; i < shuffled.length; i++) {
+    const j = i + Math.floor(Math.random() * (shuffled.length - i));
+    const tmp = shuffled[i];
+    shuffled[i] = shuffled[j];
+    shuffled[j] = tmp;
+  }
+
+  const N = particles.length;
+  const M = Math.min(N, shuffled.length);
+  for (let i = 0; i < M; i++) {
+    particles[i].tx = shuffled[i][0];
+    particles[i].ty = shuffled[i][1];
+    particles[i].red = red;
+  }
+  for (let i = M; i < N; i++) {
+    particles[i].tx = Math.floor(Math.random() * cols);
+    particles[i].ty = Math.floor(Math.random() * rows);
+    particles[i].red = false;
+  }
+}
+
+/** Random scatter for the chaos phase. */
+function assignChaosTargets(
+  particles: Particle[],
   cols: number,
   rows: number
 ): void {
-  // Reset heart mask on every phase entry; only heart-hold repopulates it.
-  heartMask.fill(0);
-
-  switch (name) {
-    case "chaos":
-      seedRandom(grid, CHAOS_DENSITY);
-      return;
-
-    case "rusen-hold":
-      clearGrid(grid);
-      stampText(grid, cols, rows, "RUŞEN", GLYPHS);
-      return;
-
-    case "beyza-hold":
-      clearGrid(grid);
-      stampText(grid, cols, rows, "BEYZA", GLYPHS);
-      return;
-
-    case "heart-hold":
-      clearGrid(grid);
-      stampSingleCentered(grid, cols, rows, GLYPHS.HEART);
-      // Mark every just-stamped cell as a heart cell so it renders red.
-      // The mask persists into the decay phase so heart cells fade red as
-      // they die, while any neighbors born during decay render in pink.
-      for (let i = 0; i < grid.length; i++) {
-        heartMask[i] = grid[i];
-      }
-      return;
-
-    case "rusen-decay":
-    case "heart-decay":
-    case "beyza-decay":
-      // No-op: let Conway evolve from the seeded grid.
-      return;
+  for (const p of particles) {
+    p.tx = Math.floor(Math.random() * cols);
+    p.ty = Math.floor(Math.random() * rows);
+    p.red = false;
   }
+}
+
+/** Move a particle one cell per axis toward its target (Manhattan king-step).
+ * Integer positions only — particles always sit on a grid cell. */
+function stepParticle(p: Particle): void {
+  if (p.x < p.tx) p.x++;
+  else if (p.x > p.tx) p.x--;
+  if (p.y < p.ty) p.y++;
+  else if (p.y > p.ty) p.y--;
 }
 
 export default function Garden() {
@@ -129,22 +188,71 @@ export default function Garden() {
     if (!ctx) return;
     ctx.scale(dpr, dpr);
 
-    let current = new Uint8Array(cols * rows);
-    let next = new Uint8Array(cols * rows);
-    const heartMask = new Uint8Array(cols * rows);
+    // Initialize particles at random *grid cells* — integer positions.
+    const N = getParticleCount();
+    const particles: Particle[] = [];
+    for (let i = 0; i < N; i++) {
+      particles.push({
+        x: Math.floor(Math.random() * cols),
+        y: Math.floor(Math.random() * rows),
+        tx: Math.floor(Math.random() * cols),
+        ty: Math.floor(Math.random() * rows),
+        red: false,
+      });
+    }
 
     const phaseNameRef = { current: PHASES[0].name as PhaseName };
     const phaseStartRef = { current: performance.now() };
     let phaseIndex = 0;
-    enterPhase(PHASES[0].name, current, heartMask, cols, rows);
 
+    const enterPhase = (name: PhaseName) => {
+      switch (name) {
+        case "chaos":
+          assignChaosTargets(particles, cols, rows);
+          return;
+        case "rusen":
+          assignGlyphTargets(
+            particles,
+            getTextCells("RUŞEN", GLYPHS, cols, rows),
+            cols,
+            rows,
+            false
+          );
+          return;
+        case "heart":
+          assignGlyphTargets(
+            particles,
+            getSingleCenteredCells(GLYPHS.HEART, cols, rows),
+            cols,
+            rows,
+            true
+          );
+          return;
+        case "beyza":
+          assignGlyphTargets(
+            particles,
+            getTextCells("BEYZA", GLYPHS, cols, rows),
+            cols,
+            rows,
+            false
+          );
+          return;
+      }
+    };
+
+    enterPhase(PHASES[0].name);
+
+    // Re-randomize chaos targets periodically so particles wander rather than
+    // settle. Only fires when the current phase is chaos.
+    const driftHandle = setInterval(() => {
+      if (phaseNameRef.current === "chaos") {
+        assignChaosTargets(particles, cols, rows);
+      }
+    }, CHAOS_DRIFT_MS);
+
+    // Motion tick — each particle steps one cell per axis toward its target.
     const tickHandle = setInterval(() => {
-      // Skip Conway evolution during hold phases.
-      if (isPaused(phaseNameRef.current)) return;
-      step(current, next, cols, rows);
-      const tmp = current;
-      current = next;
-      next = tmp;
+      for (const p of particles) stepParticle(p);
     }, TICK_MS);
 
     let phaseTimeout: ReturnType<typeof setTimeout>;
@@ -152,48 +260,38 @@ export default function Garden() {
       phaseIndex = (phaseIndex + 1) % PHASES.length;
       phaseNameRef.current = PHASES[phaseIndex].name;
       phaseStartRef.current = performance.now();
-      enterPhase(PHASES[phaseIndex].name, current, heartMask, cols, rows);
+      enterPhase(PHASES[phaseIndex].name);
       phaseTimeout = setTimeout(advancePhase, PHASES[phaseIndex].durationMs);
     };
     phaseTimeout = setTimeout(advancePhase, PHASES[0].durationMs);
 
     let rafHandle = 0;
     const draw = () => {
-      // Compute fade-in alpha at the start of every phase. This smooths the
-      // transition from chaos → bloom (and the reverse) so phases don't snap.
       const elapsed = performance.now() - phaseStartRef.current;
       const fadeAlpha =
         elapsed < FADE_IN_MS ? Math.max(0, elapsed / FADE_IN_MS) : 1;
 
-      // Background — always fully opaque.
       ctx.fillStyle = BG;
       ctx.fillRect(0, 0, cols * cellSize, rows * cellSize);
 
       ctx.globalAlpha = fadeAlpha;
 
-      // Pink pass (non-heart cells)
+      // Two passes for cheaper state changes (one shadow setup per color).
       ctx.fillStyle = FG_PINK;
       ctx.shadowColor = FG_PINK;
       ctx.shadowBlur = 3;
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          const i = r * cols + c;
-          if (current[i] && !heartMask[i]) {
-            ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
-          }
+      for (const p of particles) {
+        if (!p.red) {
+          ctx.fillRect(p.x * cellSize, p.y * cellSize, cellSize, cellSize);
         }
       }
 
-      // Red pass (heart cells)
       ctx.fillStyle = FG_RED;
       ctx.shadowColor = FG_RED;
       ctx.shadowBlur = 4;
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          const i = r * cols + c;
-          if (current[i] && heartMask[i]) {
-            ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
-          }
+      for (const p of particles) {
+        if (p.red) {
+          ctx.fillRect(p.x * cellSize, p.y * cellSize, cellSize, cellSize);
         }
       }
 
@@ -202,47 +300,11 @@ export default function Garden() {
     };
     rafHandle = requestAnimationFrame(draw);
 
-    const cellAt = (clientX: number, clientY: number): number | null => {
-      const rect = canvas.getBoundingClientRect();
-      const x = clientX - rect.left;
-      const y = clientY - rect.top;
-      const c = Math.floor(x / cellSize);
-      const r = Math.floor(y / cellSize);
-      if (r < 0 || r >= rows || c < 0 || c >= cols) return null;
-      return r * cols + c;
-    };
-
-    let pressed = false;
-    const onDown = (e: PointerEvent) => {
-      if (!isChaos(phaseNameRef.current)) return;
-      pressed = true;
-      const idx = cellAt(e.clientX, e.clientY);
-      if (idx !== null) current[idx] = 1;
-    };
-    const onMove = (e: PointerEvent) => {
-      if (!pressed || !isChaos(phaseNameRef.current)) return;
-      const idx = cellAt(e.clientX, e.clientY);
-      if (idx !== null) current[idx] = 1;
-    };
-    const onUp = () => {
-      pressed = false;
-    };
-
-    canvas.addEventListener("pointerdown", onDown);
-    canvas.addEventListener("pointermove", onMove);
-    canvas.addEventListener("pointerup", onUp);
-    canvas.addEventListener("pointerleave", onUp);
-    canvas.addEventListener("pointercancel", onUp);
-
     return () => {
+      clearInterval(driftHandle);
       clearInterval(tickHandle);
       clearTimeout(phaseTimeout);
       cancelAnimationFrame(rafHandle);
-      canvas.removeEventListener("pointerdown", onDown);
-      canvas.removeEventListener("pointermove", onMove);
-      canvas.removeEventListener("pointerup", onUp);
-      canvas.removeEventListener("pointerleave", onUp);
-      canvas.removeEventListener("pointercancel", onUp);
     };
   }, []);
 
