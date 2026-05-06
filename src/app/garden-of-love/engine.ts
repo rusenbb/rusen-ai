@@ -49,14 +49,17 @@ export function seedRandom(
 
 /**
  * Write the '1' cells of `glyph` into `grid` starting at (originCol, originRow).
- * Cells outside the grid bounds are silently skipped (no wrap).
+ * When `scale` > 1, each glyph cell paints a `scale x scale` block of grid cells
+ * — useful for making the bloom large enough to compete with the chaos field
+ * for visual presence. Cells outside grid bounds are silently skipped (no wrap).
  */
 export function stampGlyph(
   grid: Uint8Array,
   cols: number,
   glyph: Glyph,
   originCol: number,
-  originRow: number
+  originRow: number,
+  scale: number = 1
 ): void {
   const w = glyph[0]?.length ?? 0;
   const h = glyph.length;
@@ -64,12 +67,16 @@ export function stampGlyph(
     const row = glyph[r];
     for (let c = 0; c < w; c++) {
       if (row[c] !== "1") continue;
-      const gr = originRow + r;
-      const gc = originCol + c;
-      if (gr < 0 || gc < 0) continue;
-      const idx = gr * cols + gc;
-      if (idx >= grid.length) continue;
-      grid[idx] = 1;
+      for (let dy = 0; dy < scale; dy++) {
+        for (let dx = 0; dx < scale; dx++) {
+          const gr = originRow + r * scale + dy;
+          const gc = originCol + c * scale + dx;
+          if (gr < 0 || gc < 0) continue;
+          const idx = gr * cols + gc;
+          if (idx >= grid.length) continue;
+          grid[idx] = 1;
+        }
+      }
     }
   }
 }
@@ -79,20 +86,21 @@ export function stampSingleCentered(
   grid: Uint8Array,
   cols: number,
   rows: number,
-  glyph: Glyph
+  glyph: Glyph,
+  scale: number = 1
 ): void {
-  const w = glyph[0]?.length ?? 0;
-  const h = glyph.length;
+  const w = (glyph[0]?.length ?? 0) * scale;
+  const h = glyph.length * scale;
   const startCol = Math.floor((cols - w) / 2);
   const startRow = Math.floor((rows - h) / 2);
-  stampGlyph(grid, cols, glyph, startCol, startRow);
+  stampGlyph(grid, cols, glyph, startCol, startRow, scale);
 }
 
 /**
  * Stamp `text` (one glyph per character, looked up in `glyphs`) centered on
- * the grid. Glyphs are placed left-to-right with `gap` empty cells between.
- * Vertical centering uses the tallest glyph's height; all glyphs share the
- * same top row.
+ * the grid. Glyphs are placed left-to-right with `gap` empty *glyph-cells*
+ * between (so the gap also scales). Vertical centering uses the tallest
+ * glyph's height; all glyphs share the same top row.
  */
 export function stampText(
   grid: Uint8Array,
@@ -100,17 +108,18 @@ export function stampText(
   rows: number,
   text: string,
   glyphs: GlyphMap,
-  gap: number = 1
+  gap: number = 1,
+  scale: number = 1
 ): void {
   let totalWidth = 0;
   let maxHeight = 0;
   for (const ch of text) {
     const g = glyphs[ch];
     if (!g) continue;
-    totalWidth += (g[0]?.length ?? 0) + gap;
-    if (g.length > maxHeight) maxHeight = g.length;
+    totalWidth += ((g[0]?.length ?? 0) + gap) * scale;
+    if (g.length * scale > maxHeight) maxHeight = g.length * scale;
   }
-  if (totalWidth > 0) totalWidth -= gap;
+  if (totalWidth > 0) totalWidth -= gap * scale;
 
   const startCol = Math.floor((cols - totalWidth) / 2);
   const startRow = Math.floor((rows - maxHeight) / 2);
@@ -119,7 +128,7 @@ export function stampText(
   for (const ch of text) {
     const g = glyphs[ch];
     if (!g) continue;
-    stampGlyph(grid, cols, g, col, startRow);
-    col += (g[0]?.length ?? 0) + gap;
+    stampGlyph(grid, cols, g, col, startRow, scale);
+    col += ((g[0]?.length ?? 0) + gap) * scale;
   }
 }
