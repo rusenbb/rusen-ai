@@ -1,3 +1,5 @@
+import type { Glyph, GlyphMap } from "./glyphs";
+
 /**
  * Advance the grid by one Conway generation (B3/S23, toroidal edges).
  * Reads from `current`, writes into `next`. Both must be the same length.
@@ -42,5 +44,82 @@ export function seedRandom(
 ): void {
   for (let i = 0; i < grid.length; i++) {
     grid[i] = rng() < density ? 1 : 0;
+  }
+}
+
+/**
+ * Write the '1' cells of `glyph` into `grid` starting at (originCol, originRow).
+ * Cells outside the grid bounds are silently skipped (no wrap).
+ */
+export function stampGlyph(
+  grid: Uint8Array,
+  cols: number,
+  glyph: Glyph,
+  originCol: number,
+  originRow: number
+): void {
+  const w = glyph[0]?.length ?? 0;
+  const h = glyph.length;
+  for (let r = 0; r < h; r++) {
+    const row = glyph[r];
+    for (let c = 0; c < w; c++) {
+      if (row[c] !== "1") continue;
+      const gr = originRow + r;
+      const gc = originCol + c;
+      if (gr < 0 || gc < 0) continue;
+      const idx = gr * cols + gc;
+      if (idx >= grid.length) continue;
+      grid[idx] = 1;
+    }
+  }
+}
+
+/** Stamp a single glyph centered horizontally and vertically. */
+export function stampSingleCentered(
+  grid: Uint8Array,
+  cols: number,
+  rows: number,
+  glyph: Glyph
+): void {
+  const w = glyph[0]?.length ?? 0;
+  const h = glyph.length;
+  const startCol = Math.floor((cols - w) / 2);
+  const startRow = Math.floor((rows - h) / 2);
+  stampGlyph(grid, cols, glyph, startCol, startRow);
+}
+
+/**
+ * Stamp `text` (one glyph per character, looked up in `glyphs`) centered on
+ * the grid. Glyphs are placed left-to-right with `gap` empty cells between.
+ * Vertical centering uses the tallest glyph's height; all glyphs share the
+ * same top row.
+ */
+export function stampText(
+  grid: Uint8Array,
+  cols: number,
+  rows: number,
+  text: string,
+  glyphs: GlyphMap,
+  gap: number = 1
+): void {
+  let totalWidth = 0;
+  let maxHeight = 0;
+  for (const ch of text) {
+    const g = glyphs[ch];
+    if (!g) continue;
+    totalWidth += (g[0]?.length ?? 0) + gap;
+    if (g.length > maxHeight) maxHeight = g.length;
+  }
+  if (totalWidth > 0) totalWidth -= gap;
+
+  const startCol = Math.floor((cols - totalWidth) / 2);
+  const startRow = Math.floor((rows - maxHeight) / 2);
+
+  let col = startCol;
+  for (const ch of text) {
+    const g = glyphs[ch];
+    if (!g) continue;
+    stampGlyph(grid, cols, g, col, startRow);
+    col += (g[0]?.length ?? 0) + gap;
   }
 }
