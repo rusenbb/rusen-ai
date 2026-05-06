@@ -1,4 +1,4 @@
-import { step } from "../engine";
+import { clearGrid, seedRandom, step } from "../engine";
 
 function makeGrid(rows: string[]): { grid: Uint8Array; cols: number; rows: number } {
   const cols = rows[0].length;
@@ -88,5 +88,35 @@ describe("Conway step", () => {
     expect(next[2 * cols + 4]).toBe(0);
     // New cell born to the left of the middle (3 neighbors: (0,4),(1,4),(2,4))
     expect(next[1 * cols + 3]).toBe(1);
+  });
+});
+
+describe("clearGrid", () => {
+  it("zeroes every cell", () => {
+    const grid = new Uint8Array([1, 0, 1, 1, 0]);
+    clearGrid(grid);
+    expect(Array.from(grid)).toEqual([0, 0, 0, 0, 0]);
+  });
+});
+
+describe("seedRandom", () => {
+  it("respects density via injected RNG: density 1 fills entirely", () => {
+    const grid = new Uint8Array(20);
+    seedRandom(grid, 1, () => 0); // every rng() < 1 → true
+    expect(Array.from(grid).every((c) => c === 1)).toBe(true);
+  });
+
+  it("respects density via injected RNG: density 0 leaves grid empty", () => {
+    const grid = new Uint8Array(20);
+    seedRandom(grid, 0, () => 0); // 0 < 0 is false
+    expect(Array.from(grid).every((c) => c === 0)).toBe(true);
+  });
+
+  it("density 0.5 with alternating RNG produces alternating cells", () => {
+    const grid = new Uint8Array(6);
+    let i = 0;
+    const rng = () => (i++ % 2 === 0 ? 0 : 0.9);
+    seedRandom(grid, 0.5, rng);
+    expect(Array.from(grid)).toEqual([1, 0, 1, 0, 1, 0]);
   });
 });

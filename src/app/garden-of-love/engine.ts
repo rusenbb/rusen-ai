@@ -25,3 +25,22 @@ export function step(
     }
   }
 }
+
+/** Set every cell in the grid to 0. */
+export function clearGrid(grid: Uint8Array): void {
+  grid.fill(0);
+}
+
+/**
+ * Fill the grid with random live cells at the given density (0..1).
+ * RNG is injectable for deterministic tests.
+ */
+export function seedRandom(
+  grid: Uint8Array,
+  density: number,
+  rng: () => number = Math.random
+): void {
+  for (let i = 0; i < grid.length; i++) {
+    grid[i] = rng() < density ? 1 : 0;
+  }
+}
