@@ -1,4 +1,12 @@
-import { clearGrid, seedRandom, step } from "../engine";
+import {
+  clearGrid,
+  seedRandom,
+  stampGlyph,
+  stampSingleCentered,
+  stampText,
+  step,
+} from "../engine";
+import { GLYPHS } from "../glyphs";
 
 function makeGrid(rows: string[]): { grid: Uint8Array; cols: number; rows: number } {
   const cols = rows[0].length;
@@ -118,5 +126,72 @@ describe("seedRandom", () => {
     const rng = () => (i++ % 2 === 0 ? 0 : 0.9);
     seedRandom(grid, 0.5, rng);
     expect(Array.from(grid)).toEqual([1, 0, 1, 0, 1, 0]);
+  });
+});
+
+describe("stampGlyph", () => {
+  it("writes 1s where the glyph specifies and leaves other cells alone", () => {
+    const cols = 6;
+    const rows = 3;
+    const grid = new Uint8Array(cols * rows);
+    grid[0] = 1; // pre-existing cell, must remain
+    const glyph = ["010", "101", "010"];
+    stampGlyph(grid, cols, glyph, 1, 0);
+    // Expected layout (cols=6, rows=3):
+    // 1 0 1 0 0 0
+    // 0 1 0 1 0 0
+    // 0 0 1 0 0 0
+    expect(Array.from(grid)).toEqual([
+      1, 0, 1, 0, 0, 0,
+      0, 1, 0, 1, 0, 0,
+      0, 0, 1, 0, 0, 0,
+    ]);
+  });
+});
+
+describe("stampSingleCentered", () => {
+  it("centers a 3x3 glyph in a 5x5 grid", () => {
+    const cols = 5;
+    const rows = 5;
+    const grid = new Uint8Array(cols * rows);
+    const glyph = ["111", "111", "111"];
+    stampSingleCentered(grid, cols, rows, glyph);
+    // Centered: startCol=1, startRow=1; the 3x3 block sits in the middle.
+    expect(grid[0 * cols + 0]).toBe(0);
+    expect(grid[1 * cols + 1]).toBe(1);
+    expect(grid[3 * cols + 3]).toBe(1);
+    expect(grid[4 * cols + 4]).toBe(0);
+  });
+});
+
+describe("stampText", () => {
+  it("centers RUŞEN horizontally and vertically with 1-cell gaps", () => {
+    // 5 letters * 5 wide + 4 gaps of 1 = 29 wide
+    // maxHeight = 8 (Ş has the cedilla row)
+    const cols = 40;
+    const rows = 20;
+    const grid = new Uint8Array(cols * rows);
+    stampText(grid, cols, rows, "RUŞEN", GLYPHS);
+    // Expected start col: floor((40 - 29) / 2) = 5
+    // Expected start row: floor((20 - 8) / 2) = 6
+    // R's top-left has cells matching its pattern: row 0 of R is "11110".
+    expect(grid[6 * cols + 5]).toBe(1);
+    expect(grid[6 * cols + 6]).toBe(1);
+    expect(grid[6 * cols + 7]).toBe(1);
+    expect(grid[6 * cols + 8]).toBe(1);
+    expect(grid[6 * cols + 9]).toBe(0);
+  });
+
+  it("handles Ş (8-row glyph) by using its actual height for vertical centering", () => {
+    const cols = 30;
+    const rows = 20;
+    const grid = new Uint8Array(cols * rows);
+    stampText(grid, cols, rows, "Ş", GLYPHS);
+    // Ş is 5 wide, 8 tall.
+    // startRow = floor((20 - 8) / 2) = 6
+    // The cedilla cell is at row 7 of the glyph → grid row 13.
+    // Ş cedilla pattern row is "00100", so middle cell of row 13 is 1.
+    const startCol = Math.floor((cols - 5) / 2);
+    expect(grid[13 * cols + (startCol + 2)]).toBe(1);
   });
 });
