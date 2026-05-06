@@ -8,10 +8,9 @@ const FG_PINK = "#f9a8d4";
 const FG_RED = "#ef4444";
 const STEP_MS = 80; // particle step cadence (Manhattan king-step toward target)
 const GEN_MS = 320; // generation cadence — chaos roles advance one generation
-const FADE_IN_MS = 400;
 
 const CHAOS_MS = 6000;
-const BLOOM_MS = 5500;
+const BLOOM_MS = 6500;
 
 type PhaseName = "chaos" | "rusen" | "heart" | "beyza";
 
@@ -33,11 +32,24 @@ const PHASES: Phase[] = [
  * Each particle has a permanent identity. The chaos role determines what
  * scripted Conway-like behavior the particle plays when no glyph claims
  * it. Roles never change during the experience.
+ *
+ * Pair/triple walkers carry a *shared* mutable group reference so all
+ * particles in the same convoy advance together when the group moves.
  */
+type WalkerGroup = {
+  cx: number;
+  cy: number;
+  dx: number; // current direction
+  dy: number;
+  cooldown: number; // gens until direction reroll
+};
+
 type ChaosRole =
   | { type: "blinker"; cx: number; cy: number; slot: 0 | 1 | 2 } // 3 cells, period 2
   | { type: "block"; cx: number; cy: number; slot: 0 | 1 | 2 | 3 } // 4 cells, static
   | { type: "beehive"; cx: number; cy: number; slot: 0 | 1 | 2 | 3 | 4 | 5 } // 6 cells, static
+  | { type: "pair"; group: WalkerGroup; slot: 0 | 1 } // 2 cells, walks together
+  | { type: "triple"; group: WalkerGroup; slot: 0 | 1 | 2 } // 3 cells, walks together
   | { type: "drifter"; px: number; py: number }; // 1 cell, random walk
 
 type Particle = {
@@ -146,21 +158,77 @@ function chaosCellOf(role: ChaosRole, gen: number): [number, number] {
       const [dx, dy] = offsets[role.slot];
       return [role.cx + dx, role.cy + dy];
     }
+    case "pair":
+      // Two cells side-by-side, both reading from the shared group center.
+      return [role.group.cx + role.slot, role.group.cy];
+    case "triple":
+      // Three cells in a row.
+      return [role.group.cx + role.slot, role.group.cy];
     case "drifter":
       return [role.px, role.py];
   }
 }
 
-/** Move drifters one cell randomly. Mutates role state for drifter particles. */
-function advanceDrifters(particles: Particle[], cols: number, rows: number): void {
-  const dirs: Array<[number, number]> = [
-    [0, 0], [-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, 1], [-1, 1], [1, -1],
+/** Random direction vector, including diagonals. */
+const WALKER_DIRS: Array<[number, number]> = [
+  [-1, 0], [1, 0], [0, -1], [0, 1],
+  [-1, -1], [1, 1], [-1, 1], [1, -1],
+];
+
+/** Advance all chaos roles by one generation: drifters wander, walker groups
+ *  move along their current direction (and occasionally reroll it). Group
+ *  references are shared, so all members of a pair/triple stay in formation. */
+function advanceChaos(particles: Particle[], cols: number, rows: number): void {
+  const dirs9: Array<[number, number]> = [
+    [0, 0], [-1, 0], [1, 0], [0, -1], [0, 1],
+    [-1, -1], [1, 1], [-1, 1], [1, -1],
   ];
+
+  // Move drifters one cell randomly.
   for (const p of particles) {
     if (p.chaos.type !== "drifter") continue;
-    const [dx, dy] = dirs[Math.floor(Math.random() * dirs.length)];
+    const [dx, dy] = dirs9[Math.floor(Math.random() * dirs9.length)];
     p.chaos.px = Math.max(0, Math.min(cols - 1, p.chaos.px + dx));
     p.chaos.py = Math.max(0, Math.min(rows - 1, p.chaos.py + dy));
+  }
+
+  // Advance walker groups exactly once per group (dedup via Set).
+  const seen = new Set<WalkerGroup>();
+  for (const p of particles) {
+    if (p.chaos.type !== "pair" && p.chaos.type !== "triple") continue;
+    const g = p.chaos.group;
+    if (seen.has(g)) continue;
+    seen.add(g);
+
+    // Advance position. Bounce off edges so groups stay on screen.
+    const groupWidth = p.chaos.type === "pair" ? 2 : 3;
+    let nx = g.cx + g.dx;
+    let ny = g.cy + g.dy;
+    if (nx < 0) {
+      nx = 0;
+      g.dx = Math.abs(g.dx);
+    } else if (nx + groupWidth > cols) {
+      nx = cols - groupWidth;
+      g.dx = -Math.abs(g.dx);
+    }
+    if (ny < 0) {
+      ny = 0;
+      g.dy = Math.abs(g.dy);
+    } else if (ny >= rows) {
+      ny = rows - 1;
+      g.dy = -Math.abs(g.dy);
+    }
+    g.cx = nx;
+    g.cy = ny;
+
+    // Periodically pick a new direction so the group meanders.
+    g.cooldown--;
+    if (g.cooldown <= 0) {
+      const [dx, dy] = WALKER_DIRS[Math.floor(Math.random() * WALKER_DIRS.length)];
+      g.dx = dx;
+      g.dy = dy;
+      g.cooldown = 4 + Math.floor(Math.random() * 6);
+    }
   }
 }
 
@@ -181,15 +249,18 @@ function buildParticles(cols: number, rows: number): Particle[] {
   const N = Math.max(targetN, heartCells.length);
 
   // Distribution of chaos roles (rough proportions — fill remainder with drifters).
-  const numBlinkers = isPhone ? 6 : 10;
-  const numBlocks = isPhone ? 4 : 7;
-  const numBeehives = isPhone ? 2 : 4;
+  const numBlinkers = isPhone ? 5 : 8;
+  const numBlocks = isPhone ? 3 : 5;
+  const numBeehives = isPhone ? 2 : 3;
+  const numPairs = isPhone ? 4 : 7;
+  const numTriples = isPhone ? 3 : 5;
 
   const roles: ChaosRole[] = [];
 
-  // Helpers to scatter pattern centers without crashing into edges.
   const randCol = () => 2 + Math.floor(Math.random() * Math.max(1, cols - 5));
   const randRow = () => 2 + Math.floor(Math.random() * Math.max(1, rows - 5));
+  const randDir = (): [number, number] =>
+    WALKER_DIRS[Math.floor(Math.random() * WALKER_DIRS.length)];
 
   for (let i = 0; i < numBlinkers; i++) {
     const cx = randCol();
@@ -214,6 +285,32 @@ function buildParticles(cols: number, rows: number): Particle[] {
         cx, cy,
         slot: s as 0 | 1 | 2 | 3 | 4 | 5,
       });
+    }
+  }
+  for (let i = 0; i < numPairs; i++) {
+    const [dx, dy] = randDir();
+    const group: WalkerGroup = {
+      cx: randCol(),
+      cy: randRow(),
+      dx,
+      dy,
+      cooldown: 4 + Math.floor(Math.random() * 6),
+    };
+    for (let s = 0; s < 2; s++) {
+      roles.push({ type: "pair", group, slot: s as 0 | 1 });
+    }
+  }
+  for (let i = 0; i < numTriples; i++) {
+    const [dx, dy] = randDir();
+    const group: WalkerGroup = {
+      cx: randCol(),
+      cy: randRow(),
+      dx,
+      dy,
+      cooldown: 4 + Math.floor(Math.random() * 6),
+    };
+    for (let s = 0; s < 3; s++) {
+      roles.push({ type: "triple", group, slot: s as 0 | 1 | 2 });
     }
   }
   // Pad with drifters until we hit N.
@@ -318,17 +415,17 @@ export default function Garden() {
 
     let generation = 0;
     const phaseNameRef = { current: PHASES[0].name as PhaseName };
-    const phaseStartRef = { current: performance.now() };
     let phaseIndex = 0;
 
     refreshTargets(particles, PHASES[0].name, generation);
 
-    // Generation tick: advance chaos roles (blinkers flip, drifters drift)
-    // and recompute targets for every particle that's in chaos / has no home
-    // for the current bloom. Glyph-home particles ignore generation changes.
+    // Generation tick: advance chaos roles (blinkers flip, drifters drift,
+    // walker groups translate) and recompute targets for every particle
+    // that's in chaos / has no home for the current bloom. Glyph-home
+    // particles ignore generation changes during a bloom.
     const genHandle = setInterval(() => {
       generation++;
-      advanceDrifters(particles, cols, rows);
+      advanceChaos(particles, cols, rows);
       refreshTargets(particles, phaseNameRef.current, generation);
     }, GEN_MS);
 
@@ -341,7 +438,6 @@ export default function Garden() {
     const advancePhase = () => {
       phaseIndex = (phaseIndex + 1) % PHASES.length;
       phaseNameRef.current = PHASES[phaseIndex].name;
-      phaseStartRef.current = performance.now();
       refreshTargets(particles, phaseNameRef.current, generation);
       phaseTimeout = setTimeout(advancePhase, PHASES[phaseIndex].durationMs);
     };
@@ -349,14 +445,8 @@ export default function Garden() {
 
     let rafHandle = 0;
     const draw = () => {
-      const elapsed = performance.now() - phaseStartRef.current;
-      const fadeAlpha =
-        elapsed < FADE_IN_MS ? Math.max(0, elapsed / FADE_IN_MS) : 1;
-
       ctx.fillStyle = BG;
       ctx.fillRect(0, 0, cols * cellSize, rows * cellSize);
-
-      ctx.globalAlpha = fadeAlpha;
 
       ctx.fillStyle = FG_PINK;
       ctx.shadowColor = FG_PINK;
@@ -372,7 +462,6 @@ export default function Garden() {
         if (p.red) ctx.fillRect(p.x * cellSize, p.y * cellSize, cellSize, cellSize);
       }
 
-      ctx.globalAlpha = 1;
       rafHandle = requestAnimationFrame(draw);
     };
     rafHandle = requestAnimationFrame(draw);
