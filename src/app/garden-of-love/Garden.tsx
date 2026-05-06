@@ -73,6 +73,16 @@ type Particle = {
   chaos: ChaosRole;
 };
 
+/** Inclusive grid bounds within which all chaos motion is constrained.
+ *  Computed from the bounding box of every glyph plus a margin, so
+ *  particles cluster around the center where the blooms will appear. */
+type ChaosRegion = {
+  minCol: number;
+  maxCol: number;
+  minRow: number;
+  maxRow: number;
+};
+
 function getCellSize(): number {
   if (typeof window === "undefined") return 16;
   const target = Math.floor((window.innerWidth * 0.6) / 29);
@@ -182,20 +192,19 @@ const WALKER_DIRS: Array<[number, number]> = [
 ];
 
 /** Pick a fresh random direction for a walker group, biased away from the
- *  nearest wall when one is close — so groups don't keep hammering against
- *  the edge they just hit. */
+ *  nearest region wall when one is close — so groups don't keep hammering
+ *  against the edge they just hit. */
 function pickWalkerDir(
   g: WalkerGroup,
   groupWidth: number,
-  cols: number,
-  rows: number
+  region: ChaosRegion
 ): [number, number] {
   const margin = 2;
   let allowed = WALKER_DIRS.slice();
-  if (g.cx <= margin) allowed = allowed.filter(([dx]) => dx >= 0);
-  if (g.cx + groupWidth >= cols - margin) allowed = allowed.filter(([dx]) => dx <= 0);
-  if (g.cy <= margin) allowed = allowed.filter(([, dy]) => dy >= 0);
-  if (g.cy >= rows - margin) allowed = allowed.filter(([, dy]) => dy <= 0);
+  if (g.cx <= region.minCol + margin) allowed = allowed.filter(([dx]) => dx >= 0);
+  if (g.cx + groupWidth >= region.maxCol - margin) allowed = allowed.filter(([dx]) => dx <= 0);
+  if (g.cy <= region.minRow + margin) allowed = allowed.filter(([, dy]) => dy >= 0);
+  if (g.cy >= region.maxRow - margin) allowed = allowed.filter(([, dy]) => dy <= 0);
   if (allowed.length === 0) allowed = WALKER_DIRS;
   return allowed[Math.floor(Math.random() * allowed.length)];
 }
@@ -204,22 +213,23 @@ function pickWalkerDir(
  *  move along their current direction (and occasionally reroll it). Group
  *  references are shared, so all members of a pair/triple stay in formation.
  *
- *  Both drifters and walkers have a chance to *pause* each generation, so the
- *  motion feels like idle wandering instead of relentless travel. */
-function advanceChaos(particles: Particle[], cols: number, rows: number): void {
+ *  All motion is clamped/bounced inside the chaos region — particles never
+ *  travel out to the canvas edges, they stay clustered around the center
+ *  where the blooms appear. Both drifters and walkers also pause some
+ *  fraction of generations so the motion feels like idle wandering. */
+function advanceChaos(particles: Particle[], region: ChaosRegion): void {
   const dirs9: Array<[number, number]> = [
     [0, 0], [-1, 0], [1, 0], [0, -1], [0, 1],
     [-1, -1], [1, 1], [-1, 1], [1, -1],
   ];
 
-  // Drifters: pause half the time, then take a 1-cell random step. The
-  // pause makes the motion feel like a slow wander instead of jittering.
+  // Drifters: pause half the time, then take a 1-cell random step.
   for (const p of particles) {
     if (p.chaos.type !== "drifter") continue;
     if (Math.random() < 0.55) continue;
     const [dx, dy] = dirs9[Math.floor(Math.random() * dirs9.length)];
-    p.chaos.px = Math.max(0, Math.min(cols - 1, p.chaos.px + dx));
-    p.chaos.py = Math.max(0, Math.min(rows - 1, p.chaos.py + dy));
+    p.chaos.px = Math.max(region.minCol, Math.min(region.maxCol, p.chaos.px + dx));
+    p.chaos.py = Math.max(region.minRow, Math.min(region.maxRow, p.chaos.py + dy));
   }
 
   // Advance walker groups exactly once per group (dedup via Set).
@@ -230,20 +240,23 @@ function advanceChaos(particles: Particle[], cols: number, rows: number): void {
     if (seen.has(g)) continue;
     seen.add(g);
 
-    // Walkers also pause sometimes — gives the field a calmer cadence.
     if (Math.random() < 0.35) continue;
 
     const groupWidth = p.chaos.type === "pair" ? 2 : 3;
     const nx = g.cx + g.dx;
     const ny = g.cy + g.dy;
 
-    // If we'd cross an edge, don't bounce sharply — clamp position and pick
-    // a fresh random direction biased *away* from the wall. Feels like a
-    // soft turn rather than an immediate reflection.
-    if (nx < 0 || nx + groupWidth > cols || ny < 0 || ny >= rows) {
-      g.cx = Math.max(0, Math.min(cols - groupWidth, g.cx));
-      g.cy = Math.max(0, Math.min(rows - 1, g.cy));
-      const [dx, dy] = pickWalkerDir(g, groupWidth, cols, rows);
+    // If we'd cross a region boundary, clamp + pick a fresh direction
+    // biased away from that wall. Soft turn rather than reflection.
+    if (
+      nx < region.minCol ||
+      nx + groupWidth > region.maxCol ||
+      ny < region.minRow ||
+      ny > region.maxRow
+    ) {
+      g.cx = Math.max(region.minCol, Math.min(region.maxCol - groupWidth, g.cx));
+      g.cy = Math.max(region.minRow, Math.min(region.maxRow, g.cy));
+      const [dx, dy] = pickWalkerDir(g, groupWidth, region);
       g.dx = dx;
       g.dy = dy;
       g.cooldown = 4 + Math.floor(Math.random() * 5);
@@ -253,10 +266,9 @@ function advanceChaos(particles: Particle[], cols: number, rows: number): void {
     g.cx = nx;
     g.cy = ny;
 
-    // Periodically reroll direction for natural meandering.
     g.cooldown--;
     if (g.cooldown <= 0) {
-      const [dx, dy] = pickWalkerDir(g, groupWidth, cols, rows);
+      const [dx, dy] = pickWalkerDir(g, groupWidth, region);
       g.dx = dx;
       g.dy = dy;
       g.cooldown = 4 + Math.floor(Math.random() * 5);
@@ -269,10 +281,33 @@ function advanceChaos(particles: Particle[], cols: number, rows: number): void {
  *  - a permanent home in each bloom (or null if no role for that bloom)
  *  - an initial position from its chaos role
  */
-function buildParticles(cols: number, rows: number): Particle[] {
+function buildParticles(
+  cols: number,
+  rows: number
+): { particles: Particle[]; chaosRegion: ChaosRegion } {
   const rusenCells = getTextCells("RUŞEN", GLYPHS, cols, rows);
   const heartCells = getSingleCenteredCells(GLYPHS.HEART, cols, rows);
   const beyzaCells = getTextCells("BEYZA", GLYPHS, cols, rows);
+
+  // Compute the chaos region — the bounding box of every glyph plus a
+  // margin. All chaos roles live inside this region, so particles never
+  // wander to the canvas edges and the chaos→bloom transit stays short.
+  const allCells = [...rusenCells, ...heartCells, ...beyzaCells];
+  let minCol = cols, maxCol = 0, minRow = rows, maxRow = 0;
+  for (const [c, r] of allCells) {
+    if (c < minCol) minCol = c;
+    if (c > maxCol) maxCol = c;
+    if (r < minRow) minRow = r;
+    if (r > maxRow) maxRow = r;
+  }
+  const marginH = Math.max(6, Math.floor(cols * 0.08));
+  const marginV = Math.max(8, Math.floor(rows * 0.12));
+  const chaosRegion: ChaosRegion = {
+    minCol: Math.max(1, minCol - marginH),
+    maxCol: Math.min(cols - 2, maxCol + marginH),
+    minRow: Math.max(1, minRow - marginV),
+    maxRow: Math.min(rows - 2, maxRow + marginV),
+  };
 
   // Decide pool size and how many of each chaos role we want.
   // Aim for largest glyph + atmosphere; phones get fewer particles.
@@ -291,8 +326,11 @@ function buildParticles(cols: number, rows: number): Particle[] {
 
   const roles: ChaosRole[] = [];
 
-  const randCol = () => 2 + Math.floor(Math.random() * Math.max(1, cols - 5));
-  const randRow = () => 2 + Math.floor(Math.random() * Math.max(1, rows - 5));
+  // Random col/row helpers anchored to the chaos region (not the canvas).
+  const regionCols = Math.max(1, chaosRegion.maxCol - chaosRegion.minCol - 3);
+  const regionRows = Math.max(1, chaosRegion.maxRow - chaosRegion.minRow - 3);
+  const randCol = () => chaosRegion.minCol + Math.floor(Math.random() * regionCols);
+  const randRow = () => chaosRegion.minRow + Math.floor(Math.random() * regionRows);
   const randDir = (): [number, number] =>
     WALKER_DIRS[Math.floor(Math.random() * WALKER_DIRS.length)];
 
@@ -321,12 +359,15 @@ function buildParticles(cols: number, rows: number): Particle[] {
       });
     }
   }
-  // Walker groups start with a margin from the edges so they don't begin
-  // their lives slamming into a wall.
+  // Walker groups start with extra margin from the chaos-region walls so
+  // they don't begin life slamming into a boundary.
+  const walkerInset = 3;
+  const walkerCols = Math.max(1, regionCols - walkerInset * 2);
+  const walkerRows = Math.max(1, regionRows - walkerInset * 2);
   const safeCol = () =>
-    5 + Math.floor(Math.random() * Math.max(1, cols - 11));
+    chaosRegion.minCol + walkerInset + Math.floor(Math.random() * walkerCols);
   const safeRow = () =>
-    5 + Math.floor(Math.random() * Math.max(1, rows - 11));
+    chaosRegion.minRow + walkerInset + Math.floor(Math.random() * walkerRows);
 
   for (let i = 0; i < numPairs; i++) {
     const [dx, dy] = randDir();
@@ -388,7 +429,7 @@ function buildParticles(cols: number, rows: number): Particle[] {
       chaos: role,
     });
   }
-  return particles;
+  return { particles, chaosRegion };
 }
 
 /** Compute targets for every particle based on the phase. Particles with a
@@ -457,7 +498,7 @@ export default function Garden() {
     if (!ctx) return;
     ctx.scale(dpr, dpr);
 
-    const particles = buildParticles(cols, rows);
+    const { particles, chaosRegion } = buildParticles(cols, rows);
 
     let generation = 0;
     const phaseNameRef = { current: PHASES[0].name as PhaseName };
@@ -479,7 +520,7 @@ export default function Garden() {
     let genTimeout: ReturnType<typeof setTimeout>;
     const genTick = () => {
       generation++;
-      advanceChaos(particles, cols, rows);
+      advanceChaos(particles, chaosRegion);
       refreshTargets(particles, phaseNameRef.current, generation);
       genTimeout = setTimeout(genTick, GEN_MS / speedRef.current);
     };
