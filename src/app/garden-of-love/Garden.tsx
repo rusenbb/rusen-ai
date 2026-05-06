@@ -175,18 +175,42 @@ const WALKER_DIRS: Array<[number, number]> = [
   [-1, -1], [1, 1], [-1, 1], [1, -1],
 ];
 
+/** Pick a fresh random direction for a walker group, biased away from the
+ *  nearest wall when one is close — so groups don't keep hammering against
+ *  the edge they just hit. */
+function pickWalkerDir(
+  g: WalkerGroup,
+  groupWidth: number,
+  cols: number,
+  rows: number
+): [number, number] {
+  const margin = 2;
+  let allowed = WALKER_DIRS.slice();
+  if (g.cx <= margin) allowed = allowed.filter(([dx]) => dx >= 0);
+  if (g.cx + groupWidth >= cols - margin) allowed = allowed.filter(([dx]) => dx <= 0);
+  if (g.cy <= margin) allowed = allowed.filter(([, dy]) => dy >= 0);
+  if (g.cy >= rows - margin) allowed = allowed.filter(([, dy]) => dy <= 0);
+  if (allowed.length === 0) allowed = WALKER_DIRS;
+  return allowed[Math.floor(Math.random() * allowed.length)];
+}
+
 /** Advance all chaos roles by one generation: drifters wander, walker groups
  *  move along their current direction (and occasionally reroll it). Group
- *  references are shared, so all members of a pair/triple stay in formation. */
+ *  references are shared, so all members of a pair/triple stay in formation.
+ *
+ *  Both drifters and walkers have a chance to *pause* each generation, so the
+ *  motion feels like idle wandering instead of relentless travel. */
 function advanceChaos(particles: Particle[], cols: number, rows: number): void {
   const dirs9: Array<[number, number]> = [
     [0, 0], [-1, 0], [1, 0], [0, -1], [0, 1],
     [-1, -1], [1, 1], [-1, 1], [1, -1],
   ];
 
-  // Move drifters one cell randomly.
+  // Drifters: pause half the time, then take a 1-cell random step. The
+  // pause makes the motion feel like a slow wander instead of jittering.
   for (const p of particles) {
     if (p.chaos.type !== "drifter") continue;
+    if (Math.random() < 0.55) continue;
     const [dx, dy] = dirs9[Math.floor(Math.random() * dirs9.length)];
     p.chaos.px = Math.max(0, Math.min(cols - 1, p.chaos.px + dx));
     p.chaos.py = Math.max(0, Math.min(rows - 1, p.chaos.py + dy));
@@ -200,34 +224,36 @@ function advanceChaos(particles: Particle[], cols: number, rows: number): void {
     if (seen.has(g)) continue;
     seen.add(g);
 
-    // Advance position. Bounce off edges so groups stay on screen.
+    // Walkers also pause sometimes — gives the field a calmer cadence.
+    if (Math.random() < 0.35) continue;
+
     const groupWidth = p.chaos.type === "pair" ? 2 : 3;
     let nx = g.cx + g.dx;
     let ny = g.cy + g.dy;
-    if (nx < 0) {
-      nx = 0;
-      g.dx = Math.abs(g.dx);
-    } else if (nx + groupWidth > cols) {
-      nx = cols - groupWidth;
-      g.dx = -Math.abs(g.dx);
+
+    // If we'd cross an edge, don't bounce sharply — clamp position and pick
+    // a fresh random direction biased *away* from the wall. Feels like a
+    // soft turn rather than an immediate reflection.
+    if (nx < 0 || nx + groupWidth > cols || ny < 0 || ny >= rows) {
+      g.cx = Math.max(0, Math.min(cols - groupWidth, g.cx));
+      g.cy = Math.max(0, Math.min(rows - 1, g.cy));
+      const [dx, dy] = pickWalkerDir(g, groupWidth, cols, rows);
+      g.dx = dx;
+      g.dy = dy;
+      g.cooldown = 4 + Math.floor(Math.random() * 5);
+      continue;
     }
-    if (ny < 0) {
-      ny = 0;
-      g.dy = Math.abs(g.dy);
-    } else if (ny >= rows) {
-      ny = rows - 1;
-      g.dy = -Math.abs(g.dy);
-    }
+
     g.cx = nx;
     g.cy = ny;
 
-    // Periodically pick a new direction so the group meanders.
+    // Periodically reroll direction for natural meandering.
     g.cooldown--;
     if (g.cooldown <= 0) {
-      const [dx, dy] = WALKER_DIRS[Math.floor(Math.random() * WALKER_DIRS.length)];
+      const [dx, dy] = pickWalkerDir(g, groupWidth, cols, rows);
       g.dx = dx;
       g.dy = dy;
-      g.cooldown = 4 + Math.floor(Math.random() * 6);
+      g.cooldown = 4 + Math.floor(Math.random() * 5);
     }
   }
 }
@@ -249,11 +275,13 @@ function buildParticles(cols: number, rows: number): Particle[] {
   const N = Math.max(targetN, heartCells.length);
 
   // Distribution of chaos roles (rough proportions — fill remainder with drifters).
+  // Walking groups (pair/triple) are intentionally sparse: a few per scene
+  // is enough to feel "alive" without making the field feel restless.
   const numBlinkers = isPhone ? 5 : 8;
   const numBlocks = isPhone ? 3 : 5;
   const numBeehives = isPhone ? 2 : 3;
-  const numPairs = isPhone ? 4 : 7;
-  const numTriples = isPhone ? 3 : 5;
+  const numPairs = isPhone ? 2 : 4;
+  const numTriples = isPhone ? 2 : 3;
 
   const roles: ChaosRole[] = [];
 
@@ -287,14 +315,21 @@ function buildParticles(cols: number, rows: number): Particle[] {
       });
     }
   }
+  // Walker groups start with a margin from the edges so they don't begin
+  // their lives slamming into a wall.
+  const safeCol = () =>
+    5 + Math.floor(Math.random() * Math.max(1, cols - 11));
+  const safeRow = () =>
+    5 + Math.floor(Math.random() * Math.max(1, rows - 11));
+
   for (let i = 0; i < numPairs; i++) {
     const [dx, dy] = randDir();
     const group: WalkerGroup = {
-      cx: randCol(),
-      cy: randRow(),
+      cx: safeCol(),
+      cy: safeRow(),
       dx,
       dy,
-      cooldown: 4 + Math.floor(Math.random() * 6),
+      cooldown: 4 + Math.floor(Math.random() * 5),
     };
     for (let s = 0; s < 2; s++) {
       roles.push({ type: "pair", group, slot: s as 0 | 1 });
@@ -303,11 +338,11 @@ function buildParticles(cols: number, rows: number): Particle[] {
   for (let i = 0; i < numTriples; i++) {
     const [dx, dy] = randDir();
     const group: WalkerGroup = {
-      cx: randCol(),
-      cy: randRow(),
+      cx: safeCol(),
+      cy: safeRow(),
       dx,
       dy,
-      cooldown: 4 + Math.floor(Math.random() * 6),
+      cooldown: 4 + Math.floor(Math.random() * 5),
     };
     for (let s = 0; s < 3; s++) {
       roles.push({ type: "triple", group, slot: s as 0 | 1 | 2 });
