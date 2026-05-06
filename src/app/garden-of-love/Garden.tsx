@@ -1,11 +1,16 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { GLYPHS, type Glyph, type GlyphMap } from "./glyphs";
 
 const BG = "#0a0a0f";
 const FG_PINK = "#f9a8d4";
-const FG_RED = "#ef4444";
+const FG_HEART = "#ffffff";
+
+const SPEED_MIN = 0.3;
+const SPEED_MAX = 2.5;
+const SPEED_STEP = 0.1;
+const SPEED_DEFAULT = 1;
 const STEP_MS = 170; // particle step cadence — deliberately slow so formation
                      // reads as a state transition rather than a sprint
 const GEN_MS = 400; // generation cadence — chaos roles advance one generation
@@ -229,8 +234,8 @@ function advanceChaos(particles: Particle[], cols: number, rows: number): void {
     if (Math.random() < 0.35) continue;
 
     const groupWidth = p.chaos.type === "pair" ? 2 : 3;
-    let nx = g.cx + g.dx;
-    let ny = g.cy + g.dy;
+    const nx = g.cx + g.dx;
+    const ny = g.cy + g.dy;
 
     // If we'd cross an edge, don't bounce sharply — clamp position and pick
     // a fresh random direction biased *away* from the wall. Feels like a
@@ -428,6 +433,11 @@ function stepParticle(p: Particle): void {
 
 export default function Garden() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [speed, setSpeed] = useState<number>(SPEED_DEFAULT);
+  // The simulation reads the current speed off this ref every tick, so the
+  // slider is responsive without re-running the whole effect.
+  const speedRef = useRef(speed);
+  speedRef.current = speed;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -455,29 +465,40 @@ export default function Garden() {
 
     refreshTargets(particles, PHASES[0].name, generation);
 
-    // Generation tick: advance chaos roles (blinkers flip, drifters drift,
-    // walker groups translate) and recompute targets for every particle
-    // that's in chaos / has no home for the current bloom. Glyph-home
-    // particles ignore generation changes during a bloom.
-    const genHandle = setInterval(() => {
+    // All three timers (step, gen, phase) are recursive setTimeouts so each
+    // iteration can read the *current* speed multiplier off speedRef.
+    // setInterval can't change cadence on the fly without being torn down.
+
+    let stepTimeout: ReturnType<typeof setTimeout>;
+    const stepTick = () => {
+      for (const p of particles) stepParticle(p);
+      stepTimeout = setTimeout(stepTick, STEP_MS / speedRef.current);
+    };
+    stepTimeout = setTimeout(stepTick, STEP_MS / speedRef.current);
+
+    let genTimeout: ReturnType<typeof setTimeout>;
+    const genTick = () => {
       generation++;
       advanceChaos(particles, cols, rows);
       refreshTargets(particles, phaseNameRef.current, generation);
-    }, GEN_MS);
-
-    // Step tick: each particle moves one cell per axis toward its target.
-    const stepHandle = setInterval(() => {
-      for (const p of particles) stepParticle(p);
-    }, STEP_MS);
+      genTimeout = setTimeout(genTick, GEN_MS / speedRef.current);
+    };
+    genTimeout = setTimeout(genTick, GEN_MS / speedRef.current);
 
     let phaseTimeout: ReturnType<typeof setTimeout>;
     const advancePhase = () => {
       phaseIndex = (phaseIndex + 1) % PHASES.length;
       phaseNameRef.current = PHASES[phaseIndex].name;
       refreshTargets(particles, phaseNameRef.current, generation);
-      phaseTimeout = setTimeout(advancePhase, PHASES[phaseIndex].durationMs);
+      phaseTimeout = setTimeout(
+        advancePhase,
+        PHASES[phaseIndex].durationMs / speedRef.current
+      );
     };
-    phaseTimeout = setTimeout(advancePhase, PHASES[0].durationMs);
+    phaseTimeout = setTimeout(
+      advancePhase,
+      PHASES[0].durationMs / speedRef.current
+    );
 
     let rafHandle = 0;
     const draw = () => {
@@ -491,9 +512,9 @@ export default function Garden() {
         if (!p.red) ctx.fillRect(p.x * cellSize, p.y * cellSize, cellSize, cellSize);
       }
 
-      ctx.fillStyle = FG_RED;
-      ctx.shadowColor = FG_RED;
-      ctx.shadowBlur = 4;
+      ctx.fillStyle = FG_HEART;
+      ctx.shadowColor = FG_HEART;
+      ctx.shadowBlur = 5;
       for (const p of particles) {
         if (p.red) ctx.fillRect(p.x * cellSize, p.y * cellSize, cellSize, cellSize);
       }
@@ -503,8 +524,8 @@ export default function Garden() {
     rafHandle = requestAnimationFrame(draw);
 
     return () => {
-      clearInterval(genHandle);
-      clearInterval(stepHandle);
+      clearTimeout(genTimeout);
+      clearTimeout(stepTimeout);
       clearTimeout(phaseTimeout);
       cancelAnimationFrame(rafHandle);
     };
@@ -521,6 +542,47 @@ export default function Garden() {
       }}
     >
       <canvas ref={canvasRef} style={{ display: "block" }} />
+      <div
+        style={{
+          position: "fixed",
+          bottom: 16,
+          right: 16,
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          padding: "8px 12px",
+          background: "rgba(255, 255, 255, 0.06)",
+          backdropFilter: "blur(6px)",
+          borderRadius: 10,
+          color: "rgba(255, 255, 255, 0.85)",
+          fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
+          fontSize: 12,
+          letterSpacing: "0.05em",
+          userSelect: "none",
+        }}
+      >
+        <span style={{ opacity: 0.7 }}>speed</span>
+        <input
+          type="range"
+          min={SPEED_MIN}
+          max={SPEED_MAX}
+          step={SPEED_STEP}
+          value={speed}
+          onChange={(e) => setSpeed(parseFloat(e.target.value))}
+          style={{ width: 110, accentColor: FG_PINK }}
+          aria-label="Animation speed"
+        />
+        <span
+          style={{
+            minWidth: 36,
+            textAlign: "right",
+            fontVariantNumeric: "tabular-nums",
+            opacity: 0.85,
+          }}
+        >
+          {speed.toFixed(1)}×
+        </span>
+      </div>
     </main>
   );
 }
