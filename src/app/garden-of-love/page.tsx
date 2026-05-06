@@ -7,12 +7,17 @@ import Garden from "./Garden";
 export default function GardenOfLovePage() {
   const [entered, setEntered] = useState(false);
 
+  // position: fixed escapes the site's content-shell flex layout so the
+  // garden truly covers the viewport — hiding the site Header, Footer, and
+  // the DataBackground canvas that lives in the root layout.
   return (
     <div
       style={{
-        position: "relative",
+        position: "fixed",
+        inset: 0,
+        zIndex: 9999,
         background: "#0a0a0f",
-        minHeight: "100vh",
+        overflow: "hidden",
       }}
     >
       <div
@@ -27,7 +32,11 @@ export default function GardenOfLovePage() {
       >
         <Dedication onEnter={() => setEntered(true)} />
       </div>
-      {entered && <Garden />}
+      {entered && (
+        <div style={{ position: "absolute", inset: 0, zIndex: 1 }}>
+          <Garden />
+        </div>
+      )}
     </div>
   );
 }

@@ -9,27 +9,28 @@ export default function Dedication({ onEnter }: Props) {
     <button
       type="button"
       onClick={onEnter}
+      aria-label="Bahçeyi aç"
       style={{
-        all: "unset",
+        border: 0,
+        margin: 0,
+        padding: "0 24px",
+        width: "100%",
+        height: "100%",
+        background: "#0a0a0f",
+        color: "white",
         cursor: "pointer",
+        fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
+        textAlign: "center",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        minHeight: "100vh",
-        width: "100vw",
-        background: "#0a0a0f",
-        color: "white",
-        fontFamily: "var(--font-geist-sans)",
-        textAlign: "center",
-        padding: "0 24px",
       }}
-      aria-label="Bahçeyi aç"
     >
       <div style={{ maxWidth: 320 }}>
         <p
           style={{
-            fontSize: 22,
+            fontSize: 26,
             fontWeight: 600,
             margin: 0,
             lineHeight: 1.3,
@@ -39,7 +40,7 @@ export default function Dedication({ onEnter }: Props) {
         </p>
         <p
           style={{
-            fontSize: 16,
+            fontSize: 17,
             opacity: 0.85,
             margin: "16px 0 0",
             lineHeight: 1.6,
