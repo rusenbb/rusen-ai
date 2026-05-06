@@ -11,7 +11,7 @@ const STEP_MS = 170; // particle step cadence — deliberately slow so formation
 const GEN_MS = 400; // generation cadence — chaos roles advance one generation
 
 const CHAOS_MS = 7000;
-const BLOOM_MS = 8000;
+const BLOOM_MS = 10500;
 
 type PhaseName = "chaos" | "rusen" | "heart" | "beyza";
 
