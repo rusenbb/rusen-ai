@@ -6,12 +6,12 @@ import { GLYPHS, type Glyph, type GlyphMap } from "./glyphs";
 const BG = "#0a0a0f";
 const FG_PINK = "#f9a8d4";
 const FG_RED = "#ef4444";
-const TICK_MS = 60; // step cadence — particles step one cell per axis per tick
+const STEP_MS = 80; // particle step cadence (Manhattan king-step toward target)
+const GEN_MS = 320; // generation cadence — chaos roles advance one generation
 const FADE_IN_MS = 400;
 
-const CHAOS_MS = 5000;
-const BLOOM_MS = 5000;
-const CHAOS_DRIFT_MS = 2000; // re-randomize chaos targets at this cadence
+const CHAOS_MS = 6000;
+const BLOOM_MS = 5500;
 
 type PhaseName = "chaos" | "rusen" | "heart" | "beyza";
 
@@ -29,26 +29,36 @@ const PHASES: Phase[] = [
   { name: "beyza", durationMs: BLOOM_MS },
 ];
 
+/**
+ * Each particle has a permanent identity. The chaos role determines what
+ * scripted Conway-like behavior the particle plays when no glyph claims
+ * it. Roles never change during the experience.
+ */
+type ChaosRole =
+  | { type: "blinker"; cx: number; cy: number; slot: 0 | 1 | 2 } // 3 cells, period 2
+  | { type: "block"; cx: number; cy: number; slot: 0 | 1 | 2 | 3 } // 4 cells, static
+  | { type: "beehive"; cx: number; cy: number; slot: 0 | 1 | 2 | 3 | 4 | 5 } // 6 cells, static
+  | { type: "drifter"; px: number; py: number }; // 1 cell, random walk
+
 type Particle = {
+  id: number;
   x: number;
   y: number;
   tx: number;
   ty: number;
   red: boolean;
+  /** Where this particle lives during each bloom — null if it has no role
+   *  in that bloom (in which case it stays in its chaos role). */
+  rusenHome: [number, number] | null;
+  heartHome: [number, number] | null;
+  beyzaHome: [number, number] | null;
+  chaos: ChaosRole;
 };
 
-/** Cell size: target the bloom (29 glyph-cells wide) at ~60% of viewport. */
 function getCellSize(): number {
   if (typeof window === "undefined") return 16;
   const target = Math.floor((window.innerWidth * 0.6) / 29);
   return Math.max(8, Math.min(48, target));
-}
-
-/** Particle count — enough to fill the largest glyph (RUŞEN ≈ 75 cells)
- * plus a comfortable chaos cloud, without becoming visually overwhelming. */
-function getParticleCount(): number {
-  if (typeof window === "undefined") return 150;
-  return window.innerWidth < 768 ? 110 : 160;
 }
 
 /** Return all (col, row) cells lit by a single glyph, centered on the grid. */
@@ -70,7 +80,6 @@ function getSingleCenteredCells(
   return cells;
 }
 
-/** Return all (col, row) cells lit by a multi-glyph text, centered on the grid. */
 function getTextCells(
   text: string,
   glyphs: GlyphMap,
@@ -107,59 +116,176 @@ function getTextCells(
   return cells;
 }
 
-/**
- * Assign each particle a target. The first `cells.length` particles get
- * exact glyph cells (in red if `red` is true). Particles beyond that scatter
- * randomly across the grid as ambient atmosphere.
- *
- * The cells array is shuffled lightly so the same particle doesn't always
- * occupy the top-left of the glyph — gives a nicer wandering feel.
- */
-function assignGlyphTargets(
-  particles: Particle[],
-  cells: Array<[number, number]>,
-  cols: number,
-  rows: number,
-  red: boolean
-): void {
-  // Light Fisher-Yates partial shuffle — assigning the first N is enough.
-  const shuffled = cells.slice();
-  for (let i = 0; i < shuffled.length; i++) {
-    const j = i + Math.floor(Math.random() * (shuffled.length - i));
-    const tmp = shuffled[i];
-    shuffled[i] = shuffled[j];
-    shuffled[j] = tmp;
-  }
-
-  const N = particles.length;
-  const M = Math.min(N, shuffled.length);
-  for (let i = 0; i < M; i++) {
-    particles[i].tx = shuffled[i][0];
-    particles[i].ty = shuffled[i][1];
-    particles[i].red = red;
-  }
-  for (let i = M; i < N; i++) {
-    particles[i].tx = Math.floor(Math.random() * cols);
-    particles[i].ty = Math.floor(Math.random() * rows);
-    particles[i].red = false;
+/** Compute the (col, row) a particle should occupy during chaos at the given
+ *  generation, based on its scripted role. Pure function of role + gen. */
+function chaosCellOf(role: ChaosRole, gen: number): [number, number] {
+  switch (role.type) {
+    case "blinker": {
+      // Period 2: horizontal on even gens, vertical on odd.
+      if (gen % 2 === 0) {
+        return [role.cx - 1 + role.slot, role.cy];
+      }
+      return [role.cx, role.cy - 1 + role.slot];
+    }
+    case "block": {
+      const offsets: Array<[number, number]> = [
+        [0, 0], [1, 0], [0, 1], [1, 1],
+      ];
+      const [dx, dy] = offsets[role.slot];
+      return [role.cx + dx, role.cy + dy];
+    }
+    case "beehive": {
+      // .XX.
+      // X..X
+      // .XX.
+      const offsets: Array<[number, number]> = [
+        [1, 0], [2, 0],
+        [0, 1], [3, 1],
+        [1, 2], [2, 2],
+      ];
+      const [dx, dy] = offsets[role.slot];
+      return [role.cx + dx, role.cy + dy];
+    }
+    case "drifter":
+      return [role.px, role.py];
   }
 }
 
-/** Random scatter for the chaos phase. */
-function assignChaosTargets(
+/** Move drifters one cell randomly. Mutates role state for drifter particles. */
+function advanceDrifters(particles: Particle[], cols: number, rows: number): void {
+  const dirs: Array<[number, number]> = [
+    [0, 0], [-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, 1], [-1, 1], [1, -1],
+  ];
+  for (const p of particles) {
+    if (p.chaos.type !== "drifter") continue;
+    const [dx, dy] = dirs[Math.floor(Math.random() * dirs.length)];
+    p.chaos.px = Math.max(0, Math.min(cols - 1, p.chaos.px + dx));
+    p.chaos.py = Math.max(0, Math.min(rows - 1, p.chaos.py + dy));
+  }
+}
+
+/** Build the fixed pool of particles at session start. Each particle gets:
+ *  - a permanent chaos role (blinker / block / beehive / drifter)
+ *  - a permanent home in each bloom (or null if no role for that bloom)
+ *  - an initial position from its chaos role
+ */
+function buildParticles(cols: number, rows: number): Particle[] {
+  const rusenCells = getTextCells("RUŞEN", GLYPHS, cols, rows);
+  const heartCells = getSingleCenteredCells(GLYPHS.HEART, cols, rows);
+  const beyzaCells = getTextCells("BEYZA", GLYPHS, cols, rows);
+
+  // Decide pool size and how many of each chaos role we want.
+  // Aim for largest glyph + atmosphere; phones get fewer particles.
+  const isPhone = typeof window !== "undefined" && window.innerWidth < 768;
+  const targetN = Math.max(rusenCells.length, beyzaCells.length) + (isPhone ? 30 : 50);
+  const N = Math.max(targetN, heartCells.length);
+
+  // Distribution of chaos roles (rough proportions — fill remainder with drifters).
+  const numBlinkers = isPhone ? 6 : 10;
+  const numBlocks = isPhone ? 4 : 7;
+  const numBeehives = isPhone ? 2 : 4;
+
+  const roles: ChaosRole[] = [];
+
+  // Helpers to scatter pattern centers without crashing into edges.
+  const randCol = () => 2 + Math.floor(Math.random() * Math.max(1, cols - 5));
+  const randRow = () => 2 + Math.floor(Math.random() * Math.max(1, rows - 5));
+
+  for (let i = 0; i < numBlinkers; i++) {
+    const cx = randCol();
+    const cy = randRow();
+    for (let s = 0; s < 3; s++) {
+      roles.push({ type: "blinker", cx, cy, slot: s as 0 | 1 | 2 });
+    }
+  }
+  for (let i = 0; i < numBlocks; i++) {
+    const cx = randCol();
+    const cy = randRow();
+    for (let s = 0; s < 4; s++) {
+      roles.push({ type: "block", cx, cy, slot: s as 0 | 1 | 2 | 3 });
+    }
+  }
+  for (let i = 0; i < numBeehives; i++) {
+    const cx = randCol();
+    const cy = randRow();
+    for (let s = 0; s < 6; s++) {
+      roles.push({
+        type: "beehive",
+        cx, cy,
+        slot: s as 0 | 1 | 2 | 3 | 4 | 5,
+      });
+    }
+  }
+  // Pad with drifters until we hit N.
+  while (roles.length < N) {
+    roles.push({
+      type: "drifter",
+      px: Math.floor(Math.random() * cols),
+      py: Math.floor(Math.random() * rows),
+    });
+  }
+  // Shuffle so glyph-home assignment doesn't put all blinkers at the start of
+  // the glyph (which would make blinker oscillation visible during blooms).
+  for (let i = roles.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [roles[i], roles[j]] = [roles[j], roles[i]];
+  }
+
+  // Assign glyph homes by ID. Particle id i gets the i-th cell of each glyph
+  // (or null if i is past the glyph's cell count).
+  const particles: Particle[] = [];
+  for (let id = 0; id < roles.length; id++) {
+    const role = roles[id];
+    const initial = chaosCellOf(role, 0);
+    particles.push({
+      id,
+      x: initial[0],
+      y: initial[1],
+      tx: initial[0],
+      ty: initial[1],
+      red: false,
+      rusenHome: id < rusenCells.length ? rusenCells[id] : null,
+      heartHome: id < heartCells.length ? heartCells[id] : null,
+      beyzaHome: id < beyzaCells.length ? beyzaCells[id] : null,
+      chaos: role,
+    });
+  }
+  return particles;
+}
+
+/** Compute targets for every particle based on the phase. Particles with a
+ *  glyph home for the current phase target their home; everyone else (and
+ *  every particle during chaos) targets their chaos role at this generation. */
+function refreshTargets(
   particles: Particle[],
-  cols: number,
-  rows: number
+  phase: PhaseName,
+  generation: number
 ): void {
   for (const p of particles) {
-    p.tx = Math.floor(Math.random() * cols);
-    p.ty = Math.floor(Math.random() * rows);
-    p.red = false;
+    let home: [number, number] | null = null;
+    let red = false;
+    if (phase === "rusen") {
+      home = p.rusenHome;
+    } else if (phase === "heart") {
+      home = p.heartHome;
+      if (home) red = true;
+    } else if (phase === "beyza") {
+      home = p.beyzaHome;
+    }
+    if (home) {
+      p.tx = home[0];
+      p.ty = home[1];
+      p.red = red;
+    } else {
+      const [cx, cy] = chaosCellOf(p.chaos, generation);
+      p.tx = cx;
+      p.ty = cy;
+      p.red = false;
+    }
   }
 }
 
-/** Move a particle one cell per axis toward its target (Manhattan king-step).
- * Integer positions only — particles always sit on a grid cell. */
+/** Manhattan king-step toward target (one cell per axis per call). */
 function stepParticle(p: Particle): void {
   if (p.x < p.tx) p.x++;
   else if (p.x > p.tx) p.x--;
@@ -188,79 +314,35 @@ export default function Garden() {
     if (!ctx) return;
     ctx.scale(dpr, dpr);
 
-    // Initialize particles at random *grid cells* — integer positions.
-    const N = getParticleCount();
-    const particles: Particle[] = [];
-    for (let i = 0; i < N; i++) {
-      particles.push({
-        x: Math.floor(Math.random() * cols),
-        y: Math.floor(Math.random() * rows),
-        tx: Math.floor(Math.random() * cols),
-        ty: Math.floor(Math.random() * rows),
-        red: false,
-      });
-    }
+    const particles = buildParticles(cols, rows);
 
+    let generation = 0;
     const phaseNameRef = { current: PHASES[0].name as PhaseName };
     const phaseStartRef = { current: performance.now() };
     let phaseIndex = 0;
 
-    const enterPhase = (name: PhaseName) => {
-      switch (name) {
-        case "chaos":
-          assignChaosTargets(particles, cols, rows);
-          return;
-        case "rusen":
-          assignGlyphTargets(
-            particles,
-            getTextCells("RUŞEN", GLYPHS, cols, rows),
-            cols,
-            rows,
-            false
-          );
-          return;
-        case "heart":
-          assignGlyphTargets(
-            particles,
-            getSingleCenteredCells(GLYPHS.HEART, cols, rows),
-            cols,
-            rows,
-            true
-          );
-          return;
-        case "beyza":
-          assignGlyphTargets(
-            particles,
-            getTextCells("BEYZA", GLYPHS, cols, rows),
-            cols,
-            rows,
-            false
-          );
-          return;
-      }
-    };
+    refreshTargets(particles, PHASES[0].name, generation);
 
-    enterPhase(PHASES[0].name);
+    // Generation tick: advance chaos roles (blinkers flip, drifters drift)
+    // and recompute targets for every particle that's in chaos / has no home
+    // for the current bloom. Glyph-home particles ignore generation changes.
+    const genHandle = setInterval(() => {
+      generation++;
+      advanceDrifters(particles, cols, rows);
+      refreshTargets(particles, phaseNameRef.current, generation);
+    }, GEN_MS);
 
-    // Re-randomize chaos targets periodically so particles wander rather than
-    // settle. Only fires when the current phase is chaos.
-    const driftHandle = setInterval(() => {
-      if (phaseNameRef.current === "chaos") {
-        assignChaosTargets(particles, cols, rows);
-      }
-    }, CHAOS_DRIFT_MS);
-
-    // Motion tick — each particle steps one cell per axis toward its target.
-    const tickHandle = setInterval(() => {
+    // Step tick: each particle moves one cell per axis toward its target.
+    const stepHandle = setInterval(() => {
       for (const p of particles) stepParticle(p);
-    }, TICK_MS);
+    }, STEP_MS);
 
     let phaseTimeout: ReturnType<typeof setTimeout>;
     const advancePhase = () => {
       phaseIndex = (phaseIndex + 1) % PHASES.length;
       phaseNameRef.current = PHASES[phaseIndex].name;
       phaseStartRef.current = performance.now();
-      enterPhase(PHASES[phaseIndex].name);
+      refreshTargets(particles, phaseNameRef.current, generation);
       phaseTimeout = setTimeout(advancePhase, PHASES[phaseIndex].durationMs);
     };
     phaseTimeout = setTimeout(advancePhase, PHASES[0].durationMs);
@@ -276,23 +358,18 @@ export default function Garden() {
 
       ctx.globalAlpha = fadeAlpha;
 
-      // Two passes for cheaper state changes (one shadow setup per color).
       ctx.fillStyle = FG_PINK;
       ctx.shadowColor = FG_PINK;
       ctx.shadowBlur = 3;
       for (const p of particles) {
-        if (!p.red) {
-          ctx.fillRect(p.x * cellSize, p.y * cellSize, cellSize, cellSize);
-        }
+        if (!p.red) ctx.fillRect(p.x * cellSize, p.y * cellSize, cellSize, cellSize);
       }
 
       ctx.fillStyle = FG_RED;
       ctx.shadowColor = FG_RED;
       ctx.shadowBlur = 4;
       for (const p of particles) {
-        if (p.red) {
-          ctx.fillRect(p.x * cellSize, p.y * cellSize, cellSize, cellSize);
-        }
+        if (p.red) ctx.fillRect(p.x * cellSize, p.y * cellSize, cellSize, cellSize);
       }
 
       ctx.globalAlpha = 1;
@@ -301,8 +378,8 @@ export default function Garden() {
     rafHandle = requestAnimationFrame(draw);
 
     return () => {
-      clearInterval(driftHandle);
-      clearInterval(tickHandle);
+      clearInterval(genHandle);
+      clearInterval(stepHandle);
       clearTimeout(phaseTimeout);
       cancelAnimationFrame(rafHandle);
     };
