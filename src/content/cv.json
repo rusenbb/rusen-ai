@@ -6,6 +6,9 @@
     "locationLong": "Ankara, Turkey",
     "status": "AVAILABLE",
     "email": "contact@rusen.ai",
+    "phone": "+90 505 314 0400",
+    "birthday": "26/08/2002",
+    "drivingLicense": "B",
     "website": "rusen.ai",
     "websiteUrl": "https://rusen.ai",
     "linkedin": "linkedin.com/in/rusenbirben",
@@ -13,7 +16,7 @@
     "github": "github.com/rusenbb",
     "githubUrl": "https://github.com/rusenbb",
     "summary": "AI & Data Engineering graduate from Istanbul Technical University. Building intelligent systems with NLP, LLMs, and agentic AI applications.",
-    "printSummary": "AI & Data Engineering graduate from Istanbul Technical University with experience in NLP, LLMs, and agentic AI applications. Co-founder of Fiction Studios, an AI lab focused on democratizing AI systems through natural language, speech, and LLM technologies.",
+    "printSummary": "AI & Data Engineering graduate from Istanbul Technical University with experience in NLP, LLMs, and agentic AI applications. Co-founder of Fiction Studios, an AI startup at Bilkent Cyberpark building LLM-powered tools for museums and tourists.",
     "footerNote": "References available upon request - rusen.ai/cv"
   },
   "heroLinks": [
@@ -34,9 +37,9 @@
     {
       "role": "Co-Founder",
       "company": "Fiction Studios",
-      "period": "10/2025 - Present",
+      "period": "10/2025 - 07/2026",
       "location": "Ankara, TR",
-      "description": "Founded an AI lab working on natural language, speech and LLM technologies to democratize AI systems for humanity.",
+      "description": "Co-founded an AI startup at Bilkent Cyberpark — an accredited Turkish Teknokent. Built an LLM-powered guide app for museums and tourists. Wound down in 2026.",
       "link": "https://fictionstudios.ai"
     },
     {
@@ -138,11 +141,36 @@
       "note": "Transferred to AI & Data Engineering"
     }
   ],
+  "awards": [
+    {
+      "title": "1416 YLSY Scholarship — M.Sc. & Ph.D.",
+      "issuer": "Türkiye Ministry of National Education",
+      "summary": "Türkiye's flagship state scholarship for graduate study abroad, established under Law No. 1416 (1929). Funds tuition, living stipend, travel, and exam fees for master's and doctoral programs in exchange for mandatory service at a Turkish university or public institution."
+    }
+  ],
   "interests": [
     { "title": "Coffee", "desc": "V60 - Aeropress - Moka Pot", "icon": "☕" },
     { "title": "Books", "desc": "Philosophy - AI/CS - Finance", "icon": "📚" },
     { "title": "Anime & Manga", "desc": "Watcher - Reader - Collector", "icon": "📺" },
     { "title": "Fitness", "desc": "Lifting - Running - Calisthenics", "icon": "💪" }
+  ],
+  "courses": [
+    {
+      "title": "Deep Learning Specialization",
+      "issuer": "Deeplearning.ai · Andrew Ng",
+      "url": "https://coursera.org/share/9c59e9758d378fb8a8b4ab7074dd71ed",
+      "summary": "Sequence Models, CNNs, NN and DL basics, Structuring ML Projects, Improving Deep NNs."
+    },
+    {
+      "title": "AWS Cloud Technical Essentials",
+      "issuer": "AWS · Coursera",
+      "url": "https://coursera.org/share/f8ab2981ab0bbdc3fec17c6e88804ff8",
+      "summary": "Core AWS concepts, security practices, EC2, Lambda, ECS, RDS, DynamoDB, S3."
+    }
+  ],
+  "languages": [
+    { "name": "Turkish", "level": "Native" },
+    { "name": "English", "level": "Fluent" }
   ],
   "skills": {
     "Languages": ["Python", "JavaScript/TypeScript", "SQL", "C/C++"],
