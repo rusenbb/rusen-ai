@@ -1,0 +1,184 @@
+% !TEX TS-program = tectonic
+%
+% Generated from src/content/cv.json by scripts/render_cv.py.
+% Do not edit by hand — edit the JSON and re-run `npm run cv:build`.
+%
+% Style: neo-brutalist (mono headers, thick black rules, no chrome).
+% Mirrors the visual language of rusen.ai/cv.
+
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{inconsolata}
+\usepackage[scaled]{helvet}
+\usepackage[top=0.55in, bottom=0.55in, left=0.7in, right=0.7in]{geometry}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{needspace}
+
+\renewcommand{\familydefault}{\sfdefault}
+\setstretch{1.18}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\raggedright
+
+\hypersetup{
+  colorlinks=false,
+  pdfborder={0 0 0},
+  pdftitle={\VAR{cv.basics.name | latex} CV},
+  pdfauthor={\VAR{cv.basics.name | latex}}
+}
+\pagestyle{empty}
+
+% Section heading: mono uppercase + thick rule under
+\titleformat{\section}
+  {\normalfont\ttfamily\bfseries\large\MakeUppercase}
+  {}{0pt}{}
+  [\vspace{1pt}\noindent\rule{\linewidth}{2pt}]
+\titlespacing{\section}{0pt}{14pt}{6pt}
+
+\newcommand{\barsep}{\hspace{6pt}\textbar\hspace{6pt}}
+\newcommand{\rowdates}[1]{\hfill{\ttfamily\small #1}}
+
+\begin{document}
+
+% ======================================================================
+% HEADER
+% ======================================================================
+\noindent\rule{\linewidth}{3pt}\\[4pt]
+{\noindent\ttfamily\bfseries\Huge \VAR{cv.basics.name | latex}}\\[4pt]
+{\noindent\ttfamily\bfseries\small \VAR{cv.basics.role | latex | upper}}\\[6pt]
+\noindent\rule{\linewidth}{1pt}\\[8pt]
+
+% Contact bar (mono, dense)
+{\ttfamily\footnotesize\noindent
+\VAR{cv.basics.locationLong | latex}%
+\barsep%
+\href{mailto:\VAR{cv.basics.email}}{\VAR{cv.basics.email | latex}}%
+\barsep%
+\VAR{cv.basics.phone | latex}\\[2pt]
+\href{\VAR{cv.basics.websiteUrl}}{\VAR{cv.basics.website | latex}}%
+\barsep%
+\href{\VAR{cv.basics.linkedinUrl}}{\VAR{cv.basics.linkedin | latex}}%
+\barsep%
+\href{\VAR{cv.basics.githubUrl}}{\VAR{cv.basics.github | latex}}\\[2pt]
+DOB \VAR{cv.basics.birthday | latex}%
+\barsep%
+LICENSE \VAR{cv.basics.drivingLicense | latex}%
+\barsep%
+STATUS \VAR{cv.basics.status | latex}
+}
+
+\vspace{12pt}
+
+% ======================================================================
+% SUMMARY
+% ======================================================================
+\section*{Summary}
+\VAR{cv.basics.printSummary | latex}
+
+% ======================================================================
+% EXPERIENCE
+% ======================================================================
+\section*{Experience}
+
+\BLOCK{ for item in cv.experience }
+\needspace{4\baselineskip}%
+\noindent\textbf{\VAR{item.role | latex}}\rowdates{\VAR{item.period | latex}}\\
+{\itshape\BLOCK{ if item.link }\href{\VAR{item.link}}{\VAR{item.company | latex}}\BLOCK{ else }\VAR{item.company | latex}\BLOCK{ endif }}\rowdates{\VAR{item.location | latex}}\\[2pt]
+{\small \VAR{item.description | latex}}\\[8pt]
+\BLOCK{ endfor }
+
+% ======================================================================
+% PROJECTS
+% ======================================================================
+\section*{Projects}
+
+\BLOCK{ for proj in cv.projects }
+\needspace{4\baselineskip}%
+\noindent\textbf{\VAR{proj.title | latex}}\rowdates{\VAR{proj.period | latex}}\\
+{\itshape \VAR{proj.subtitle | latex}}\\[2pt]
+{\small \VAR{proj.description | latex}}\\[2pt]
+{\ttfamily\footnotesize \VAR{proj.tags | latex_bullets}}%
+\BLOCK{ if proj.links }\hfill{\ttfamily\footnotesize%
+\BLOCK{ for link in proj.links }\href{\VAR{link.url}}{[\VAR{link.label | latex}]}\BLOCK{ if not loop.last }\hspace{4pt}\BLOCK{ endif }\BLOCK{ endfor }%
+}\BLOCK{ endif }\\[8pt]
+\BLOCK{ endfor }
+
+% ======================================================================
+% EDUCATION
+% ======================================================================
+\section*{Education}
+
+\BLOCK{ for edu in cv.education }
+\needspace{3\baselineskip}%
+\noindent\textbf{\VAR{edu.degree | latex}}\rowdates{\VAR{edu.period | latex}}\\
+{\itshape \VAR{edu.school | latex}}\BLOCK{ if edu.gpa }\rowdates{GPA \VAR{edu.gpa | latex}}\BLOCK{ endif }\\
+\BLOCK{ if edu.note }{\small\itshape \VAR{edu.note | latex}}\\\BLOCK{ endif }
+\vspace{6pt}
+\BLOCK{ endfor }
+
+% ======================================================================
+% AWARDS
+% ======================================================================
+\section*{Awards}
+
+\BLOCK{ for award in cv.awards }
+\needspace{3\baselineskip}%
+\noindent\textbf{\VAR{award.title | latex}}\BLOCK{ if award.period }\rowdates{\VAR{award.period | latex}}\BLOCK{ endif }\\
+{\itshape \VAR{award.issuer | latex}}\\[2pt]
+{\small \VAR{award.summary | latex}}\\[6pt]
+\BLOCK{ endfor }
+
+% ======================================================================
+% COURSES
+% ======================================================================
+\section*{Courses}
+
+\BLOCK{ for c in cv.courses }
+\needspace{3\baselineskip}%
+\noindent\textbf{\BLOCK{ if c.url }\href{\VAR{c.url}}{\VAR{c.title | latex}}\BLOCK{ else }\VAR{c.title | latex}\BLOCK{ endif }}\rowdates{\VAR{c.issuer | latex}}\\
+{\small \VAR{c.summary | latex}}\\[6pt]
+\BLOCK{ endfor }
+
+% ======================================================================
+% SKILLS
+% ======================================================================
+\section*{Skills}
+
+\BLOCK{ for category, items in cv.skills.items() }
+\noindent{\ttfamily\bfseries\small\MakeUppercase{\VAR{category | latex}}}\hspace{6pt}{\small \VAR{items | latex_bullets}}\\[3pt]
+\BLOCK{ endfor }
+
+\vspace{4pt}
+
+% ======================================================================
+% LANGUAGES
+% ======================================================================
+\section*{Languages}
+
+\noindent\BLOCK{ for lang in cv.languages }\textbf{\VAR{lang.name | latex}} {\small (\textit{\VAR{lang.level | latex}})}\BLOCK{ if not loop.last }\hspace{18pt}\BLOCK{ endif }\BLOCK{ endfor }
+
+\vspace{8pt}
+
+% ======================================================================
+% INTERESTS
+% ======================================================================
+\section*{Interests}
+
+\noindent\BLOCK{ for i in cv.interests }\textbf{\VAR{i.title | latex}} {\small \textemdash{} \VAR{i.desc | latex}}\BLOCK{ if not loop.last }\hspace{14pt}\BLOCK{ endif }\BLOCK{ endfor }
+
+\vspace{14pt}
+
+% ======================================================================
+% FOOTER
+% ======================================================================
+\noindent\rule{\linewidth}{1pt}\\[3pt]
+{\centering\ttfamily\footnotesize \VAR{cv.basics.footerNote | latex}\par}
+
+\end{document}

@@ -11,6 +11,7 @@
     "social:create:all": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/social-create-all.ts",
     "test": "vitest",
     "test:run": "vitest run",
+    "cv:build": "uv run --script scripts/render_cv.py",
     "train:adaptive-arena": "uv run python scripts/train_adaptive_arena.py",
     "train:adaptive-arena:deps": "uv sync && uv pip install --reinstall torch==2.10.0 --torch-backend=cu128",
     "train:adaptive-arena:ts": "tsx scripts/train-adaptive-arena.ts",
@@ -18,10 +19,8 @@
   },
   "dependencies": {
     "@huggingface/transformers": "^4.0.0-next.6",
-    "@react-pdf/renderer": "^4.3.2",
     "@types/three": "^0.182.0",
     "next": "16.1.1",
-    "pdfjs-dist": "^5.4.530",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-icons": "^5.5.0",
