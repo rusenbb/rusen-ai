@@ -1,0 +1,187 @@
+{
+  "basics": {
+    "name": "RUSEN BIRBEN",
+    "role": "Yapay Zeka ve Veri Mühendisi",
+    "location": "ANKARA, TR",
+    "locationLong": "Ankara, Türkiye",
+    "status": "MÜSAİT",
+    "email": "contact@rusen.ai",
+    "birthday": "26/08/2002",
+    "drivingLicense": "B",
+    "website": "rusen.ai",
+    "websiteUrl": "https://rusen.ai",
+    "linkedin": "linkedin.com/in/rusenbirben",
+    "linkedinUrl": "https://linkedin.com/in/rusenbirben",
+    "github": "github.com/rusenbb",
+    "githubUrl": "https://github.com/rusenbb",
+    "summary": "İstanbul Teknik Üniversitesi Yapay Zeka ve Veri Mühendisliği mezunuyum. NLP, LLM'ler ve etmensel yapay zeka uygulamaları ile akıllı sistemler geliştiriyorum.",
+    "printSummary": "İstanbul Teknik Üniversitesi Yapay Zeka ve Veri Mühendisliği mezunu; NLP, LLM'ler ve etmensel yapay zeka uygulamalarında deneyimli. Fiction Studios'un kurucu ortağı: Bilkent Cyberpark'ta müzeler ve turistler için LLM destekli araçlar geliştiren yapay zeka girişimi.",
+    "footerNote": "Talep üzerine referanslar sunulur - rusen.ai/cv"
+  },
+  "heroLinks": [
+    {
+      "label": "GitHub",
+      "url": "https://github.com/rusenbb"
+    },
+    {
+      "label": "LinkedIn",
+      "url": "https://linkedin.com/in/rusenbirben"
+    },
+    {
+      "label": "E-posta",
+      "url": "mailto:contact@rusen.ai"
+    }
+  ],
+  "experience": [
+    {
+      "role": "Yüksek Lisans Araştırmacısı",
+      "company": "ODTÜ Uygulamalı NLP Grubu",
+      "period": "04/2026 - Bugün",
+      "location": "Ankara, TR",
+      "description": "Laboratuvarın YouTube kanalı METU NLP Connect'i yönetiyorum: uzman röportajları, LLM'ler ve modern NLP üzerine eğitici açıklamalar, güncel makale incelemeleri. Uygulamalı NLP Grubu'nun (Yard. Doç. Dr. Çağrı Toraman önderliğinde) üyesi olarak LLM'ler, üretken yapay zeka ve Türkçe dil teknolojileri üzerine çalışıyorum.",
+      "link": "https://nlp.ceng.metu.edu.tr"
+    },
+    {
+      "role": "Kurucu Ortak",
+      "company": "Fiction Studios",
+      "period": "10/2025 - 07/2026",
+      "location": "Ankara, TR",
+      "description": "Bilkent Cyberpark'ta, akredite bir Türkiye Teknokenti'nde, bir yapay zeka girişiminin kurucu ortağı olarak görev yaptım. Müzeler ve turistler için LLM destekli bir rehber uygulaması geliştirdik. 2026'da faaliyetler sona erdi.",
+      "link": "https://fictionstudios.ai"
+    },
+    {
+      "role": "Junior Yapay Zeka Mühendisi",
+      "company": "CyberQuote",
+      "period": "03/2025 - 07/2025",
+      "location": "İstanbul, TR",
+      "description": "Phillip Capital iştiraki için yapay zeka otomasyonları ve etmensel LLM uygulamaları geliştirdim. Operasyonel süreçler ve müşteriye dönük platformlar için akıllı sistemler.",
+      "link": "https://cyberquote.com/tk/"
+    },
+    {
+      "role": "NLP Araştırma Stajyeri",
+      "company": "İTÜ NLP Lab.",
+      "period": "07/2024 - 08/2024",
+      "location": "İstanbul, TR",
+      "description": "Finansal uygulamalar için LLM'ler üzerine araştırmalar: tahminleme, duygu analizi, araç kullanımı, akıl yürütme ve RAG uygulamaları.",
+      "link": "https://nlp.itu.edu.tr/"
+    },
+    {
+      "role": "AIOps Araştırma Stajyeri",
+      "company": "Havelsan",
+      "period": "08/2024 - 09/2024",
+      "location": "İstanbul, TR",
+      "description": "Yazılım log verilerini kullanarak öngörücü bakım için AIOps araştırması. HDFS logları üzerinde demo geliştirdim.",
+      "link": "https://havelsan.com/tr"
+    }
+  ],
+  "projects": [
+    {
+      "title": "Tobor",
+      "subtitle": "Amazon Depo Robotu",
+      "period": "2024 - 2025",
+      "description": "Amazon lojistiğini simüle eden otonom depo robotu. Yol bulma, engel kaçınma, görev planlama. Özel eğitilmiş YOLO ile insan/kargo tespiti.",
+      "tags": ["Python", "ROS2", "YOLO", "Robotik"],
+      "links": [
+        { "label": "GH", "url": "https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/Amazon-Warehouse-Robot" },
+        { "label": "YT", "url": "https://youtu.be/h-Jxs_y9kNA" }
+      ]
+    },
+    {
+      "title": "Biting The Bytes",
+      "subtitle": "Türkçe Diakritik Geri Yükleme",
+      "period": "2024",
+      "description": "Türkçe diakritikleri geri yüklemek için T5 tabanlı bir transformer modeli. Aksan işaretlerini ve özel karakterleri okunabilirlik için otomatik olarak ekler.",
+      "tags": ["NLP", "T5", "Transformers", "Türkçe"],
+      "links": [
+        { "label": "GH", "url": "https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/Biting-The-Bytes" },
+        { "label": "HF", "url": "https://huggingface.co/spaces/rusen/diacritizeTR" }
+      ]
+    },
+    {
+      "title": "AIZheimer",
+      "subtitle": "Stable Diffusion'da Makine Unutma",
+      "period": "2024",
+      "description": "Diğer yetenekleri korurken Stable Diffusion 2.1'den seçici olarak kavram kaldırma. İçerik denetimi ve yapay zeka çıktısı özelleştirmesi.",
+      "tags": ["Stable Diffusion", "Unutma", "Bilgisayarlı Görü"],
+      "links": [
+        { "label": "GH", "url": "https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/AIzheimer" }
+      ]
+    },
+    {
+      "title": "To-AI-or-Not-to-AI",
+      "subtitle": "GPT Tespit Edici",
+      "period": "2023",
+      "description": "Üç ince ayarlı modeli birleştiren topluluk yöntemiyle yapay zeka üretimi metinlerin tespiti. Akademik dürüstlük ve dezenformasyon sorunlarına yönelik.",
+      "tags": ["NLP", "Topluluk", "Sınıflandırma"],
+      "links": [
+        { "label": "GH", "url": "https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/To-AI-or-Not-to-AI" },
+        { "label": "HF", "url": "https://huggingface.co/spaces/rusen/gpt_detector" }
+      ]
+    },
+    {
+      "title": "Anime Recommender",
+      "subtitle": "İşbirlikçi Filtreleme",
+      "period": "2022 - 2023",
+      "description": "İşbirlikçi filtreleme ve içerik tabanlı yaklaşımları birleştiren kişiselleştirilmiş anime önerileri. RMSE: 0,289 / MAE: 0,213.",
+      "tags": ["Öneri Sistemi", "Matris Çarpanlara Ayırma"],
+      "links": [
+        { "label": "GH", "url": "https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/Anime-Recommender" }
+      ]
+    }
+  ],
+  "education": [
+    {
+      "degree": "Bilgisayar Mühendisliği Yüksek Lisansı (Tezli)",
+      "school": "Orta Doğu Teknik Üniversitesi",
+      "period": "2026 - Bugün"
+    },
+    {
+      "degree": "Yapay Zeka ve Veri Mühendisliği Lisansı",
+      "school": "İstanbul Teknik Üniversitesi",
+      "period": "2022 - 2025",
+      "gpa": "3.61 / 4.00"
+    },
+    {
+      "degree": "Elektronik ve Haberleşme Mühendisliği Lisansı",
+      "school": "İstanbul Teknik Üniversitesi",
+      "period": "2020 - 2022",
+      "note": "Yapay Zeka ve Veri Mühendisliği'ne yatay geçiş yapıldı"
+    }
+  ],
+  "awards": [
+    {
+      "title": "1416 YLSY Bursu · Yüksek Lisans ve Doktora",
+      "issuer": "T.C. Millî Eğitim Bakanlığı",
+      "summary": "Türkiye'nin yurt dışı lisansüstü eğitim için bayrak-gemisi devlet bursu; 1929 yılında yürürlüğe giren 1416 sayılı kanun çerçevesinde yürütülür. Yüksek lisans ve doktora programları için öğrenim ücreti, geçim bursu, sağlık, ulaşım ve sınav giderlerini, bir Türkiye üniversitesinde veya kamu kurumunda mecburi hizmet karşılığında karşılar."
+    }
+  ],
+  "interests": [
+    { "title": "Kahve", "desc": "V60 - Aeropress - Moka Pot", "icon": "☕" },
+    { "title": "Kitaplar", "desc": "Felsefe - YZ/Bilgisayar - Finans", "icon": "📚" },
+    { "title": "Anime ve Manga", "desc": "İzleyici - Okuyucu - Koleksiyoncu", "icon": "📺" },
+    { "title": "Spor", "desc": "Halter - Koşu - Kalistenik", "icon": "💪" }
+  ],
+  "courses": [
+    {
+      "title": "Deep Learning Specialization",
+      "issuer": "Deeplearning.ai · Andrew Ng",
+      "url": "https://coursera.org/share/9c59e9758d378fb8a8b4ab7074dd71ed",
+      "summary": "Dizi Modelleri, CNN'ler, Sinir Ağı ve Derin Öğrenme temelleri, ML Projelerini Yapılandırma, Derin Sinir Ağlarını İyileştirme."
+    },
+    {
+      "title": "AWS Cloud Technical Essentials",
+      "issuer": "AWS · Coursera",
+      "url": "https://coursera.org/share/f8ab2981ab0bbdc3fec17c6e88804ff8",
+      "summary": "Temel AWS kavramları, güvenlik uygulamaları, EC2, Lambda, ECS, RDS, DynamoDB, S3."
+    }
+  ],
+  "languages": [
+    { "name": "Türkçe", "level": "Anadil" },
+    { "name": "İngilizce", "level": "Akıcı" }
+  ],
+  "skills": {
+    "Diller": ["Python", "JavaScript/TypeScript", "SQL", "C/C++"],
+    "Çerçeveler ve Araçlar": ["PyTorch", "TensorFlow", "ROS2", "YOLO", "Transformers", "Scikit-learn", "Pandas", "NumPy"],
+    "Uzmanlıklar": ["NLP", "LLM'ler", "Bilgisayarlı Görü", "RAG", "MLOps", "Etmensel YZ", "Veri Mühendisliği"]
+  }
+}

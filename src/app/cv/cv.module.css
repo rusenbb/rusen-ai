@@ -218,6 +218,50 @@
   color: var(--cbg);
 }
 
+/* Locale switcher: small EN / TR pair */
+.localeSwitch {
+  display: flex;
+  align-items: stretch;
+  flex: 0 0 auto;
+  border-left: var(--border-thick) solid var(--cborder);
+}
+
+.localeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 0.85rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--ctext-sub);
+  background: var(--cbg);
+  border: none;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  border-right: var(--border-thick) solid var(--cborder);
+}
+
+.localeBtn:last-child {
+  border-right: none;
+}
+
+.localeBtn:hover {
+  background: var(--csurface);
+  color: var(--ctext);
+}
+
+.localeBtnActive {
+  background: var(--cborder);
+  color: var(--cbg);
+}
+
+.localeBtnActive:hover {
+  background: var(--cborder);
+  color: var(--cbg);
+}
+
 /* ========================================
    SECTION HEADERS
    ======================================== */
