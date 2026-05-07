@@ -14,7 +14,7 @@ export default function MetuclassBulletinPage() {
   return (
     <BulletinPage
       title="metuclass"
-      subtitle="Sync ODTUClass course files to your local machine. PDFs, slides, homeworks — everything, organized, incremental."
+      subtitle="Sync ODTUClass course files to your local machine. PDFs, slides, homeworks: everything, organized, incremental."
       status="STABLE"
       platform={["CLI", "macOS", "Linux", "Windows"]}
       tech={["Python 3.11+", "SQLite", "PyPI"]}
@@ -27,7 +27,7 @@ export default function MetuclassBulletinPage() {
         <BulletinProse>
           <p>
             metuclass is a small command-line tool for METU students. Log in once, run{" "}
-            <code>metuclass sync</code>, and every file from every course you&apos;re enrolled in lands on your disk —
+            <code>metuclass sync</code>, and every file from every course you&apos;re enrolled in lands on your disk,
             organized by course and section, in folders that match the way ODTUClass already groups them.
           </p>
           <p>
@@ -41,7 +41,7 @@ export default function MetuclassBulletinPage() {
       <BulletinSection number="02" title="WHY I BUILT IT">
         <BulletinProse>
           <p>
-            The native ODTUClass interface is fine for one course. By week six of a semester it stops being fine —
+            The native ODTUClass interface is fine for one course. By week six of a semester it stops being fine:
             you&apos;re clicking through six course pages, ten weeks of slides, and three handouts each just to keep
             up with what was uploaded. I wanted one command that gets me from <code>git pull</code>-style mental model
             to actually having all the files.
@@ -49,7 +49,7 @@ export default function MetuclassBulletinPage() {
           <p>
             The design priority was <strong>not surprising you</strong>. Idempotent runs, dry-run support, conflict
             detection on locally modified files, and predictable destination paths so you can build downstream tooling
-            on top — Obsidian indexing, full-text search, whatever.
+            on top: Obsidian indexing, full-text search, whatever.
           </p>
         </BulletinProse>
       </BulletinSection>

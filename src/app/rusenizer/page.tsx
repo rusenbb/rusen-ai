@@ -856,7 +856,7 @@ function RusenizerPageInner() {
             </div>
             <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-4 text-center">
               <div className={`text-2xl font-bold ${Number(savings) > 0 ? "text-green-600 dark:text-green-400" : ""}`}>
-                {savings ? `${Number(savings) > 0 ? "-" : "+"}${Math.abs(Number(savings))}%` : "—"}
+                {savings ? `${Number(savings) > 0 ? "-" : "+"}${Math.abs(Number(savings))}%` : "·"}
               </div>
               <div className="text-sm text-neutral-500">Difference</div>
             </div>
