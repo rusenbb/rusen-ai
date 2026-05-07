@@ -11,12 +11,14 @@ const SPEED_MIN = 0.3;
 const SPEED_MAX = 2.5;
 const SPEED_STEP = 0.1;
 const SPEED_DEFAULT = 1;
+const SPEED_BASE_MULTIPLIER = 1.5;
 const STEP_MS = 170; // particle step cadence — deliberately slow so formation
                      // reads as a state transition rather than a sprint
 const GEN_MS = 400; // generation cadence — chaos roles advance one generation
 
 const CHAOS_MS = 7000;
 const BLOOM_MS = 10500;
+const BLOOM_CLEAR_RADIUS_CELLS = 3;
 
 type PhaseName = "chaos" | "rusen" | "heart" | "beyza";
 
@@ -65,10 +67,8 @@ type Particle = {
   tx: number;
   ty: number;
   red: boolean;
-  /** Skip rendering this frame. Set per-phase by refreshTargets so that
-   *  solo drifters are hidden during blooms — they look like noise around
-   *  the glyph — while structured atmosphere (blinkers, blocks, beehives,
-   *  walker convoys) stays visible to keep the GoL feel. */
+  /** Skip rendering this frame. During blooms, non-symbol particles remain
+   *  visible only outside the active symbol's padded quiet zone. */
   visible: boolean;
   /** Where this particle lives during each bloom — null if it has no role
    *  in that bloom (in which case it stays in its chaos role). */
@@ -82,6 +82,13 @@ type Particle = {
  *  Computed from the bounding box of every glyph plus a margin, so
  *  particles cluster around the center where the blooms will appear. */
 type ChaosRegion = {
+  minCol: number;
+  maxCol: number;
+  minRow: number;
+  maxRow: number;
+};
+
+type CellBounds = {
   minCol: number;
   maxCol: number;
   minRow: number;
@@ -448,6 +455,10 @@ function refreshTargets(
   generation: number
 ): void {
   const isBloom = phase !== "chaos";
+  const bloomBounds = isBloom
+    ? getBloomBounds(particles, phase, BLOOM_CLEAR_RADIUS_CELLS)
+    : null;
+
   for (const p of particles) {
     let home: [number, number] | null = null;
     let red = false;
@@ -469,12 +480,58 @@ function refreshTargets(
       p.tx = cx;
       p.ty = cy;
       p.red = false;
-      // During blooms, hide solo drifters (they look like noise around the
-      // shape). Keep structured atmosphere — blinkers, blocks, beehives,
-      // pair/triple walkers — visible so the GoL feel persists.
-      p.visible = !isBloom || p.chaos.type !== "drifter";
+      // Keep the atmosphere during blooms, but carve a padded quiet zone
+      // around the active symbol so stray cells don't muddy the letterforms.
+      p.visible =
+        !isBloom ||
+        !bloomBounds ||
+        (!containsCell(bloomBounds, p.x, p.y) &&
+          !containsCell(bloomBounds, cx, cy));
     }
   }
+}
+
+function getBloomBounds(
+  particles: Particle[],
+  phase: Exclude<PhaseName, "chaos">,
+  radius: number
+): CellBounds {
+  let minCol = Infinity;
+  let maxCol = -Infinity;
+  let minRow = Infinity;
+  let maxRow = -Infinity;
+
+  for (const p of particles) {
+    const home =
+      phase === "rusen"
+        ? p.rusenHome
+        : phase === "heart"
+          ? p.heartHome
+          : p.beyzaHome;
+
+    if (!home) continue;
+    const [col, row] = home;
+    minCol = Math.min(minCol, col);
+    maxCol = Math.max(maxCol, col);
+    minRow = Math.min(minRow, row);
+    maxRow = Math.max(maxRow, row);
+  }
+
+  return {
+    minCol: minCol - radius,
+    maxCol: maxCol + radius,
+    minRow: minRow - radius,
+    maxRow: maxRow + radius,
+  };
+}
+
+function containsCell(bounds: CellBounds, col: number, row: number): boolean {
+  return (
+    col >= bounds.minCol &&
+    col <= bounds.maxCol &&
+    row >= bounds.minRow &&
+    row <= bounds.maxRow
+  );
 }
 
 /** Manhattan king-step toward target (one cell per axis per call). */
@@ -489,9 +546,9 @@ export default function Garden() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [speed, setSpeed] = useState<number>(SPEED_DEFAULT);
   const [paused, setPaused] = useState<boolean>(false);
-  // The simulation reads the current speed and pause state off these refs
-  // every tick, so both controls are responsive without re-running the
-  // whole effect (which would rebuild particles and reset chaos roles).
+  // The slider stays human-scaled (1.0x is "normal"), while the simulation
+  // gets a slightly quicker base tempo so the opening pace feels livelier.
+  // Refs keep the controls responsive without rebuilding particles.
   const speedRef = useRef(speed);
   speedRef.current = speed;
   const pausedRef = useRef(paused);
@@ -538,9 +595,15 @@ export default function Garden() {
       if (!pausedRef.current) {
         for (const p of particles) stepParticle(p);
       }
-      stepTimeout = setTimeout(stepTick, STEP_MS / speedRef.current);
+      stepTimeout = setTimeout(
+        stepTick,
+        STEP_MS / (speedRef.current * SPEED_BASE_MULTIPLIER)
+      );
     };
-    stepTimeout = setTimeout(stepTick, STEP_MS / speedRef.current);
+    stepTimeout = setTimeout(
+      stepTick,
+      STEP_MS / (speedRef.current * SPEED_BASE_MULTIPLIER)
+    );
 
     let genTimeout: ReturnType<typeof setTimeout>;
     const genTick = () => {
@@ -562,9 +625,15 @@ export default function Garden() {
 
         refreshTargets(particles, phaseNameRef.current, generation);
       }
-      genTimeout = setTimeout(genTick, GEN_MS / speedRef.current);
+      genTimeout = setTimeout(
+        genTick,
+        GEN_MS / (speedRef.current * SPEED_BASE_MULTIPLIER)
+      );
     };
-    genTimeout = setTimeout(genTick, GEN_MS / speedRef.current);
+    genTimeout = setTimeout(
+      genTick,
+      GEN_MS / (speedRef.current * SPEED_BASE_MULTIPLIER)
+    );
 
     let rafHandle = 0;
     const draw = () => {
