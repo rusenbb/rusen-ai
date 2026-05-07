@@ -47,10 +47,32 @@ function stepRow(row: Uint8Array, table: Uint8Array): Uint8Array {
   return next;
 }
 
-/** Create an initial grid: single cell in the center. */
-function createInitialGrid(width: number): CellState {
+/**
+ * Create an initial grid for a given rule.
+ *
+ * Most rules read clearly from a single seed cell — they fan out from one
+ * point, so the diagonal/triangle patterns are the demo. Rule 184 is a
+ * traffic-flow rule (1 = car, 0 = empty road, cars move right), and a
+ * single seed just gives a lonely diagonal. Seeding it with a random
+ * sparse density lets the traffic dynamics actually surface: clusters,
+ * gaps, and the steady rightward drift.
+ */
+function createInitialGrid(width: number, rule: RuleNumber = 30): CellState {
   const row = new Uint8Array(width);
-  row[Math.floor(width / 2)] = 1;
+  if (rule === 184) {
+    // ~40% density traffic, deterministic from a fixed seed so the demo
+    // looks the same across reloads (re-seeded only on Reset / rule change).
+    let s = 0xa5_a5_a5_a5;
+    for (let i = 0; i < width; i++) {
+      // xorshift32 (small but enough for a visual seed)
+      s ^= s << 13;
+      s ^= s >>> 17;
+      s ^= s << 5;
+      row[i] = (s >>> 0) % 5 < 2 ? 1 : 0;
+    }
+  } else {
+    row[Math.floor(width / 2)] = 1;
+  }
   return { grid: [row], width, generation: 0 };
 }
 
@@ -267,7 +289,7 @@ export default function ElementaryCA(): React.ReactElement {
 
   // Initialize grid
   const initializeGrid = useCallback(() => {
-    const initial = createInitialGrid(GRID_WIDTH);
+    const initial = createInitialGrid(GRID_WIDTH, rule);
     gridRef.current = initial.grid;
     setGeneration(0);
 
@@ -280,7 +302,7 @@ export default function ElementaryCA(): React.ReactElement {
     }
 
     redraw();
-  }, [redraw]);
+  }, [redraw, rule]);
 
   // Initialize on mount
   useEffect(() => {

@@ -36,6 +36,14 @@ type Phase = "symmetric" | "chaos" | "pre-highway" | "highway";
 type SeedPresetId = "blank" | "dot" | "plus" | "ring" | "stairs" | "scatter" | "random";
 type EditTool = "draw" | "erase";
 
+/**
+ * Manual viewport override. While set, the viewport keeps a fixed cell size
+ * and stays centered on (centerX, centerY) regardless of how the bounding
+ * box of visited cells grows. Cleared by Reset, by seed change, and by the
+ * Fit button — at which point the viewport returns to auto-fit.
+ */
+type ViewLock = { cellSize: number; centerX: number; centerY: number };
+
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
@@ -244,7 +252,16 @@ function computeViewport(
   sim: SimState,
   displayW: number,
   displayH: number,
+  lock: ViewLock | null = null,
 ): ViewportTransform {
+  if (lock) {
+    const cellPixelSize = lock.cellSize;
+    const padding = 0;
+    const offsetX = displayW / 2 - (lock.centerX - sim.minX) * cellPixelSize;
+    const offsetY = displayH / 2 - (lock.centerY - sim.minY) * cellPixelSize;
+    return { cellPixelSize, padding, offsetX, offsetY };
+  }
+
   const spanX = sim.maxX - sim.minX + 1;
   const spanY = sim.maxY - sim.minY + 1;
   const span = Math.max(spanX, spanY, 20);
@@ -511,6 +528,12 @@ export default function LangtonsAnt(): React.ReactElement {
   const stepsPerFrameRef = useRef<number>(1);
   const pointerDrawingRef = useRef<boolean>(false);
   const lastPaintCellRef = useRef<[number, number] | null>(null);
+  // Tracked in a ref so callbacks can read the latest lock without
+  // re-binding on every change. Mirrored into state purely so React
+  // can use it for memoization / dev tools — we don't read state for
+  // logic, only the ref.
+  const viewLockRef = useRef<ViewLock | null>(null);
+  const [, setViewLockTick] = useState<number>(0);
 
   // Keep refs in sync
   useEffect(() => {
@@ -556,6 +579,7 @@ export default function LangtonsAnt(): React.ReactElement {
       sim,
       displayW,
       displayH,
+      viewLockRef.current,
     );
 
     if (cellPixelSize >= 5) {
@@ -646,7 +670,12 @@ export default function LangtonsAnt(): React.ReactElement {
       const pointerX = event.clientX - rect.left;
       const pointerY = event.clientY - rect.top;
       const sim = simRef.current;
-      const viewport = computeViewport(sim, container.clientWidth, canvas.clientHeight);
+      const viewport = computeViewport(
+        sim,
+        container.clientWidth,
+        canvas.clientHeight,
+        viewLockRef.current,
+      );
 
       const cellX = Math.floor(
         (pointerX - viewport.offsetX) / viewport.cellPixelSize +
@@ -681,11 +710,40 @@ export default function LangtonsAnt(): React.ReactElement {
     [editTool],
   );
 
+  /**
+   * Snapshot the current auto-fit viewport into a lock. No-op if already
+   * locked. Used by paint and zoom-button handlers so the viewport stops
+   * tracking the bounding box of visited cells.
+   */
+  const lockCurrentView = useCallback(() => {
+    if (viewLockRef.current !== null) return;
+    const container = containerRef.current;
+    const canvas = canvasRef.current;
+    if (!container || !canvas) return;
+    const sim = simRef.current;
+    const vp = computeViewport(
+      sim,
+      container.clientWidth,
+      canvas.clientHeight,
+      null,
+    );
+    viewLockRef.current = {
+      cellSize: vp.cellPixelSize,
+      centerX: (sim.minX + sim.maxX) / 2,
+      centerY: (sim.minY + sim.maxY) / 2,
+    };
+    setViewLockTick((n) => n + 1);
+  }, []);
+
   const handleCanvasPointerDown = useCallback(
     (event: React.PointerEvent<HTMLCanvasElement>) => {
       if (playingRef.current || fastForwarding) return;
       const canvas = canvasRef.current;
       if (!canvas) return;
+
+      // Lock the viewport before painting so the canvas doesn't zoom out
+      // when the user paints near the current edge of the visited region.
+      lockCurrentView();
 
       const cell = getCellFromPointerEvent(event);
       if (!cell) return;
@@ -696,7 +754,7 @@ export default function LangtonsAnt(): React.ReactElement {
       applyEditToCell(cell[0], cell[1]);
       drawState();
     },
-    [applyEditToCell, drawState, fastForwarding, getCellFromPointerEvent],
+    [applyEditToCell, drawState, fastForwarding, getCellFromPointerEvent, lockCurrentView],
   );
 
   const handleCanvasPointerMove = useCallback(
@@ -823,6 +881,8 @@ export default function LangtonsAnt(): React.ReactElement {
     setPlaying(false);
     setFastForwarding(false);
     simRef.current = createInitialState(selectedSeed);
+    viewLockRef.current = null;
+    setViewLockTick((n) => n + 1);
     setStepCount(0);
     drawState();
   }, [drawState, selectedSeed]);
@@ -833,11 +893,36 @@ export default function LangtonsAnt(): React.ReactElement {
       setPlaying(false);
       setFastForwarding(false);
       simRef.current = createInitialState(seedId);
+      viewLockRef.current = null;
+      setViewLockTick((n) => n + 1);
       setStepCount(0);
       drawState();
     },
     [drawState],
   );
+
+  // Zoom handlers. Zoom-in/-out lock the viewport (snapshot first if not
+  // already locked), then scale the cell size in place. Fit clears the
+  // lock and returns to auto-fit.
+  const ZOOM_FACTOR = 1.25;
+  const zoomBy = useCallback(
+    (factor: number) => {
+      lockCurrentView();
+      const lock = viewLockRef.current;
+      if (!lock) return;
+      viewLockRef.current = { ...lock, cellSize: lock.cellSize * factor };
+      setViewLockTick((n) => n + 1);
+      drawState();
+    },
+    [drawState, lockCurrentView],
+  );
+  const handleZoomIn = useCallback(() => zoomBy(ZOOM_FACTOR), [zoomBy]);
+  const handleZoomOut = useCallback(() => zoomBy(1 / ZOOM_FACTOR), [zoomBy]);
+  const handleFit = useCallback(() => {
+    viewLockRef.current = null;
+    setViewLockTick((n) => n + 1);
+    drawState();
+  }, [drawState]);
 
   // -----------------------------------------------------------------------
   // Derived state
@@ -1042,6 +1127,40 @@ export default function LangtonsAnt(): React.ReactElement {
               className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-300 transition"
             >
               Reset
+            </button>
+          </div>
+
+          {/* Divider */}
+          <div className="w-px h-6 bg-neutral-200 dark:bg-neutral-800 hidden sm:block" />
+
+          {/* Zoom controls */}
+          <div className="flex gap-1.5" role="group" aria-label="Zoom controls">
+            <button
+              type="button"
+              onClick={handleZoomOut}
+              aria-label="Zoom out"
+              title="Zoom out"
+              className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-300 transition"
+            >
+              −
+            </button>
+            <button
+              type="button"
+              onClick={handleZoomIn}
+              aria-label="Zoom in"
+              title="Zoom in"
+              className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-300 transition"
+            >
+              +
+            </button>
+            <button
+              type="button"
+              onClick={handleFit}
+              aria-label="Fit view"
+              title="Fit view to bounding box"
+              className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-300 transition"
+            >
+              Fit
             </button>
           </div>
 
