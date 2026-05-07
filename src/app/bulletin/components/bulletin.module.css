@@ -1,0 +1,451 @@
+/* ========================================
+   BULLETIN — Neo-brutalist project showcase
+   Shares visual language with /cv but sized for prose-heavy content.
+   ======================================== */
+
+:root {
+  --bul-bg: #ffffff;
+  --bul-surface: #f5f5f5;
+  --bul-border: #000000;
+  --bul-text: #000000;
+  --bul-text-muted: #555555;
+  --bul-text-sub: #888888;
+  --bul-shadow-offset: 4px;
+  --bul-border-thick: 3px;
+  --bul-font-mono: var(--font-geist-mono), "Courier New", monospace;
+  --bul-font-sans: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+:global(html[data-theme="dark"]) {
+  --bul-bg: #0a0a0a;
+  --bul-surface: #141414;
+  --bul-border: #ffffff;
+  --bul-text: #ffffff;
+  --bul-text-muted: #aaaaaa;
+  --bul-text-sub: #777777;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+  position: relative;
+  font-family: var(--bul-font-sans);
+  color: var(--bul-text);
+  background: var(--bul-bg);
+}
+
+.gridBg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.03;
+  background-image:
+    linear-gradient(var(--bul-border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--bul-border) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+.container > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* HERO */
+
+.hero {
+  border: var(--bul-border-thick) solid var(--bul-border);
+  background: var(--bul-bg);
+  box-shadow: var(--bul-shadow-offset) var(--bul-shadow-offset) 0 0 var(--bul-border);
+  margin-bottom: 3rem;
+}
+
+.heroMain {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 2rem;
+  border-bottom: var(--bul-border-thick) solid var(--bul-border);
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.heroTitleSection {
+  flex: 1;
+  min-width: 0;
+}
+
+.heroLabel {
+  display: inline-block;
+  font-family: var(--bul-font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  padding: 0.25rem 0.5rem;
+  background: var(--bul-border);
+  color: var(--bul-bg);
+  margin-bottom: 1rem;
+}
+
+.heroTitle {
+  font-family: var(--bul-font-mono);
+  font-size: clamp(2rem, 7vw, 3.25rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin: 0 0 0.75rem 0;
+  color: var(--bul-text);
+}
+
+.heroSubtitle {
+  font-family: var(--bul-font-mono);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--bul-text-muted);
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  line-height: 1.4;
+}
+
+.subtitleIndicator {
+  color: var(--bul-border);
+  flex-shrink: 0;
+}
+
+.heroMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  text-align: right;
+}
+
+.metaItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.metaLabel {
+  font-family: var(--bul-font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  color: var(--bul-text-sub);
+}
+
+.metaValue {
+  font-family: var(--bul-font-mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--bul-text);
+}
+
+.heroTech {
+  padding: 1.25rem 2rem;
+  border-bottom: var(--bul-border-thick) solid var(--bul-border);
+  background: var(--bul-surface);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.techChip {
+  font-family: var(--bul-font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  padding: 0.25rem 0.5rem;
+  border: 2px solid var(--bul-border);
+  background: var(--bul-bg);
+  color: var(--bul-text);
+}
+
+.heroLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+}
+
+.linkBtn {
+  flex: 1;
+  min-width: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  font-family: var(--bul-font-mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--bul-text);
+  background: var(--bul-bg);
+  border: none;
+  border-right: var(--bul-border-thick) solid var(--bul-border);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.linkBtn:last-child {
+  border-right: none;
+}
+
+.linkArrow {
+  transition: transform 0.15s ease;
+}
+
+.linkBtn:hover .linkArrow {
+  transform: translateX(3px);
+}
+
+.linkBtn:hover {
+  background: var(--bul-border);
+  color: var(--bul-bg);
+}
+
+/* SECTION HEADERS */
+
+.section {
+  margin-bottom: 3rem;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.sectionNumber {
+  font-family: var(--bul-font-mono);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--bul-border);
+  opacity: 0.3;
+  line-height: 1;
+}
+
+.sectionTitle {
+  font-family: var(--bul-font-mono);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  margin: 0;
+  color: var(--bul-text);
+  white-space: nowrap;
+}
+
+.sectionLine {
+  flex: 1;
+  height: var(--bul-border-thick);
+  background: repeating-linear-gradient(
+    90deg,
+    var(--bul-border) 0,
+    var(--bul-border) 8px,
+    transparent 8px,
+    transparent 12px
+  );
+  opacity: 0.3;
+}
+
+/* PROSE BLOCKS */
+
+.prose {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--bul-text-muted);
+}
+
+.prose p {
+  margin: 0 0 1rem 0;
+}
+
+.prose p:last-child {
+  margin-bottom: 0;
+}
+
+.prose strong {
+  color: var(--bul-text);
+  font-weight: 700;
+}
+
+.prose code {
+  font-family: var(--bul-font-mono);
+  font-size: 0.85em;
+  padding: 0.1em 0.35em;
+  background: var(--bul-surface);
+  border: 1px solid var(--bul-border);
+  color: var(--bul-text);
+}
+
+.prose a {
+  color: var(--bul-text);
+  text-decoration: none;
+  border-bottom: 2px solid var(--bul-border);
+  transition: all 0.15s ease;
+}
+
+.prose a:hover {
+  background: var(--bul-border);
+  color: var(--bul-bg);
+}
+
+/* CARD — bordered block for grouped content */
+
+.card {
+  border: var(--bul-border-thick) solid var(--bul-border);
+  background: var(--bul-bg);
+  box-shadow: var(--bul-shadow-offset) var(--bul-shadow-offset) 0 0 var(--bul-border);
+  padding: 1.5rem;
+  transition: all 0.15s ease;
+}
+
+.card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: calc(var(--bul-shadow-offset) + 2px) calc(var(--bul-shadow-offset) + 2px) 0 0 var(--bul-border);
+}
+
+.cardTitle {
+  font-family: var(--bul-font-mono);
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  color: var(--bul-text);
+}
+
+.cardBody {
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--bul-text-muted);
+}
+
+/* CODE BLOCK */
+
+.codeBlock {
+  font-family: var(--bul-font-mono);
+  font-size: 0.85rem;
+  line-height: 1.55;
+  padding: 1.25rem 1.5rem;
+  border: var(--bul-border-thick) solid var(--bul-border);
+  background: var(--bul-surface);
+  box-shadow: var(--bul-shadow-offset) var(--bul-shadow-offset) 0 0 var(--bul-border);
+  overflow-x: auto;
+  white-space: pre;
+  color: var(--bul-text);
+  margin: 0;
+}
+
+/* GRID */
+
+.grid2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .grid2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* FOOTER */
+
+.footer {
+  margin-top: 4rem;
+}
+
+.footerLine {
+  height: var(--bul-border-thick);
+  background: var(--bul-border);
+  margin-bottom: 1rem;
+}
+
+.footerContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.footerText {
+  font-family: var(--bul-font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  color: var(--bul-text-sub);
+}
+
+.footerLinks {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.footerLink {
+  font-family: var(--bul-font-mono);
+  font-size: 0.75rem;
+  color: var(--bul-text-muted);
+  text-decoration: none;
+  border-bottom: 1px solid var(--bul-border);
+  transition: all 0.15s ease;
+}
+
+.footerLink:hover {
+  color: var(--bul-text);
+  border-bottom-width: 2px;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 768px) {
+  .container {
+    padding: 1.5rem 1rem;
+  }
+
+  .heroMain {
+    flex-direction: column;
+    padding: 1.5rem;
+  }
+
+  .heroMeta {
+    text-align: left;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+  }
+
+  .heroTech {
+    padding: 1rem 1.5rem;
+  }
+
+  .linkBtn {
+    border-right: none;
+    border-bottom: var(--bul-border-thick) solid var(--bul-border);
+  }
+
+  .linkBtn:last-child {
+    border-bottom: none;
+  }
+
+  .sectionHeader {
+    gap: 0.75rem;
+  }
+
+  .sectionNumber {
+    font-size: 1.5rem;
+  }
+
+  .sectionTitle {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .heroTitle {
+    font-size: 1.75rem;
+  }
+}

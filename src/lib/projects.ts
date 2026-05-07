@@ -1,4 +1,4 @@
-export type ProjectCollection = "demos" | "nerdy-stuff";
+export type ProjectCollection = "demos" | "nerdy-stuff" | "bulletin";
 export type ProjectStatus = "live" | "coming-soon";
 
 export type ProjectMeta = {
@@ -15,6 +15,11 @@ export type ProjectMeta = {
   tech: string[];
   order: number;
   featuredHome?: boolean;
+  repoUrl?: string;
+  homepageUrl?: string;
+  releaseUrl?: string;
+  installCmd?: string;
+  platform?: string[];
 };
 
 export const PROJECTS: ProjectMeta[] = [
@@ -257,9 +262,70 @@ export const PROJECTS: ProjectMeta[] = [
     tech: ["N-grams"],
     order: 80,
   },
+  {
+    id: "eduport",
+    title: "Eduport",
+    slug: "eduport",
+    collection: "bulletin",
+    status: "live",
+    summary:
+      "Single-user desktop app for tracking university applications. Storage is plain Markdown + YAML, sync-friendly and Obsidian-compatible.",
+    description:
+      "Tauri + SvelteKit + Python desktop app for tracking universities, programs, labs, applications, and the documents and emails connecting them.",
+    tags: ["Tauri", "SvelteKit", "Rust", "Python", "Desktop"],
+    domains: ["Desktop", "Productivity"],
+    capabilities: ["Local-first", "Markdown-native"],
+    tech: ["Tauri 2", "SvelteKit", "FastAPI", "SQLite FTS5"],
+    order: 10,
+    repoUrl: "https://github.com/rusenbb/eduport",
+    releaseUrl: "https://github.com/rusenbb/eduport/releases/latest",
+    platform: ["macOS", "Windows", "Linux"],
+  },
+  {
+    id: "vaultdb",
+    title: "vaultdb",
+    slug: "vaultdb",
+    collection: "bulletin",
+    status: "live",
+    summary:
+      "A database engine for your markdown files. Query, filter, mutate, and traverse Obsidian vaults from the command line.",
+    description:
+      "Rust CLI that treats folders of .md files as database tables, YAML frontmatter as columns, and [[wiki-links]] as a citation graph.",
+    tags: ["Rust", "CLI", "Markdown", "Obsidian"],
+    domains: ["Tools", "Knowledge management"],
+    capabilities: ["Querying", "Graph traversal"],
+    tech: ["Rust", "SQLite-free"],
+    order: 20,
+    repoUrl: "https://github.com/rusenbb/vaultdb",
+    homepageUrl: "https://crates.io/crates/vaultdb",
+    installCmd: "cargo install vaultdb",
+    platform: ["CLI"],
+  },
+  {
+    id: "metuclass",
+    title: "metuclass",
+    slug: "metuclass",
+    collection: "bulletin",
+    status: "live",
+    summary:
+      "CLI tool to sync ODTUClass course files to your local machine. Tracks changes so subsequent syncs only pull new or updated files.",
+    description:
+      "Python CLI for incremental sync of METU course materials — PDFs, slides, homeworks — organized by course and section.",
+    tags: ["Python", "CLI", "METU"],
+    domains: ["Tools"],
+    capabilities: ["Incremental sync"],
+    tech: ["Python 3.11+"],
+    order: 30,
+    repoUrl: "https://github.com/rusenbb/metuclass",
+    installCmd: "pip install metuclass",
+    platform: ["CLI"],
+  },
 ];
 
 export function getProjectPath(project: ProjectMeta): string {
+  if (project.collection === "bulletin") {
+    return `/bulletin/${project.slug}`;
+  }
   return `/${project.slug}`;
 }
 
