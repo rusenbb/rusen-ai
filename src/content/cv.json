@@ -39,7 +39,7 @@
       "company": "METU Applied NLP Group",
       "period": "04/2026 - Present",
       "location": "Ankara, TR",
-      "description": "Lead METU NLP Connect, the lab's YouTube channel — expert interviews, educational explainers on LLMs and modern NLP, and recent-paper spotlights. Member of the Applied NLP Group (led by Asst. Prof. Çağrı Toraman), working on LLMs, generative AI, and Turkish language technologies.",
+      "description": "Lead METU NLP Connect, the lab's YouTube channel: expert interviews, educational explainers on LLMs and modern NLP, and recent-paper spotlights. Member of the Applied NLP Group (led by Asst. Prof. Çağrı Toraman), working on LLMs, generative AI, and Turkish language technologies.",
       "link": "https://nlp.ceng.metu.edu.tr"
     },
     {
@@ -47,7 +47,7 @@
       "company": "Fiction Studios",
       "period": "10/2025 - 07/2026",
       "location": "Ankara, TR",
-      "description": "Co-founded an AI startup at Bilkent Cyberpark — an accredited Turkish Teknokent. Built an LLM-powered guide app for museums and tourists. Wound down in 2026.",
+      "description": "Co-founded an AI startup at Bilkent Cyberpark, an accredited Turkish Teknokent. Built an LLM-powered guide app for museums and tourists. Wound down in 2026.",
       "link": "https://fictionstudios.ai"
     },
     {
@@ -151,7 +151,7 @@
   ],
   "awards": [
     {
-      "title": "1416 YLSY Scholarship — M.Sc. & Ph.D.",
+      "title": "1416 YLSY Scholarship · M.Sc. & Ph.D.",
       "issuer": "Türkiye Ministry of National Education",
       "summary": "Türkiye's flagship state scholarship for graduate study abroad, established under Law No. 1416 (1929). Funds tuition, living stipend, travel, and exam fees for master's and doctoral programs in exchange for mandatory service at a Turkish university or public institution."
     }

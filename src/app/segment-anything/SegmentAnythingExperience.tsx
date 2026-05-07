@@ -232,7 +232,7 @@ export default function SegmentAnythingExperience() {
       <DemoHeader
         eyebrow="Computer Vision / Segmentation"
         title="Segment Anything"
-        description="Click anywhere on an image to instantly segment objects — SAM 2.1 running entirely in your browser via WebAssembly."
+        description="Click anywhere on an image to instantly segment objects. SAM 2.1 running entirely in your browser via WebAssembly."
         actions={
           <>
             <Button
