@@ -33,6 +33,7 @@ export default function Header() {
   const links = [
     { href: "/demos", label: "Demos" },
     { href: "/nerdy-stuff", label: "Nerdy Stuff" },
+    { href: "/bulletin", label: "Bulletin" },
     { href: "/cv", label: "CV" },
   ];
 
