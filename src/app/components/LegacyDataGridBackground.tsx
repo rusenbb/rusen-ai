@@ -42,7 +42,6 @@ const MARGIN_COLS = 4;
 const RIPPLE_EXPANSION_SPEED = 200;
 const RIPPLE_DURATION = 1.5;
 const RING_WIDTH = 40;
-const MAX_RIPPLES = 5;
 
 type Dot = {
   screenX: number;
@@ -95,9 +94,6 @@ export default function LegacyDataGridBackground() {
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      if (ripplesRef.current.length >= MAX_RIPPLES) {
-        ripplesRef.current.shift();
-      }
       ripplesRef.current.push({
         x: e.clientX,
         y: e.clientY,
