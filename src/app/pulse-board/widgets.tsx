@@ -475,13 +475,26 @@ function CryptoHubWidget() {
       const ethData = await ethRes.json();
       const gasData = await gasRes.json();
 
-      const btcPrice = btcData.result ? Number(BigInt("0x" + btcData.result.slice(66, 130))) / 1e8 : 0;
-      const ethPrice = ethData.result ? Number(BigInt("0x" + ethData.result.slice(66, 130))) / 1e8 : 0;
-      const gasPrice = gasData.result ? Number(BigInt(gasData.result)) / 1e9 : 0;
+      // JSON-RPC sometimes returns an error envelope with HTTP 200; the
+      // previous code treated those as "0" and painted "$0 / 0.0 gwei".
+      // Fail the whole batch instead so the UI keeps showing the last
+      // good values (or "--" on first failure).
+      if (btcData.error || ethData.error || gasData.error) {
+        throw new Error("RPC returned an error envelope");
+      }
+      if (!btcData.result || !ethData.result || !gasData.result) {
+        throw new Error("RPC returned no result");
+      }
+
+      const btcPrice = Number(BigInt("0x" + btcData.result.slice(66, 130))) / 1e8;
+      const ethPrice = Number(BigInt("0x" + ethData.result.slice(66, 130))) / 1e8;
+      const gasPrice = Number(BigInt(gasData.result)) / 1e9;
 
       setChainlink({ btc: btcPrice, eth: ethPrice, gas: gasPrice });
     } catch {
-      console.error("Failed to fetch Chainlink data");
+      // Leave previous chainlink data intact (UI keeps showing last
+      // good prices). On first failure chainlink stays null and the
+      // widget shows "--".
     }
   }, []);
 
@@ -554,9 +567,9 @@ function CryptoHubWidget() {
 
         {/* ETH */}
         <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg overflow-hidden">
-          <div className="flex items-center gap-2 mb-1">
-            <SiEthereum className="w-6 h-6 shrink-0 text-[#627EEA]" />
-            <span className="text-xs font-medium">Ethereum</span>
+          <div className="flex items-center gap-2 mb-1 min-w-0">
+            <SiEthereum className="w-5 h-5 shrink-0 text-[#627EEA]" />
+            <span className="text-xs font-medium truncate">Ethereum</span>
           </div>
           <div className={`font-mono text-base font-bold truncate ${getPriceColor(prices.eth.price, prices.eth.prevPrice)}`}>
             ${formatPrice(prices.eth.price)}
@@ -1191,7 +1204,9 @@ function AviationWidget() {
         setError(null);
       }
     } catch {
-      setError("Rate limited - try again in 10s");
+      // Keep any previously-fetched planes on the screen — surface the
+      // rate-limit as a small badge instead of clobbering the whole panel.
+      setError("Rate-limited by OpenSky · showing last fetch");
     } finally {
       setLoading(false);
     }
@@ -1199,7 +1214,9 @@ function AviationWidget() {
 
   useEffect(() => {
     fetchAircraft();
-    const interval = setInterval(fetchAircraft, 15000); // 15 seconds
+    // 60s poll. OpenSky's anonymous tier is heavily limited; faster
+    // intervals get rejected for the rest of the window.
+    const interval = setInterval(fetchAircraft, 60000);
     return () => clearInterval(interval);
   }, [fetchAircraft]);
 
@@ -1239,12 +1256,17 @@ function AviationWidget() {
             <Skeleton key={i} className="h-6 w-full" />
           ))}
         </div>
-      ) : error ? (
-        <p className="text-amber-500 text-sm">{error}</p>
       ) : aircraft.length === 0 ? (
-        <p className="text-neutral-500 text-sm">No aircraft detected</p>
+        error ? (
+          <p className="text-amber-500 text-sm">{error}</p>
+        ) : (
+          <p className="text-neutral-500 text-sm">No aircraft detected</p>
+        )
       ) : (
         <div className="space-y-2">
+          {error && (
+            <p className="text-[11px] text-amber-500/80 -mt-1 mb-1">{error}</p>
+          )}
           {aircraft.map((plane) => (
             <div key={plane.icao24} className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2">
