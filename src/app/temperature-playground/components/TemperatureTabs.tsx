@@ -15,10 +15,10 @@ const TEMP_LABELS: Record<TemperatureKey, string> = {
 };
 
 const TEMP_DESCRIPTIONS: Record<TemperatureKey, string> = {
-  "0.0": "Greedy — always picks the most likely token",
-  "0.3": "Focused — slight randomness, mostly predictable",
-  "0.6": "Balanced — noticeable diversity in word choice",
-  "1.0": "Creative — flat distribution, frequent surprises",
+  "0.0": "Greedy: always picks the most likely token",
+  "0.3": "Focused: slight randomness, mostly predictable",
+  "0.6": "Balanced: noticeable diversity in word choice",
+  "1.0": "Creative: flat distribution, frequent surprises",
 };
 
 export default function TemperatureTabs({

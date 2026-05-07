@@ -91,7 +91,7 @@ export default function TokenChip({
       type="button"
       onClick={handleClick}
       className={`inline-flex items-center gap-0.5 rounded px-1 py-0.5 text-sm font-mono leading-snug transition-colors cursor-pointer ${colorClasses} ${isSpecial ? "text-neutral-400 dark:text-neutral-500 italic text-[11px]" : "text-neutral-800 dark:text-neutral-200"}`}
-      title={`"${text}" — ${(probability * 100).toFixed(1)}% probability`}
+      title={`"${text}" · ${(probability * 100).toFixed(1)}% probability`}
     >
       <span className={isSpecial ? "" : "whitespace-pre"}>{display}</span>
       {hasBranches && (

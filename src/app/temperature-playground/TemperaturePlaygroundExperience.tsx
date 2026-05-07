@@ -228,7 +228,7 @@ export default function TemperaturePlaygroundExperience() {
       <DemoHeader
         eyebrow="NLP / Sampling"
         title="Temperature Playground"
-        description="Explore how temperature shapes what an LLM writes. Each token is colored by how surprising it was — click any token to see the full probability distribution."
+        description="Explore how temperature shapes what an LLM writes. Each token is colored by how surprising it was. Click any token to see the full probability distribution."
       />
 
       {/* Controls bar */}
@@ -320,8 +320,8 @@ export default function TemperaturePlaygroundExperience() {
             </h3>
             <p>
               LLMs predict one token at a time. At each step, the model
-              produces a probability distribution over its entire vocabulary
-              — typically 100K+ words and word fragments.
+              produces a probability distribution over its entire vocabulary,
+              typically 100K+ words and word fragments.
             </p>
           </div>
           <div>
@@ -341,7 +341,7 @@ export default function TemperaturePlaygroundExperience() {
             </h3>
             <p>
               Branches appear where a strong alternative token had &gt;10%
-              probability — moments of genuine model uncertainty. Click
+              probability: moments of genuine model uncertainty. Click
               them to see what would have happened if a different token
               had been chosen.
             </p>

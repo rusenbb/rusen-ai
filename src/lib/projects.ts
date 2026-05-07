@@ -46,7 +46,7 @@ export const PROJECTS: ProjectMeta[] = [
     collection: "demos",
     status: "live",
     summary:
-      "Click any object in an image to instantly segment it — SAM 2.1 running entirely in your browser via WebAssembly.",
+      "Click any object in an image to instantly segment it. SAM 2.1 running entirely in your browser via WebAssembly.",
     description:
       "Interactive image segmentation with SAM 2.1 Tiny, running locally via WASM.",
     tags: ["Segmentation", "SAM", "Transformers.js"],
@@ -310,7 +310,7 @@ export const PROJECTS: ProjectMeta[] = [
     summary:
       "CLI tool to sync ODTUClass course files to your local machine. Tracks changes so subsequent syncs only pull new or updated files.",
     description:
-      "Python CLI for incremental sync of METU course materials — PDFs, slides, homeworks — organized by course and section.",
+      "Python CLI for incremental sync of METU course materials (PDFs, slides, homeworks) organized by course and section.",
     tags: ["Python", "CLI", "METU"],
     domains: ["Tools"],
     capabilities: ["Incremental sync"],

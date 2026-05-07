@@ -171,7 +171,7 @@ STATUS \VAR{cv.basics.status | latex}
 % ======================================================================
 \section*{Interests}
 
-\noindent\BLOCK{ for i in cv.interests }\textbf{\VAR{i.title | latex}} {\small \textemdash{} \VAR{i.desc | latex}}\BLOCK{ if not loop.last }\hspace{14pt}\BLOCK{ endif }\BLOCK{ endfor }
+\noindent\BLOCK{ for i in cv.interests }\textbf{\VAR{i.title | latex}} {\small \textperiodcentered{} \VAR{i.desc | latex}}\BLOCK{ if not loop.last }\hspace{14pt}\BLOCK{ endif }\BLOCK{ endfor }
 
 \vspace{14pt}
 

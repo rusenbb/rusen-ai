@@ -31,7 +31,7 @@ export default function VaultdbBulletinPage() {
             a citation graph you can traverse and join across.
           </p>
           <p>
-            It&apos;s a CLI — no daemon, no cache, no state files. Every command reads the current files directly.
+            It&apos;s a CLI: no daemon, no cache, no state files. Every command reads the current files directly.
             That means you can edit notes in Obsidian and query them with vaultdb in the same second; they don&apos;t
             fight each other.
           </p>
@@ -49,8 +49,8 @@ export default function VaultdbBulletinPage() {
           </p>
           <p>
             The design constraint was <strong>peaceful coexistence with Obsidian</strong>. No proprietary database, no
-            schema migrations, no &quot;import your vault.&quot; Every operation is a pure read or a careful in-place edit
-            — with <code>--dry-run</code> on every mutation so you can see exactly what would change.
+            schema migrations, no &quot;import your vault.&quot; Every operation is a pure read or a careful in-place edit,
+            with <code>--dry-run</code> on every mutation so you can see exactly what would change.
           </p>
         </BulletinProse>
       </BulletinSection>
