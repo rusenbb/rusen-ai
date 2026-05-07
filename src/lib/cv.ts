@@ -37,6 +37,25 @@ export type CVInterestItem = {
   icon: string;
 };
 
+export type CVCourseItem = {
+  title: string;
+  issuer: string;
+  url?: string;
+  summary: string;
+};
+
+export type CVAwardItem = {
+  title: string;
+  issuer: string;
+  period?: string;
+  summary: string;
+};
+
+export type CVLanguageItem = {
+  name: string;
+  level: string;
+};
+
 export type CVSkills = Record<string, string[]>;
 
 export type CVData = {
@@ -47,6 +66,9 @@ export type CVData = {
     locationLong: string;
     status: string;
     email: string;
+    phone: string;
+    birthday: string;
+    drivingLicense: string;
     website: string;
     websiteUrl: string;
     linkedin: string;
@@ -62,6 +84,9 @@ export type CVData = {
   projects: CVProjectItem[];
   education: CVEducationItem[];
   interests: CVInterestItem[];
+  courses: CVCourseItem[];
+  awards: CVAwardItem[];
+  languages: CVLanguageItem[];
   skills: CVSkills;
 };
 

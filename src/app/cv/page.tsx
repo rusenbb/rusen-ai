@@ -1,36 +1,9 @@
-"use client";
-
-import { useState } from "react";
 import { getCvData } from "@/lib/cv";
-import CVPdfDocument from "./CVPdfDocument";
 import styles from "./cv.module.css";
 
 const cv = getCvData();
 
 export default function CVPage() {
-  const [downloadingPdf, setDownloadingPdf] = useState(false);
-
-  const handlePdfDownload = async () => {
-    try {
-      setDownloadingPdf(true);
-
-      const { pdf } = await import("@react-pdf/renderer");
-      const blob = await pdf(<CVPdfDocument cv={cv} />).toBlob();
-      const objectUrl = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-
-      link.href = objectUrl;
-      link.download = "rusen-birben-cv.pdf";
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-
-      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
-    } finally {
-      setDownloadingPdf(false);
-    }
-  };
-
   return (
     <div className={styles.container}>
       <div className={styles.gridBg} />
@@ -54,6 +27,18 @@ export default function CVPage() {
               <span className={styles.metaLabel}>STATUS</span>
               <span className={styles.metaValue}>{cv.basics.status}</span>
             </div>
+            <div className={styles.metaItem}>
+              <span className={styles.metaLabel}>PHONE</span>
+              <span className={styles.metaValue}>{cv.basics.phone}</span>
+            </div>
+            <div className={styles.metaItem}>
+              <span className={styles.metaLabel}>DOB</span>
+              <span className={styles.metaValue}>{cv.basics.birthday}</span>
+            </div>
+            <div className={styles.metaItem}>
+              <span className={styles.metaLabel}>LIC</span>
+              <span className={styles.metaValue}>{cv.basics.drivingLicense}</span>
+            </div>
           </div>
         </div>
 
@@ -73,10 +58,14 @@ export default function CVPage() {
               <span className={styles.linkArrow}>→</span> {link.label.toUpperCase()}
             </a>
           ))}
-          <button type="button" onClick={handlePdfDownload} className={styles.printBtn} disabled={downloadingPdf}>
-            <span className={styles.linkArrow}>{downloadingPdf ? "…" : "↓"}</span>
-            {downloadingPdf ? "PREPARING" : "PDF"}
-          </button>
+          <a href="/cv.pdf" download className={styles.printBtn}>
+            <span className={styles.linkArrow}>↓</span>
+            PDF
+          </a>
+          <a href="/cv.tex" download className={styles.printBtn}>
+            <span className={styles.linkArrow}>↓</span>
+            TEX
+          </a>
         </div>
       </header>
 
@@ -190,6 +179,85 @@ export default function CVPage() {
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
           <span className={styles.sectionNumber}>04</span>
+          <h2 className={styles.sectionTitle}>AWARDS</h2>
+          <div className={styles.sectionLine} />
+        </div>
+
+        <div className={styles.educationList}>
+          {cv.awards.map((award) => (
+            <div key={award.title} className={styles.educationCard}>
+              <div className={styles.eduHeader}>
+                <div className={styles.eduMain}>
+                  <h3 className={styles.eduDegree}>{award.title}</h3>
+                  <span className={styles.eduSchool}>{award.issuer}</span>
+                </div>
+                {award.period && (
+                  <div className={styles.eduMeta}>
+                    <span className={styles.eduPeriod}>{award.period}</span>
+                  </div>
+                )}
+              </div>
+              <p className={styles.eduNote}>{award.summary}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <span className={styles.sectionNumber}>05</span>
+          <h2 className={styles.sectionTitle}>COURSES</h2>
+          <div className={styles.sectionLine} />
+        </div>
+
+        <div className={styles.educationList}>
+          {cv.courses.map((course) => (
+            <div key={course.title} className={styles.educationCard}>
+              <div className={styles.eduHeader}>
+                <div className={styles.eduMain}>
+                  {course.url ? (
+                    <a
+                      href={course.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.cardCompanyLink}
+                    >
+                      <h3 className={styles.eduDegree}>{course.title} ↗</h3>
+                    </a>
+                  ) : (
+                    <h3 className={styles.eduDegree}>{course.title}</h3>
+                  )}
+                  <span className={styles.eduSchool}>{course.issuer}</span>
+                </div>
+              </div>
+              <p className={styles.eduNote}>{course.summary}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <span className={styles.sectionNumber}>06</span>
+          <h2 className={styles.sectionTitle}>LANGUAGES</h2>
+          <div className={styles.sectionLine} />
+        </div>
+
+        <div className={styles.interestsGrid}>
+          {cv.languages.map((lang) => (
+            <div key={lang.name} className={styles.interestCard}>
+              <div className={styles.interestContent}>
+                <h4 className={styles.interestTitle}>{lang.name}</h4>
+                <p className={styles.interestDesc}>{lang.level}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <span className={styles.sectionNumber}>07</span>
           <h2 className={styles.sectionTitle}>INTERESTS</h2>
           <div className={styles.sectionLine} />
         </div>
@@ -210,7 +278,7 @@ export default function CVPage() {
       <footer className={styles.footer}>
         <div className={styles.footerLine} />
         <div className={styles.footerContent}>
-          <span className={styles.footerText}>RUSEN.AI / CV / 2025</span>
+          <span className={styles.footerText}>RUSEN.AI / CV / 2026</span>
           <div className={styles.footerLinks}>
             <a href={cv.basics.websiteUrl} className={styles.footerLink}>{cv.basics.website}</a>
             <span className={styles.footerDivider}>│</span>
