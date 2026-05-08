@@ -14,9 +14,9 @@
     "linkedinUrl": "https://linkedin.com/in/rusenbirben",
     "github": "github.com/rusenbb",
     "githubUrl": "https://github.com/rusenbb",
-    "summary": "İstanbul Teknik Üniversitesi Yapay Zeka ve Veri Mühendisliği mezunuyum. NLP, LLM'ler ve etmensel yapay zeka uygulamaları ile akıllı sistemler geliştiriyorum.",
-    "printSummary": "İstanbul Teknik Üniversitesi Yapay Zeka ve Veri Mühendisliği mezunu; NLP, LLM'ler ve etmensel yapay zeka uygulamalarında deneyimli. Fiction Studios'un kurucu ortağı: Bilkent Cyberpark'ta müzeler ve turistler için LLM destekli araçlar geliştiren yapay zeka girişimi.",
-    "footerNote": "Talep üzerine referanslar sunulur - rusen.ai/cv"
+    "summary": "İstanbul Teknik Üniversitesi Yapay Zeka ve Veri Mühendisliği mezunuyum. NLP, büyük dil modelleri ve agentic AI uygulamalarıyla akıllı sistemler geliştiriyorum.",
+    "printSummary": "İTÜ Yapay Zeka ve Veri Mühendisliği lisans mezunu. NLP, LLM ve agentic AI uygulamalarında deneyimli. Fiction Studios kurucu ortağı: Bilkent Cyberpark'ta müzeler ve turistlere yönelik LLM destekli rehber araçları geliştiren bir yapay zeka girişimi.",
+    "footerNote": "Referanslar talep üzerine sunulur · rusen.ai/cv"
   },
   "heroLinks": [
     {
@@ -38,7 +38,7 @@
       "company": "ODTÜ Uygulamalı NLP Grubu",
       "period": "04/2026 - Bugün",
       "location": "Ankara, TR",
-      "description": "Laboratuvarın YouTube kanalı METU NLP Connect'i yönetiyorum: uzman röportajları, LLM'ler ve modern NLP üzerine eğitici açıklamalar, güncel makale incelemeleri. Uygulamalı NLP Grubu'nun (Yard. Doç. Dr. Çağrı Toraman önderliğinde) üyesi olarak LLM'ler, üretken yapay zeka ve Türkçe dil teknolojileri üzerine çalışıyorum.",
+      "description": "Laboratuvarın YouTube kanalı METU NLP Connect'i yönetiyorum: uzmanlarla röportajlar, LLM ve modern NLP üzerine anlatım videoları, güncel makale incelemeleri. Dr. Öğr. Üyesi Çağrı Toraman'ın yürüttüğü Uygulamalı NLP Grubu'nda LLM, üretken yapay zeka ve Türkçe dil teknolojileri üzerine çalışıyorum.",
       "link": "https://nlp.ceng.metu.edu.tr"
     },
     {
@@ -46,7 +46,7 @@
       "company": "Fiction Studios",
       "period": "10/2025 - 07/2026",
       "location": "Ankara, TR",
-      "description": "Bilkent Cyberpark'ta, akredite bir Türkiye Teknokenti'nde, bir yapay zeka girişiminin kurucu ortağı olarak görev yaptım. Müzeler ve turistler için LLM destekli bir rehber uygulaması geliştirdik. 2026'da faaliyetler sona erdi.",
+      "description": "Bilkent Cyberpark teknokentinde kurduğumuz yapay zeka girişimi. Müzeler ve turistlere yönelik LLM destekli bir rehber uygulaması geliştirdik. Şirket 2026'da kapandı.",
       "link": "https://fictionstudios.ai"
     },
     {
@@ -54,15 +54,15 @@
       "company": "CyberQuote",
       "period": "03/2025 - 07/2025",
       "location": "İstanbul, TR",
-      "description": "Phillip Capital iştiraki için yapay zeka otomasyonları ve etmensel LLM uygulamaları geliştirdim. Operasyonel süreçler ve müşteriye dönük platformlar için akıllı sistemler.",
+      "description": "Phillip Capital iştirakinde yapay zeka otomasyonları ve agentic LLM uygulamaları geliştirdim. Hem operasyonel süreçler hem müşteriye yönelik platformlar için akıllı sistemler kurguladım.",
       "link": "https://cyberquote.com/tk/"
     },
     {
       "role": "NLP Araştırma Stajyeri",
-      "company": "İTÜ NLP Lab.",
+      "company": "İTÜ NLP Laboratuvarı",
       "period": "07/2024 - 08/2024",
       "location": "İstanbul, TR",
-      "description": "Finansal uygulamalar için LLM'ler üzerine araştırmalar: tahminleme, duygu analizi, araç kullanımı, akıl yürütme ve RAG uygulamaları.",
+      "description": "Finansal alanda LLM araştırması: tahminleme, duygu analizi, araç kullanımı, akıl yürütme ve RAG uygulamaları.",
       "link": "https://nlp.itu.edu.tr/"
     },
     {
@@ -70,7 +70,7 @@
       "company": "Havelsan",
       "period": "08/2024 - 09/2024",
       "location": "İstanbul, TR",
-      "description": "Yazılım log verilerini kullanarak öngörücü bakım için AIOps araştırması. HDFS logları üzerinde demo geliştirdim.",
+      "description": "Yazılım logları üzerinde kestirimci bakım için AIOps araştırması. HDFS log verisi üzerinde demo geliştirdim.",
       "link": "https://havelsan.com/tr"
     }
   ],
@@ -79,7 +79,7 @@
       "title": "Tobor",
       "subtitle": "Amazon Depo Robotu",
       "period": "2024 - 2025",
-      "description": "Amazon lojistiğini simüle eden otonom depo robotu. Yol bulma, engel kaçınma, görev planlama. Özel eğitilmiş YOLO ile insan/kargo tespiti.",
+      "description": "Amazon lojistiğini taklit eden otonom depo robotu. Yol planlama, engel kaçınma ve görev programlama. Özel eğittiğim YOLO modeliyle insan/kargo tespiti.",
       "tags": ["Python", "ROS2", "YOLO", "Robotik"],
       "links": [
         { "label": "GH", "url": "https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/Amazon-Warehouse-Robot" },
@@ -88,9 +88,9 @@
     },
     {
       "title": "Biting The Bytes",
-      "subtitle": "Türkçe Diakritik Geri Yükleme",
+      "subtitle": "Türkçe Karakter Tamamlama",
       "period": "2024",
-      "description": "Türkçe diakritikleri geri yüklemek için T5 tabanlı bir transformer modeli. Aksan işaretlerini ve özel karakterleri okunabilirlik için otomatik olarak ekler.",
+      "description": "Türkçe metinlerdeki diakritik işaretleri (ş, ç, ı, ğ, ü, ö) geri kazandıran T5 tabanlı transformer modeli. Aksan ve özel karakterleri okunabilirlik için otomatik tamamlar.",
       "tags": ["NLP", "T5", "Transformers", "Türkçe"],
       "links": [
         { "label": "GH", "url": "https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/Biting-The-Bytes" },
@@ -101,17 +101,17 @@
       "title": "AIZheimer",
       "subtitle": "Stable Diffusion'da Makine Unutma",
       "period": "2024",
-      "description": "Diğer yetenekleri korurken Stable Diffusion 2.1'den seçici olarak kavram kaldırma. İçerik denetimi ve yapay zeka çıktısı özelleştirmesi.",
-      "tags": ["Stable Diffusion", "Unutma", "Bilgisayarlı Görü"],
+      "description": "Stable Diffusion 2.1 modelinden seçili kavramları, diğer yetenekleri bozmadan çıkarma yöntemi. İçerik denetimi ve YZ çıktılarının özelleştirilmesine yönelik.",
+      "tags": ["Stable Diffusion", "Makine Unutma", "Bilgisayarlı Görü"],
       "links": [
         { "label": "GH", "url": "https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/AIzheimer" }
       ]
     },
     {
       "title": "To-AI-or-Not-to-AI",
-      "subtitle": "GPT Tespit Edici",
+      "subtitle": "Yapay Zeka Metin Tespiti",
       "period": "2023",
-      "description": "Üç ince ayarlı modeli birleştiren topluluk yöntemiyle yapay zeka üretimi metinlerin tespiti. Akademik dürüstlük ve dezenformasyon sorunlarına yönelik.",
+      "description": "Üç ince ayarlı modelden oluşan topluluk yöntemiyle yapay zeka üretimi metinleri tespit eder. Akademik dürüstlük ve dezenformasyon sorunlarını hedefler.",
       "tags": ["NLP", "Topluluk", "Sınıflandırma"],
       "links": [
         { "label": "GH", "url": "https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/To-AI-or-Not-to-AI" },
@@ -120,9 +120,9 @@
     },
     {
       "title": "Anime Recommender",
-      "subtitle": "İşbirlikçi Filtreleme",
+      "subtitle": "İşbirlikli Filtreleme",
       "period": "2022 - 2023",
-      "description": "İşbirlikçi filtreleme ve içerik tabanlı yaklaşımları birleştiren kişiselleştirilmiş anime önerileri. RMSE: 0,289 / MAE: 0,213.",
+      "description": "İşbirlikli filtreleme ve içerik tabanlı yöntemleri birleştiren kişiselleştirilmiş anime önerisi. RMSE: 0,289 / MAE: 0,213.",
       "tags": ["Öneri Sistemi", "Matris Çarpanlara Ayırma"],
       "links": [
         { "label": "GH", "url": "https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/Anime-Recommender" }
@@ -145,19 +145,19 @@
       "degree": "Elektronik ve Haberleşme Mühendisliği Lisansı",
       "school": "İstanbul Teknik Üniversitesi",
       "period": "2020 - 2022",
-      "note": "Yapay Zeka ve Veri Mühendisliği'ne yatay geçiş yapıldı"
+      "note": "Yapay Zeka ve Veri Mühendisliği'ne yatay geçiş yaptım."
     }
   ],
   "awards": [
     {
       "title": "1416 YLSY Bursu · Yüksek Lisans ve Doktora",
       "issuer": "T.C. Millî Eğitim Bakanlığı",
-      "summary": "Türkiye'nin yurt dışı lisansüstü eğitim için bayrak-gemisi devlet bursu; 1929 yılında yürürlüğe giren 1416 sayılı kanun çerçevesinde yürütülür. Yüksek lisans ve doktora programları için öğrenim ücreti, geçim bursu, sağlık, ulaşım ve sınav giderlerini, bir Türkiye üniversitesinde veya kamu kurumunda mecburi hizmet karşılığında karşılar."
+      "summary": "Türkiye'nin yurt dışı lisansüstü eğitim için amiral devlet bursu (1929 tarihli 1416 sayılı kanun). Yüksek lisans ve doktora programlarında öğrenim ücreti, yaşam giderleri, sağlık, ulaşım ve sınav masraflarını karşılıyor; karşılığında bir Türk üniversitesi veya kamu kurumunda mecburi hizmet veriliyor."
     }
   ],
   "interests": [
     { "title": "Kahve", "desc": "V60 - Aeropress - Moka Pot", "icon": "☕" },
-    { "title": "Kitaplar", "desc": "Felsefe - YZ/Bilgisayar - Finans", "icon": "📚" },
+    { "title": "Kitap", "desc": "Felsefe - YZ/Bilgisayar - Finans", "icon": "📚" },
     { "title": "Anime ve Manga", "desc": "İzleyici - Okuyucu - Koleksiyoncu", "icon": "📺" },
     { "title": "Spor", "desc": "Halter - Koşu - Kalistenik", "icon": "💪" }
   ],
@@ -166,13 +166,13 @@
       "title": "Deep Learning Specialization",
       "issuer": "Deeplearning.ai · Andrew Ng",
       "url": "https://coursera.org/share/9c59e9758d378fb8a8b4ab7074dd71ed",
-      "summary": "Dizi Modelleri, CNN'ler, Sinir Ağı ve Derin Öğrenme temelleri, ML Projelerini Yapılandırma, Derin Sinir Ağlarını İyileştirme."
+      "summary": "Sıralı modeller, CNN'ler, sinir ağları ve derin öğrenme temelleri, ML projelerini yapılandırma, derin sinir ağı iyileştirmeleri."
     },
     {
       "title": "AWS Cloud Technical Essentials",
       "issuer": "AWS · Coursera",
       "url": "https://coursera.org/share/f8ab2981ab0bbdc3fec17c6e88804ff8",
-      "summary": "Temel AWS kavramları, güvenlik uygulamaları, EC2, Lambda, ECS, RDS, DynamoDB, S3."
+      "summary": "Temel AWS kavramları, güvenlik pratikleri, EC2, Lambda, ECS, RDS, DynamoDB, S3."
     }
   ],
   "languages": [
@@ -182,6 +182,6 @@
   "skills": {
     "Diller": ["Python", "JavaScript/TypeScript", "SQL", "C/C++"],
     "Çerçeveler ve Araçlar": ["PyTorch", "TensorFlow", "ROS2", "YOLO", "Transformers", "Scikit-learn", "Pandas", "NumPy"],
-    "Uzmanlıklar": ["NLP", "LLM'ler", "Bilgisayarlı Görü", "RAG", "MLOps", "Etmensel YZ", "Veri Mühendisliği"]
+    "Uzmanlık Alanları": ["NLP", "LLM'ler", "Bilgisayarlı Görü", "RAG", "MLOps", "Agentic AI", "Veri Mühendisliği"]
   }
 }

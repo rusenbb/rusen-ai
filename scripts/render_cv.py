@@ -123,7 +123,29 @@ def latex_bullets(items: list) -> str:
     return r" \textbullet{} ".join(latex_escape(item) for item in items)
 
 
-def build_environment() -> jinja2.Environment:
+def _upper_default(value: object) -> str:
+    return str(value).upper()
+
+
+def _upper_turkish(value: object) -> str:
+    r"""Turkish-aware uppercase. The standard `str.upper()` maps `i` -> `I`,
+    losing the dot. Turkish needs `i` -> `İ` and `ı` -> `I`. We swap those
+    pairs first, then defer to `upper()` for the rest of the alphabet.
+
+    This matters because `\MakeUppercase` in LaTeX has the same defect, so
+    uppercasing in Python (with this function) and skipping LaTeX's macro
+    is the cleanest way to get correct DENEYİM / EĞİTİM / DİLLER /
+    İLGİ ALANLARI in a Turkish CV.
+    """
+    return str(value).replace("i", "İ").replace("ı", "I").upper()
+
+
+_UPPER_FILTERS: dict[str, callable] = {
+    "tr": _upper_turkish,
+}
+
+
+def build_environment(locale: str) -> jinja2.Environment:
     """Jinja2 env with LaTeX-friendly delimiters so we don't fight `{ }`."""
     env = jinja2.Environment(
         loader=jinja2.FileSystemLoader(TEMPLATE_DIR),
@@ -140,7 +162,7 @@ def build_environment() -> jinja2.Environment:
     )
     env.filters["latex"] = latex_escape
     env.filters["latex_bullets"] = latex_bullets
-    env.filters["upper"] = lambda s: str(s).upper()
+    env.filters["upper"] = _UPPER_FILTERS.get(locale, _upper_default)
     return env
 
 
@@ -154,7 +176,7 @@ def render(
     cv_data = json.loads(json_path.read_text(encoding="utf-8"))
     if phone_override:
         cv_data["basics"]["phone"] = phone_override
-    env = build_environment()
+    env = build_environment(locale)
     template = env.get_template(TEMPLATE_NAME)
     return template.render(
         cv=cv_data,

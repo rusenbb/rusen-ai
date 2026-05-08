@@ -10,7 +10,8 @@
 
 % XeTeX-native font setup (tectonic uses XeTeX). TeX Gyre Heros is the
 % Helvetica clone with full Latin Extended coverage including Turkish
-% (Ş, İ, Ğ, ı). Inconsolata for the mono headers.
+% (Ş, İ, Ğ, ı). Latin Modern Mono Light for the mono headers — same
+% Turkish coverage and a more elegant weight than default Inconsolata.
 \usepackage{fontspec}
 \setmainfont{TeX Gyre Heros}
 \setmonofont{Latin Modern Mono Light}[Scale=MatchLowercase]
@@ -20,7 +21,7 @@
 % in this CV (reliably reproducible). fontawesome (v4) is rock-solid here
 % and covers every glyph we need.
 \usepackage{fontawesome}
-\usepackage[top=0.5in, bottom=0.5in, left=0.7in, right=0.7in]{geometry}
+\usepackage[top=0.6in, bottom=0.55in, left=0.7in, right=0.7in]{geometry}
 \usepackage{enumitem}
 \usepackage{xcolor}
 \usepackage{titlesec}
@@ -28,7 +29,7 @@
 \usepackage{setspace}
 \usepackage{needspace}
 
-\setstretch{1.12}
+\setstretch{1.15}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{0pt}
 \raggedright
@@ -41,12 +42,31 @@
 }
 \pagestyle{empty}
 
-% Section heading: mono uppercase + thick rule under
-\titleformat{\section}
-  {\normalfont\ttfamily\bfseries\large\MakeUppercase}
-  {}{0pt}{}
-  [\vspace{1pt}\noindent\rule{\linewidth}{1.6pt}]
-\titlespacing{\section}{0pt}{10pt}{4pt}
+% Section colors
+\definecolor{cvsecnum}{HTML}{C0C0C0}
+\definecolor{cvrule}{HTML}{111111}
+
+% Custom section command: "01 EXPERIENCE" with a muted number prefix and a
+% thick rule under, mirroring the HTML CV's section style. Title content
+% is expected to already be uppercased (locale-aware) by the Jinja
+% `upper` filter — we don't call \MakeUppercase here because it doesn't
+% know about Turkish dotted-i.
+\newcounter{cvsec}
+\setcounter{cvsec}{0}
+\newcommand{\cvsection}[1]{%
+  \refstepcounter{cvsec}%
+  \needspace{4\baselineskip}%
+  \par\vspace{14pt}%
+  \noindent%
+  {\ttfamily\bfseries\large%
+    \textcolor{cvsecnum}{\ifnum\value{cvsec}<10 0\fi\thecvsec}%
+    \hspace{0.65em}%
+    #1%
+  }%
+  \par\vspace{2pt}%
+  {\color{cvrule}\noindent\rule{\linewidth}{1.6pt}}%
+  \par\vspace{8pt}%
+}
 
 \newcommand{\barsep}{\hspace{6pt}\textbar\hspace{6pt}}
 \newcommand{\rowdates}[1]{\hfill{\ttfamily\small #1}}
@@ -58,10 +78,10 @@
 % ======================================================================
 % HEADER
 % ======================================================================
-\noindent\rule{\linewidth}{2.5pt}\\[3pt]
-{\noindent\ttfamily\bfseries\Huge \VAR{cv.basics.name | latex}}\\[3pt]
-{\noindent\ttfamily\bfseries\small \VAR{cv.basics.role | latex | upper}}\\[5pt]
-\noindent\rule{\linewidth}{0.8pt}\\[6pt]
+\noindent\rule{\linewidth}{2.5pt}\\[5pt]
+{\noindent\ttfamily\bfseries\Huge \VAR{cv.basics.name | latex}}\\[5pt]
+{\noindent\ttfamily\bfseries\small \VAR{cv.basics.role | upper | latex}}\\[7pt]
+\noindent\rule{\linewidth}{0.8pt}\\[8pt]
 
 % Contact bar (mono, dense, icon-led)
 {\ttfamily\footnotesize\noindent
@@ -75,12 +95,12 @@
 \BLOCK{ if cv.basics.phone }%
 \barsep%
 \faPhone\,\VAR{cv.basics.phone | latex}%
-\BLOCK{ endif }\\[2pt]
+\BLOCK{ endif }\\[3pt]
 \faGlobe\,\href{\VAR{cv.basics.websiteUrl}}{\VAR{cv.basics.website | latex}}%
 \barsep%
 \faLinkedin\,\href{\VAR{cv.basics.linkedinUrl}}{\VAR{cv.basics.linkedin | latex}}%
 \barsep%
-\faGithub\,\href{\VAR{cv.basics.githubUrl}}{\VAR{cv.basics.github | latex}}\\[2pt]
+\faGithub\,\href{\VAR{cv.basics.githubUrl}}{\VAR{cv.basics.github | latex}}\\[3pt]
 \VAR{labels.dobAbbr | latex}\,\VAR{cv.basics.birthday | latex}%
 \barsep%
 \VAR{labels.licAbbr | latex}\,\VAR{cv.basics.drivingLicense | latex}%
@@ -88,36 +108,34 @@
 \VAR{labels.statusAbbr | latex}\,\VAR{cv.basics.status | latex}
 }
 
-\vspace{8pt}
-
 % ======================================================================
 % SUMMARY
 % ======================================================================
-\section*{\VAR{labels.summary | latex}}
+\cvsection{\VAR{labels.summary | upper | latex}}
 \VAR{cv.basics.printSummary | latex}
 
 % ======================================================================
 % EXPERIENCE
 % ======================================================================
-\section*{\VAR{labels.experience | latex}}
+\cvsection{\VAR{labels.experience | upper | latex}}
 
 \BLOCK{ for item in cv.experience }
 \needspace{4\baselineskip}%
 \noindent\textbf{\VAR{item.role | latex}}\rowdates{\VAR{item.period | latex}}\\
-{\itshape\BLOCK{ if item.link }\href{\VAR{item.link}}{\VAR{item.company | latex}\extarrow}\BLOCK{ else }\VAR{item.company | latex}\BLOCK{ endif }}\rowdates{\VAR{item.location | latex}}\\[1pt]
-{\small \VAR{item.description | latex}}\\[5pt]
+{\itshape\BLOCK{ if item.link }\href{\VAR{item.link}}{\VAR{item.company | latex}\extarrow}\BLOCK{ else }\VAR{item.company | latex}\BLOCK{ endif }}\rowdates{\VAR{item.location | latex}}\\[2pt]
+{\small \VAR{item.description | latex}}\\[8pt]
 \BLOCK{ endfor }
 
 % ======================================================================
 % PROJECTS
 % ======================================================================
-\section*{\VAR{labels.projects | latex}}
+\cvsection{\VAR{labels.projects | upper | latex}}
 
 \BLOCK{ for proj in cv.projects }
 \needspace{4\baselineskip}%
 \noindent\textbf{\VAR{proj.title | latex}}\rowdates{\VAR{proj.period | latex}}\\
-{\itshape \VAR{proj.subtitle | latex}}\\[1pt]
-{\small \VAR{proj.description | latex}}\\[1pt]
+{\itshape \VAR{proj.subtitle | latex}}\\[2pt]
+{\small \VAR{proj.description | latex}}\\[2pt]
 {\ttfamily\footnotesize \VAR{proj.tags | latex_bullets}}%
 \BLOCK{ if proj.links }\hfill{\footnotesize%
 \BLOCK{ for link in proj.links }\href{\VAR{link.url}}{%
@@ -127,52 +145,52 @@
 \BLOCK{ else }{\ttfamily \VAR{link.label | latex}}\,{\tiny\faExternalLink}%
 \BLOCK{ endif }%
 }\BLOCK{ if not loop.last }\hspace{8pt}\BLOCK{ endif }\BLOCK{ endfor }%
-}\BLOCK{ endif }\\[5pt]
+}\BLOCK{ endif }\\[8pt]
 \BLOCK{ endfor }
 
 % ======================================================================
 % EDUCATION
 % ======================================================================
-\section*{\VAR{labels.education | latex}}
+\cvsection{\VAR{labels.education | upper | latex}}
 
 \BLOCK{ for edu in cv.education }
 \needspace{3\baselineskip}%
 \noindent\textbf{\VAR{edu.degree | latex}}\rowdates{\VAR{edu.period | latex}}\\
 {\itshape \VAR{edu.school | latex}}\BLOCK{ if edu.gpa }\rowdates{\VAR{labels.gpa | latex} \VAR{edu.gpa | latex}}\BLOCK{ endif }\\
 \BLOCK{ if edu.note }{\small\itshape \VAR{edu.note | latex}}\\\BLOCK{ endif }
-\vspace{4pt}
+\vspace{6pt}
 \BLOCK{ endfor }
 
 % ======================================================================
 % AWARDS
 % ======================================================================
-\section*{\VAR{labels.awards | latex}}
+\cvsection{\VAR{labels.awards | upper | latex}}
 
 \BLOCK{ for award in cv.awards }
 \needspace{3\baselineskip}%
 \noindent\textbf{\VAR{award.title | latex}}\BLOCK{ if award.period }\rowdates{\VAR{award.period | latex}}\BLOCK{ endif }\\
-{\itshape \VAR{award.issuer | latex}}\\[1pt]
-{\small \VAR{award.summary | latex}}\\[4pt]
+{\itshape \VAR{award.issuer | latex}}\\[2pt]
+{\small \VAR{award.summary | latex}}\\[6pt]
 \BLOCK{ endfor }
 
 % ======================================================================
 % COURSES
 % ======================================================================
-\section*{\VAR{labels.courses | latex}}
+\cvsection{\VAR{labels.courses | upper | latex}}
 
 \BLOCK{ for c in cv.courses }
 \needspace{3\baselineskip}%
 \noindent\textbf{\BLOCK{ if c.url }\href{\VAR{c.url}}{\VAR{c.title | latex}\extarrow}\BLOCK{ else }\VAR{c.title | latex}\BLOCK{ endif }}\rowdates{\VAR{c.issuer | latex}}\\
-{\small \VAR{c.summary | latex}}\\[4pt]
+{\small \VAR{c.summary | latex}}\\[6pt]
 \BLOCK{ endfor }
 
 % ======================================================================
 % SKILLS
 % ======================================================================
-\section*{\VAR{labels.skills | latex}}
+\cvsection{\VAR{labels.skills | upper | latex}}
 
 \BLOCK{ for category, items in cv.skills.items() }
-\noindent{\ttfamily\bfseries\small\MakeUppercase{\VAR{category | latex}}}\hspace{6pt}{\small \VAR{items | latex_bullets}}\\[2pt]
+\noindent{\ttfamily\bfseries\small \VAR{category | upper | latex}}\hspace{6pt}{\small \VAR{items | latex_bullets}}\\[4pt]
 \BLOCK{ endfor }
 
 \vspace{2pt}
@@ -180,25 +198,23 @@
 % ======================================================================
 % LANGUAGES
 % ======================================================================
-\section*{\VAR{labels.languages | latex}}
+\cvsection{\VAR{labels.languages | upper | latex}}
 
 \noindent\BLOCK{ for lang in cv.languages }\textbf{\VAR{lang.name | latex}} {\small (\textit{\VAR{lang.level | latex}})}\BLOCK{ if not loop.last }\hspace{18pt}\BLOCK{ endif }\BLOCK{ endfor }
-
-\vspace{6pt}
 
 % ======================================================================
 % INTERESTS
 % ======================================================================
-\section*{\VAR{labels.interests | latex}}
+\cvsection{\VAR{labels.interests | upper | latex}}
 
 \noindent\BLOCK{ for i in cv.interests }\textbf{\VAR{i.title | latex}} {\small \textperiodcentered{} \VAR{i.desc | latex}}\BLOCK{ if not loop.last }\hspace{14pt}\BLOCK{ endif }\BLOCK{ endfor }
 
-\vspace{10pt}
+\vspace{14pt}
 
 % ======================================================================
 % FOOTER
 % ======================================================================
-\noindent\rule{\linewidth}{0.8pt}\\[3pt]
+\noindent\rule{\linewidth}{0.8pt}\\[4pt]
 {\centering\ttfamily\footnotesize \VAR{cv.basics.footerNote | latex}\par}
 
 \end{document}
