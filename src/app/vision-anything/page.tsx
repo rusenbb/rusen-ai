@@ -2,12 +2,56 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { DEMO_IMAGES } from "@/lib/demoImages";
 import { useVisionClassifier, type VisionResult } from "./hooks/useVisionClassifier";
+import { useClipSeg, type AttentionMask } from "./hooks/useClipSeg";
 
-const PRESET_LABELS = ["a photo of a cat", "a photo of a dog", "a photo of a bird", "a photo of a person"];
+const PRESET_LABELS = [
+  "a photo of a cat",
+  "a photo of a dog",
+  "a photo of a bird",
+  "a photo of a person",
+  "a photo of food",
+  "a photo of a car",
+  "a photo of a building",
+  "a photo of a flower",
+];
+
+function AttentionOverlay({ mask }: { mask: AttentionMask }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    canvas.width = mask.width;
+    canvas.height = mask.height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const img = ctx.createImageData(mask.width, mask.height);
+    for (let i = 0; i < mask.data.length; i++) {
+      const v = mask.data[i];
+      const j = i * 4;
+      // Cyan glow → magenta peak gradient.
+      img.data[j] = Math.round(34 + v * 222);
+      img.data[j + 1] = Math.round(211 - v * 100);
+      img.data[j + 2] = Math.round(238 - v * 60);
+      img.data[j + 3] = Math.round(v * v * 230);
+    }
+    ctx.putImageData(img, 0, 0);
+  }, [mask]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full pointer-events-none"
+      style={{ mixBlendMode: "screen" }}
+    />
+  );
+}
 
 export default function VisionAnythingPage() {
   const { isLoading, isModelReady, loadProgress, status, error, classify } = useVisionClassifier();
+  const clipSeg = useClipSeg();
 
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [labels, setLabels] = useState<string[]>(PRESET_LABELS);
@@ -15,6 +59,9 @@ export default function VisionAnythingPage() {
   const [results, setResults] = useState<VisionResult[] | null>(null);
   const [isClassifying, setIsClassifying] = useState(false);
   const [classifyError, setClassifyError] = useState<string | null>(null);
+  const [attentionMask, setAttentionMask] = useState<AttentionMask | null>(null);
+  const [attentionLabel, setAttentionLabel] = useState<string | null>(null);
+  const [attentionBusy, setAttentionBusy] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Revoke object URLs to avoid memory leaks
@@ -26,13 +73,38 @@ export default function VisionAnythingPage() {
     };
   }, [imageUrl]);
 
-  const handleFile = useCallback((file: File) => {
-    if (!file.type.startsWith("image/")) return;
-    const url = URL.createObjectURL(file);
-    setImageUrl(url);
-    setResults(null);
-    setClassifyError(null);
+  const clearAttention = useCallback(() => {
+    setAttentionMask(null);
+    setAttentionLabel(null);
   }, []);
+
+  const handleFile = useCallback(
+    (file: File) => {
+      if (!file.type.startsWith("image/")) return;
+      const url = URL.createObjectURL(file);
+      setImageUrl(url);
+      setResults(null);
+      setClassifyError(null);
+      clearAttention();
+      // Reset suggested labels back to preset when uploading something new.
+      setLabels(PRESET_LABELS);
+    },
+    [clearAttention],
+  );
+
+  const pickSampleImage = useCallback(
+    (url: string) => {
+      setImageUrl(url);
+      setResults(null);
+      setClassifyError(null);
+      clearAttention();
+      const sample = DEMO_IMAGES.find((d) => d.url === url);
+      if (sample?.suggestedLabels) {
+        setLabels(sample.suggestedLabels);
+      }
+    },
+    [clearAttention],
+  );
 
   const handleAddLabel = useCallback(() => {
     const trimmed = labelInput.trim();
@@ -50,6 +122,7 @@ export default function VisionAnythingPage() {
     if (!imageUrl || labels.length < 2) return;
     setIsClassifying(true);
     setClassifyError(null);
+    clearAttention();
     try {
       const out = await classify(imageUrl, labels);
       setResults(out);
@@ -58,7 +131,25 @@ export default function VisionAnythingPage() {
     } finally {
       setIsClassifying(false);
     }
-  }, [imageUrl, labels, classify]);
+  }, [imageUrl, labels, classify, clearAttention]);
+
+  const showAttentionFor = useCallback(
+    async (label: string) => {
+      if (!imageUrl) return;
+      setAttentionBusy(true);
+      setAttentionLabel(label);
+      try {
+        const mask = await clipSeg.segment(imageUrl, label);
+        setAttentionMask(mask);
+      } catch (err) {
+        setClassifyError(err instanceof Error ? err.message : "Attention failed");
+        setAttentionMask(null);
+      } finally {
+        setAttentionBusy(false);
+      }
+    },
+    [imageUrl, clipSeg],
+  );
 
   const top = results?.[0];
   const max = results ? Math.max(...results.map((r) => r.score), 1e-6) : 1;
@@ -71,7 +162,8 @@ export default function VisionAnythingPage() {
         </p>
         <h1 className="text-3xl sm:text-4xl font-bold mb-3">Vision Anything</h1>
         <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 max-w-2xl text-pretty">
-          Drop an image, type the labels you care about, and a CLIP-class model ranks them in your browser. No backend; the model runs via WebAssembly.
+          Drop an image, type the labels you care about, and a CLIP-class model ranks them in your browser.
+          Reveal the attention heatmap to see <em>where</em> the model thinks each label is. No backend.
         </p>
       </div>
 
@@ -92,11 +184,19 @@ export default function VisionAnythingPage() {
           </div>
         )}
         {status === "ready" && (
-          <div className="text-xs font-mono text-green-600 dark:text-green-400">Model ready · {(loadProgress / 1).toFixed(0)}% loaded</div>
+          <div className="text-xs font-mono text-green-600 dark:text-green-400">
+            CLIP ready{clipSeg.status === "ready" && " · CLIPSeg ready"}
+            {clipSeg.status === "loading" && ` · loading attention model… ${clipSeg.progress}%`}
+          </div>
         )}
         {error && (
           <div className="rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-3 text-sm text-red-700 dark:text-red-300">
             {error}
+          </div>
+        )}
+        {clipSeg.error && (
+          <div className="mt-2 rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-3 text-sm text-red-700 dark:text-red-300">
+            Attention model: {clipSeg.error}
           </div>
         )}
       </div>
@@ -132,6 +232,7 @@ export default function VisionAnythingPage() {
                 <span className="mt-1 text-xs text-neutral-400">PNG · JPG · WebP</span>
               </div>
             )}
+            {imageUrl && attentionMask && <AttentionOverlay mask={attentionMask} />}
             <input
               id="vision-file"
               ref={fileInputRef}
@@ -144,18 +245,67 @@ export default function VisionAnythingPage() {
               }}
             />
           </label>
+
+          {/* Sample images */}
+          <div>
+            <h3 className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500 dark:text-neutral-400">
+              Try a sample
+            </h3>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {DEMO_IMAGES.map((img) => {
+                const isActive = imageUrl === img.url;
+                return (
+                  <button
+                    key={img.url}
+                    onClick={() => pickSampleImage(img.url)}
+                    className={`shrink-0 overflow-hidden rounded-lg border-2 transition-all ${
+                      isActive
+                        ? "border-cyan-500 ring-2 ring-cyan-500/20"
+                        : "border-transparent hover:border-neutral-300 dark:hover:border-neutral-600"
+                    }`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={img.url}
+                      alt={img.alt}
+                      className="h-14 w-20 object-cover sm:h-16 sm:w-24"
+                      loading="lazy"
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {imageUrl && (
-            <button
-              type="button"
-              onClick={() => {
-                setImageUrl(null);
-                setResults(null);
-                if (fileInputRef.current) fileInputRef.current.value = "";
-              }}
-              className="text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200 underline underline-offset-2"
-            >
-              Clear image
-            </button>
+            <div className="flex items-center gap-3 text-xs">
+              <button
+                type="button"
+                onClick={() => {
+                  setImageUrl(null);
+                  setResults(null);
+                  clearAttention();
+                  if (fileInputRef.current) fileInputRef.current.value = "";
+                }}
+                className="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200 underline underline-offset-2"
+              >
+                Clear image
+              </button>
+              {attentionMask && (
+                <button
+                  type="button"
+                  onClick={clearAttention}
+                  className="text-cyan-600 dark:text-cyan-400 hover:opacity-80 underline underline-offset-2"
+                >
+                  Hide attention
+                </button>
+              )}
+              {attentionLabel && (
+                <span className="font-mono text-neutral-500">
+                  attending to: {attentionLabel}
+                </span>
+              )}
+            </div>
           )}
         </div>
 
@@ -224,31 +374,73 @@ export default function VisionAnythingPage() {
           )}
 
           {results && results.length > 0 && (
-            <div className="space-y-2">
-              <h2 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">
-                Results
+            <div className="space-y-3">
+              <div className="flex items-baseline justify-between gap-3">
+                <h2 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">
+                  Results
+                  {top && (
+                    <span className="ml-2 text-xs font-mono text-neutral-500">
+                      best: {top.label} ({(top.score * 100).toFixed(1)}%)
+                    </span>
+                  )}
+                </h2>
                 {top && (
-                  <span className="ml-2 text-xs font-mono text-neutral-500">
-                    best: {top.label} ({(top.score * 100).toFixed(1)}%)
-                  </span>
+                  <button
+                    type="button"
+                    onClick={() => showAttentionFor(top.label)}
+                    disabled={attentionBusy}
+                    className="text-[11px] font-mono uppercase tracking-[0.18em] text-cyan-600 dark:text-cyan-400 hover:opacity-80 disabled:opacity-50"
+                  >
+                    {attentionBusy
+                      ? `Computing… ${clipSeg.progress}%`
+                      : attentionLabel === top.label
+                        ? "↻ Refresh attention"
+                        : "↗ Show attention"}
+                  </button>
                 )}
-              </h2>
+              </div>
+              <p className="text-[11px] text-neutral-500">
+                Click any label below to see its heatmap. The first time, an extra ~140 MB
+                model is downloaded.
+              </p>
               <ul className="space-y-1.5">
                 {results.map((r) => {
                   const pct = (r.score / max) * 100;
                   const isTop = r === top;
+                  const isActive = attentionLabel === r.label;
                   return (
                     <li key={r.label} className="space-y-1">
-                      <div className="flex items-baseline justify-between text-xs font-mono">
-                        <span className={isTop ? "text-cyan-600 dark:text-cyan-400 font-semibold" : "text-neutral-700 dark:text-neutral-300"}>{r.label}</span>
-                        <span className="text-neutral-500 tabular-nums">{(r.score * 100).toFixed(2)}%</span>
-                      </div>
-                      <div className="h-1.5 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full transition-all ${isTop ? "bg-cyan-500" : "bg-neutral-400 dark:bg-neutral-600"}`}
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => showAttentionFor(r.label)}
+                        disabled={attentionBusy}
+                        className="w-full text-left group disabled:opacity-60"
+                      >
+                        <div className="flex items-baseline justify-between text-xs font-mono">
+                          <span
+                            className={
+                              isActive
+                                ? "text-cyan-600 dark:text-cyan-400 font-semibold underline underline-offset-2"
+                                : isTop
+                                  ? "text-cyan-600 dark:text-cyan-400 font-semibold"
+                                  : "text-neutral-700 dark:text-neutral-300 group-hover:text-cyan-500"
+                            }
+                          >
+                            {r.label}
+                          </span>
+                          <span className="text-neutral-500 tabular-nums">
+                            {(r.score * 100).toFixed(2)}%
+                          </span>
+                        </div>
+                        <div className="h-1.5 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full transition-all ${
+                              isTop ? "bg-cyan-500" : "bg-neutral-400 dark:bg-neutral-600"
+                            }`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </button>
                     </li>
                   );
                 })}
@@ -256,6 +448,15 @@ export default function VisionAnythingPage() {
             </div>
           )}
         </div>
+      </div>
+
+      <div className="mt-10 text-xs text-neutral-500 leading-relaxed max-w-3xl">
+        <p>
+          Classification uses <code className="font-mono text-[11px]">clip-vit-base-patch16</code>{" "}
+          (~150 MB). The attention heatmap uses <code className="font-mono text-[11px]">clipseg-rd64-refined</code>{" "}
+          (~140 MB), a CLIP-derived model that produces a low-resolution probability mask given a text prompt.
+          Both run via WebAssembly and cache after the first load.
+        </p>
       </div>
     </div>
   );
