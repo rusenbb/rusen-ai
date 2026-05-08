@@ -129,7 +129,7 @@ export const PROJECTS: ProjectMeta[] = [
     summary:
       "Simple rules, complex behavior. An interactive essay on cellular automata, synchrony, segregation, highways, and critical cascades.",
     description:
-      "A guided, interactive exploration of emergence through six systems: Elementary CA, Game of Life, firefly synchronization, Schelling's Segregation, Langton's Ant, and self-organized criticality.",
+      "A guided, interactive exploration of emergence through six systems: Elementary CA, Game of Life, firefly synchronization, Schelling's Segregation, Langton's Ant, and Flocking.",
     tags: ["Emergence", "Interactive Essay", "Simulation"],
     domains: ["Computational Tools"],
     capabilities: ["Simulation", "Visualization"],
@@ -266,19 +266,19 @@ export const PROJECTS: ProjectMeta[] = [
     order: 60,
   },
   {
-    id: "word-sense-atlas",
-    title: "Word Sense Atlas",
-    slug: "word-sense-atlas",
+    id: "sentence-surgeon",
+    title: "Sentence Surgeon",
+    slug: "sentence-surgeon",
     collection: "nerdy-stuff",
     status: "live",
     summary:
-      "Pick a polysemous word. Sentences using it get embedded and projected to 2D in your browser; clusters reveal each sense without ever being told.",
+      "Click any word to remove it. A small BERT predicts what should fill the gap, ranked with probabilities. Click a prediction to graft it in.",
     description:
-      "Visualises word polysemy by embedding example sentences with mxbai-embed-xsmall and projecting via UMAP, all in the browser.",
-    tags: ["NLP", "Embeddings", "UMAP", "Polysemy"],
+      "Masked-language-model playground using DistilBERT in the browser; mask a word, see top-K predictions, graft them into the sentence.",
+    tags: ["NLP", "BERT", "Masked LM", "Interactive"],
     domains: ["NLP"],
-    capabilities: ["Visualization", "Semantics"],
-    tech: ["mxbai-embed-xsmall", "UMAP", "Transformers.js", "WASM"],
+    capabilities: ["Inference", "Visualization"],
+    tech: ["DistilBERT", "Transformers.js", "WASM"],
     order: 22,
     featuredHome: true,
   },
