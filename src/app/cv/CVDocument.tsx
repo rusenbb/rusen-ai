@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import {
   type CVData,
   type CVLabels,
@@ -11,11 +14,36 @@ type CVDocumentProps = {
   cv: CVData;
   labels: CVLabels;
   locale: CVLocale;
-  /** PDF/TEX file basenames (no extension). EN -> "cv", TR -> "cv.tr". */
+  /** PDF/TEX file basenames (no extension). EN -> "cv", TR -> "cv.tr", JA -> "cv.ja". */
   outputBase: string;
 };
 
+type OpenMenu = "language" | "download" | null;
+
 export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumentProps) {
+  const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
+  const menusRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!openMenu) return;
+    const onPointer = (e: MouseEvent) => {
+      if (!menusRef.current) return;
+      if (!menusRef.current.contains(e.target as Node)) setOpenMenu(null);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpenMenu(null);
+    };
+    document.addEventListener("mousedown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [openMenu]);
+
+  const currentLocale = SUPPORTED_CV_LOCALES.find((l) => l.locale === locale);
+  const showDownload = currentLocale?.hasPdf ?? true;
+
   return (
     <div className={styles.container}>
       <div className={styles.gridBg} />
@@ -54,7 +82,7 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
           <p>{cv.basics.summary}</p>
         </div>
 
-        <div className={styles.heroLinks}>
+        <div className={styles.heroLinks} ref={menusRef}>
           {cv.heroLinks.map((link) => (
             <a
               key={link.label}
@@ -66,26 +94,82 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
               <span className={styles.linkArrow}>→</span> {link.label.toUpperCase()}
             </a>
           ))}
-          <a href={`/${outputBase}.pdf`} download className={styles.printBtn}>
-            <span className={styles.linkArrow}>↓</span>
-            {labels.pdf}
-          </a>
-          <a href={`/${outputBase}.tex`} download className={styles.printBtn}>
-            <span className={styles.linkArrow}>↓</span>
-            {labels.tex}
-          </a>
-          <span className={styles.localeSwitch} aria-label="Language">
-            {SUPPORTED_CV_LOCALES.map((opt) => (
-              <Link
-                key={opt.locale}
-                href={opt.href}
-                className={`${styles.localeBtn} ${opt.locale === locale ? styles.localeBtnActive : ""}`}
-                aria-current={opt.locale === locale ? "page" : undefined}
+
+          {/* Download dropdown (PDF / TeX) — hidden for locales without artifacts. */}
+          {showDownload && (
+            <div className={styles.dropdown}>
+              <button
+                type="button"
+                className={`${styles.printBtn} ${styles.dropdownTrigger}`}
+                aria-haspopup="menu"
+                aria-expanded={openMenu === "download"}
+                onClick={() =>
+                  setOpenMenu((cur) => (cur === "download" ? null : "download"))
+                }
               >
-                {opt.label}
-              </Link>
-            ))}
-          </span>
+                <span className={styles.linkArrow}>↓</span>
+                {labels.download}
+                <span className={styles.dropdownCaret}>{openMenu === "download" ? "▴" : "▾"}</span>
+              </button>
+              {openMenu === "download" && (
+                <div className={styles.dropdownPanel} role="menu">
+                  <a
+                    href={`/${outputBase}.pdf`}
+                    download
+                    className={styles.dropdownItem}
+                    role="menuitem"
+                    onClick={() => setOpenMenu(null)}
+                  >
+                    <span>{labels.pdf}</span>
+                  </a>
+                  <a
+                    href={`/${outputBase}.tex`}
+                    download
+                    className={styles.dropdownItem}
+                    role="menuitem"
+                    onClick={() => setOpenMenu(null)}
+                  >
+                    <span>{labels.tex}</span>
+                  </a>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Language dropdown */}
+          <div className={`${styles.dropdown} ${styles.langDropdown}`}>
+            <button
+              type="button"
+              className={`${styles.localeBtn} ${styles.dropdownTrigger}`}
+              aria-haspopup="menu"
+              aria-expanded={openMenu === "language"}
+              onClick={() =>
+                setOpenMenu((cur) => (cur === "language" ? null : "language"))
+              }
+              aria-label={labels.language}
+            >
+              {currentLocale?.label ?? labels.language}
+              <span className={styles.dropdownCaret}>{openMenu === "language" ? "▴" : "▾"}</span>
+            </button>
+            {openMenu === "language" && (
+              <div className={styles.dropdownPanel} role="menu">
+                {SUPPORTED_CV_LOCALES.map((opt) => (
+                  <Link
+                    key={opt.locale}
+                    href={opt.href}
+                    className={`${styles.dropdownItem} ${
+                      opt.locale === locale ? styles.dropdownItemActive : ""
+                    }`}
+                    role="menuitem"
+                    aria-current={opt.locale === locale ? "page" : undefined}
+                    onClick={() => setOpenMenu(null)}
+                  >
+                    {opt.label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </header>
 

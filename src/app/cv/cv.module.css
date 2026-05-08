@@ -263,6 +263,97 @@
 }
 
 /* ========================================
+   DROPDOWN MENUS (Language / Download)
+   ======================================== */
+
+.dropdown {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 120px;
+  border-right: var(--border-thick) solid var(--cborder);
+}
+
+.dropdown:last-child {
+  border-right: none;
+}
+
+/* Lang dropdown matches the old localeSwitch slot: tight, border-left, no flex */
+.langDropdown {
+  flex: 0 0 auto;
+  min-width: auto;
+  border-left: var(--border-thick) solid var(--cborder);
+}
+
+/* Trigger reuses the existing button styles but the wrapper owns the border. */
+.dropdownTrigger {
+  flex: 1;
+  border-right: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.dropdownCaret {
+  font-size: 0.65rem;
+  opacity: 0.65;
+}
+
+.dropdownPanel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  background: var(--cbg);
+  border: var(--border-thick) solid var(--cborder);
+  border-top: none;
+  min-width: 100%;
+  box-shadow: 0 6px 0 0 rgba(0, 0, 0, 0.08);
+}
+
+.langDropdown .dropdownPanel {
+  /* Right-anchor so the panel doesn't overflow the small trigger. */
+  left: auto;
+  right: 0;
+  min-width: 8rem;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.85rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--ctext);
+  background: var(--cbg);
+  text-decoration: none;
+  border-bottom: 1px solid var(--cborder);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dropdownItem:last-child {
+  border-bottom: none;
+}
+
+.dropdownItem:hover {
+  background: var(--cborder);
+  color: var(--cbg);
+}
+
+.dropdownItemActive {
+  background: var(--cborder);
+  color: var(--cbg);
+}
+
+/* ========================================
    SECTION HEADERS
    ======================================== */
 

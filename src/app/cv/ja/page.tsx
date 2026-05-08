@@ -3,10 +3,10 @@ import { getCvData, getCvLabels } from "@/lib/cv";
 import CVDocument from "../CVDocument";
 
 export const metadata: Metadata = {
-  title: "Özgeçmiş | Rusen.ai",
-  description: "Rusen Birben'in özgeçmişi — Yapay Zeka ve Veri Mühendisi.",
+  title: "履歴書 | Rusen.ai",
+  description: "Rusen Birben の履歴書 — AI・データエンジニア。",
   alternates: {
-    canonical: "/cv/tr",
+    canonical: "/cv/ja",
     languages: {
       en: "/cv",
       tr: "/cv/tr",
@@ -15,13 +15,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function CVPageTr() {
+export default function CVPageJa() {
   return (
     <CVDocument
-      cv={getCvData("tr")}
-      labels={getCvLabels("tr")}
-      locale="tr"
-      outputBase="cv.tr"
+      cv={getCvData("ja")}
+      labels={getCvLabels("ja")}
+      locale="ja"
+      outputBase="cv.ja"
     />
   );
 }

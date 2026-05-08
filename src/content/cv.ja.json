@@ -1,0 +1,187 @@
+{
+  "basics": {
+    "name": "RUŞEN BİRBEN",
+    "role": "AI・データエンジニア",
+    "location": "ANKARA, TR",
+    "locationLong": "アンカラ、トルコ",
+    "status": "対応可能",
+    "email": "contact@rusen.ai",
+    "birthday": "26/08/2002",
+    "drivingLicense": "B",
+    "website": "rusen.ai",
+    "websiteUrl": "https://rusen.ai",
+    "linkedin": "linkedin.com/in/rusenbirben",
+    "linkedinUrl": "https://linkedin.com/in/rusenbirben",
+    "github": "github.com/rusenbb",
+    "githubUrl": "https://github.com/rusenbb",
+    "summary": "イスタンブール工科大学・人工知能とデータ工学卒業。NLP、LLM、エージェントAIを用いた知的システムを構築しています。",
+    "printSummary": "イスタンブール工科大学・人工知能とデータ工学卒業。NLP、LLM、エージェントAIアプリケーションに従事。Fiction Studiosの共同創業者として、ビルケント・サイバーパークで博物館・観光客向けのLLM搭載アプリを開発。",
+    "footerNote": "依頼に応じて推薦人を提供 - rusen.ai/cv"
+  },
+  "heroLinks": [
+    {
+      "label": "GitHub",
+      "url": "https://github.com/rusenbb"
+    },
+    {
+      "label": "LinkedIn",
+      "url": "https://linkedin.com/in/rusenbirben"
+    },
+    {
+      "label": "メール",
+      "url": "mailto:contact@rusen.ai"
+    }
+  ],
+  "experience": [
+    {
+      "role": "大学院研究員",
+      "company": "中東工科大学 応用NLPグループ",
+      "period": "04/2026 - 現在",
+      "location": "アンカラ、トルコ",
+      "description": "ラボのYouTubeチャンネルMETU NLP Connectを運営しています:専門家インタビュー、LLM・現代NLPの解説、最新論文の紹介を制作。応用NLPグループ(チャール・トラマン助教授指導)の一員として、LLM、生成AI、トルコ語言語技術に取り組んでいます。",
+      "link": "https://nlp.ceng.metu.edu.tr"
+    },
+    {
+      "role": "共同創業者",
+      "company": "Fiction Studios",
+      "period": "10/2025 - 07/2026",
+      "location": "アンカラ、トルコ",
+      "description": "認定トルコ・テクノパークであるビルケント・サイバーパークでAIスタートアップを共同創業。博物館や観光客向けのLLM搭載ガイドアプリを開発。2026年に活動終了。",
+      "link": "https://fictionstudios.ai"
+    },
+    {
+      "role": "ジュニアAIエンジニア",
+      "company": "CyberQuote",
+      "period": "03/2025 - 07/2025",
+      "location": "イスタンブール、トルコ",
+      "description": "Phillip Capital傘下企業向けのAI自動化とエージェントLLM実装。業務および顧客向けプラットフォーム用の知的システムを開発。",
+      "link": "https://cyberquote.com/tk/"
+    },
+    {
+      "role": "NLP研究インターン",
+      "company": "ITU NLP研究室",
+      "period": "07/2024 - 08/2024",
+      "location": "イスタンブール、トルコ",
+      "description": "金融分野におけるLLMの研究:予測、感情分析、ツール利用、推論、RAG実装。",
+      "link": "https://nlp.itu.edu.tr/"
+    },
+    {
+      "role": "AIOps研究インターン",
+      "company": "Havelsan",
+      "period": "08/2024 - 09/2024",
+      "location": "イスタンブール、トルコ",
+      "description": "ソフトウェアログを用いた予測保全のAIOps研究。HDFSログでデモを生成。",
+      "link": "https://havelsan.com/tr"
+    }
+  ],
+  "projects": [
+    {
+      "title": "Tobor",
+      "subtitle": "Amazon倉庫ロボット",
+      "period": "2024 - 2025",
+      "description": "Amazonの物流をシミュレートする自律倉庫ロボット。経路探索、障害物回避、タスクスケジューリング。カスタムYOLOによる人間/貨物の検出。",
+      "tags": ["Python", "ROS2", "YOLO", "ロボティクス"],
+      "links": [
+        { "label": "GH", "url": "https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/Amazon-Warehouse-Robot" },
+        { "label": "YT", "url": "https://youtu.be/h-Jxs_y9kNA" }
+      ]
+    },
+    {
+      "title": "Biting The Bytes",
+      "subtitle": "トルコ語ダイアクリティカル復元",
+      "period": "2024",
+      "description": "T5ベースのTransformerモデルでトルコ語ダイアクリティカルを自動復元。アクセント記号や特殊文字を読みやすさのために自動付加。",
+      "tags": ["NLP", "T5", "Transformers", "トルコ語"],
+      "links": [
+        { "label": "GH", "url": "https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/Biting-The-Bytes" },
+        { "label": "HF", "url": "https://huggingface.co/spaces/rusen/diacritizeTR" }
+      ]
+    },
+    {
+      "title": "AIZheimer",
+      "subtitle": "Stable Diffusionによる機械忘却",
+      "period": "2024",
+      "description": "他の能力を保ちつつStable Diffusion 2.1から特定の概念を選択的に削除。コンテンツモデレーションとAI出力カスタマイズに対応。",
+      "tags": ["Stable Diffusion", "機械忘却", "CV"],
+      "links": [
+        { "label": "GH", "url": "https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/AIzheimer" }
+      ]
+    },
+    {
+      "title": "To-AI-or-Not-to-AI",
+      "subtitle": "GPT検出器",
+      "period": "2023",
+      "description": "3つのファインチューニングモデルを組み合わせたアンサンブル手法でAI生成テキストを検出。学術的誠実性と誤情報問題に対応。",
+      "tags": ["NLP", "アンサンブル", "分類"],
+      "links": [
+        { "label": "GH", "url": "https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/To-AI-or-Not-to-AI" },
+        { "label": "HF", "url": "https://huggingface.co/spaces/rusen/gpt_detector" }
+      ]
+    },
+    {
+      "title": "Anime Recommender",
+      "subtitle": "協調フィルタリング",
+      "period": "2022 - 2023",
+      "description": "協調フィルタリングとコンテンツベース手法を組み合わせたパーソナライズ・アニメ推薦。RMSE: 0.289 / MAE: 0.213。",
+      "tags": ["推薦システム", "行列分解"],
+      "links": [
+        { "label": "GH", "url": "https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/Anime-Recommender" }
+      ]
+    }
+  ],
+  "education": [
+    {
+      "degree": "計算機工学修士課程(論文)",
+      "school": "中東工科大学",
+      "period": "2026 - 現在"
+    },
+    {
+      "degree": "AI・データ工学学士",
+      "school": "イスタンブール工科大学",
+      "period": "2022 - 2025",
+      "gpa": "3.61 / 4.00"
+    },
+    {
+      "degree": "電子・通信工学学士",
+      "school": "イスタンブール工科大学",
+      "period": "2020 - 2022",
+      "note": "AI・データ工学に転編入"
+    }
+  ],
+  "awards": [
+    {
+      "title": "1416 YLSY奨学金 · 修士・博士課程",
+      "issuer": "トルコ国民教育省",
+      "summary": "1929年法律1416号に基づくトルコの旗艦的国費海外留学奨学金。修士・博士課程の学費、生活費、医療、交通、試験費用を支給する代わりに、トルコの大学または公的機関での義務勤務が課される。"
+    }
+  ],
+  "interests": [
+    { "title": "コーヒー", "desc": "V60 - エアロプレス - モカポット", "icon": "☕" },
+    { "title": "読書", "desc": "哲学 - AI/CS - 金融", "icon": "📚" },
+    { "title": "アニメ・漫画", "desc": "視聴 - 読書 - コレクター", "icon": "📺" },
+    { "title": "フィットネス", "desc": "ウェイト - ランニング - 自重トレ", "icon": "💪" }
+  ],
+  "courses": [
+    {
+      "title": "Deep Learning Specialization",
+      "issuer": "Deeplearning.ai · Andrew Ng",
+      "url": "https://coursera.org/share/9c59e9758d378fb8a8b4ab7074dd71ed",
+      "summary": "シーケンスモデル、CNN、ニューラルネットと深層学習の基礎、MLプロジェクトの構造化、深層NNの改善。"
+    },
+    {
+      "title": "AWS Cloud Technical Essentials",
+      "issuer": "AWS · Coursera",
+      "url": "https://coursera.org/share/f8ab2981ab0bbdc3fec17c6e88804ff8",
+      "summary": "AWS基礎、セキュリティ、EC2、Lambda、ECS、RDS、DynamoDB、S3。"
+    }
+  ],
+  "languages": [
+    { "name": "トルコ語", "level": "母語" },
+    { "name": "英語", "level": "流暢 · TOEFL iBT 109" }
+  ],
+  "skills": {
+    "言語": ["Python", "JavaScript/TypeScript", "SQL", "C/C++"],
+    "フレームワーク・ツール": ["PyTorch", "TensorFlow", "ROS2", "YOLO", "Transformers", "Scikit-learn", "Pandas", "NumPy"],
+    "専門分野": ["NLP", "LLM", "コンピュータビジョン", "RAG", "MLOps", "エージェントAI", "データエンジニアリング"]
+  }
+}

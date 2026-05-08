@@ -1,5 +1,6 @@
 import rawCvDataEn from "@/content/cv.json";
 import rawCvDataTr from "@/content/cv.tr.json";
+import rawCvDataJa from "@/content/cv.ja.json";
 
 export type CVLink = {
   label: string;
@@ -93,7 +94,7 @@ export type CVData = {
   skills: CVSkills;
 };
 
-export type CVLocale = "en" | "tr";
+export type CVLocale = "en" | "tr" | "ja";
 
 export type CVLabels = {
   identity: string;
@@ -113,6 +114,9 @@ export type CVLabels = {
   gpa: string;
   /** Footer year string, fully customisable per locale. */
   footerLine: string;
+  /** Trigger labels for the language and download dropdowns. */
+  language: string;
+  download: string;
 };
 
 const LABELS_EN: CVLabels = {
@@ -132,6 +136,8 @@ const LABELS_EN: CVLabels = {
   interests: "INTERESTS",
   gpa: "GPA",
   footerLine: "RUSEN.AI / CV / 2026",
+  language: "LANGUAGE",
+  download: "DOWNLOAD",
 };
 
 const LABELS_TR: CVLabels = {
@@ -151,16 +157,41 @@ const LABELS_TR: CVLabels = {
   interests: "İLGİ ALANLARI",
   gpa: "ORT",
   footerLine: "RUSEN.AI / ÖZGEÇMİŞ / 2026",
+  language: "DİL",
+  download: "İNDİR",
+};
+
+const LABELS_JA: CVLabels = {
+  identity: "プロフィール",
+  loc: "所在地",
+  status: "状況",
+  dob: "生年月日",
+  lic: "免許",
+  pdf: "PDF",
+  tex: "TeX",
+  experience: "職務経歴",
+  projects: "プロジェクト",
+  education: "学歴",
+  awards: "受賞・表彰",
+  courses: "修了コース",
+  languages: "言語",
+  interests: "趣味",
+  gpa: "GPA",
+  footerLine: "RUSEN.AI / 履歴書 / 2026",
+  language: "言語",
+  download: "ダウンロード",
 };
 
 const DATA_BY_LOCALE: Record<CVLocale, CVData> = {
   en: rawCvDataEn as CVData,
   tr: rawCvDataTr as CVData,
+  ja: rawCvDataJa as CVData,
 };
 
 const LABELS_BY_LOCALE: Record<CVLocale, CVLabels> = {
   en: LABELS_EN,
   tr: LABELS_TR,
+  ja: LABELS_JA,
 };
 
 export const cvData = DATA_BY_LOCALE.en;
@@ -173,7 +204,16 @@ export function getCvLabels(locale: CVLocale = "en"): CVLabels {
   return LABELS_BY_LOCALE[locale];
 }
 
-export const SUPPORTED_CV_LOCALES: ReadonlyArray<{ locale: CVLocale; label: string; href: string }> = [
-  { locale: "en", label: "EN", href: "/cv" },
-  { locale: "tr", label: "TR", href: "/cv/tr" },
+/** A locale entry. `hasPdf` gates the download dropdown — Japanese is HTML-only
+ *  for now because the LaTeX template needs CJK fonts (xeCJK + Noto CJK) before
+ *  it can render. */
+export const SUPPORTED_CV_LOCALES: ReadonlyArray<{
+  locale: CVLocale;
+  label: string;
+  href: string;
+  hasPdf: boolean;
+}> = [
+  { locale: "en", label: "EN", href: "/cv", hasPdf: true },
+  { locale: "tr", label: "TR", href: "/cv/tr", hasPdf: true },
+  { locale: "ja", label: "JP", href: "/cv/ja", hasPdf: false },
 ];

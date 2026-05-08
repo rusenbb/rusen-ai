@@ -17,9 +17,12 @@ CLI flags (PDF-only — not reflected in the public HTML CV):
                                  cv.json so the public web CV doesn't expose
                                  it; passed in here for specific recipients.
   --personal-email EMAIL         Inject an additional contact email line.
-  --locale {en,tr}               Pick a locale for content + output filename.
-                                 Default 'en' renders cv.json -> cv.{tex,pdf};
-                                 'tr' renders cv.tr.json -> cv.tr.{tex,pdf}.
+  --locale {en,tr,all}           Pick a locale for content + output filename.
+                                 Default 'all' renders both en and tr.
+
+NOTE: Japanese (ja) lives at /cv/ja as HTML only. Adding a JA PDF requires a
+CJK-aware LaTeX setup (xeCJK + Noto CJK fonts in the build environment) which
+is intentionally out of scope here.
 """
 from __future__ import annotations
 

@@ -10,6 +10,7 @@ export const metadata: Metadata = {
     languages: {
       en: "/cv",
       tr: "/cv/tr",
+      ja: "/cv/ja",
     },
   },
 };
