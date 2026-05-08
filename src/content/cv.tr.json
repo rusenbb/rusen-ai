@@ -1,6 +1,6 @@
 {
   "basics": {
-    "name": "RUSEN BIRBEN",
+    "name": "RUŞEN BİRBEN",
     "role": "Yapay Zeka ve Veri Mühendisi",
     "location": "ANKARA, TR",
     "locationLong": "Ankara, Türkiye",
@@ -177,7 +177,7 @@
   ],
   "languages": [
     { "name": "Türkçe", "level": "Anadil" },
-    { "name": "İngilizce", "level": "Akıcı" }
+    { "name": "İngilizce", "level": "Akıcı · TOEFL iBT 109" }
   ],
   "skills": {
     "Diller": ["Python", "JavaScript/TypeScript", "SQL", "C/C++"],
