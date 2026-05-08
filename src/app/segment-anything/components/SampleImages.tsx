@@ -1,16 +1,8 @@
 "use client";
 
-export interface SampleImage {
-  url: string;
-  alt: string;
-}
+import { DEMO_IMAGES } from "@/lib/demoImages";
 
-export const SAMPLE_IMAGES: SampleImage[] = [
-  { url: "/segment-anything/samples/dog.jpg", alt: "Dog" },
-  { url: "/segment-anything/samples/street.jpg", alt: "Street" },
-  { url: "/segment-anything/samples/kitchen.jpg", alt: "Kitchen" },
-  { url: "/segment-anything/samples/nature.jpg", alt: "Nature" },
-];
+export const SAMPLE_IMAGES = DEMO_IMAGES.map(({ url, alt }) => ({ url, alt }));
 
 interface SampleImagesProps {
   activeUrl: string | null;
