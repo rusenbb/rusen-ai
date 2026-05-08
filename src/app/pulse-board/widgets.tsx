@@ -201,7 +201,7 @@ export const WIDGET_ORDER = [
   "github-activity",
   "rocket-launches",
   "wikipedia-live",
-  "aviation",
+  "space-weather",
   "world-clocks",
   "weather",
   "iss-tracker",
@@ -210,12 +210,6 @@ export const WIDGET_ORDER = [
   "github-trending",
   "hacker-news",
 ] as const;
-
-const AVIATION_REGIONS = {
-  nyc: { name: "New York", bbox: { lamin: 40.4, lomin: -74.5, lamax: 41.0, lomax: -73.5 } },
-  london: { name: "London", bbox: { lamin: 51.2, lomin: -0.6, lamax: 51.7, lomax: 0.4 } },
-  tokyo: { name: "Tokyo", bbox: { lamin: 35.4, lomin: 139.4, lamax: 35.9, lomax: 140.0 } },
-} as const;
 
 function useRelativeTimeTicker(intervalMs = 1000): number {
   const [nowMs, setNowMs] = useState(() => Date.now());
@@ -254,7 +248,7 @@ export function ShortcutsModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
 
   const widgetNames = [
     "Crypto Hub", "GitHub Activity", "Rocket Launches", "Wikipedia Live",
-    "Live Aircraft", "World Clocks", "Weather", "ISS Tracker", "Earthquakes"
+    "Space Weather", "World Clocks", "Weather", "ISS Tracker", "Earthquakes"
   ];
 
   return (
@@ -1159,137 +1153,130 @@ function WikipediaLiveWidget() {
   );
 }
 
-// OpenSky Aviation Widget - Live aircraft near major airports
-function AviationWidget() {
-  const [aircraft, setAircraft] = useState<Array<{
-    icao24: string;
-    callsign: string;
-    origin: string;
-    altitude: number;
-    velocity: number;
-    heading: number;
-  }>>([]);
+// Space Weather Widget - planetary K-index from NOAA SWPC.
+// CORS-friendly, no auth, refreshes every 3 hours upstream.
+function SpaceWeatherWidget() {
+  const [latestKp, setLatestKp] = useState<number | null>(null);
+  const [recent, setRecent] = useState<number[]>([]);
+  const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [region, setRegion] = useState<"nyc" | "london" | "tokyo">(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("pulse-aviation-region");
-      if (saved && ["nyc", "london", "tokyo"].includes(saved)) {
-        return saved as "nyc" | "london" | "tokyo";
-      }
-    }
-    return "nyc";
-  });
 
-  const fetchAircraft = useCallback(async () => {
+  const fetchKp = useCallback(async () => {
     try {
-      const r = AVIATION_REGIONS[region];
       const res = await fetch(
-        `https://opensky-network.org/api/states/all?lamin=${r.bbox.lamin}&lomin=${r.bbox.lomin}&lamax=${r.bbox.lamax}&lomax=${r.bbox.lomax}`
+        "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json",
       );
-
-      if (!res.ok) throw new Error("API rate limited");
-
-      const data = await res.json();
-      if (data.states) {
-        const planes = data.states.slice(0, 6).map((s: (string | number | null)[]) => ({
-          icao24: s[0] as string,
-          callsign: (s[1] as string)?.trim() || "N/A",
-          origin: (s[2] as string) || "??",
-          altitude: Math.round(((s[7] as number) || 0) * 3.281), // meters to feet
-          velocity: Math.round(((s[9] as number) || 0) * 1.944), // m/s to knots
-          heading: Math.round((s[10] as number) || 0),
-        }));
-        setAircraft(planes);
-        setError(null);
-      }
+      if (!res.ok) throw new Error("NOAA fetch failed");
+      const data = (await res.json()) as string[][];
+      // First row is the header. Take the last 8 rows (~24 h at a 3 h cadence).
+      const rows = data.slice(1).slice(-8);
+      if (rows.length === 0) throw new Error("No data");
+      const values = rows.map((r) => parseFloat(r[1])).filter((v) => !Number.isNaN(v));
+      const latest = values[values.length - 1];
+      setLatestKp(latest);
+      setRecent(values);
+      setUpdatedAt(new Date(rows[rows.length - 1][0].replace(" ", "T") + "Z"));
+      setError(null);
     } catch {
-      // Keep any previously-fetched planes on the screen — surface the
-      // rate-limit as a small badge instead of clobbering the whole panel.
-      setError("Rate-limited by OpenSky · showing last fetch");
+      setError("NOAA SWPC unreachable");
     } finally {
       setLoading(false);
     }
-  }, [region]);
+  }, []);
 
   useEffect(() => {
-    fetchAircraft();
-    // 60s poll. OpenSky's anonymous tier is heavily limited; faster
-    // intervals get rejected for the rest of the window.
-    const interval = setInterval(fetchAircraft, 60000);
+    fetchKp();
+    // 5-minute poll; upstream cadence is 3h but a quick poll picks up updates.
+    const interval = setInterval(fetchKp, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [fetchAircraft]);
+  }, [fetchKp]);
 
-  const getHeadingArrow = (heading: number) => {
-    const arrows = ["↑", "↗", "→", "↘", "↓", "↙", "←", "↖"];
-    const index = Math.round(heading / 45) % 8;
-    return arrows[index];
+  const kpInfo = (kp: number) => {
+    if (kp >= 7) return { label: "Severe storm", color: "#a855f7", aurora: "Visible far from poles" };
+    if (kp >= 5) return { label: "Geomagnetic storm", color: "#ef4444", aurora: "Aurora at high latitudes" };
+    if (kp >= 4) return { label: "Active", color: "#f97316", aurora: "Aurora possible at upper latitudes" };
+    if (kp >= 3) return { label: "Unsettled", color: "#eab308", aurora: "Quiet aurora near the poles" };
+    return { label: "Quiet", color: "#22c55e", aurora: "Aurora confined to the poles" };
   };
+
+  const info = latestKp != null ? kpInfo(latestKp) : null;
 
   return (
     <Card>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold flex items-center gap-2">
-          <span className="text-xl">&#9992;</span> Live Aircraft
+          <span className="text-xl">&#127774;</span> Space Weather
         </h2>
         <LiveBadge connected={!loading && !error} />
       </div>
 
-      <select
-        value={region}
-        onChange={(e) => {
-          const newRegion = e.target.value as "nyc" | "london" | "tokyo";
-          setRegion(newRegion);
-          localStorage.setItem("pulse-aviation-region", newRegion);
-          setLoading(true);
-        }}
-        className="w-full mb-4 p-2 border border-neutral-200 dark:border-neutral-700 rounded bg-white dark:bg-neutral-900 text-sm"
-      >
-        {Object.entries(AVIATION_REGIONS).map(([key, val]) => (
-          <option key={key} value={key}>{val.name} Area</option>
-        ))}
-      </select>
-
       {loading ? (
-        <div className="space-y-2">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-6 w-full" />
-          ))}
+        <div className="space-y-3">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="h-3 w-2/3" />
         </div>
-      ) : aircraft.length === 0 ? (
-        error ? (
-          <p className="text-amber-500 text-sm">{error}</p>
-        ) : (
-          <p className="text-neutral-500 text-sm">No aircraft detected</p>
-        )
-      ) : (
-        <div className="space-y-2">
-          {error && (
-            <p className="text-[11px] text-amber-500/80 -mt-1 mb-1">{error}</p>
-          )}
-          {aircraft.map((plane) => (
-            <div key={plane.icao24} className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2">
-                <span className="font-mono font-semibold">{plane.callsign}</span>
-                <span className="text-neutral-400">{plane.origin}</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-neutral-500">
-                <span>{plane.altitude.toLocaleString()}ft</span>
-                <span>{plane.velocity}kts</span>
-                <span>{getHeadingArrow(plane.heading)}</span>
-              </div>
+      ) : error ? (
+        <p className="text-red-500 text-sm">{error}</p>
+      ) : latestKp != null && info ? (
+        <div>
+          <div className="flex items-baseline gap-3 mb-1">
+            <span className="text-3xl font-bold font-mono tabular-nums" style={{ color: info.color }}>
+              Kp {latestKp.toFixed(2)}
+            </span>
+            <span className="text-sm font-mono text-neutral-500">/ 9</span>
+          </div>
+          <div className="text-sm font-medium mb-3" style={{ color: info.color }}>
+            {info.label}
+          </div>
+          {/* 9-segment scale */}
+          <div className="flex gap-0.5 mb-3" aria-label="Kp scale">
+            {Array.from({ length: 9 }).map((_, i) => {
+              const filled = i < Math.round(latestKp);
+              const segColor = filled ? kpInfo(i + 1).color : "rgba(255,255,255,0.08)";
+              return (
+                <div
+                  key={i}
+                  className="h-2 flex-1 rounded-sm"
+                  style={{ background: segColor }}
+                />
+              );
+            })}
+          </div>
+          {/* 24h sparkline */}
+          {recent.length > 1 && (
+            <div className="flex items-end gap-0.5 h-10 mb-3">
+              {recent.map((v, i) => (
+                <div
+                  key={i}
+                  className="flex-1 rounded-sm"
+                  style={{
+                    height: `${(v / 9) * 100}%`,
+                    background: kpInfo(v).color,
+                    opacity: i === recent.length - 1 ? 1 : 0.55,
+                  }}
+                  title={`Kp ${v.toFixed(2)}`}
+                />
+              ))}
             </div>
-          ))}
+          )}
+          <p className="text-xs text-neutral-500">{info.aurora}</p>
+          {updatedAt && (
+            <p className="text-[10px] text-neutral-500 mt-1">
+              Updated {updatedAt.toUTCString().replace("GMT", "UTC")}
+            </p>
+          )}
         </div>
-      )}
+      ) : null}
 
       <a
-        href="https://opensky-network.org"
+        href="https://www.swpc.noaa.gov/products/planetary-k-index"
         target="_blank"
         rel="noopener noreferrer"
         className="text-xs text-neutral-500 hover:underline mt-3 inline-block"
       >
-        OpenSky Network &#8594;
+        NOAA Space Weather &#8594;
       </a>
     </Card>
   );
@@ -1811,7 +1798,7 @@ export const PULSE_WIDGETS = [
   { id: "github-activity", component: <GitHubActivityWidget /> },
   { id: "rocket-launches", component: <RocketLaunchesWidget /> },
   { id: "wikipedia-live", component: <WikipediaLiveWidget /> },
-  { id: "aviation", component: <AviationWidget /> },
+  { id: "space-weather", component: <SpaceWeatherWidget /> },
   { id: "world-clocks", component: <WorldClocksWidget /> },
   { id: "weather", component: <WeatherWidget /> },
   { id: "iss-tracker", component: <ISSTrackerWidget /> },
