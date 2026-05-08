@@ -51,4 +51,44 @@ export const DEMO_IMAGES: DemoImage[] = [
       "a photo of a lake",
     ],
   },
+  {
+    url: "/demo-images/beach.jpg",
+    alt: "Beach",
+    suggestedLabels: [
+      "a photo of the ocean",
+      "a photo of a mountain",
+      "a photo of a sunset",
+      "a photo of sand",
+    ],
+  },
+  {
+    url: "/demo-images/food.jpg",
+    alt: "Food",
+    suggestedLabels: [
+      "a photo of food",
+      "a photo of vegetables",
+      "a photo of a meal",
+      "a photo of a kitchen",
+    ],
+  },
+  {
+    url: "/demo-images/portrait.jpg",
+    alt: "Portrait",
+    suggestedLabels: [
+      "a portrait of a person",
+      "a black and white photo",
+      "a photo of someone smiling",
+      "a photo of a face",
+    ],
+  },
+  {
+    url: "/demo-images/city.jpg",
+    alt: "City",
+    suggestedLabels: [
+      "a photo of a city skyline",
+      "a photo of a building",
+      "a photo of a bridge",
+      "a photo of a sky",
+    ],
+  },
 ];

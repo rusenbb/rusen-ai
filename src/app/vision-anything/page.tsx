@@ -5,6 +5,8 @@ import Image from "next/image";
 import { DEMO_IMAGES } from "@/lib/demoImages";
 import { useVisionClassifier, type VisionResult } from "./hooks/useVisionClassifier";
 import { useClipSeg, type AttentionMask } from "./hooks/useClipSeg";
+import HeatmapCanvas from "./components/HeatmapCanvas";
+import FullAttentionPanel from "./components/FullAttentionPanel";
 
 const PRESET_LABELS = [
   "a photo of a cat",
@@ -16,38 +18,6 @@ const PRESET_LABELS = [
   "a photo of a building",
   "a photo of a flower",
 ];
-
-function AttentionOverlay({ mask }: { mask: AttentionMask }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    canvas.width = mask.width;
-    canvas.height = mask.height;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    const img = ctx.createImageData(mask.width, mask.height);
-    for (let i = 0; i < mask.data.length; i++) {
-      const v = mask.data[i];
-      const j = i * 4;
-      // Cyan glow → magenta peak gradient.
-      img.data[j] = Math.round(34 + v * 222);
-      img.data[j + 1] = Math.round(211 - v * 100);
-      img.data[j + 2] = Math.round(238 - v * 60);
-      img.data[j + 3] = Math.round(v * v * 230);
-    }
-    ctx.putImageData(img, 0, 0);
-  }, [mask]);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      className="absolute inset-0 w-full h-full pointer-events-none"
-      style={{ mixBlendMode: "screen" }}
-    />
-  );
-}
 
 export default function VisionAnythingPage() {
   const { isLoading, isModelReady, loadProgress, status, error, classify } = useVisionClassifier();
@@ -62,6 +32,7 @@ export default function VisionAnythingPage() {
   const [attentionMask, setAttentionMask] = useState<AttentionMask | null>(null);
   const [attentionLabel, setAttentionLabel] = useState<string | null>(null);
   const [attentionBusy, setAttentionBusy] = useState(false);
+  const [fullAttention, setFullAttention] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Revoke object URLs to avoid memory leaks
@@ -76,6 +47,7 @@ export default function VisionAnythingPage() {
   const clearAttention = useCallback(() => {
     setAttentionMask(null);
     setAttentionLabel(null);
+    setFullAttention(false);
   }, []);
 
   const handleFile = useCallback(
@@ -163,7 +135,7 @@ export default function VisionAnythingPage() {
         <h1 className="text-3xl sm:text-4xl font-bold mb-3">Vision Anything</h1>
         <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 max-w-2xl text-pretty">
           Drop an image, type the labels you care about, and a CLIP-class model ranks them in your browser.
-          Reveal the attention heatmap to see <em>where</em> the model thinks each label is. No backend.
+          Then enter <em>full attention</em> to inspect each label&apos;s per-pixel relevance map. No backend.
         </p>
       </div>
 
@@ -201,6 +173,17 @@ export default function VisionAnythingPage() {
         )}
       </div>
 
+      {/* Full attention panel — when active, takes over above the regular layout. */}
+      {fullAttention && imageUrl && results && results.length >= 1 && (
+        <FullAttentionPanel
+          imageUrl={imageUrl}
+          labels={results.map((r) => r.label)}
+          initialLabel={attentionLabel ?? results[0].label}
+          clipSeg={clipSeg}
+          onClose={() => setFullAttention(false)}
+        />
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left: image */}
         <div className="space-y-3">
@@ -232,7 +215,9 @@ export default function VisionAnythingPage() {
                 <span className="mt-1 text-xs text-neutral-400">PNG · JPG · WebP</span>
               </div>
             )}
-            {imageUrl && attentionMask && <AttentionOverlay mask={attentionMask} />}
+            {imageUrl && attentionMask && !fullAttention && (
+              <HeatmapCanvas mask={attentionMask} palette="cyan" blend="screen" />
+            )}
             <input
               id="vision-file"
               ref={fileInputRef}
@@ -278,7 +263,7 @@ export default function VisionAnythingPage() {
           </div>
 
           {imageUrl && (
-            <div className="flex items-center gap-3 text-xs">
+            <div className="flex items-center gap-3 text-xs flex-wrap">
               <button
                 type="button"
                 onClick={() => {
@@ -291,16 +276,19 @@ export default function VisionAnythingPage() {
               >
                 Clear image
               </button>
-              {attentionMask && (
+              {attentionMask && !fullAttention && (
                 <button
                   type="button"
-                  onClick={clearAttention}
+                  onClick={() => {
+                    setAttentionMask(null);
+                    setAttentionLabel(null);
+                  }}
                   className="text-cyan-600 dark:text-cyan-400 hover:opacity-80 underline underline-offset-2"
                 >
                   Hide attention
                 </button>
               )}
-              {attentionLabel && (
+              {attentionLabel && !fullAttention && (
                 <span className="font-mono text-neutral-500">
                   attending to: {attentionLabel}
                 </span>
@@ -375,7 +363,7 @@ export default function VisionAnythingPage() {
 
           {results && results.length > 0 && (
             <div className="space-y-3">
-              <div className="flex items-baseline justify-between gap-3">
+              <div className="flex items-baseline justify-between gap-3 flex-wrap">
                 <h2 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">
                   Results
                   {top && (
@@ -384,24 +372,20 @@ export default function VisionAnythingPage() {
                     </span>
                   )}
                 </h2>
-                {top && (
-                  <button
-                    type="button"
-                    onClick={() => showAttentionFor(top.label)}
-                    disabled={attentionBusy}
-                    className="text-[11px] font-mono uppercase tracking-[0.18em] text-cyan-600 dark:text-cyan-400 hover:opacity-80 disabled:opacity-50"
-                  >
-                    {attentionBusy
-                      ? `Computing… ${clipSeg.progress}%`
-                      : attentionLabel === top.label
-                        ? "↻ Refresh attention"
-                        : "↗ Show attention"}
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => setFullAttention(true)}
+                  disabled={fullAttention}
+                  className="text-[11px] font-mono uppercase tracking-[0.18em] text-cyan-600 dark:text-cyan-400 hover:opacity-80 disabled:opacity-50"
+                >
+                  ⛶ Enter full attention
+                </button>
               </div>
               <p className="text-[11px] text-neutral-500">
-                Click any label below to see its heatmap. The first time, an extra ~140 MB
-                model is downloaded.
+                Click any label below to overlay its heatmap on the image, or open
+                <em> full attention </em>
+                for a side-by-side of every label, an averaged saliency map, alpha-controlled
+                inspection, and a heatmap-only view.
               </p>
               <ul className="space-y-1.5">
                 {results.map((r) => {
@@ -427,6 +411,7 @@ export default function VisionAnythingPage() {
                             }
                           >
                             {r.label}
+                            {attentionBusy && isActive && ` · ${clipSeg.progress}%`}
                           </span>
                           <span className="text-neutral-500 tabular-nums">
                             {(r.score * 100).toFixed(2)}%
@@ -453,9 +438,9 @@ export default function VisionAnythingPage() {
       <div className="mt-10 text-xs text-neutral-500 leading-relaxed max-w-3xl">
         <p>
           Classification uses <code className="font-mono text-[11px]">clip-vit-base-patch16</code>{" "}
-          (~150 MB). The attention heatmap uses <code className="font-mono text-[11px]">clipseg-rd64-refined</code>{" "}
-          (~140 MB), a CLIP-derived model that produces a low-resolution probability mask given a text prompt.
-          Both run via WebAssembly and cache after the first load.
+          (~150 MB). The attention map uses <code className="font-mono text-[11px]">clipseg-rd64-refined</code>{" "}
+          (~140 MB), a small Transformer decoder bolted on top of CLIP that turns a text prompt into a
+          per-pixel probability map. Both run via WebAssembly and cache after the first load.
         </p>
       </div>
     </div>

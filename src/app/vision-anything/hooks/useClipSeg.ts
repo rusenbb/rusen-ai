@@ -19,6 +19,25 @@ export interface UseClipSeg {
   error: string | null;
   load: () => Promise<void>;
   segment: (imageUrl: string, label: string) => Promise<AttentionMask>;
+  segmentBatch: (imageUrl: string, labels: string[]) => Promise<AttentionMask[]>;
+}
+
+function sigmoidNormalised(raw: Float32Array, width: number, height: number): AttentionMask {
+  const total = width * height;
+  const mask = new Float32Array(total);
+  let mn = Infinity;
+  let mx = -Infinity;
+  for (let i = 0; i < total; i++) {
+    const v = 1 / (1 + Math.exp(-raw[i]));
+    mask[i] = v;
+    if (v < mn) mn = v;
+    if (v > mx) mx = v;
+  }
+  const range = mx - mn || 1;
+  for (let i = 0; i < total; i++) {
+    mask[i] = (mask[i] - mn) / range;
+  }
+  return { data: mask, width, height };
 }
 
 export function useClipSeg(): UseClipSeg {
@@ -42,9 +61,6 @@ export function useClipSeg(): UseClipSeg {
         const tf = await import("@huggingface/transformers");
         tf.env.allowLocalModels = false;
         tf.env.useBrowserCache = true;
-        // transformers.js's `ProgressCallback` is a discriminated union over
-        // download phases. We only care about the "progress" shape; cast keeps
-        // the call sites tidy.
         const progress_callback = ((p: { progress?: number }) => {
           if (p.progress !== undefined) setProgress(Math.round(p.progress));
         }) as unknown as Parameters<typeof tf.AutoTokenizer.from_pretrained>[1] extends infer O
@@ -75,8 +91,9 @@ export function useClipSeg(): UseClipSeg {
     return initPromise.current;
   }, []);
 
-  const segment = useCallback(
-    async (imageUrl: string, label: string): Promise<AttentionMask> => {
+  const segmentBatch = useCallback(
+    async (imageUrl: string, labels: string[]): Promise<AttentionMask[]> => {
+      if (labels.length === 0) return [];
       if (!modelRef.current || !processorRef.current || !tokenizerRef.current) {
         await load();
       }
@@ -94,41 +111,43 @@ export function useClipSeg(): UseClipSeg {
         throw new Error("Attention model not ready");
       }
       const tf = await import("@huggingface/transformers");
-      const text_inputs = tokenizer([label], { padding: true, truncation: true });
+      const text_inputs = tokenizer(labels, { padding: true, truncation: true });
       const image = await tf.RawImage.read(imageUrl);
       const image_inputs = await processor(image);
       const out = await model({ ...text_inputs, ...image_inputs });
       const dims = out.logits.dims;
+      // Expected: [N, H, W] for N>1 labels, or [H, W] for single-label batches
+      // where the model squeezes the leading 1.
+      let n: number;
       let height: number;
       let width: number;
       if (dims.length === 3) {
-        height = dims[1];
-        width = dims[2];
+        [n, height, width] = dims as [number, number, number];
       } else if (dims.length === 2) {
-        height = dims[0];
-        width = dims[1];
+        n = 1;
+        [height, width] = dims as [number, number];
       } else {
         throw new Error(`Unexpected logits shape: ${dims.join("x")}`);
       }
-      const raw = out.logits.data;
       const total = width * height;
-      const mask = new Float32Array(total);
-      let mn = Infinity;
-      let mx = -Infinity;
-      for (let i = 0; i < total; i++) {
-        const v = 1 / (1 + Math.exp(-raw[i]));
-        mask[i] = v;
-        if (v < mn) mn = v;
-        if (v > mx) mx = v;
+      const raw = out.logits.data;
+      const masks: AttentionMask[] = [];
+      for (let i = 0; i < n; i++) {
+        const slice = raw.subarray(i * total, (i + 1) * total);
+        masks.push(sigmoidNormalised(slice, width, height));
       }
-      const range = mx - mn || 1;
-      for (let i = 0; i < total; i++) {
-        mask[i] = (mask[i] - mn) / range;
-      }
-      return { data: mask, width, height };
+      return masks;
     },
     [load],
   );
 
-  return { status, progress, error, load, segment };
+  const segment = useCallback(
+    async (imageUrl: string, label: string): Promise<AttentionMask> => {
+      const [mask] = await segmentBatch(imageUrl, [label]);
+      return mask;
+    },
+    [segmentBatch],
+  );
+
+  return { status, progress, error, load, segment, segmentBatch };
 }
