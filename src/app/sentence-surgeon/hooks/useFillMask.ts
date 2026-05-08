@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const MODEL_ID = "Xenova/distilbert-base-uncased";
 
@@ -88,5 +88,13 @@ export function useFillMask(): UseFillMask {
     return () => clearTimeout(t);
   }, [initModel]);
 
-  return { status, progress, error, predict };
+  // Memoise so consumers can put the whole object in `useEffect` deps without
+  // triggering a re-fire on every parent render. Without this, every state
+  // update inside the consumer made a new fillMask reference, causing the
+  // prediction effect to refire and queueing predictions until the WASM
+  // thread saturated and the page froze.
+  return useMemo(
+    () => ({ status, progress, error, predict }),
+    [status, progress, error, predict],
+  );
 }

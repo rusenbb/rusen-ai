@@ -8,12 +8,19 @@
 
 \documentclass[11pt,a4paper]{article}
 
-\usepackage[T1]{fontenc}
-\usepackage[utf8]{inputenc}
-\usepackage{lmodern}
-\usepackage{inconsolata}
-\usepackage[scaled]{helvet}
-\usepackage[top=0.55in, bottom=0.55in, left=0.7in, right=0.7in]{geometry}
+% XeTeX-native font setup (tectonic uses XeTeX). TeX Gyre Heros is the
+% Helvetica clone with full Latin Extended coverage including Turkish
+% (Ş, İ, Ğ, ı). Inconsolata for the mono headers.
+\usepackage{fontspec}
+\setmainfont{TeX Gyre Heros}
+\setmonofont{Latin Modern Mono Light}[Scale=MatchLowercase]
+\renewcommand{\familydefault}{\sfdefault}
+
+% fontawesome5 segfaults tectonic when combined with the volume of content
+% in this CV (reliably reproducible). fontawesome (v4) is rock-solid here
+% and covers every glyph we need.
+\usepackage{fontawesome}
+\usepackage[top=0.5in, bottom=0.5in, left=0.7in, right=0.7in]{geometry}
 \usepackage{enumitem}
 \usepackage{xcolor}
 \usepackage{titlesec}
@@ -21,8 +28,7 @@
 \usepackage{setspace}
 \usepackage{needspace}
 
-\renewcommand{\familydefault}{\sfdefault}
-\setstretch{1.18}
+\setstretch{1.12}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{0pt}
 \raggedright
@@ -39,42 +45,44 @@
 \titleformat{\section}
   {\normalfont\ttfamily\bfseries\large\MakeUppercase}
   {}{0pt}{}
-  [\vspace{1pt}\noindent\rule{\linewidth}{2pt}]
-\titlespacing{\section}{0pt}{14pt}{6pt}
+  [\vspace{1pt}\noindent\rule{\linewidth}{1.6pt}]
+\titlespacing{\section}{0pt}{10pt}{4pt}
 
 \newcommand{\barsep}{\hspace{6pt}\textbar\hspace{6pt}}
 \newcommand{\rowdates}[1]{\hfill{\ttfamily\small #1}}
+% Small superscript outgoing-arrow icon for hyperlinked items.
+\newcommand{\extarrow}{\,{\footnotesize\faExternalLink}}
 
 \begin{document}
 
 % ======================================================================
 % HEADER
 % ======================================================================
-\noindent\rule{\linewidth}{3pt}\\[4pt]
-{\noindent\ttfamily\bfseries\Huge RUŞEN BİRBEN}\\[4pt]
-{\noindent\ttfamily\bfseries\small YAPAY ZEKA VE VERI MÜHENDISI}\\[6pt]
-\noindent\rule{\linewidth}{1pt}\\[8pt]
+\noindent\rule{\linewidth}{2.5pt}\\[3pt]
+{\noindent\ttfamily\bfseries\Huge RUŞEN BİRBEN}\\[3pt]
+{\noindent\ttfamily\bfseries\small YAPAY ZEKA VE VERI MÜHENDISI}\\[5pt]
+\noindent\rule{\linewidth}{0.8pt}\\[6pt]
 
-% Contact bar (mono, dense)
+% Contact bar (mono, dense, icon-led)
 {\ttfamily\footnotesize\noindent
-Ankara, Türkiye%
+\faMapMarker\,Ankara, Türkiye%
 \barsep%
-\href{mailto:contact@rusen.ai}{contact@rusen.ai}%
+\faEnvelope\,\href{mailto:contact@rusen.ai}{contact@rusen.ai}%
 %
 \\[2pt]
-\href{https://rusen.ai}{rusen.ai}%
+\faGlobe\,\href{https://rusen.ai}{rusen.ai}%
 \barsep%
-\href{https://linkedin.com/in/rusenbirben}{linkedin.com/in/rusenbirben}%
+\faLinkedin\,\href{https://linkedin.com/in/rusenbirben}{linkedin.com/in/rusenbirben}%
 \barsep%
-\href{https://github.com/rusenbb}{github.com/rusenbb}\\[2pt]
-DOĞ 26/08/2002%
+\faGithub\,\href{https://github.com/rusenbb}{github.com/rusenbb}\\[2pt]
+DOĞ\,26/08/2002%
 \barsep%
-EHLİYET B%
+EHLİYET\,B%
 \barsep%
-DURUM MÜSAİT
+DURUM\,MÜSAİT
 }
 
-\vspace{12pt}
+\vspace{8pt}
 
 % ======================================================================
 % SUMMARY
@@ -89,24 +97,24 @@ DURUM MÜSAİT
 
 \needspace{4\baselineskip}%
 \noindent\textbf{Yüksek Lisans Araştırmacısı}\rowdates{04/2026 - Bugün}\\
-{\itshape\href{https://nlp.ceng.metu.edu.tr}{ODTÜ Uygulamalı NLP Grubu}}\rowdates{Ankara, TR}\\[2pt]
-{\small Laboratuvarın YouTube kanalı METU NLP Connect'i yönetiyorum: uzman röportajları, LLM'ler ve modern NLP üzerine eğitici açıklamalar, güncel makale incelemeleri. Uygulamalı NLP Grubu'nun (Yard. Doç. Dr. Çağrı Toraman önderliğinde) üyesi olarak LLM'ler, üretken yapay zeka ve Türkçe dil teknolojileri üzerine çalışıyorum.}\\[8pt]
+{\itshape\href{https://nlp.ceng.metu.edu.tr}{ODTÜ Uygulamalı NLP Grubu\extarrow}}\rowdates{Ankara, TR}\\[1pt]
+{\small Laboratuvarın YouTube kanalı METU NLP Connect'i yönetiyorum: uzman röportajları, LLM'ler ve modern NLP üzerine eğitici açıklamalar, güncel makale incelemeleri. Uygulamalı NLP Grubu'nun (Yard. Doç. Dr. Çağrı Toraman önderliğinde) üyesi olarak LLM'ler, üretken yapay zeka ve Türkçe dil teknolojileri üzerine çalışıyorum.}\\[5pt]
 \needspace{4\baselineskip}%
 \noindent\textbf{Kurucu Ortak}\rowdates{10/2025 - 07/2026}\\
-{\itshape\href{https://fictionstudios.ai}{Fiction Studios}}\rowdates{Ankara, TR}\\[2pt]
-{\small Bilkent Cyberpark'ta, akredite bir Türkiye Teknokenti'nde, bir yapay zeka girişiminin kurucu ortağı olarak görev yaptım. Müzeler ve turistler için LLM destekli bir rehber uygulaması geliştirdik. 2026'da faaliyetler sona erdi.}\\[8pt]
+{\itshape\href{https://fictionstudios.ai}{Fiction Studios\extarrow}}\rowdates{Ankara, TR}\\[1pt]
+{\small Bilkent Cyberpark'ta, akredite bir Türkiye Teknokenti'nde, bir yapay zeka girişiminin kurucu ortağı olarak görev yaptım. Müzeler ve turistler için LLM destekli bir rehber uygulaması geliştirdik. 2026'da faaliyetler sona erdi.}\\[5pt]
 \needspace{4\baselineskip}%
 \noindent\textbf{Junior Yapay Zeka Mühendisi}\rowdates{03/2025 - 07/2025}\\
-{\itshape\href{https://cyberquote.com/tk/}{CyberQuote}}\rowdates{İstanbul, TR}\\[2pt]
-{\small Phillip Capital iştiraki için yapay zeka otomasyonları ve etmensel LLM uygulamaları geliştirdim. Operasyonel süreçler ve müşteriye dönük platformlar için akıllı sistemler.}\\[8pt]
+{\itshape\href{https://cyberquote.com/tk/}{CyberQuote\extarrow}}\rowdates{İstanbul, TR}\\[1pt]
+{\small Phillip Capital iştiraki için yapay zeka otomasyonları ve etmensel LLM uygulamaları geliştirdim. Operasyonel süreçler ve müşteriye dönük platformlar için akıllı sistemler.}\\[5pt]
 \needspace{4\baselineskip}%
 \noindent\textbf{NLP Araştırma Stajyeri}\rowdates{07/2024 - 08/2024}\\
-{\itshape\href{https://nlp.itu.edu.tr/}{İTÜ NLP Lab.}}\rowdates{İstanbul, TR}\\[2pt]
-{\small Finansal uygulamalar için LLM'ler üzerine araştırmalar: tahminleme, duygu analizi, araç kullanımı, akıl yürütme ve RAG uygulamaları.}\\[8pt]
+{\itshape\href{https://nlp.itu.edu.tr/}{İTÜ NLP Lab.\extarrow}}\rowdates{İstanbul, TR}\\[1pt]
+{\small Finansal uygulamalar için LLM'ler üzerine araştırmalar: tahminleme, duygu analizi, araç kullanımı, akıl yürütme ve RAG uygulamaları.}\\[5pt]
 \needspace{4\baselineskip}%
 \noindent\textbf{AIOps Araştırma Stajyeri}\rowdates{08/2024 - 09/2024}\\
-{\itshape\href{https://havelsan.com/tr}{Havelsan}}\rowdates{İstanbul, TR}\\[2pt]
-{\small Yazılım log verilerini kullanarak öngörücü bakım için AIOps araştırması. HDFS logları üzerinde demo geliştirdim.}\\[8pt]
+{\itshape\href{https://havelsan.com/tr}{Havelsan\extarrow}}\rowdates{İstanbul, TR}\\[1pt]
+{\small Yazılım log verilerini kullanarak öngörücü bakım için AIOps araştırması. HDFS logları üzerinde demo geliştirdim.}\\[5pt]
 
 % ======================================================================
 % PROJECTS
@@ -115,44 +123,68 @@ DURUM MÜSAİT
 
 \needspace{4\baselineskip}%
 \noindent\textbf{Tobor}\rowdates{2024 - 2025}\\
-{\itshape Amazon Depo Robotu}\\[2pt]
-{\small Amazon lojistiğini simüle eden otonom depo robotu. Yol bulma, engel kaçınma, görev planlama. Özel eğitilmiş YOLO ile insan/kargo tespiti.}\\[2pt]
+{\itshape Amazon Depo Robotu}\\[1pt]
+{\small Amazon lojistiğini simüle eden otonom depo robotu. Yol bulma, engel kaçınma, görev planlama. Özel eğitilmiş YOLO ile insan/kargo tespiti.}\\[1pt]
 {\ttfamily\footnotesize Python \textbullet{} ROS2 \textbullet{} YOLO \textbullet{} Robotik}%
-\hfill{\ttfamily\footnotesize%
-\href{https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/Amazon-Warehouse-Robot}{[GH]}\hspace{4pt}\href{https://youtu.be/h-Jxs_y9kNA}{[YT]}%
-}\\[8pt]
+\hfill{\footnotesize%
+\href{https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/Amazon-Warehouse-Robot}{%
+\faGithub%
+%
+}\hspace{8pt}\href{https://youtu.be/h-Jxs_y9kNA}{%
+\faYoutubePlay%
+%
+}%
+}\\[5pt]
 \needspace{4\baselineskip}%
 \noindent\textbf{Biting The Bytes}\rowdates{2024}\\
-{\itshape Türkçe Diakritik Geri Yükleme}\\[2pt]
-{\small Türkçe diakritikleri geri yüklemek için T5 tabanlı bir transformer modeli. Aksan işaretlerini ve özel karakterleri okunabilirlik için otomatik olarak ekler.}\\[2pt]
+{\itshape Türkçe Diakritik Geri Yükleme}\\[1pt]
+{\small Türkçe diakritikleri geri yüklemek için T5 tabanlı bir transformer modeli. Aksan işaretlerini ve özel karakterleri okunabilirlik için otomatik olarak ekler.}\\[1pt]
 {\ttfamily\footnotesize NLP \textbullet{} T5 \textbullet{} Transformers \textbullet{} Türkçe}%
-\hfill{\ttfamily\footnotesize%
-\href{https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/Biting-The-Bytes}{[GH]}\hspace{4pt}\href{https://huggingface.co/spaces/rusen/diacritizeTR}{[HF]}%
-}\\[8pt]
+\hfill{\footnotesize%
+\href{https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/Biting-The-Bytes}{%
+\faGithub%
+%
+}\hspace{8pt}\href{https://huggingface.co/spaces/rusen/diacritizeTR}{%
+{\ttfamily HF}\,{\tiny\faExternalLink}%
+%
+}%
+}\\[5pt]
 \needspace{4\baselineskip}%
 \noindent\textbf{AIZheimer}\rowdates{2024}\\
-{\itshape Stable Diffusion'da Makine Unutma}\\[2pt]
-{\small Diğer yetenekleri korurken Stable Diffusion 2.1'den seçici olarak kavram kaldırma. İçerik denetimi ve yapay zeka çıktısı özelleştirmesi.}\\[2pt]
+{\itshape Stable Diffusion'da Makine Unutma}\\[1pt]
+{\small Diğer yetenekleri korurken Stable Diffusion 2.1'den seçici olarak kavram kaldırma. İçerik denetimi ve yapay zeka çıktısı özelleştirmesi.}\\[1pt]
 {\ttfamily\footnotesize Stable Diffusion \textbullet{} Unutma \textbullet{} Bilgisayarlı Görü}%
-\hfill{\ttfamily\footnotesize%
-\href{https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/AIzheimer}{[GH]}%
-}\\[8pt]
+\hfill{\footnotesize%
+\href{https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/AIzheimer}{%
+\faGithub%
+%
+}%
+}\\[5pt]
 \needspace{4\baselineskip}%
 \noindent\textbf{To-AI-or-Not-to-AI}\rowdates{2023}\\
-{\itshape GPT Tespit Edici}\\[2pt]
-{\small Üç ince ayarlı modeli birleştiren topluluk yöntemiyle yapay zeka üretimi metinlerin tespiti. Akademik dürüstlük ve dezenformasyon sorunlarına yönelik.}\\[2pt]
+{\itshape GPT Tespit Edici}\\[1pt]
+{\small Üç ince ayarlı modeli birleştiren topluluk yöntemiyle yapay zeka üretimi metinlerin tespiti. Akademik dürüstlük ve dezenformasyon sorunlarına yönelik.}\\[1pt]
 {\ttfamily\footnotesize NLP \textbullet{} Topluluk \textbullet{} Sınıflandırma}%
-\hfill{\ttfamily\footnotesize%
-\href{https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/To-AI-or-Not-to-AI}{[GH]}\hspace{4pt}\href{https://huggingface.co/spaces/rusen/gpt_detector}{[HF]}%
-}\\[8pt]
+\hfill{\footnotesize%
+\href{https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/To-AI-or-Not-to-AI}{%
+\faGithub%
+%
+}\hspace{8pt}\href{https://huggingface.co/spaces/rusen/gpt_detector}{%
+{\ttfamily HF}\,{\tiny\faExternalLink}%
+%
+}%
+}\\[5pt]
 \needspace{4\baselineskip}%
 \noindent\textbf{Anime Recommender}\rowdates{2022 - 2023}\\
-{\itshape İşbirlikçi Filtreleme}\\[2pt]
-{\small İşbirlikçi filtreleme ve içerik tabanlı yaklaşımları birleştiren kişiselleştirilmiş anime önerileri. RMSE: 0,289 / MAE: 0,213.}\\[2pt]
+{\itshape İşbirlikçi Filtreleme}\\[1pt]
+{\small İşbirlikçi filtreleme ve içerik tabanlı yaklaşımları birleştiren kişiselleştirilmiş anime önerileri. RMSE: 0,289 / MAE: 0,213.}\\[1pt]
 {\ttfamily\footnotesize Öneri Sistemi \textbullet{} Matris Çarpanlara Ayırma}%
-\hfill{\ttfamily\footnotesize%
-\href{https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/Anime-Recommender}{[GH]}%
-}\\[8pt]
+\hfill{\footnotesize%
+\href{https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/Anime-Recommender}{%
+\faGithub%
+%
+}%
+}\\[5pt]
 
 % ======================================================================
 % EDUCATION
@@ -162,15 +194,15 @@ DURUM MÜSAİT
 \needspace{3\baselineskip}%
 \noindent\textbf{Bilgisayar Mühendisliği Yüksek Lisansı (Tezli)}\rowdates{2026 - Bugün}\\
 {\itshape Orta Doğu Teknik Üniversitesi}\\
-\vspace{6pt}
+\vspace{4pt}
 \needspace{3\baselineskip}%
 \noindent\textbf{Yapay Zeka ve Veri Mühendisliği Lisansı}\rowdates{2022 - 2025}\\
 {\itshape İstanbul Teknik Üniversitesi}\rowdates{ORT 3.61 / 4.00}\\
-\vspace{6pt}
+\vspace{4pt}
 \needspace{3\baselineskip}%
 \noindent\textbf{Elektronik ve Haberleşme Mühendisliği Lisansı}\rowdates{2020 - 2022}\\
 {\itshape İstanbul Teknik Üniversitesi}\\
-{\small\itshape Yapay Zeka ve Veri Mühendisliği'ne yatay geçiş yapıldı}\\\vspace{6pt}
+{\small\itshape Yapay Zeka ve Veri Mühendisliği'ne yatay geçiş yapıldı}\\\vspace{4pt}
 
 % ======================================================================
 % AWARDS
@@ -179,8 +211,8 @@ DURUM MÜSAİT
 
 \needspace{3\baselineskip}%
 \noindent\textbf{1416 YLSY Bursu · Yüksek Lisans ve Doktora}\\
-{\itshape T.C. Millî Eğitim Bakanlığı}\\[2pt]
-{\small Türkiye'nin yurt dışı lisansüstü eğitim için bayrak-gemisi devlet bursu; 1929 yılında yürürlüğe giren 1416 sayılı kanun çerçevesinde yürütülür. Yüksek lisans ve doktora programları için öğrenim ücreti, geçim bursu, sağlık, ulaşım ve sınav giderlerini, bir Türkiye üniversitesinde veya kamu kurumunda mecburi hizmet karşılığında karşılar.}\\[6pt]
+{\itshape T.C. Millî Eğitim Bakanlığı}\\[1pt]
+{\small Türkiye'nin yurt dışı lisansüstü eğitim için bayrak-gemisi devlet bursu; 1929 yılında yürürlüğe giren 1416 sayılı kanun çerçevesinde yürütülür. Yüksek lisans ve doktora programları için öğrenim ücreti, geçim bursu, sağlık, ulaşım ve sınav giderlerini, bir Türkiye üniversitesinde veya kamu kurumunda mecburi hizmet karşılığında karşılar.}\\[4pt]
 
 % ======================================================================
 % COURSES
@@ -188,22 +220,22 @@ DURUM MÜSAİT
 \section*{Kurslar}
 
 \needspace{3\baselineskip}%
-\noindent\textbf{\href{https://coursera.org/share/9c59e9758d378fb8a8b4ab7074dd71ed}{Deep Learning Specialization}}\rowdates{Deeplearning.ai · Andrew Ng}\\
-{\small Dizi Modelleri, CNN'ler, Sinir Ağı ve Derin Öğrenme temelleri, ML Projelerini Yapılandırma, Derin Sinir Ağlarını İyileştirme.}\\[6pt]
+\noindent\textbf{\href{https://coursera.org/share/9c59e9758d378fb8a8b4ab7074dd71ed}{Deep Learning Specialization\extarrow}}\rowdates{Deeplearning.ai · Andrew Ng}\\
+{\small Dizi Modelleri, CNN'ler, Sinir Ağı ve Derin Öğrenme temelleri, ML Projelerini Yapılandırma, Derin Sinir Ağlarını İyileştirme.}\\[4pt]
 \needspace{3\baselineskip}%
-\noindent\textbf{\href{https://coursera.org/share/f8ab2981ab0bbdc3fec17c6e88804ff8}{AWS Cloud Technical Essentials}}\rowdates{AWS · Coursera}\\
-{\small Temel AWS kavramları, güvenlik uygulamaları, EC2, Lambda, ECS, RDS, DynamoDB, S3.}\\[6pt]
+\noindent\textbf{\href{https://coursera.org/share/f8ab2981ab0bbdc3fec17c6e88804ff8}{AWS Cloud Technical Essentials\extarrow}}\rowdates{AWS · Coursera}\\
+{\small Temel AWS kavramları, güvenlik uygulamaları, EC2, Lambda, ECS, RDS, DynamoDB, S3.}\\[4pt]
 
 % ======================================================================
 % SKILLS
 % ======================================================================
 \section*{Yetenekler}
 
-\noindent{\ttfamily\bfseries\small\MakeUppercase{Diller}}\hspace{6pt}{\small Python \textbullet{} JavaScript/TypeScript \textbullet{} SQL \textbullet{} C/C++}\\[3pt]
-\noindent{\ttfamily\bfseries\small\MakeUppercase{Çerçeveler ve Araçlar}}\hspace{6pt}{\small PyTorch \textbullet{} TensorFlow \textbullet{} ROS2 \textbullet{} YOLO \textbullet{} Transformers \textbullet{} Scikit-learn \textbullet{} Pandas \textbullet{} NumPy}\\[3pt]
-\noindent{\ttfamily\bfseries\small\MakeUppercase{Uzmanlıklar}}\hspace{6pt}{\small NLP \textbullet{} LLM'ler \textbullet{} Bilgisayarlı Görü \textbullet{} RAG \textbullet{} MLOps \textbullet{} Etmensel YZ \textbullet{} Veri Mühendisliği}\\[3pt]
+\noindent{\ttfamily\bfseries\small\MakeUppercase{Diller}}\hspace{6pt}{\small Python \textbullet{} JavaScript/TypeScript \textbullet{} SQL \textbullet{} C/C++}\\[2pt]
+\noindent{\ttfamily\bfseries\small\MakeUppercase{Çerçeveler ve Araçlar}}\hspace{6pt}{\small PyTorch \textbullet{} TensorFlow \textbullet{} ROS2 \textbullet{} YOLO \textbullet{} Transformers \textbullet{} Scikit-learn \textbullet{} Pandas \textbullet{} NumPy}\\[2pt]
+\noindent{\ttfamily\bfseries\small\MakeUppercase{Uzmanlıklar}}\hspace{6pt}{\small NLP \textbullet{} LLM'ler \textbullet{} Bilgisayarlı Görü \textbullet{} RAG \textbullet{} MLOps \textbullet{} Etmensel YZ \textbullet{} Veri Mühendisliği}\\[2pt]
 
-\vspace{4pt}
+\vspace{2pt}
 
 % ======================================================================
 % LANGUAGES
@@ -211,7 +243,7 @@ DURUM MÜSAİT
 \section*{Diller}
 
 \noindent\textbf{Türkçe} {\small (\textit{Anadil})}\hspace{18pt}\textbf{İngilizce} {\small (\textit{Akıcı · TOEFL iBT 109})}
-\vspace{8pt}
+\vspace{6pt}
 
 % ======================================================================
 % INTERESTS
@@ -219,12 +251,12 @@ DURUM MÜSAİT
 \section*{İlgi Alanları}
 
 \noindent\textbf{Kahve} {\small \textperiodcentered{} V60 - Aeropress - Moka Pot}\hspace{14pt}\textbf{Kitaplar} {\small \textperiodcentered{} Felsefe - YZ/Bilgisayar - Finans}\hspace{14pt}\textbf{Anime ve Manga} {\small \textperiodcentered{} İzleyici - Okuyucu - Koleksiyoncu}\hspace{14pt}\textbf{Spor} {\small \textperiodcentered{} Halter - Koşu - Kalistenik}
-\vspace{14pt}
+\vspace{10pt}
 
 % ======================================================================
 % FOOTER
 % ======================================================================
-\noindent\rule{\linewidth}{1pt}\\[3pt]
+\noindent\rule{\linewidth}{0.8pt}\\[3pt]
 {\centering\ttfamily\footnotesize Talep üzerine referanslar sunulur - rusen.ai/cv\par}
 
 \end{document}
