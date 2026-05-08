@@ -1,8 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-
-const TARGET_SAMPLE_RATE = 16000;
+import { resampleTo16k } from "../utils/audio";
 
 type MicState = "idle" | "asking" | "ready" | "recording" | "error";
 
@@ -25,21 +24,11 @@ export interface UseMic {
   stop: () => Promise<RecordingHandle | null>;
   /** Live snapshot of the analyser. Empty if not recording. */
   sample: () => AnalyserSnapshot;
-}
-
-function resampleTo16k(input: Float32Array, fromRate: number): Float32Array {
-  if (fromRate === TARGET_SAMPLE_RATE) return input;
-  const ratio = fromRate / TARGET_SAMPLE_RATE;
-  const outLen = Math.floor(input.length / ratio);
-  const out = new Float32Array(outLen);
-  for (let i = 0; i < outLen; i++) {
-    const srcIdx = i * ratio;
-    const i0 = Math.floor(srcIdx);
-    const i1 = Math.min(i0 + 1, input.length - 1);
-    const frac = srcIdx - i0;
-    out[i] = input[i0] * (1 - frac) + input[i1] * frac;
-  }
-  return out;
+  /**
+   * Returns the last `durationSec` seconds of recorded audio resampled to 16 kHz,
+   * or `null` if no audio is buffered yet. Safe to call mid-recording.
+   */
+  snapshotRecent: (durationSec: number) => Float32Array | null;
 }
 
 export function useMic(): UseMic {
@@ -155,5 +144,27 @@ export function useMic(): UseMic {
     return { waveform: buf, rms };
   }, []);
 
-  return { state, error, start, stop, sample };
+  const snapshotRecent = useCallback((durationSec: number): Float32Array | null => {
+    const ctx = ctxRef.current;
+    if (!ctx) return null;
+    const chunks = chunksRef.current;
+    if (chunks.length === 0) return null;
+    const sampleRate = ctx.sampleRate;
+    const wantedSamples = Math.floor(durationSec * sampleRate);
+    let totalAvailable = 0;
+    for (const c of chunks) totalAvailable += c.length;
+    if (totalAvailable === 0) return null;
+    const samplesToTake = Math.min(wantedSamples, totalAvailable);
+    const merged = new Float32Array(samplesToTake);
+    let writeIdx = samplesToTake;
+    for (let i = chunks.length - 1; i >= 0 && writeIdx > 0; i--) {
+      const c = chunks[i];
+      const take = Math.min(c.length, writeIdx);
+      merged.set(c.subarray(c.length - take), writeIdx - take);
+      writeIdx -= take;
+    }
+    return resampleTo16k(merged, sampleRate);
+  }, []);
+
+  return { state, error, start, stop, sample, snapshotRecent };
 }
