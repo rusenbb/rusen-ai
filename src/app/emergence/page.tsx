@@ -4,7 +4,7 @@ import GameOfLifeDemo from "./components/GameOfLifeDemo";
 import FireflySynchronization from "./components/FireflySynchronization";
 import SchellingSegregation from "./components/SchellingSegregation";
 import LangtonsAnt from "./components/LangtonsAnt";
-import SandPile from "./components/SandPile";
+import Flocking from "./components/Flocking";
 import EmergenceSectionDirectory from "./components/EmergenceSectionDirectory";
 
 const ESSAY_SECTIONS = [
@@ -34,9 +34,9 @@ const ESSAY_SECTIONS = [
     summary: "Deterministic chaos can wander for ages, then snap into order.",
   },
   {
-    id: "sandpile",
-    title: "SandPile",
-    summary: "Slow pressure can organize a system into catastrophic sensitivity.",
+    id: "flocking",
+    title: "Flocking",
+    summary: "Three local rules can pull independent agents into a moving group with no leader.",
   },
 ] as const;
 
@@ -155,16 +155,17 @@ export default function EmergencePage() {
       <div className="h-20 sm:h-28" />
 
       {/* Section 6 */}
-      <section id="sandpile" className="scroll-mt-24">
+      <section id="flocking" className="scroll-mt-24">
         <div className="flex items-center gap-4 mb-8">
           <span className="text-sm font-mono tracking-[0.22em] text-neutral-400 dark:text-neutral-500 shrink-0">06</span>
           <hr className="flex-1 border-neutral-200 dark:border-neutral-800" />
         </div>
         <p className="mb-6 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400 max-w-2xl">
-          Finally, move from pattern to shock. The same local threshold that keeps a system stable
-          can also make it catastrophically sensitive.
+          We end where the agents leave the grid. Each one only watches its near neighbors and obeys
+          three rules: avoid crowding, match speed, drift toward the group. No leader, no plan,
+          and yet a single sweeping motion appears.
         </p>
-        <SandPile />
+        <Flocking />
       </section>
 
       {/* Closing */}

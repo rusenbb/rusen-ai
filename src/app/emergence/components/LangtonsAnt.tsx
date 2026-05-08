@@ -34,7 +34,7 @@ interface SimState {
 
 type Phase = "symmetric" | "chaos" | "pre-highway" | "highway";
 type SeedPresetId = "blank" | "dot" | "plus" | "ring" | "stairs" | "scatter" | "random";
-type EditTool = "draw" | "erase";
+type EditTool = "draw" | "erase" | "pan";
 
 /**
  * Manual viewport override. While set, the viewport keeps a fixed cell size
@@ -528,6 +528,12 @@ export default function LangtonsAnt(): React.ReactElement {
   const stepsPerFrameRef = useRef<number>(1);
   const pointerDrawingRef = useRef<boolean>(false);
   const lastPaintCellRef = useRef<[number, number] | null>(null);
+  const panStateRef = useRef<{
+    startClientX: number;
+    startClientY: number;
+    origCenterX: number;
+    origCenterY: number;
+  } | null>(null);
   // Tracked in a ref so callbacks can read the latest lock without
   // re-binding on every change. Mirrored into state purely so React
   // can use it for memoization / dev tools — we don't read state for
@@ -737,9 +743,26 @@ export default function LangtonsAnt(): React.ReactElement {
 
   const handleCanvasPointerDown = useCallback(
     (event: React.PointerEvent<HTMLCanvasElement>) => {
-      if (playingRef.current || fastForwarding) return;
       const canvas = canvasRef.current;
       if (!canvas) return;
+
+      // Pan mode works whether the simulation is playing or paused — the
+      // user is just changing where they're looking, not editing cells.
+      if (editTool === "pan") {
+        lockCurrentView();
+        const lock = viewLockRef.current;
+        if (!lock) return;
+        panStateRef.current = {
+          startClientX: event.clientX,
+          startClientY: event.clientY,
+          origCenterX: lock.centerX,
+          origCenterY: lock.centerY,
+        };
+        canvas.setPointerCapture?.(event.pointerId);
+        return;
+      }
+
+      if (playingRef.current || fastForwarding) return;
 
       // Lock the viewport before painting so the canvas doesn't zoom out
       // when the user paints near the current edge of the visited region.
@@ -754,11 +777,26 @@ export default function LangtonsAnt(): React.ReactElement {
       applyEditToCell(cell[0], cell[1]);
       drawState();
     },
-    [applyEditToCell, drawState, fastForwarding, getCellFromPointerEvent, lockCurrentView],
+    [applyEditToCell, drawState, editTool, fastForwarding, getCellFromPointerEvent, lockCurrentView],
   );
 
   const handleCanvasPointerMove = useCallback(
     (event: React.PointerEvent<HTMLCanvasElement>) => {
+      if (panStateRef.current) {
+        const lock = viewLockRef.current;
+        if (!lock) return;
+        const dx = event.clientX - panStateRef.current.startClientX;
+        const dy = event.clientY - panStateRef.current.startClientY;
+        viewLockRef.current = {
+          ...lock,
+          centerX: panStateRef.current.origCenterX - dx / lock.cellSize,
+          centerY: panStateRef.current.origCenterY - dy / lock.cellSize,
+        };
+        setViewLockTick((n) => n + 1);
+        drawState();
+        return;
+      }
+
       if (!pointerDrawingRef.current || playingRef.current || fastForwarding) return;
 
       const cell = getCellFromPointerEvent(event);
@@ -785,6 +823,7 @@ export default function LangtonsAnt(): React.ReactElement {
     (event?: React.PointerEvent<HTMLCanvasElement>) => {
       pointerDrawingRef.current = false;
       lastPaintCellRef.current = null;
+      panStateRef.current = null;
       if (event) {
         event.currentTarget.releasePointerCapture?.(event.pointerId);
       }
@@ -1059,9 +1098,9 @@ export default function LangtonsAnt(): React.ReactElement {
           </p>
           <div className="flex flex-wrap items-center gap-2 border-t border-neutral-200 pt-3 dark:border-neutral-800">
             <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500">
-              Manual edit
+              Tool
             </span>
-            {(["draw", "erase"] as const).map((tool) => {
+            {(["draw", "erase", "pan"] as const).map((tool) => {
               const active = editTool === tool;
               return (
                 <button
@@ -1074,12 +1113,12 @@ export default function LangtonsAnt(): React.ReactElement {
                       : "border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200"
                   }`}
                 >
-                  {tool === "draw" ? "Draw black cells" : "Erase black cells"}
+                  {tool === "draw" ? "Draw black cells" : tool === "erase" ? "Erase black cells" : "Pan view"}
                 </button>
               );
             })}
             <span className="text-xs text-neutral-500 dark:text-neutral-400">
-              Pause first, then click or drag on the canvas.
+              Drag to draw or erase (pause first); drag to pan any time.
             </span>
           </div>
         </div>
@@ -1090,7 +1129,15 @@ export default function LangtonsAnt(): React.ReactElement {
         >
           <canvas
             ref={canvasRef}
-            className={`block w-full ${playing || fastForwarding ? "cursor-default" : editTool === "erase" ? "cursor-cell" : "cursor-crosshair"}`}
+            className={`block w-full ${
+              editTool === "pan"
+                ? "cursor-grab active:cursor-grabbing"
+                : playing || fastForwarding
+                  ? "cursor-default"
+                  : editTool === "erase"
+                    ? "cursor-cell"
+                    : "cursor-crosshair"
+            }`}
             style={{ height: 480, imageRendering: "pixelated" }}
             onPointerDown={handleCanvasPointerDown}
             onPointerMove={handleCanvasPointerMove}
