@@ -1,14 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { resampleTo16k } from "../utils/audio";
+import type { MicVAD } from "@ricky0123/vad-web";
 
-type MicState = "idle" | "asking" | "ready" | "recording" | "error";
-
-interface RecordingHandle {
-  audio: Float32Array;
-  durationSec: number;
-}
+export type MicState = "idle" | "asking" | "ready" | "recording" | "error";
 
 interface AnalyserSnapshot {
   /** Time-domain samples in [-1, 1]. */
@@ -17,126 +12,124 @@ interface AnalyserSnapshot {
   rms: number;
 }
 
+export interface UseMicOptions {
+  /** Called once per detected speech segment with 16 kHz mono PCM. */
+  onSpeech?: (audio: Float32Array) => void;
+}
+
 export interface UseMic {
   state: MicState;
   error: string | null;
+  /** True while the VAD believes the user is currently speaking. */
+  speaking: boolean;
   start: () => Promise<void>;
-  stop: () => Promise<RecordingHandle | null>;
+  stop: () => Promise<void>;
   /** Live snapshot of the analyser. Empty if not recording. */
   sample: () => AnalyserSnapshot;
-  /**
-   * Returns the last `durationSec` seconds of recorded audio resampled to 16 kHz,
-   * or `null` if no audio is buffered yet. Safe to call mid-recording.
-   */
-  snapshotRecent: (durationSec: number) => Float32Array | null;
 }
 
-export function useMic(): UseMic {
+const MIC_CONSTRAINTS: MediaStreamConstraints = {
+  audio: {
+    channelCount: 1,
+    echoCancellation: true,
+    autoGainControl: true,
+    noiseSuppression: true,
+  },
+};
+
+export function useMic(options: UseMicOptions = {}): UseMic {
+  const { onSpeech } = options;
   const [state, setState] = useState<MicState>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [speaking, setSpeaking] = useState(false);
 
+  const onSpeechRef = useRef(onSpeech);
+  onSpeechRef.current = onSpeech;
+
+  const vadRef = useRef<MicVAD | null>(null);
   const ctxRef = useRef<AudioContext | null>(null);
-  const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
-  const processorRef = useRef<ScriptProcessorNode | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const chunksRef = useRef<Float32Array[]>([]);
-  const startTimeRef = useRef<number>(0);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const analyserSourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const waveformBufRef = useRef<Float32Array | null>(null);
 
-  const cleanup = useCallback(() => {
+  const cleanup = useCallback(async () => {
     try {
-      processorRef.current?.disconnect();
-      sourceRef.current?.disconnect();
+      await vadRef.current?.destroy();
+    } catch {}
+    vadRef.current = null;
+    try {
+      analyserSourceRef.current?.disconnect();
       analyserRef.current?.disconnect();
     } catch {}
     streamRef.current?.getTracks().forEach((t) => t.stop());
-    ctxRef.current?.close().catch(() => {});
+    try {
+      await ctxRef.current?.close();
+    } catch {}
     ctxRef.current = null;
-    sourceRef.current = null;
-    processorRef.current = null;
-    analyserRef.current = null;
     streamRef.current = null;
+    analyserRef.current = null;
+    analyserSourceRef.current = null;
     waveformBufRef.current = null;
+    setSpeaking(false);
   }, []);
 
-  useEffect(() => () => cleanup(), [cleanup]);
+  useEffect(() => () => void cleanup(), [cleanup]);
 
   const start = useCallback(async () => {
     setError(null);
     setState("asking");
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia(MIC_CONSTRAINTS);
       const ctx = new AudioContext();
-      const source = ctx.createMediaStreamSource(stream);
+      const analyserSource = ctx.createMediaStreamSource(stream);
       const analyser = ctx.createAnalyser();
       analyser.fftSize = 1024;
-      const processor = ctx.createScriptProcessor(4096, 1, 1);
+      analyserSource.connect(analyser);
 
-      source.connect(analyser);
-      source.connect(processor);
-      processor.connect(ctx.destination);
-
-      chunksRef.current = [];
-      startTimeRef.current = performance.now();
-      processor.onaudioprocess = (e) => {
-        const channel = e.inputBuffer.getChannelData(0);
-        // Copy because the underlying buffer is reused.
-        chunksRef.current.push(new Float32Array(channel));
-      };
-
-      ctxRef.current = ctx;
-      sourceRef.current = source;
-      processorRef.current = processor;
-      analyserRef.current = analyser;
       streamRef.current = stream;
+      ctxRef.current = ctx;
+      analyserRef.current = analyser;
+      analyserSourceRef.current = analyserSource;
       waveformBufRef.current = new Float32Array(analyser.fftSize);
+
+      const { MicVAD } = await import("@ricky0123/vad-web");
+      const vad = await MicVAD.new({
+        audioContext: ctx,
+        getStream: async () => stream,
+        // Tuned to match Xenova's moonshine-web reference.
+        positiveSpeechThreshold: 0.3,
+        negativeSpeechThreshold: 0.25,
+        redemptionMs: 400,
+        preSpeechPadMs: 80,
+        minSpeechMs: 250,
+        onSpeechStart: () => setSpeaking(true),
+        onSpeechEnd: (audio) => {
+          setSpeaking(false);
+          onSpeechRef.current?.(audio);
+        },
+        onVADMisfire: () => setSpeaking(false),
+      });
+      vadRef.current = vad;
+      await vad.start();
 
       setState("recording");
     } catch (err) {
-      cleanup();
+      await cleanup();
       setError(err instanceof Error ? err.message : "Microphone permission denied");
       setState("error");
     }
   }, [cleanup]);
 
-  const stop = useCallback(async (): Promise<RecordingHandle | null> => {
-    const ctx = ctxRef.current;
-    if (!ctx) {
-      setState("idle");
-      return null;
-    }
-    const sampleRate = ctx.sampleRate;
-    const chunks = chunksRef.current;
-    chunksRef.current = [];
-
-    cleanup();
-
-    if (chunks.length === 0) {
-      setState("idle");
-      return null;
-    }
-    const total = chunks.reduce((sum, c) => sum + c.length, 0);
-    const merged = new Float32Array(total);
-    let offset = 0;
-    for (const c of chunks) {
-      merged.set(c, offset);
-      offset += c.length;
-    }
-    const audio = resampleTo16k(merged, sampleRate);
-    const durationSec = (performance.now() - startTimeRef.current) / 1000;
-
+  const stop = useCallback(async () => {
+    await cleanup();
     setState("idle");
-    return { audio, durationSec };
   }, [cleanup]);
 
   const sample = useCallback((): AnalyserSnapshot => {
     const analyser = analyserRef.current;
     const buf = waveformBufRef.current;
     if (!analyser || !buf) return { waveform: new Float32Array(0), rms: 0 };
-    // The DOM type for getFloatTimeDomainData wants Float32Array<ArrayBuffer>;
-    // our buffer is Float32Array<ArrayBufferLike>. Runtime is identical;
-    // bypass via unknown.
     analyser.getFloatTimeDomainData(buf as unknown as Float32Array<ArrayBuffer>);
     let sumSq = 0;
     for (let i = 0; i < buf.length; i++) sumSq += buf[i] * buf[i];
@@ -144,27 +137,5 @@ export function useMic(): UseMic {
     return { waveform: buf, rms };
   }, []);
 
-  const snapshotRecent = useCallback((durationSec: number): Float32Array | null => {
-    const ctx = ctxRef.current;
-    if (!ctx) return null;
-    const chunks = chunksRef.current;
-    if (chunks.length === 0) return null;
-    const sampleRate = ctx.sampleRate;
-    const wantedSamples = Math.floor(durationSec * sampleRate);
-    let totalAvailable = 0;
-    for (const c of chunks) totalAvailable += c.length;
-    if (totalAvailable === 0) return null;
-    const samplesToTake = Math.min(wantedSamples, totalAvailable);
-    const merged = new Float32Array(samplesToTake);
-    let writeIdx = samplesToTake;
-    for (let i = chunks.length - 1; i >= 0 && writeIdx > 0; i--) {
-      const c = chunks[i];
-      const take = Math.min(c.length, writeIdx);
-      merged.set(c.subarray(c.length - take), writeIdx - take);
-      writeIdx -= take;
-    }
-    return resampleTo16k(merged, sampleRate);
-  }, []);
-
-  return { state, error, start, stop, sample, snapshotRecent };
+  return { state, error, speaking, start, stop, sample };
 }
