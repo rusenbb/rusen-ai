@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useFillMask, type FillMaskPrediction } from "./hooks/useFillMask";
 import { EXAMPLES, type SentenceExample } from "./data/examples";
 
@@ -23,21 +23,41 @@ function buildMaskedSentence(state: SentenceState): string | null {
     .join(" ");
 }
 
+function stateToText(state: SentenceState): string {
+  return buildMaskedSentence(state) ?? state.words.join(" ");
+}
+
+function textToState(text: string): SentenceState {
+  const words = text.split(/\s+/).filter(Boolean);
+  const maskedIndex = words.findIndex((w) => w.includes(MASK_TOKEN));
+  return { words, maskedIndex };
+}
+
 export default function SentenceSurgeonPage() {
   const fillMask = useFillMask();
   const [activeExampleIdx, setActiveExampleIdx] = useState(0);
   const [state, setState] = useState<SentenceState>(() => exampleToState(EXAMPLES[0]));
+  const [editMode, setEditMode] = useState(false);
+  const [rawText, setRawText] = useState(() => stateToText(exampleToState(EXAMPLES[0])));
   const [predictions, setPredictions] = useState<FillMaskPrediction[]>([]);
   const [busy, setBusy] = useState(false);
   const [predictError, setPredictError] = useState<string | null>(null);
   const reqIdRef = useRef(0);
 
+  // The single source of truth the model sees. In chip mode it's derived from
+  // `state`; in edit mode it's the textarea string (only if it contains [MASK]).
+  const maskedSentence = useMemo<string | null>(() => {
+    if (editMode) {
+      return rawText.includes(MASK_TOKEN) ? rawText : null;
+    }
+    return buildMaskedSentence(state);
+  }, [editMode, rawText, state]);
+
   // Run prediction whenever the masked sentence changes (and model is ready).
   // All setState calls live inside the promise chain so the effect itself
   // doesn't update state synchronously.
   useEffect(() => {
-    const masked = buildMaskedSentence(state);
-    if (!masked || fillMask.status !== "ready") {
+    if (!maskedSentence || fillMask.status !== "ready") {
       return;
     }
     const id = ++reqIdRef.current;
@@ -49,7 +69,7 @@ export default function SentenceSurgeonPage() {
         if (isStale()) return null;
         setBusy(true);
         setPredictError(null);
-        return fillMask.predict(masked, 6);
+        return fillMask.predict(maskedSentence, 6);
       })
       .then((preds) => {
         if (isStale() || !preds) return;
@@ -68,11 +88,13 @@ export default function SentenceSurgeonPage() {
     return () => {
       cancelled = true;
     };
-  }, [state, fillMask]);
+  }, [maskedSentence, fillMask]);
 
   const pickExample = useCallback((i: number) => {
     setActiveExampleIdx(i);
-    setState(exampleToState(EXAMPLES[i]));
+    const next = exampleToState(EXAMPLES[i]);
+    setState(next);
+    setRawText(stateToText(next));
   }, []);
 
   const handleWordClick = useCallback((i: number) => {
@@ -82,21 +104,49 @@ export default function SentenceSurgeonPage() {
     }));
   }, []);
 
-  const handlePredictionPick = useCallback((token: string) => {
-    setState((prev) => {
-      if (prev.maskedIndex < 0) return prev;
+  const handlePredictionPick = useCallback(
+    (token: string) => {
       const cleanedToken = token.replace(/^##/, "");
-      const original = prev.words[prev.maskedIndex];
-      const trailing = original.match(/[.,!?;:]+$/)?.[0] ?? "";
-      const newWords = [...prev.words];
-      newWords[prev.maskedIndex] = cleanedToken + trailing;
-      return { words: newWords, maskedIndex: -1 };
-    });
-  }, []);
+      if (editMode) {
+        setRawText((prev) => prev.replace(MASK_TOKEN, cleanedToken));
+        return;
+      }
+      setState((prev) => {
+        if (prev.maskedIndex < 0) return prev;
+        const original = prev.words[prev.maskedIndex];
+        const trailing = original.match(/[.,!?;:]+$/)?.[0] ?? "";
+        const newWords = [...prev.words];
+        newWords[prev.maskedIndex] = cleanedToken + trailing;
+        return { words: newWords, maskedIndex: -1 };
+      });
+    },
+    [editMode],
+  );
 
   const handleReset = useCallback(() => {
-    setState(exampleToState(EXAMPLES[activeExampleIdx]));
+    const fresh = exampleToState(EXAMPLES[activeExampleIdx]);
+    setState(fresh);
+    setRawText(stateToText(fresh));
   }, [activeExampleIdx]);
+
+  const toggleEditMode = useCallback(() => {
+    setEditMode((prev) => {
+      if (!prev) {
+        setRawText(stateToText(state));
+        return true;
+      }
+      setState(textToState(rawText));
+      return false;
+    });
+  }, [state, rawText]);
+
+  const handleRawTextChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setRawText(e.target.value);
+  }, []);
+
+  const insertMaskAtCursor = useCallback(() => {
+    setRawText((prev) => (prev.includes(MASK_TOKEN) ? prev : prev.trimEnd() + " " + MASK_TOKEN));
+  }, []);
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 sm:py-12">
@@ -117,7 +167,9 @@ export default function SentenceSurgeonPage() {
           <span className="text-neutral-500">Loading DistilBERT… {fillMask.progress}%</span>
         )}
         {fillMask.status === "ready" && !busy && (
-          <span className="text-green-600 dark:text-green-400">Model ready · click a word</span>
+          <span className="text-green-600 dark:text-green-400">
+            Model ready · {editMode ? "type a sentence with [MASK]" : "click a word"}
+          </span>
         )}
         {fillMask.status === "ready" && busy && (
           <span className="text-cyan-600 dark:text-cyan-400">Predicting…</span>
@@ -154,42 +206,86 @@ export default function SentenceSurgeonPage() {
           <span className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
             Sentence
           </span>
-          <button
-            type="button"
-            onClick={handleReset}
-            className="text-[10px] font-mono uppercase tracking-[0.18em] text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200 transition"
-          >
-            ↺ Reset
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={toggleEditMode}
+              className={`text-[10px] font-mono uppercase tracking-[0.18em] transition ${
+                editMode
+                  ? "text-cyan-600 dark:text-cyan-400"
+                  : "text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200"
+              }`}
+              title={editMode ? "Switch back to click-to-mask chips" : "Type any sentence with [MASK]"}
+            >
+              {editMode ? "▤ Chip mode" : "✎ Edit text"}
+            </button>
+            <button
+              type="button"
+              onClick={handleReset}
+              className="text-[10px] font-mono uppercase tracking-[0.18em] text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200 transition"
+            >
+              ↺ Reset
+            </button>
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2 leading-relaxed">
-          {state.words.map((w, i) => {
-            const isMasked = i === state.maskedIndex;
-            return (
-              <button
-                key={`${i}-${w}`}
-                type="button"
-                onClick={() => handleWordClick(i)}
-                className={`px-3 py-1.5 rounded-md text-base sm:text-lg font-medium transition border ${
-                  isMasked
-                    ? "border-cyan-500 bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 font-mono"
-                    : "border-transparent hover:border-neutral-300 dark:hover:border-neutral-700 text-neutral-800 dark:text-neutral-200"
-                }`}
-              >
-                {isMasked ? "▒▒▒" : w}
-              </button>
-            );
-          })}
-        </div>
-        {state.maskedIndex < 0 && (
-          <p className="text-xs text-neutral-500 mt-3 italic">
-            No mask. Click a word to mask it again.
-          </p>
+
+        {editMode ? (
+          <>
+            <textarea
+              value={rawText}
+              onChange={handleRawTextChange}
+              spellCheck={false}
+              rows={3}
+              className="w-full resize-y rounded-md border border-neutral-300 dark:border-neutral-700 bg-transparent px-3 py-2 text-base sm:text-lg font-mono leading-relaxed text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-cyan-500"
+              placeholder="Type any sentence and put [MASK] where you want a prediction…"
+            />
+            <div className="flex items-center justify-between mt-2 gap-3 flex-wrap">
+              <p className="text-xs text-neutral-500">
+                Use the literal token <code className="font-mono text-cyan-600 dark:text-cyan-400">[MASK]</code> to mark the gap.
+              </p>
+              {!rawText.includes(MASK_TOKEN) && (
+                <button
+                  type="button"
+                  onClick={insertMaskAtCursor}
+                  className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-600 dark:text-cyan-400 hover:underline"
+                >
+                  + Append [MASK]
+                </button>
+              )}
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex flex-wrap gap-2 leading-relaxed">
+              {state.words.map((w, i) => {
+                const isMasked = i === state.maskedIndex;
+                return (
+                  <button
+                    key={`${i}-${w}`}
+                    type="button"
+                    onClick={() => handleWordClick(i)}
+                    className={`px-3 py-1.5 rounded-md text-base sm:text-lg font-medium transition border ${
+                      isMasked
+                        ? "border-cyan-500 bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 font-mono"
+                        : "border-transparent hover:border-neutral-300 dark:hover:border-neutral-700 text-neutral-800 dark:text-neutral-200"
+                    }`}
+                  >
+                    {isMasked ? "▒▒▒" : w}
+                  </button>
+                );
+              })}
+            </div>
+            {state.maskedIndex < 0 && (
+              <p className="text-xs text-neutral-500 mt-3 italic">
+                No mask. Click a word to mask it again.
+              </p>
+            )}
+          </>
         )}
       </div>
 
       {/* Predictions */}
-      {state.maskedIndex >= 0 && (
+      {maskedSentence !== null && (
         <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/5 p-5">
           <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-cyan-600 dark:text-cyan-400 mb-3">
             Top predictions
