@@ -116,9 +116,30 @@ export default function FullAttentionPanel({
       </div>
 
       {busy && (
-        <p className="text-xs font-mono text-cyan-400 mb-3">
-          Running CLIPSeg on {labels.length} labels… {clipSeg.progress}%
-        </p>
+        <div className="mb-4 rounded-lg border border-cyan-500/40 bg-cyan-500/5 p-3">
+          <div className="flex items-center justify-between gap-3 text-xs font-mono text-cyan-300">
+            <span className="flex items-center gap-2">
+              <span className="relative inline-flex h-2 w-2">
+                <span className="absolute inset-0 rounded-full bg-cyan-400 animate-ping" />
+                <span className="relative inline-block h-2 w-2 rounded-full bg-cyan-400" />
+              </span>
+              {clipSeg.status === "loading"
+                ? `Loading attention model · ${clipSeg.progress}%`
+                : `Computing attention for ${labels.length} ${labels.length === 1 ? "label" : "labels"}…`}
+            </span>
+            <span className="hidden sm:inline text-cyan-500/60">browser may pause briefly</span>
+          </div>
+          <div className="relative mt-2 h-1 bg-neutral-800 rounded-full overflow-hidden">
+            {clipSeg.status === "loading" ? (
+              <div
+                className="absolute inset-y-0 left-0 bg-cyan-500 transition-all"
+                style={{ width: `${clipSeg.progress}%` }}
+              />
+            ) : (
+              <div className="absolute inset-y-0 left-0 right-0 bg-cyan-500/60 animate-pulse" />
+            )}
+          </div>
+        </div>
       )}
       {error && (
         <p className="text-xs font-mono text-red-400 mb-3">{error}</p>

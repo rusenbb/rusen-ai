@@ -218,6 +218,22 @@ export default function VisionAnythingPage() {
             {imageUrl && attentionMask && !fullAttention && (
               <HeatmapCanvas mask={attentionMask} palette="cyan" blend="screen" />
             )}
+            {imageUrl && attentionBusy && !fullAttention && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+                <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px]" />
+                <div className="relative flex items-center gap-2.5 rounded-lg border border-cyan-500/40 bg-neutral-900/95 px-3.5 py-2.5 text-xs font-mono text-white shadow-xl">
+                  <span className="relative inline-flex h-2 w-2">
+                    <span className="absolute inset-0 rounded-full bg-cyan-400 animate-ping" />
+                    <span className="relative inline-block h-2 w-2 rounded-full bg-cyan-400" />
+                  </span>
+                  <span>
+                    {clipSeg.status === "loading"
+                      ? `Loading attention model · ${clipSeg.progress}%`
+                      : `Computing attention${attentionLabel ? ` for "${attentionLabel}"` : "…"}`}
+                  </span>
+                </div>
+              </div>
+            )}
             <input
               id="vision-file"
               ref={fileInputRef}
@@ -411,7 +427,11 @@ export default function VisionAnythingPage() {
                             }
                           >
                             {r.label}
-                            {attentionBusy && isActive && ` · ${clipSeg.progress}%`}
+                            {attentionBusy && isActive && (
+                              clipSeg.status === "loading"
+                                ? ` · loading model ${clipSeg.progress}%`
+                                : " · computing…"
+                            )}
                           </span>
                           <span className="text-neutral-500 tabular-nums">
                             {(r.score * 100).toFixed(2)}%
