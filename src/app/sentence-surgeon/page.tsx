@@ -2,60 +2,89 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useFillMask, type FillMaskPrediction } from "./hooks/useFillMask";
-import { EXAMPLES, type SentenceExample } from "./data/examples";
+import { EXAMPLES } from "./data/examples";
 
 const MASK_TOKEN = "[MASK]";
 
-type SentenceState = {
-  words: string[];
-  /** Index into `words` whose word is hidden behind a mask. -1 = no mask. */
-  maskedIndex: number;
-};
+type Mode = "fill" | "next";
 
-function exampleToState(ex: SentenceExample): SentenceState {
-  return { words: ex.sentence.split(/\s+/), maskedIndex: ex.defaultMaskIndex };
-}
-
-function buildMaskedSentence(state: SentenceState): string | null {
-  if (state.maskedIndex < 0) return null;
-  return state.words
-    .map((w, i) => (i === state.maskedIndex ? MASK_TOKEN : w))
-    .join(" ");
-}
-
-function stateToText(state: SentenceState): string {
-  return buildMaskedSentence(state) ?? state.words.join(" ");
-}
-
-function textToState(text: string): SentenceState {
-  const words = text.split(/\s+/).filter(Boolean);
-  const maskedIndex = words.findIndex((w) => w.includes(MASK_TOKEN));
-  return { words, maskedIndex };
+/**
+ * Stitch a WordPiece token list back into a sentence string.
+ * Subword tokens are prefixed with "##" — these glue to the previous
+ * token without a space; everything else gets a leading space.
+ * If `maskIdx` is set, that token is replaced with [MASK]
+ * (and the leading space is preserved so the model sees a clean gap).
+ */
+function tokensToSentence(tokens: string[], maskIdx: number | null): string {
+  let out = "";
+  for (let i = 0; i < tokens.length; i++) {
+    const t = tokens[i];
+    const isSub = t.startsWith("##");
+    const display = i === maskIdx ? MASK_TOKEN : isSub ? t.slice(2) : t;
+    if (i === 0) {
+      out += display;
+    } else if (isSub && i !== maskIdx) {
+      // Subword stays glued. If the masked token is a subword we still want
+      // a space before [MASK] so the model treats it as a normal word slot.
+      out += display;
+    } else {
+      out += " " + display;
+    }
+  }
+  return out;
 }
 
 export default function SentenceSurgeonPage() {
   const fillMask = useFillMask();
-  const [activeExampleIdx, setActiveExampleIdx] = useState(0);
-  const [state, setState] = useState<SentenceState>(() => exampleToState(EXAMPLES[0]));
-  const [editMode, setEditMode] = useState(false);
-  const [rawText, setRawText] = useState(() => stateToText(exampleToState(EXAMPLES[0])));
+  const [text, setText] = useState<string>(EXAMPLES[0]);
+  const [tokens, setTokens] = useState<string[]>([]);
+  const [maskedIdx, setMaskedIdx] = useState<number | null>(null);
+  const [mode, setMode] = useState<Mode>("fill");
   const [predictions, setPredictions] = useState<FillMaskPrediction[]>([]);
   const [busy, setBusy] = useState(false);
   const [predictError, setPredictError] = useState<string | null>(null);
   const reqIdRef = useRef(0);
 
-  // The single source of truth the model sees. In chip mode it's derived from
-  // `state`; in edit mode it's the textarea string (only if it contains [MASK]).
-  const maskedSentence = useMemo<string | null>(() => {
-    if (editMode) {
-      return rawText.includes(MASK_TOKEN) ? rawText : null;
+  // Re-tokenize whenever text or model readiness changes.
+  useEffect(() => {
+    if (fillMask.status !== "ready") return;
+    const next = fillMask.tokenize(text);
+    setTokens(next);
+    // If the previously-masked index is now out of range, drop it.
+    setMaskedIdx((prev) => (prev !== null && prev < next.length ? prev : null));
+  }, [text, fillMask, fillMask.status]);
+
+  // Pick a sensible default mask once tokens land.
+  useEffect(() => {
+    if (mode !== "fill") return;
+    if (tokens.length === 0) {
+      setMaskedIdx(null);
+      return;
     }
-    return buildMaskedSentence(state);
-  }, [editMode, rawText, state]);
+    setMaskedIdx((prev) => {
+      if (prev !== null && prev < tokens.length) return prev;
+      // Default: the last "word-ish" token (skip punctuation tokens).
+      for (let i = tokens.length - 1; i >= 0; i--) {
+        if (/^[a-z0-9##]/i.test(tokens[i])) return i;
+      }
+      return tokens.length - 1;
+    });
+  }, [tokens, mode]);
+
+  // The exact string the model sees, derived from tokens (or text + [MASK]
+  // for next-word mode). Memoised so the prediction effect doesn't fire
+  // on every keystroke before tokens land.
+  const maskedSentence = useMemo<string | null>(() => {
+    if (mode === "next") {
+      const trimmed = text.trim();
+      if (trimmed.length === 0) return null;
+      return trimmed + " " + MASK_TOKEN;
+    }
+    if (tokens.length === 0 || maskedIdx === null) return null;
+    return tokensToSentence(tokens, maskedIdx);
+  }, [mode, text, tokens, maskedIdx]);
 
   // Run prediction whenever the masked sentence changes (and model is ready).
-  // All setState calls live inside the promise chain so the effect itself
-  // doesn't update state synchronously.
   useEffect(() => {
     if (!maskedSentence || fillMask.status !== "ready") {
       return;
@@ -90,63 +119,93 @@ export default function SentenceSurgeonPage() {
     };
   }, [maskedSentence, fillMask]);
 
-  const pickExample = useCallback((i: number) => {
-    setActiveExampleIdx(i);
-    const next = exampleToState(EXAMPLES[i]);
-    setState(next);
-    setRawText(stateToText(next));
-  }, []);
-
-  const handleWordClick = useCallback((i: number) => {
-    setState((prev) => ({
-      words: prev.words,
-      maskedIndex: prev.maskedIndex === i ? -1 : i,
-    }));
+  const handleChipClick = useCallback((i: number) => {
+    setMaskedIdx((prev) => (prev === i ? null : i));
   }, []);
 
   const handlePredictionPick = useCallback(
     (token: string) => {
-      const cleanedToken = token.replace(/^##/, "");
-      if (editMode) {
-        setRawText((prev) => prev.replace(MASK_TOKEN, cleanedToken));
+      const cleaned = token.replace(/^##/, "");
+      if (mode === "next") {
+        // Append the predicted word with a leading space.
+        setText((prev) => prev.replace(/\s+$/, "") + " " + cleaned);
         return;
       }
-      setState((prev) => {
-        if (prev.maskedIndex < 0) return prev;
-        const original = prev.words[prev.maskedIndex];
-        const trailing = original.match(/[.,!?;:]+$/)?.[0] ?? "";
-        const newWords = [...prev.words];
-        newWords[prev.maskedIndex] = cleanedToken + trailing;
-        return { words: newWords, maskedIndex: -1 };
-      });
+      if (maskedIdx === null) return;
+      // Stitch the new token list back into a sentence and use that as the
+      // new textarea contents. WordPiece is uncased, so we preserve the
+      // user's original casing where possible by only replacing the masked
+      // span with the lowercased prediction.
+      const newTokens = [...tokens];
+      // Re-prefix with "##" if the original token was a subword, so the
+      // glue-to-previous behavior is preserved when we re-render.
+      const wasSub = newTokens[maskedIdx].startsWith("##");
+      newTokens[maskedIdx] = wasSub ? "##" + cleaned : cleaned;
+      const next = tokensToSentence(newTokens, null);
+      setText(next);
+      setMaskedIdx(null);
     },
-    [editMode],
+    [mode, maskedIdx, tokens],
   );
 
-  const handleReset = useCallback(() => {
-    const fresh = exampleToState(EXAMPLES[activeExampleIdx]);
-    setState(fresh);
-    setRawText(stateToText(fresh));
-  }, [activeExampleIdx]);
-
-  const toggleEditMode = useCallback(() => {
-    setEditMode((prev) => {
-      if (!prev) {
-        setRawText(stateToText(state));
-        return true;
-      }
-      setState(textToState(rawText));
-      return false;
-    });
-  }, [state, rawText]);
-
-  const handleRawTextChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setRawText(e.target.value);
+  const handleExample = useCallback((s: string) => {
+    setText(s);
+    setMaskedIdx(null);
+    setPredictions([]);
   }, []);
 
-  const insertMaskAtCursor = useCallback(() => {
-    setRawText((prev) => (prev.includes(MASK_TOKEN) ? prev : prev.trimEnd() + " " + MASK_TOKEN));
+  const handleClear = useCallback(() => {
+    setText("");
+    setMaskedIdx(null);
+    setPredictions([]);
   }, []);
+
+  const tokenStrip = useMemo(() => {
+    if (tokens.length === 0) {
+      return (
+        <p className="text-xs italic text-neutral-500">
+          {fillMask.status === "ready"
+            ? "Type something to see how the model tokenises it."
+            : "Tokens will appear once DistilBERT finishes loading."}
+        </p>
+      );
+    }
+    return (
+      <div className="flex flex-wrap gap-1.5 leading-relaxed">
+        {tokens.map((t, i) => {
+          const isSub = t.startsWith("##");
+          const display = isSub ? t.slice(2) : t;
+          const isMasked = mode === "fill" && i === maskedIdx;
+          const disabled = mode === "next";
+          return (
+            <button
+              key={`${i}-${t}`}
+              type="button"
+              disabled={disabled}
+              onClick={() => handleChipClick(i)}
+              title={
+                disabled
+                  ? "Switch to fill-mask mode to mask a specific token"
+                  : isSub
+                    ? `subword: ##${display}`
+                    : `token: ${display}`
+              }
+              className={`px-2.5 py-1 rounded-md text-sm font-mono transition border ${
+                isMasked
+                  ? "border-cyan-500 bg-cyan-500/10 text-cyan-700 dark:text-cyan-300"
+                  : isSub
+                    ? "border-amber-500/40 bg-amber-500/5 text-amber-700 dark:text-amber-300 hover:border-amber-500"
+                    : "border-neutral-300 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 hover:border-cyan-500"
+              } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+            >
+              {isSub && <span className="text-[10px] opacity-60 mr-0.5">##</span>}
+              {isMasked ? "▒▒▒" : display}
+            </button>
+          );
+        })}
+      </div>
+    );
+  }, [tokens, maskedIdx, mode, fillMask.status, handleChipClick]);
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 sm:py-12">
@@ -156,8 +215,10 @@ export default function SentenceSurgeonPage() {
         </p>
         <h1 className="text-3xl sm:text-4xl font-bold mb-3">Sentence Surgeon</h1>
         <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 max-w-2xl text-pretty">
-          Click any word to remove it. A small BERT predicts what should fill the gap. Click a
-          prediction to graft it in. Everything runs locally on WASM, no audio or text leaves your browser.
+          Type any sentence. DistilBERT&apos;s WordPiece tokeniser splits it into the
+          actual subword units the model sees. Click a token to mask it and watch the
+          model predict what fills the gap — or switch to next-word mode to see what
+          it would extend the sentence with.
         </p>
       </div>
 
@@ -168,7 +229,7 @@ export default function SentenceSurgeonPage() {
         )}
         {fillMask.status === "ready" && !busy && (
           <span className="text-green-600 dark:text-green-400">
-            Model ready · {editMode ? "type a sentence with [MASK]" : "click a word"}
+            Model ready · {tokens.length} tokens
           </span>
         )}
         {fillMask.status === "ready" && busy && (
@@ -180,115 +241,99 @@ export default function SentenceSurgeonPage() {
 
       {/* Example chips */}
       <div className="flex flex-wrap gap-2 mb-5">
-        {EXAMPLES.map((ex, i) => {
-          const active = i === activeExampleIdx;
-          return (
-            <button
-              key={ex.sentence}
-              type="button"
-              onClick={() => pickExample(i)}
-              className={`rounded-full border px-3 py-1 text-xs font-mono transition ${
-                active
-                  ? "border-cyan-500 bg-cyan-500/10 text-cyan-700 dark:text-cyan-300"
-                  : "border-neutral-300 dark:border-neutral-700 text-neutral-500 hover:border-neutral-500"
-              }`}
-              title={ex.sentence}
-            >
-              {ex.sentence.length > 38 ? ex.sentence.slice(0, 38) + "…" : ex.sentence}
-            </button>
-          );
-        })}
+        {EXAMPLES.map((s) => (
+          <button
+            key={s}
+            type="button"
+            onClick={() => handleExample(s)}
+            className={`rounded-full border px-3 py-1 text-xs font-mono transition ${
+              s === text
+                ? "border-cyan-500 bg-cyan-500/10 text-cyan-700 dark:text-cyan-300"
+                : "border-neutral-300 dark:border-neutral-700 text-neutral-500 hover:border-neutral-500"
+            }`}
+            title={s}
+          >
+            {s.length > 38 ? s.slice(0, 38) + "…" : s}
+          </button>
+        ))}
       </div>
 
-      {/* Sentence editor */}
+      {/* Editor */}
       <div className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 p-5 sm:p-7 mb-6">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
           <span className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
             Sentence
           </span>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em]">
+            {/* Mode toggle */}
+            <div className="inline-flex rounded-md border border-neutral-300 dark:border-neutral-700 overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setMode("fill")}
+                className={`px-2.5 py-1 transition ${
+                  mode === "fill"
+                    ? "bg-cyan-500/10 text-cyan-700 dark:text-cyan-300"
+                    : "text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200"
+                }`}
+              >
+                Fill mask
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("next")}
+                className={`px-2.5 py-1 transition border-l border-neutral-300 dark:border-neutral-700 ${
+                  mode === "next"
+                    ? "bg-cyan-500/10 text-cyan-700 dark:text-cyan-300"
+                    : "text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200"
+                }`}
+              >
+                Next word
+              </button>
+            </div>
+
             <button
               type="button"
-              onClick={toggleEditMode}
-              className={`text-[10px] font-mono uppercase tracking-[0.18em] transition ${
-                editMode
-                  ? "text-cyan-600 dark:text-cyan-400"
-                  : "text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200"
-              }`}
-              title={editMode ? "Switch back to click-to-mask chips" : "Type any sentence with [MASK]"}
+              onClick={handleClear}
+              className="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200 transition"
             >
-              {editMode ? "▤ Chip mode" : "✎ Edit text"}
-            </button>
-            <button
-              type="button"
-              onClick={handleReset}
-              className="text-[10px] font-mono uppercase tracking-[0.18em] text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200 transition"
-            >
-              ↺ Reset
+              ↺ Clear
             </button>
           </div>
         </div>
 
-        {editMode ? (
-          <>
-            <textarea
-              value={rawText}
-              onChange={handleRawTextChange}
-              spellCheck={false}
-              rows={3}
-              className="w-full resize-y rounded-md border border-neutral-300 dark:border-neutral-700 bg-transparent px-3 py-2 text-base sm:text-lg font-mono leading-relaxed text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-cyan-500"
-              placeholder="Type any sentence and put [MASK] where you want a prediction…"
-            />
-            <div className="flex items-center justify-between mt-2 gap-3 flex-wrap">
-              <p className="text-xs text-neutral-500">
-                Use the literal token <code className="font-mono text-cyan-600 dark:text-cyan-400">[MASK]</code> to mark the gap.
-              </p>
-              {!rawText.includes(MASK_TOKEN) && (
-                <button
-                  type="button"
-                  onClick={insertMaskAtCursor}
-                  className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-600 dark:text-cyan-400 hover:underline"
-                >
-                  + Append [MASK]
-                </button>
-              )}
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="flex flex-wrap gap-2 leading-relaxed">
-              {state.words.map((w, i) => {
-                const isMasked = i === state.maskedIndex;
-                return (
-                  <button
-                    key={`${i}-${w}`}
-                    type="button"
-                    onClick={() => handleWordClick(i)}
-                    className={`px-3 py-1.5 rounded-md text-base sm:text-lg font-medium transition border ${
-                      isMasked
-                        ? "border-cyan-500 bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 font-mono"
-                        : "border-transparent hover:border-neutral-300 dark:hover:border-neutral-700 text-neutral-800 dark:text-neutral-200"
-                    }`}
-                  >
-                    {isMasked ? "▒▒▒" : w}
-                  </button>
-                );
-              })}
-            </div>
-            {state.maskedIndex < 0 && (
-              <p className="text-xs text-neutral-500 mt-3 italic">
-                No mask. Click a word to mask it again.
-              </p>
-            )}
-          </>
-        )}
+        <textarea
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          spellCheck={false}
+          rows={2}
+          placeholder="Type a sentence and click a token below to mask it…"
+          className="w-full resize-y rounded-md border border-neutral-300 dark:border-neutral-700 bg-transparent px-3 py-2 text-base sm:text-lg leading-relaxed text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-cyan-500"
+        />
+
+        {/* Token strip */}
+        <div className="mt-4">
+          <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500 mb-2">
+            {mode === "fill" ? "Tokens — click one to mask it" : "Tokens (next-word mode predicts the end)"}
+          </div>
+          {tokenStrip}
+          {tokens.some((t) => t.startsWith("##")) && (
+            <p className="text-[10px] text-neutral-500 mt-2">
+              <span className="text-amber-600 dark:text-amber-400 font-mono">amber</span> tokens are
+              WordPiece subwords (start with <code className="font-mono">##</code>). They glue to
+              the previous token and represent how the model actually sees the word.
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Predictions */}
       {maskedSentence !== null && (
         <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/5 p-5">
-          <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-cyan-600 dark:text-cyan-400 mb-3">
-            Top predictions
+          <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-cyan-600 dark:text-cyan-400 mb-3 flex items-center gap-2">
+            <span>Top predictions</span>
+            <span className="text-neutral-500 normal-case tracking-normal">
+              {mode === "next" ? "what should come next" : "what fills the gap"}
+            </span>
           </div>
           {predictions.length === 0 && busy && (
             <p className="text-sm text-neutral-500">Computing…</p>
@@ -301,7 +346,7 @@ export default function SentenceSurgeonPage() {
               const isTop = i === 0;
               const pct = p.score * 100;
               return (
-                <li key={p.token}>
+                <li key={p.token + i}>
                   <button
                     type="button"
                     onClick={() => handlePredictionPick(p.token)}
@@ -335,8 +380,8 @@ export default function SentenceSurgeonPage() {
             })}
           </ul>
           <p className="text-xs text-neutral-500 mt-4 leading-relaxed">
-            Click a prediction to graft it into the sentence. Probabilities sum across the model&apos;s
-            entire vocabulary, so even the top guess often sits below 50%.
+            Click a prediction to graft it in. Probabilities sum across the model&apos;s
+            entire 30k vocabulary, so even the top guess often sits below 50%.
           </p>
         </div>
       )}
@@ -344,10 +389,13 @@ export default function SentenceSurgeonPage() {
       {/* Method note */}
       <div className="mt-10 text-xs text-neutral-500 leading-relaxed max-w-2xl">
         <p>
-          The model is <code className="font-mono text-[11px]">distilbert-base-uncased</code> (~66 MB), a
-          distilled BERT that predicts what word is missing from a sentence. It was trained on English
-          Wikipedia and BookCorpus, so its world model and biases reflect that. Predictions are lowercased
-          because the model is uncased; click a result anyway and the trailing punctuation is preserved.
+          The model is <code className="font-mono text-[11px]">distilbert-base-uncased</code> (~66 MB),
+          a distilled BERT trained on English Wikipedia and BookCorpus, so its world model and biases
+          reflect that. WordPiece is uncased, which is why predictions come back lowercased — and why
+          rare words split into multiple <code className="font-mono">##</code>-prefixed subwords.
+          Next-word mode is a soft hack: BERT is bidirectional, not autoregressive, but we still get a
+          plausible distribution for the trailing slot by appending <code className="font-mono">[MASK]</code>{" "}
+          at the end.
         </p>
       </div>
     </div>
