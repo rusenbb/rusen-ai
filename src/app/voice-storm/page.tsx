@@ -28,12 +28,22 @@ export default function VoiceStormPage() {
   const rafRef = useRef<number>(0);
   const idRef = useRef<number>(0);
   // Serialize transcribe calls so concurrent utterances don't fight for the
-  // single WASM inference thread.
+  // single WASM inference thread. Track depth so we can drop overflow rather
+  // than letting the queue grow unbounded — a stuck "speaking" loop used to
+  // freeze the UI by piling up tens of pending transcriptions.
   const transcribeQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const queueDepthRef = useRef(0);
+  const MAX_QUEUE_DEPTH = 4;
 
   // Defined after `mic` because `handleSpeech` closes over `transcriber`.
   const handleSpeech = useCallback(
     (audio: Float32Array) => {
+      if (queueDepthRef.current >= MAX_QUEUE_DEPTH) {
+        // Backpressure: drop the new utterance rather than freezing the page.
+        // The user sees a small toast in the status strip via setTranscribeError.
+        setTranscribeError("Skipped a segment (transcriber catching up)…");
+        return;
+      }
       const id = ++idRef.current;
       const durationSec = audio.length / 16000;
       const placeholder: Utterance = {
@@ -44,6 +54,7 @@ export default function VoiceStormPage() {
         transcribing: true,
       };
       setHistory((prev) => [placeholder, ...prev].slice(0, MAX_HISTORY));
+      queueDepthRef.current += 1;
       transcribeQueueRef.current = transcribeQueueRef.current.then(async () => {
         try {
           const text = await transcriber.transcribe(audio);
@@ -61,6 +72,8 @@ export default function VoiceStormPage() {
             ),
           );
           setTranscribeError(msg);
+        } finally {
+          queueDepthRef.current = Math.max(0, queueDepthRef.current - 1);
         }
       });
     },
