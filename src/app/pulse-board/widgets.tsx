@@ -1,15 +1,18 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { SiBitcoin, SiEthereum, SiSolana, SiChainlink } from "react-icons/si";
+import {
+  SiBitcoin,
+  SiEthereum,
+  SiSolana,
+  SiBinance,
+  SiRipple,
+  SiDogecoin,
+  SiCardano,
+} from "react-icons/si";
 import { Card as SharedCard } from "@/components/ui";
 
 // Types
-interface FearGreedData {
-  value: string;
-  value_classification: string;
-}
-
 interface WeatherData {
   temperature: number;
   windspeed: number;
@@ -201,7 +204,7 @@ export const WIDGET_ORDER = [
   "github-activity",
   "rocket-launches",
   "wikipedia-live",
-  "space-weather",
+  "fx-pulse",
   "world-clocks",
   "weather",
   "iss-tracker",
@@ -248,7 +251,7 @@ export function ShortcutsModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
 
   const widgetNames = [
     "Crypto Hub", "GitHub Activity", "Rocket Launches", "Wikipedia Live",
-    "Space Weather", "World Clocks", "Weather", "ISS Tracker", "Earthquakes"
+    "FX Pulse", "World Clocks", "Weather", "ISS Tracker", "Earthquakes"
   ];
 
   return (
@@ -354,164 +357,130 @@ function WorldClocksWidget() {
   );
 }
 
-// Unified Crypto Hub - Real-time prices, 24h change, Fear & Greed, Chainlink oracle, Gas
+// Crypto Hub - Real-time streaming prices for 8 coins via Binance WebSocket.
+type CoinSymbol = "btc" | "eth" | "sol" | "bnb" | "xrp" | "doge" | "ada" | "avax";
+
+type CoinIconProps = { className?: string; style?: React.CSSProperties };
+
+const COINS: ReadonlyArray<{
+  sym: CoinSymbol;
+  stream: string;
+  name: string;
+  Icon: React.ComponentType<CoinIconProps>;
+  color: string;
+  cgId: string;
+}> = [
+  { sym: "btc", stream: "btcusdt@trade", name: "Bitcoin", Icon: SiBitcoin, color: "#F7931A", cgId: "bitcoin" },
+  { sym: "eth", stream: "ethusdt@trade", name: "Ethereum", Icon: SiEthereum, color: "#627EEA", cgId: "ethereum" },
+  { sym: "sol", stream: "solusdt@trade", name: "Solana", Icon: SiSolana, color: "#9945FF", cgId: "solana" },
+  { sym: "bnb", stream: "bnbusdt@trade", name: "BNB", Icon: SiBinance, color: "#F3BA2F", cgId: "binancecoin" },
+  { sym: "xrp", stream: "xrpusdt@trade", name: "XRP", Icon: SiRipple, color: "#23292F", cgId: "ripple" },
+  { sym: "doge", stream: "dogeusdt@trade", name: "Dogecoin", Icon: SiDogecoin, color: "#C2A633", cgId: "dogecoin" },
+  { sym: "ada", stream: "adausdt@trade", name: "Cardano", Icon: SiCardano, color: "#0033AD", cgId: "cardano" },
+  // Avalanche has no react-icons/si entry; reuse the Solana-style block with a placeholder glyph.
+  { sym: "avax", stream: "avaxusdt@trade", name: "Avalanche", Icon: AvalancheGlyph, color: "#E84142", cgId: "avalanche-2" },
+];
+
+function AvalancheGlyph({ className = "", style }: CoinIconProps) {
+  return (
+    <svg viewBox="0 0 32 32" className={className} style={style} aria-hidden>
+      <circle cx="16" cy="16" r="16" fill="#E84142" />
+      <path
+        d="M10.4 22.5h-3l5.85-10.4h3zM18.5 22.5l-3.6-6.4h3l3.6 6.4z"
+        fill="#fff"
+      />
+    </svg>
+  );
+}
+
+type PriceState = { price: number; prevPrice: number };
+type ChangeState = number | null;
+
 function CryptoHubWidget() {
-  // WebSocket real-time prices
-  const [prices, setPrices] = useState<{
-    btc: { price: number; prevPrice: number };
-    eth: { price: number; prevPrice: number };
-    sol: { price: number; prevPrice: number };
-  }>({
-    btc: { price: 0, prevPrice: 0 },
-    eth: { price: 0, prevPrice: 0 },
-    sol: { price: 0, prevPrice: 0 },
+  const [prices, setPrices] = useState<Record<CoinSymbol, PriceState>>(() => {
+    const init = {} as Record<CoinSymbol, PriceState>;
+    COINS.forEach((c) => {
+      init[c.sym] = { price: 0, prevPrice: 0 };
+    });
+    return init;
+  });
+  const [changes, setChanges] = useState<Record<CoinSymbol, ChangeState>>(() => {
+    const init = {} as Record<CoinSymbol, ChangeState>;
+    COINS.forEach((c) => {
+      init[c.sym] = null;
+    });
+    return init;
   });
   const [wsConnected, setWsConnected] = useState(false);
   const [updateCount, setUpdateCount] = useState(0);
   const wsRef = useRef<WebSocket | null>(null);
 
-  // CoinGecko 24h change data
-  const [changes, setChanges] = useState<{ btc: number; eth: number } | null>(null);
-
-  // Fear & Greed
-  const [fearGreed, setFearGreed] = useState<FearGreedData | null>(null);
-
-  // Chainlink on-chain prices + Gas
-  const [chainlink, setChainlink] = useState<{ btc: number; eth: number; gas: number } | null>(null);
-
-  // WebSocket connection for real-time prices
   useEffect(() => {
-    const ws = new WebSocket(
-      "wss://stream.binance.com:9443/stream?streams=btcusdt@trade/ethusdt@trade/solusdt@trade"
-    );
+    const streamPath = COINS.map((c) => c.stream).join("/");
+    const ws = new WebSocket(`wss://stream.binance.com:9443/stream?streams=${streamPath}`);
 
     ws.onopen = () => setWsConnected(true);
     ws.onclose = () => setWsConnected(false);
     ws.onerror = () => setWsConnected(false);
 
+    const streamToSym = new Map<string, CoinSymbol>(
+      COINS.map((c) => [c.stream, c.sym] as const),
+    );
+
     ws.onmessage = (event) => {
-      const message = JSON.parse(event.data);
-      const { stream, data } = message;
-      const price = parseFloat(data.p);
-
-      setPrices((prev) => {
-        if (stream === "btcusdt@trade") {
-          return { ...prev, btc: { price, prevPrice: prev.btc.price || price } };
-        } else if (stream === "ethusdt@trade") {
-          return { ...prev, eth: { price, prevPrice: prev.eth.price || price } };
-        } else if (stream === "solusdt@trade") {
-          return { ...prev, sol: { price, prevPrice: prev.sol.price || price } };
-        }
-        return prev;
-      });
-
-      setUpdateCount((c) => c + 1);
+      try {
+        const message = JSON.parse(event.data);
+        const sym = streamToSym.get(message.stream);
+        if (!sym) return;
+        const price = parseFloat(message.data.p);
+        setPrices((prev) => ({
+          ...prev,
+          [sym]: { price, prevPrice: prev[sym].price || price },
+        }));
+        setUpdateCount((c) => c + 1);
+      } catch {
+        // ignore malformed frames
+      }
     };
 
     wsRef.current = ws;
     return () => ws.close();
   }, []);
 
-  // Fetch 24h change + Fear & Greed (every 60s)
-  const fetchMarketData = useCallback(async () => {
+  // 24h change for all 8 coins from CoinGecko (single call, polled every 60s).
+  const fetchChanges = useCallback(async () => {
     try {
-      const [cryptoRes, fgRes] = await Promise.all([
-        fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true"),
-        fetch("https://api.alternative.me/fng/?limit=1"),
-      ]);
-
-      if (cryptoRes.ok) {
-        const data = await cryptoRes.json();
-        setChanges({
-          btc: data.bitcoin.usd_24h_change,
-          eth: data.ethereum.usd_24h_change,
-        });
-      }
-
-      if (fgRes.ok) {
-        const fgData = await fgRes.json();
-        if (fgData.data?.[0]) {
-          setFearGreed(fgData.data[0]);
-        }
-      }
+      const ids = COINS.map((c) => c.cgId).join(",");
+      const res = await fetch(
+        `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`,
+      );
+      if (!res.ok) return;
+      const data = await res.json();
+      const next = {} as Record<CoinSymbol, ChangeState>;
+      COINS.forEach((c) => {
+        next[c.sym] = data[c.cgId]?.usd_24h_change ?? null;
+      });
+      setChanges(next);
     } catch {
-      console.error("Failed to fetch market data");
-    }
-  }, []);
-
-  // Fetch Chainlink on-chain data (every 30s)
-  const fetchChainlink = useCallback(async () => {
-    try {
-      const rpcUrl = "https://eth.llamarpc.com";
-      const BTC_FEED = "0xF4030086522a5bEEa4988F8cA5B36dbC97BeE88c";
-      const ETH_FEED = "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419";
-      const LATEST_ROUND = "0xfeaf968c";
-
-      const [btcRes, ethRes, gasRes] = await Promise.all([
-        fetch(rpcUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ jsonrpc: "2.0", method: "eth_call", params: [{ to: BTC_FEED, data: LATEST_ROUND }, "latest"], id: 1 }),
-        }),
-        fetch(rpcUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ jsonrpc: "2.0", method: "eth_call", params: [{ to: ETH_FEED, data: LATEST_ROUND }, "latest"], id: 2 }),
-        }),
-        fetch(rpcUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ jsonrpc: "2.0", method: "eth_gasPrice", params: [], id: 3 }),
-        }),
-      ]);
-
-      const btcData = await btcRes.json();
-      const ethData = await ethRes.json();
-      const gasData = await gasRes.json();
-
-      // JSON-RPC sometimes returns an error envelope with HTTP 200; the
-      // previous code treated those as "0" and painted "$0 / 0.0 gwei".
-      // Fail the whole batch instead so the UI keeps showing the last
-      // good values (or "--" on first failure).
-      if (btcData.error || ethData.error || gasData.error) {
-        throw new Error("RPC returned an error envelope");
-      }
-      if (!btcData.result || !ethData.result || !gasData.result) {
-        throw new Error("RPC returned no result");
-      }
-
-      const btcPrice = Number(BigInt("0x" + btcData.result.slice(66, 130))) / 1e8;
-      const ethPrice = Number(BigInt("0x" + ethData.result.slice(66, 130))) / 1e8;
-      const gasPrice = Number(BigInt(gasData.result)) / 1e9;
-
-      setChainlink({ btc: btcPrice, eth: ethPrice, gas: gasPrice });
-    } catch {
-      // Leave previous chainlink data intact (UI keeps showing last
-      // good prices). On first failure chainlink stays null and the
-      // widget shows "--".
+      // Leave previous changes intact on failure.
     }
   }, []);
 
   useEffect(() => {
-    queueMicrotask(() => {
-      void fetchMarketData();
-      void fetchChainlink();
-    });
-    const marketInterval = setInterval(fetchMarketData, 60000);
-    const chainlinkInterval = setInterval(fetchChainlink, 30000);
-    return () => {
-      clearInterval(marketInterval);
-      clearInterval(chainlinkInterval);
-    };
-  }, [fetchMarketData, fetchChainlink]);
+    void fetchChanges();
+    const id = setInterval(fetchChanges, 60000);
+    return () => clearInterval(id);
+  }, [fetchChanges]);
 
   const formatPrice = (price: number) => {
     if (price === 0) return "--";
-    // No decimals for prices >= $1000, 2 decimals otherwise
     if (price >= 1000) {
       return price.toLocaleString("en-US", { maximumFractionDigits: 0 });
     }
-    return price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (price >= 1) {
+      return price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    return price.toLocaleString("en-US", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
   };
 
   const formatChange = (change: number) => {
@@ -524,14 +493,6 @@ function CryptoHubWidget() {
     return current > prev ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400";
   };
 
-  const getFearGreedColor = (value: number) => {
-    if (value <= 25) return "text-red-600 dark:text-red-400";
-    if (value <= 45) return "text-orange-500 dark:text-orange-400";
-    if (value <= 55) return "text-yellow-500 dark:text-yellow-400";
-    if (value <= 75) return "text-lime-500 dark:text-lime-400";
-    return "text-green-600 dark:text-green-400";
-  };
-
   return (
     <Card className="col-span-1 md:col-span-2 lg:col-span-3">
       <div className="flex items-center justify-between mb-4">
@@ -541,101 +502,27 @@ function CryptoHubWidget() {
         <LiveBadge connected={wsConnected} updateCount={updateCount} />
       </div>
 
-      {/* Real-time prices */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-4">
-        {/* BTC */}
-        <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg overflow-hidden">
-          <div className="flex items-center gap-2 mb-1">
-            <SiBitcoin className="w-5 h-5 shrink-0 text-[#F7931A]" />
-            <span className="text-xs font-medium">Bitcoin</span>
-          </div>
-          <div className={`font-mono text-base font-bold truncate ${getPriceColor(prices.btc.price, prices.btc.prevPrice)}`}>
-            ${formatPrice(prices.btc.price)}
-          </div>
-          {changes && (
-            <div className={`text-xs ${changes.btc >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
-              {formatChange(changes.btc)} <span className="text-neutral-400">24h</span>
-            </div>
-          )}
-        </div>
-
-        {/* ETH */}
-        <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg overflow-hidden">
-          <div className="flex items-center gap-2 mb-1 min-w-0">
-            <SiEthereum className="w-5 h-5 shrink-0 text-[#627EEA]" />
-            <span className="text-xs font-medium truncate">Ethereum</span>
-          </div>
-          <div className={`font-mono text-base font-bold truncate ${getPriceColor(prices.eth.price, prices.eth.prevPrice)}`}>
-            ${formatPrice(prices.eth.price)}
-          </div>
-          {changes && (
-            <div className={`text-xs ${changes.eth >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
-              {formatChange(changes.eth)} <span className="text-neutral-400">24h</span>
-            </div>
-          )}
-        </div>
-
-        {/* SOL */}
-        <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg overflow-hidden">
-          <div className="flex items-center gap-2 mb-1">
-            <SiSolana className="w-5 h-5 shrink-0 text-[#9945FF]" />
-            <span className="text-xs font-medium">Solana</span>
-          </div>
-          <div className={`font-mono text-base font-bold truncate ${getPriceColor(prices.sol.price, prices.sol.prevPrice)}`}>
-            ${formatPrice(prices.sol.price)}
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom row: Fear & Greed + Chainlink Oracle + Gas */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 pt-4 border-t border-neutral-200 dark:border-neutral-700">
-        {/* Fear & Greed */}
-        <div>
-          <div className="text-xs text-neutral-500 mb-1">Fear & Greed Index</div>
-          <div className="flex items-baseline gap-1">
-            <span className={`text-2xl font-bold ${fearGreed ? getFearGreedColor(parseInt(fearGreed.value)) : ""}`}>
-              {fearGreed?.value || "--"}
-            </span>
-            <span className="text-xs text-neutral-400">/100</span>
-          </div>
-          <div className="text-xs text-neutral-500">{fearGreed?.value_classification || "--"}</div>
-          {fearGreed && (
-            <div className="mt-1 h-1.5 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500" style={{ width: `${fearGreed.value}%` }} />
-            </div>
-          )}
-        </div>
-
-        {/* Chainlink Oracle */}
-        <div>
-          <div className="text-xs text-neutral-500 mb-1 flex items-center gap-1">
-            <SiChainlink className="w-3.5 h-3.5 shrink-0 text-[#375BD2]" />
-            Chainlink Oracle
-          </div>
-          {chainlink ? (
-            <div className="space-y-0.5">
-              <div className="flex justify-between text-xs">
-                <span className="text-neutral-500">BTC</span>
-                <span className="font-mono">${chainlink.btc.toLocaleString()}</span>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+        {COINS.map(({ sym, name, Icon, color }) => {
+          const p = prices[sym];
+          const ch = changes[sym];
+          return (
+            <div key={sym} className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg overflow-hidden">
+              <div className="flex items-center gap-2 mb-1 min-w-0">
+                <Icon className="w-5 h-5 shrink-0" style={{ color }} />
+                <span className="text-xs font-medium truncate">{name}</span>
               </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-neutral-500">ETH</span>
-                <span className="font-mono">${chainlink.eth.toLocaleString()}</span>
+              <div className={`font-mono text-base font-bold truncate ${getPriceColor(p.price, p.prevPrice)}`}>
+                ${formatPrice(p.price)}
               </div>
+              {ch != null && (
+                <div className={`text-xs ${ch >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+                  {formatChange(ch)} <span className="text-neutral-400">24h</span>
+                </div>
+              )}
             </div>
-          ) : (
-            <Skeleton className="h-8 w-full" />
-          )}
-        </div>
-
-        {/* Gas Price */}
-        <div>
-          <div className="text-xs text-neutral-500 mb-1">Ethereum Gas</div>
-          <div className="text-2xl font-bold text-purple-600 dark:text-purple-400 font-mono">
-            {chainlink ? `${chainlink.gas.toFixed(1)}` : "--"}
-          </div>
-          <div className="text-xs text-neutral-500">gwei</div>
-        </div>
+          );
+        })}
       </div>
     </Card>
   );
@@ -1153,130 +1040,121 @@ function WikipediaLiveWidget() {
   );
 }
 
-// Space Weather Widget - planetary K-index from NOAA SWPC.
-// CORS-friendly, no auth, refreshes every 3 hours upstream.
-function SpaceWeatherWidget() {
-  const [latestKp, setLatestKp] = useState<number | null>(null);
-  const [recent, setRecent] = useState<number[]>([]);
+// FX Pulse Widget - major currency pairs vs USD, polled from frankfurter.app
+// (free ECB feed, CORS-friendly, no auth).
+type FxRate = {
+  code: string;
+  flag: string;
+  rate: number;
+  prev: number;
+};
+
+const FX_CODES = ["EUR", "GBP", "JPY", "CHF", "TRY", "CAD"] as const;
+const FX_FLAGS: Record<string, string> = {
+  EUR: "EU", GBP: "GB", JPY: "JP", CHF: "CH", TRY: "TR", CAD: "CA",
+};
+
+function FxPulseWidget() {
+  const [rates, setRates] = useState<FxRate[]>([]);
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchKp = useCallback(async () => {
+  const fetchRates = useCallback(async () => {
     try {
-      const res = await fetch(
-        "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json",
-      );
-      if (!res.ok) throw new Error("NOAA fetch failed");
-      const data = (await res.json()) as string[][];
-      // First row is the header. Take the last 8 rows (~24 h at a 3 h cadence).
-      const rows = data.slice(1).slice(-8);
-      if (rows.length === 0) throw new Error("No data");
-      const values = rows.map((r) => parseFloat(r[1])).filter((v) => !Number.isNaN(v));
-      const latest = values[values.length - 1];
-      setLatestKp(latest);
-      setRecent(values);
-      setUpdatedAt(new Date(rows[rows.length - 1][0].replace(" ", "T") + "Z"));
+      const codes = FX_CODES.join(",");
+      const res = await fetch(`https://api.frankfurter.app/latest?from=USD&to=${codes}`);
+      if (!res.ok) throw new Error("Frankfurter fetch failed");
+      const data = await res.json();
+      const date = new Date(data.date + "T00:00:00Z");
+
+      setRates((prev) => {
+        const prevMap = new Map(prev.map((r) => [r.code, r.rate]));
+        return FX_CODES.map((code) => ({
+          code,
+          flag: FX_FLAGS[code],
+          rate: data.rates[code],
+          prev: prevMap.get(code) ?? data.rates[code],
+        }));
+      });
+      setUpdatedAt(date);
       setError(null);
     } catch {
-      setError("NOAA SWPC unreachable");
+      setError("FX feed unreachable");
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchKp();
-    // 5-minute poll; upstream cadence is 3h but a quick poll picks up updates.
-    const interval = setInterval(fetchKp, 5 * 60 * 1000);
+    fetchRates();
+    // ECB updates rates once per business day; poll every 10 min just in case.
+    const interval = setInterval(fetchRates, 10 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [fetchKp]);
+  }, [fetchRates]);
 
-  const kpInfo = (kp: number) => {
-    if (kp >= 7) return { label: "Severe storm", color: "#a855f7", aurora: "Visible far from poles" };
-    if (kp >= 5) return { label: "Geomagnetic storm", color: "#ef4444", aurora: "Aurora at high latitudes" };
-    if (kp >= 4) return { label: "Active", color: "#f97316", aurora: "Aurora possible at upper latitudes" };
-    if (kp >= 3) return { label: "Unsettled", color: "#eab308", aurora: "Quiet aurora near the poles" };
-    return { label: "Quiet", color: "#22c55e", aurora: "Aurora confined to the poles" };
+  const formatRate = (r: number) => {
+    if (r >= 100) return r.toFixed(2);
+    if (r >= 10) return r.toFixed(3);
+    return r.toFixed(4);
   };
 
-  const info = latestKp != null ? kpInfo(latestKp) : null;
+  const colorFor = (curr: number, prev: number) => {
+    if (curr === prev) return "";
+    return curr > prev ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400";
+  };
 
   return (
     <Card>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold flex items-center gap-2">
-          <span className="text-xl">&#127774;</span> Space Weather
+          <span className="text-xl">&#128181;</span> FX Pulse
         </h2>
         <LiveBadge connected={!loading && !error} />
       </div>
 
       {loading ? (
-        <div className="space-y-3">
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-3 w-full" />
-          <Skeleton className="h-3 w-2/3" />
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-8 w-full" />
         </div>
       ) : error ? (
         <p className="text-red-500 text-sm">{error}</p>
-      ) : latestKp != null && info ? (
-        <div>
-          <div className="flex items-baseline gap-3 mb-1">
-            <span className="text-3xl font-bold font-mono tabular-nums" style={{ color: info.color }}>
-              Kp {latestKp.toFixed(2)}
-            </span>
-            <span className="text-sm font-mono text-neutral-500">/ 9</span>
-          </div>
-          <div className="text-sm font-medium mb-3" style={{ color: info.color }}>
-            {info.label}
-          </div>
-          {/* 9-segment scale */}
-          <div className="flex gap-0.5 mb-3" aria-label="Kp scale">
-            {Array.from({ length: 9 }).map((_, i) => {
-              const filled = i < Math.round(latestKp);
-              const segColor = filled ? kpInfo(i + 1).color : "rgba(255,255,255,0.08)";
-              return (
-                <div
-                  key={i}
-                  className="h-2 flex-1 rounded-sm"
-                  style={{ background: segColor }}
-                />
-              );
-            })}
-          </div>
-          {/* 24h sparkline */}
-          {recent.length > 1 && (
-            <div className="flex items-end gap-0.5 h-10 mb-3">
-              {recent.map((v, i) => (
-                <div
-                  key={i}
-                  className="flex-1 rounded-sm"
-                  style={{
-                    height: `${(v / 9) * 100}%`,
-                    background: kpInfo(v).color,
-                    opacity: i === recent.length - 1 ? 1 : 0.55,
-                  }}
-                  title={`Kp ${v.toFixed(2)}`}
-                />
-              ))}
+      ) : (
+        <div className="space-y-1.5">
+          {rates.map((r) => (
+            <div
+              key={r.code}
+              className="flex items-center justify-between py-1 border-b border-neutral-100 dark:border-neutral-800 last:border-0"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded">
+                  {r.flag}
+                </span>
+                <span className="text-xs text-neutral-600 dark:text-neutral-400">USD/{r.code}</span>
+              </div>
+              <span className={`font-mono text-sm tabular-nums ${colorFor(r.rate, r.prev)}`}>
+                {formatRate(r.rate)}
+              </span>
             </div>
-          )}
-          <p className="text-xs text-neutral-500">{info.aurora}</p>
-          {updatedAt && (
-            <p className="text-[10px] text-neutral-500 mt-1">
-              Updated {updatedAt.toUTCString().replace("GMT", "UTC")}
-            </p>
-          )}
+          ))}
         </div>
-      ) : null}
+      )}
+
+      {updatedAt && (
+        <p className="text-[10px] text-neutral-500 mt-3">
+          ECB reference rates &middot; {updatedAt.toLocaleDateString()}
+        </p>
+      )}
 
       <a
-        href="https://www.swpc.noaa.gov/products/planetary-k-index"
+        href="https://www.frankfurter.app/"
         target="_blank"
         rel="noopener noreferrer"
-        className="text-xs text-neutral-500 hover:underline mt-3 inline-block"
+        className="text-xs text-neutral-500 hover:underline mt-1 inline-block"
       >
-        NOAA Space Weather &#8594;
+        frankfurter.app &#8594;
       </a>
     </Card>
   );
@@ -1798,7 +1676,7 @@ export const PULSE_WIDGETS = [
   { id: "github-activity", component: <GitHubActivityWidget /> },
   { id: "rocket-launches", component: <RocketLaunchesWidget /> },
   { id: "wikipedia-live", component: <WikipediaLiveWidget /> },
-  { id: "space-weather", component: <SpaceWeatherWidget /> },
+  { id: "fx-pulse", component: <FxPulseWidget /> },
   { id: "world-clocks", component: <WorldClocksWidget /> },
   { id: "weather", component: <WeatherWidget /> },
   { id: "iss-tracker", component: <ISSTrackerWidget /> },
