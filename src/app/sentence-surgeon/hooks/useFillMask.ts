@@ -11,10 +11,13 @@ type RawPrediction = {
   sequence: string;
 };
 
-type FillMaskPipeline = (
-  text: string,
-  options?: { topk?: number },
-) => Promise<RawPrediction[]>;
+type FillMaskPipeline = {
+  (text: string, options?: { topk?: number }): Promise<RawPrediction[]>;
+  tokenizer: {
+    tokenize: (text: string) => string[];
+    mask_token?: string;
+  };
+};
 
 export type FillMaskStatus = "idle" | "loading" | "ready" | "error";
 
@@ -28,6 +31,8 @@ export interface UseFillMask {
   progress: number;
   error: string | null;
   predict: (sentenceWithMask: string, topk?: number) => Promise<FillMaskPrediction[]>;
+  /** Run the model's WordPiece tokenizer. Empty array if not yet ready. */
+  tokenize: (text: string) => string[];
 }
 
 export function useFillMask(): UseFillMask {
@@ -81,6 +86,16 @@ export function useFillMask(): UseFillMask {
     [initModel],
   );
 
+  const tokenize = useCallback((text: string): string[] => {
+    const pipe = pipelineRef.current;
+    if (!pipe) return [];
+    try {
+      return pipe.tokenizer.tokenize(text);
+    } catch {
+      return [];
+    }
+  }, []);
+
   useEffect(() => {
     const t = setTimeout(() => {
       initModel();
@@ -88,13 +103,8 @@ export function useFillMask(): UseFillMask {
     return () => clearTimeout(t);
   }, [initModel]);
 
-  // Memoise so consumers can put the whole object in `useEffect` deps without
-  // triggering a re-fire on every parent render. Without this, every state
-  // update inside the consumer made a new fillMask reference, causing the
-  // prediction effect to refire and queueing predictions until the WASM
-  // thread saturated and the page froze.
   return useMemo(
-    () => ({ status, progress, error, predict }),
-    [status, progress, error, predict],
+    () => ({ status, progress, error, predict, tokenize }),
+    [status, progress, error, predict, tokenize],
   );
 }
