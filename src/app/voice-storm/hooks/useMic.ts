@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { MicVAD } from "@ricky0123/vad-web";
 
+const VAD_ASSET_BASE_URL = "https://cdn.jsdelivr.net/npm/@ricky0123/vad-web@0.0.30/dist/";
+const VAD_ONNX_WASM_BASE_URL = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.26.0/dist/";
+
 export type MicState = "idle" | "asking" | "ready" | "recording" | "error";
 
 interface AnalyserSnapshot {
@@ -36,6 +39,14 @@ const MIC_CONSTRAINTS: MediaStreamConstraints = {
     noiseSuppression: true,
   },
 };
+
+function getMicErrorMessage(err: unknown): string {
+  const message = err instanceof Error ? err.message : String(err || "");
+  if (message.includes("no available backend found") || message.includes("initWasm")) {
+    return "Voice activity detection failed to load. Refresh and try again; the speech runtime assets may be blocked.";
+  }
+  return message || "Microphone permission denied";
+}
 
 export function useMic(options: UseMicOptions = {}): UseMic {
   const { onSpeech } = options;
@@ -97,6 +108,13 @@ export function useMic(options: UseMicOptions = {}): UseMic {
       const vad = await MicVAD.new({
         audioContext: ctx,
         getStream: async () => stream,
+        baseAssetPath: VAD_ASSET_BASE_URL,
+        onnxWASMBasePath: VAD_ONNX_WASM_BASE_URL,
+        ortConfig: (ort) => {
+          ort.env.logLevel = "error";
+          ort.env.wasm.numThreads = 1;
+          ort.env.wasm.proxy = false;
+        },
         // Tuned to match Xenova's moonshine-web reference.
         positiveSpeechThreshold: 0.3,
         negativeSpeechThreshold: 0.25,
@@ -116,7 +134,7 @@ export function useMic(options: UseMicOptions = {}): UseMic {
       setState("recording");
     } catch (err) {
       await cleanup();
-      setError(err instanceof Error ? err.message : "Microphone permission denied");
+      setError(getMicErrorMessage(err));
       setState("error");
     }
   }, [cleanup]);

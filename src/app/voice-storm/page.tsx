@@ -258,7 +258,7 @@ export default function VoiceStormPage() {
       </div>
 
       {/* Model status */}
-      <div className="mb-4 text-xs font-mono">
+      <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-mono">
         {transcriber.status === "loading" && (
           <span className="text-neutral-500">Loading Whisper Base… {transcriber.progress}%</span>
         )}
@@ -268,8 +268,8 @@ export default function VoiceStormPage() {
           </span>
         )}
         {transcriber.error && <span className="text-red-500">{transcriber.error}</span>}
-        {mic.error && <span className="text-red-500 ml-3">{mic.error}</span>}
-        {transcribeError && <span className="text-red-500 ml-3">{transcribeError}</span>}
+        {mic.error && <span className="text-red-500">{mic.error}</span>}
+        {transcribeError && <span className="text-red-500">{transcribeError}</span>}
       </div>
 
       {/* Visualizer */}

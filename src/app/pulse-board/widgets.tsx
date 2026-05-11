@@ -467,9 +467,17 @@ function CryptoHubWidget() {
   }, []);
 
   useEffect(() => {
-    void fetchChanges();
-    const id = setInterval(fetchChanges, 60000);
-    return () => clearInterval(id);
+    let cancelled = false;
+    const run = () => {
+      if (!cancelled) void fetchChanges();
+    };
+    const initialId = window.setTimeout(run, 0);
+    const intervalId = window.setInterval(run, 60000);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(initialId);
+      window.clearInterval(intervalId);
+    };
   }, [fetchChanges]);
 
   const formatPrice = (price: number) => {

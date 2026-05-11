@@ -45,26 +45,40 @@ export default function SentenceSurgeonPage() {
   // Re-tokenize whenever text or model readiness changes.
   useEffect(() => {
     if (fillMask.status !== "ready") return;
-    const next = fillMask.tokenize(text);
-    setTokens(next);
-    // If the previously-masked index is now out of range, drop it.
-    setMaskedIdx((prev) => (prev !== null && prev < next.length ? prev : null));
+    let cancelled = false;
+    Promise.resolve().then(() => {
+      if (cancelled) return;
+      const next = fillMask.tokenize(text);
+      setTokens(next);
+      // If the previously-masked index is now out of range, drop it.
+      setMaskedIdx((prev) => (prev !== null && prev < next.length ? prev : null));
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [text, fillMask, fillMask.status]);
 
   // Pick a sensible default mask once tokens land.
   useEffect(() => {
-    if (tokens.length === 0) {
-      setMaskedIdx(null);
-      return;
-    }
-    setMaskedIdx((prev) => {
-      if (prev !== null && prev < tokens.length) return prev;
-      // Default: the last "word-ish" token (skip punctuation tokens).
-      for (let i = tokens.length - 1; i >= 0; i--) {
-        if (/^[a-z0-9##]/i.test(tokens[i])) return i;
+    let cancelled = false;
+    Promise.resolve().then(() => {
+      if (cancelled) return;
+      if (tokens.length === 0) {
+        setMaskedIdx(null);
+        return;
       }
-      return tokens.length - 1;
+      setMaskedIdx((prev) => {
+        if (prev !== null && prev < tokens.length) return prev;
+        // Default: the last "word-ish" token (skip punctuation tokens).
+        for (let i = tokens.length - 1; i >= 0; i--) {
+          if (/^[a-z0-9##]/i.test(tokens[i])) return i;
+        }
+        return tokens.length - 1;
+      });
     });
+    return () => {
+      cancelled = true;
+    };
   }, [tokens]);
 
   // The exact string the model sees, derived from tokens. Memoised so the
