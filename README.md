@@ -13,7 +13,7 @@ simulation-heavy explainers, and portfolio content.
 The current site mixes:
 
 - browser-side ML demos such as classification, segmentation, tokenization, and embedding exploration
-- interactive essays and labs such as Emergence and Optimization
+- interactive essays and labs such as Emergence and Game of Life
 - game-like systems such as RL-Arena and the standalone Game of Life experience
 - portfolio pages such as the homepage, demos index, nerdy-stuff index, and CV
 
@@ -33,7 +33,6 @@ The current site mixes:
 | Route | Project | Description |
 |-------|---------|-------------|
 | `/emergence` | Emergence | Interactive essay on cellular automata, synchrony, segregation, highways, and criticality |
-| `/optimization` | Optimization | Interactive lab for gradient descent, black-box search, and high-dimensional optimization |
 | `/game-of-life` | Game of Life | Standalone playground for the site’s cellular automata world |
 | `/embedding-explorer` | Embedding Explorer | Visual semantic geometry with embeddings and UMAP |
 | `/rusenizer` | Rusenizer | Turkish tokenizer playground and comparison tool |
@@ -65,12 +64,10 @@ src/
 │   ├── emergence/
 │   ├── embedding-explorer/
 │   ├── game-of-life/
-│   ├── optimization/
 │   ├── pulse-board/
 │   ├── rusenizer/
 │   └── segment-anything/
 ├── components/ui/               # Shared layout and UI primitives
-├── components/optimization/     # Shared optimization rendering primitives
 ├── content/                     # Site content such as CV data
 └── lib/                         # Shared helpers, registries, and math utilities
 
