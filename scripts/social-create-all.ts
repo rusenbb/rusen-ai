@@ -19,13 +19,11 @@ const PROJECT_PRESETS: Record<string, ProjectPreset> = {
   "embedding-explorer": { word: "embedding\nexplorer" },
   emergence: { word: "emergence" },
   "game-of-life": { word: "game\nof\nlife" },
-  optimization: { word: "optimization" },
   "pulse-board": { word: "pulse\nboard" },
   "rusen-gram": { word: "rusen\ngram" },
   rusenizer: { word: "rusenizer" },
   "segment-anything": { word: "segment\nanything" },
   "steering-llms": { word: "steering\nllms" },
-  "temperature-playground": { word: "temperature\nplayground" },
   "vision-anything": { word: "vision\nanything" },
   "voice-morph": { word: "voice\nmorph" },
 };

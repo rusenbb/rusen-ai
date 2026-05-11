@@ -142,14 +142,6 @@ A portfolio website that demonstrates practical AI applications with interactive
 
 ---
 
-### F6: Temperature Playground (Planned)
-
-**Purpose**: Compare LLM outputs at different temperature settings.
-
-**Status**: Planned, not yet implemented.
-
----
-
 ## Site-Wide Requirements
 
 ### Navigation

@@ -33,8 +33,7 @@ src/
 │   │   └── data-forge/         # Schema-aware test data generator
 │   ├── nerdy-stuff/            # Educational visualizations
 │   │   ├── embedding-explorer/ # Word embedding visualization
-│   │   ├── rusenizer/          # Turkish tokenizer comparison
-│   │   └── temperature-playground/
+│   │   └── rusenizer/          # Turkish tokenizer comparison
 │   └── components/             # Page-specific components
 ├── components/
 │   └── ui/                     # Shared UI library (Button, Alert, Card, etc.)
@@ -81,7 +80,6 @@ functions/
 
 - **Embedding Explorer**: 2D vector space visualization, vector arithmetic
 - **Rusenizer**: Turkish-optimized tokenizer (~45% token savings)
-- **Temperature Playground**: Sampling visualization
 
 ---
 
