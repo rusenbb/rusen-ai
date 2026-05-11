@@ -26,7 +26,6 @@ Status legend:
 | Game of Life | `live` | `/nerdy-stuff/game-of-life` | Interactive cellular automata world and camera controls. |
 | Embedding Explorer | `live` | `/nerdy-stuff/embedding-explorer` | Visual semantic geometry with embeddings, UMAP, and steering-style arithmetic. |
 | Rusenizer | `live` | `/nerdy-stuff/rusenizer` | Turkish-focused tokenizer experimentation playground. |
-| Optimization | `live` | `/optimization` | One unified optimization lab for gradient methods, black-box search, and high-dimensional training intuition. |
 | Attention Heatmap | `to-do` | `/nerdy-stuff/attention-heatmap` | Transformer attention visualization toolkit. |
 | RuseN-Gram | `to-do` | `/nerdy-stuff/rusen-gram` | Classic N-gram language modeling playground. |
 
