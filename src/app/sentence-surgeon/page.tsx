@@ -6,8 +6,6 @@ import { EXAMPLES } from "./data/examples";
 
 const MASK_TOKEN = "[MASK]";
 
-type Mode = "fill" | "next";
-
 /**
  * Stitch a WordPiece token list back into a sentence string.
  * Subword tokens are prefixed with "##" — these glue to the previous
@@ -39,7 +37,6 @@ export default function SentenceSurgeonPage() {
   const [text, setText] = useState<string>(EXAMPLES[0]);
   const [tokens, setTokens] = useState<string[]>([]);
   const [maskedIdx, setMaskedIdx] = useState<number | null>(null);
-  const [mode, setMode] = useState<Mode>("fill");
   const [predictions, setPredictions] = useState<FillMaskPrediction[]>([]);
   const [busy, setBusy] = useState(false);
   const [predictError, setPredictError] = useState<string | null>(null);
@@ -56,7 +53,6 @@ export default function SentenceSurgeonPage() {
 
   // Pick a sensible default mask once tokens land.
   useEffect(() => {
-    if (mode !== "fill") return;
     if (tokens.length === 0) {
       setMaskedIdx(null);
       return;
@@ -69,20 +65,14 @@ export default function SentenceSurgeonPage() {
       }
       return tokens.length - 1;
     });
-  }, [tokens, mode]);
+  }, [tokens]);
 
-  // The exact string the model sees, derived from tokens (or text + [MASK]
-  // for next-word mode). Memoised so the prediction effect doesn't fire
-  // on every keystroke before tokens land.
+  // The exact string the model sees, derived from tokens. Memoised so the
+  // prediction effect doesn't fire on every keystroke before tokens land.
   const maskedSentence = useMemo<string | null>(() => {
-    if (mode === "next") {
-      const trimmed = text.trim();
-      if (trimmed.length === 0) return null;
-      return trimmed + " " + MASK_TOKEN;
-    }
     if (tokens.length === 0 || maskedIdx === null) return null;
     return tokensToSentence(tokens, maskedIdx);
-  }, [mode, text, tokens, maskedIdx]);
+  }, [tokens, maskedIdx]);
 
   // Run prediction whenever the masked sentence changes (and model is ready).
   useEffect(() => {
@@ -126,11 +116,6 @@ export default function SentenceSurgeonPage() {
   const handlePredictionPick = useCallback(
     (token: string) => {
       const cleaned = token.replace(/^##/, "");
-      if (mode === "next") {
-        // Append the predicted word with a leading space.
-        setText((prev) => prev.replace(/\s+$/, "") + " " + cleaned);
-        return;
-      }
       if (maskedIdx === null) return;
       // Stitch the new token list back into a sentence and use that as the
       // new textarea contents. WordPiece is uncased, so we preserve the
@@ -145,7 +130,7 @@ export default function SentenceSurgeonPage() {
       setText(next);
       setMaskedIdx(null);
     },
-    [mode, maskedIdx, tokens],
+    [maskedIdx, tokens],
   );
 
   const handleExample = useCallback((s: string) => {
@@ -175,28 +160,20 @@ export default function SentenceSurgeonPage() {
         {tokens.map((t, i) => {
           const isSub = t.startsWith("##");
           const display = isSub ? t.slice(2) : t;
-          const isMasked = mode === "fill" && i === maskedIdx;
-          const disabled = mode === "next";
+          const isMasked = i === maskedIdx;
           return (
             <button
               key={`${i}-${t}`}
               type="button"
-              disabled={disabled}
               onClick={() => handleChipClick(i)}
-              title={
-                disabled
-                  ? "Switch to fill-mask mode to mask a specific token"
-                  : isSub
-                    ? `subword: ##${display}`
-                    : `token: ${display}`
-              }
+              title={isSub ? `subword: ##${display}` : `token: ${display}`}
               className={`px-2.5 py-1 rounded-md text-sm font-mono transition border ${
                 isMasked
                   ? "border-cyan-500 bg-cyan-500/10 text-cyan-700 dark:text-cyan-300"
                   : isSub
                     ? "border-amber-500/40 bg-amber-500/5 text-amber-700 dark:text-amber-300 hover:border-amber-500"
-                    : "border-neutral-300 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 hover:border-cyan-500"
-              } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                  : "border-neutral-300 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 hover:border-cyan-500"
+              }`}
             >
               {isSub && <span className="text-[10px] opacity-60 mr-0.5">##</span>}
               {isMasked ? "▒▒▒" : display}
@@ -205,7 +182,7 @@ export default function SentenceSurgeonPage() {
         })}
       </div>
     );
-  }, [tokens, maskedIdx, mode, fillMask.status, handleChipClick]);
+  }, [tokens, maskedIdx, fillMask.status, handleChipClick]);
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 sm:py-12">
@@ -217,8 +194,7 @@ export default function SentenceSurgeonPage() {
         <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 max-w-2xl text-pretty">
           Type any sentence. DistilBERT&apos;s WordPiece tokeniser splits it into the
           actual subword units the model sees. Click a token to mask it and watch the
-          model predict what fills the gap — or switch to next-word mode to see what
-          it would extend the sentence with.
+          model predict what fills the gap.
         </p>
       </div>
 
@@ -265,32 +241,6 @@ export default function SentenceSurgeonPage() {
             Sentence
           </span>
           <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em]">
-            {/* Mode toggle */}
-            <div className="inline-flex rounded-md border border-neutral-300 dark:border-neutral-700 overflow-hidden">
-              <button
-                type="button"
-                onClick={() => setMode("fill")}
-                className={`px-2.5 py-1 transition ${
-                  mode === "fill"
-                    ? "bg-cyan-500/10 text-cyan-700 dark:text-cyan-300"
-                    : "text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200"
-                }`}
-              >
-                Fill mask
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode("next")}
-                className={`px-2.5 py-1 transition border-l border-neutral-300 dark:border-neutral-700 ${
-                  mode === "next"
-                    ? "bg-cyan-500/10 text-cyan-700 dark:text-cyan-300"
-                    : "text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200"
-                }`}
-              >
-                Next word
-              </button>
-            </div>
-
             <button
               type="button"
               onClick={handleClear}
@@ -313,7 +263,7 @@ export default function SentenceSurgeonPage() {
         {/* Token strip */}
         <div className="mt-4">
           <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500 mb-2">
-            {mode === "fill" ? "Tokens — click one to mask it" : "Tokens (next-word mode predicts the end)"}
+            Tokens — click one to mask it
           </div>
           {tokenStrip}
           {tokens.some((t) => t.startsWith("##")) && (
@@ -332,7 +282,7 @@ export default function SentenceSurgeonPage() {
           <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-cyan-600 dark:text-cyan-400 mb-3 flex items-center gap-2">
             <span>Top predictions</span>
             <span className="text-neutral-500 normal-case tracking-normal">
-              {mode === "next" ? "what should come next" : "what fills the gap"}
+              what fills the gap
             </span>
           </div>
           {predictions.length === 0 && busy && (
@@ -393,9 +343,6 @@ export default function SentenceSurgeonPage() {
           a distilled BERT trained on English Wikipedia and BookCorpus, so its world model and biases
           reflect that. WordPiece is uncased, which is why predictions come back lowercased — and why
           rare words split into multiple <code className="font-mono">##</code>-prefixed subwords.
-          Next-word mode is a soft hack: BERT is bidirectional, not autoregressive, but we still get a
-          plausible distribution for the trailing slot by appending <code className="font-mono">[MASK]</code>{" "}
-          at the end.
         </p>
       </div>
     </div>
