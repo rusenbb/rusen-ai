@@ -25,7 +25,7 @@ type Section = "gradient" | "non-gradient";
 
 export default function OptimizationLab() {
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:py-12 md:py-16 space-y-16">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:py-10 md:py-12 space-y-10">
       <Header />
       <PrimerEssay />
       <GradientSection />
@@ -38,17 +38,22 @@ export default function OptimizationLab() {
 // ─── Header ──────────────────────────────────────────────────────────────────
 function Header() {
   return (
-    <header>
-      <p className="mb-3 text-xs font-mono uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-400">
-        OPTIMIZATION / GRADIENT & METAHEURISTIC METHODS
-      </p>
-      <h1 className="text-3xl sm:text-4xl font-bold mb-3">Optimization Lab</h1>
-      <p className="max-w-3xl text-sm sm:text-base text-neutral-600 dark:text-neutral-400 text-pretty">
-        A walk through nine optimisation algorithms — five gradient-based, four
-        derivative-free — running live on the same six 2-D test surfaces. Drop the ball anywhere
-        on the plot to start a run from there. Every contour can also be viewed as a 3-D surface;
-        drag to rotate.
-      </p>
+    <header className="grid gap-6 border-b border-neutral-200 pb-8 dark:border-neutral-800 lg:grid-cols-[minmax(0,1.15fr)_minmax(20rem,0.85fr)] lg:items-end">
+      <div>
+        <p className="mb-3 text-xs font-mono uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-400">
+          OPTIMIZATION / LIVE ALGORITHM LAB
+        </p>
+        <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">Optimization Lab</h1>
+        <p className="mt-4 max-w-3xl text-sm leading-relaxed text-neutral-600 dark:text-neutral-400 sm:text-base">
+          Run gradient and black-box optimizers on the same surfaces, move the start point, and
+          compare how each method searches for a minimum.
+        </p>
+      </div>
+      <div className="grid grid-cols-3 divide-x divide-neutral-200 border-y border-neutral-200 py-4 text-center dark:divide-neutral-800 dark:border-neutral-800">
+        <Stat label="surfaces" value="6" />
+        <Stat label="algorithms" value="9" />
+        <Stat label="views" value="2D / 3D" />
+      </div>
     </header>
   );
 }
@@ -56,26 +61,19 @@ function Header() {
 // ─── Primer essay ────────────────────────────────────────────────────────────
 function PrimerEssay() {
   return (
-    <section className="prose-block">
-      <SectionEyebrow>The setup</SectionEyebrow>
-      <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-300 leading-relaxed mb-3">
-        Every algorithm here is trying to do the same thing: find the (x, y) that minimises a real-valued
-        function f(x, y). The function is called the <em>loss</em>, the <em>objective</em>, the{" "}
-        <em>energy</em>, the <em>cost</em>, depending on which corner of the field you come from. The
-        landscape it carves out has hills you want to avoid and valleys you want to fall into.
-      </p>
-      <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-300 leading-relaxed mb-3">
-        The split between the two families is whether the algorithm gets to peek at the slope. If you can
-        compute ∇f — the vector of partial derivatives — you can take a step downhill and watch convergence
-        in tens of iterations. If you only get to evaluate f and nothing more, you have to probe the
-        landscape with samples and infer the shape: that is the world of population methods, evolutionary
-        search, and simulated annealing.
-      </p>
-      <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-300 leading-relaxed">
-        Gradient methods are king when the surface is smooth and you have the gradient. They start to fail
-        when the surface is non-convex with many basins (Rastrigin, Ackley) or when the gradient is
-        unavailable, expensive, or just plain noisy. That is where the second family earns its keep.
-      </p>
+    <section className="grid gap-4 md:grid-cols-3">
+      <PrimerPoint
+        title="Objective"
+        text="Minimize f(x, y). Lower regions are better; every method is trying to find a valley."
+      />
+      <PrimerPoint
+        title="Gradient"
+        text="Uses ∇f to step downhill. Fast on smooth terrain, brittle on rippled landscapes."
+      />
+      <PrimerPoint
+        title="Black box"
+        text="Only samples f(x, y). Slower, but much better when gradients are unavailable or misleading."
+      />
     </section>
   );
 }
@@ -108,60 +106,76 @@ function GradientSection() {
   const converged = Math.abs(last.f - surface.globalMin.f) < 1e-2;
 
   return (
-    <section>
+    <section className="border-t border-neutral-200 pt-10 dark:border-neutral-800">
       <SectionEyebrow>I · Gradient-based methods</SectionEyebrow>
-      <h2 className="text-2xl sm:text-3xl font-semibold mb-3">When you can see the slope</h2>
-      <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-300 leading-relaxed mb-6 max-w-3xl">
-        The gradient ∇f points in the direction of steepest <em>increase</em>. To minimise, we step in the
-        opposite direction. Everything in this family is some flavour of that idea: vanilla descent
-        (constant step), momentum (accumulate velocity), and adaptive methods (per-coordinate step sizes
-        based on past gradients).
-      </p>
+      <div className="mb-6 grid gap-3 lg:grid-cols-[minmax(0,0.9fr)_minmax(18rem,0.35fr)] lg:items-end">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">When you can see the slope</h2>
+          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-neutral-600 dark:text-neutral-300 sm:text-base">
+            The gradient ∇f points in the direction of steepest <em>increase</em>. To minimise, we step in the
+            opposite direction. Everything in this family is some flavour of that idea: vanilla descent,
+            momentum, and adaptive per-coordinate step sizes.
+          </p>
+        </div>
+        <Readout
+          rows={[
+            ["surface", surface.name],
+            ["method", algoMeta.name],
+            ["status", converged ? "converged" : "searching"],
+          ]}
+        />
+      </div>
 
       {/* Surface chooser */}
-      <Chips
-        items={SURFACE_LIST.map((s) => ({ id: s.id, label: s.name }))}
-        selectedId={surfaceId}
-        onSelect={(id) => {
-          setSurfaceId(id as SurfaceId);
-          setStart(defaultStartFor(id as SurfaceId));
-          setFrame(0);
-          setAnimating(true);
-        }}
-      />
+      <ControlGroup label="Surface">
+        <Chips
+          items={SURFACE_LIST.map((s) => ({ id: s.id, label: s.name }))}
+          selectedId={surfaceId}
+          onSelect={(id) => {
+            setSurfaceId(id as SurfaceId);
+            setStart(defaultStartFor(id as SurfaceId));
+            setFrame(0);
+            setAnimating(true);
+          }}
+        />
+      </ControlGroup>
       <p className="text-xs text-neutral-500 mt-2 mb-5 max-w-3xl">{surface.blurb}</p>
 
       {/* Algo + mode */}
-      <div className="flex flex-wrap items-center gap-3 mb-3">
-        <Chips
-          items={GRAD_ALGO_LIST.map((a) => ({ id: a.id, label: a.name }))}
-          selectedId={algo}
-          onSelect={(id) => {
-            setAlgo(id as GradAlgoId);
-            setFrame(0);
-            setAnimating(true);
-          }}
-        />
-        <ModeToggle mode={mode} onChange={setMode} />
-        <PlayPause
-          animating={animating}
-          atEnd={frame >= trace.length - 1}
-          onClick={() => {
-            if (frame >= trace.length - 1) setFrame(0);
-            setAnimating((a) => !a);
-          }}
-          onReset={() => {
-            setFrame(0);
-            setAnimating(true);
-          }}
-        />
+      <div className="mb-4 space-y-3 border-y border-neutral-200 py-4 dark:border-neutral-800">
+        <ControlGroup label="Algorithm">
+          <Chips
+            items={GRAD_ALGO_LIST.map((a) => ({ id: a.id, label: a.name }))}
+            selectedId={algo}
+            onSelect={(id) => {
+              setAlgo(id as GradAlgoId);
+              setFrame(0);
+              setAnimating(true);
+            }}
+          />
+        </ControlGroup>
+        <ControlGroup label="Playback">
+          <ModeToggle mode={mode} onChange={setMode} />
+          <PlayPause
+            animating={animating}
+            atEnd={frame >= trace.length - 1}
+            onClick={() => {
+              if (frame >= trace.length - 1) setFrame(0);
+              setAnimating((a) => !a);
+            }}
+            onReset={() => {
+              setFrame(0);
+              setAnimating(true);
+            }}
+          />
+        </ControlGroup>
       </div>
 
       <SurfacePlot
         surface={surface}
         trace={trace}
         mode={mode}
-        height={420}
+        height={460}
         onPick={handlePick}
         frame={frame}
         animate={animating}
@@ -189,7 +203,7 @@ function GradientSection() {
       </div>
 
       {/* Hyperparameters */}
-      <div className="mt-5 rounded-xl border border-neutral-200 dark:border-neutral-800 p-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="mt-5 grid grid-cols-2 gap-4 rounded-lg border border-neutral-200 bg-white/60 p-4 dark:border-neutral-800 dark:bg-neutral-950/35 sm:grid-cols-4">
         <Slider
           label="Learning rate η"
           value={hyper.lr}
@@ -244,7 +258,7 @@ function GradientSection() {
       </div>
 
       {/* Algo prose */}
-      <div className="mt-6 rounded-xl border border-cyan-500/30 bg-cyan-500/5 p-5">
+      <div className="mt-6 rounded-lg border border-cyan-500/30 bg-cyan-500/5 p-5">
         <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-cyan-600 dark:text-cyan-400 mb-2">
           {algoMeta.name} · update rule
         </div>
@@ -290,97 +304,98 @@ function SwarmSection() {
   const algoMetaB = SWARM_ALGOS[algoB];
 
   return (
-    <section>
+    <section className="border-t border-neutral-200 pt-10 dark:border-neutral-800">
       <SectionEyebrow>II · Non-gradient methods</SectionEyebrow>
-      <h2 className="text-2xl sm:text-3xl font-semibold mb-3">When you only get to ask f(x, y)</h2>
-      <div className="space-y-4 max-w-3xl text-sm sm:text-base text-neutral-600 dark:text-neutral-300 leading-relaxed mb-6">
-        <p>
-          Sometimes the function you want to optimise is a black box. It might be a simulation that takes
-          ten minutes per evaluation. It might be discrete or non-differentiable — switch counts in a
-          combinatorial design, hyperparameters of a model that has to be retrained from scratch. It might
-          have a gradient that is technically defined but pathologically hard to use, like the cosine
-          ripples of Rastrigin where every gradient method gets stuck after two steps.
-        </p>
-        <p>
-          The methods in this family share one simple discipline: they only ever <em>evaluate</em> f.
-          They never differentiate it. They make up for that lost information by using a population of
-          candidate solutions, or by accepting the occasional uphill move on purpose, or by combining
-          coordinates from individuals to form trial points.
-        </p>
-        <p>
-          Below, two methods run on the same surface in parallel — cyan and pink. Compare how they
-          explore, how quickly they collapse to a basin, and how often they get stuck.
-        </p>
-      </div>
-
-      <Chips
-        items={SURFACE_LIST.map((s) => ({ id: s.id, label: s.name }))}
-        selectedId={surfaceId}
-        onSelect={(id) => {
-          setSurfaceId(id as SurfaceId);
-          setFrame(0);
-          setAnimating(true);
-        }}
-      />
-      <p className="text-xs text-neutral-500 mt-2 mb-5 max-w-3xl">{surface.blurb}</p>
-
-      <div className="flex flex-wrap items-center gap-3 mb-3">
-        <Chips
-          items={SWARM_ALGO_LIST.map((a) => ({ id: a.id, label: a.name }))}
-          selectedId={algoA}
-          onSelect={(id) => {
-            setAlgoA(id as SwarmAlgoId);
-            setFrame(0);
-            setAnimating(true);
-          }}
-          accent="cyan"
+      <div className="mb-6 grid gap-3 lg:grid-cols-[minmax(0,0.9fr)_minmax(18rem,0.35fr)] lg:items-end">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">When you only get to ask f(x, y)</h2>
+          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-neutral-600 dark:text-neutral-300 sm:text-base">
+            Black-box methods never differentiate the surface. They probe, rank, mutate, cool, and
+            share information across candidates, which makes them useful on noisy or highly multimodal
+            landscapes.
+          </p>
+        </div>
+        <Readout
+          rows={[
+            ["surface", surface.name],
+            ["primary", algoMetaA.name],
+            ["comparison", comparing ? algoMetaB.name : "off"],
+          ]}
         />
       </div>
 
-      {comparing && (
-        <div className="flex flex-wrap items-center gap-3 mb-3">
+      <ControlGroup label="Surface">
+        <Chips
+          items={SURFACE_LIST.map((s) => ({ id: s.id, label: s.name }))}
+          selectedId={surfaceId}
+          onSelect={(id) => {
+            setSurfaceId(id as SurfaceId);
+            setFrame(0);
+            setAnimating(true);
+          }}
+        />
+      </ControlGroup>
+      <p className="text-xs text-neutral-500 mt-2 mb-5 max-w-3xl">{surface.blurb}</p>
+
+      <div className="mb-4 space-y-3 border-y border-neutral-200 py-4 dark:border-neutral-800">
+        <ControlGroup label="Primary">
           <Chips
             items={SWARM_ALGO_LIST.map((a) => ({ id: a.id, label: a.name }))}
-            selectedId={algoB}
+            selectedId={algoA}
             onSelect={(id) => {
-              setAlgoB(id as SwarmAlgoId);
+              setAlgoA(id as SwarmAlgoId);
               setFrame(0);
               setAnimating(true);
             }}
-            accent="pink"
+            accent="cyan"
           />
-        </div>
-      )}
+        </ControlGroup>
 
-      <div className="flex flex-wrap items-center gap-3 mb-4">
-        <ModeToggle mode={mode} onChange={setMode} />
-        <button
-          type="button"
-          onClick={() => {
-            setComparing((c) => !c);
-            setFrame(0);
-            setAnimating(true);
-          }}
-          className={`text-[10px] font-mono uppercase tracking-[0.18em] px-3 py-1.5 rounded-md border transition ${
-            comparing
-              ? "border-cyan-500 bg-cyan-500/10 text-cyan-700 dark:text-cyan-300"
-              : "border-neutral-300 dark:border-neutral-700 text-neutral-500 hover:border-neutral-500"
-          }`}
-        >
-          {comparing ? "Comparing two methods" : "Comparison off"}
-        </button>
-        <PlayPause
-          animating={animating}
-          atEnd={frame >= totalFrames - 1}
-          onClick={() => {
-            if (frame >= totalFrames - 1) setFrame(0);
-            setAnimating((a) => !a);
-          }}
-          onReset={() => {
-            setFrame(0);
-            setAnimating(true);
-          }}
-        />
+        {comparing && (
+          <ControlGroup label="Compare">
+            <Chips
+              items={SWARM_ALGO_LIST.map((a) => ({ id: a.id, label: a.name }))}
+              selectedId={algoB}
+              onSelect={(id) => {
+                setAlgoB(id as SwarmAlgoId);
+                setFrame(0);
+                setAnimating(true);
+              }}
+              accent="pink"
+            />
+          </ControlGroup>
+        )}
+
+        <ControlGroup label="Playback">
+          <ModeToggle mode={mode} onChange={setMode} />
+          <button
+            type="button"
+            onClick={() => {
+              setComparing((c) => !c);
+              setFrame(0);
+              setAnimating(true);
+            }}
+            className={`text-[10px] font-mono uppercase tracking-[0.18em] px-3 py-1.5 rounded-md border transition ${
+              comparing
+                ? "border-cyan-500 bg-cyan-500/10 text-cyan-700 dark:text-cyan-300"
+                : "border-neutral-300 dark:border-neutral-700 text-neutral-500 hover:border-neutral-500"
+            }`}
+          >
+            {comparing ? "Comparing two methods" : "Comparison off"}
+          </button>
+          <PlayPause
+            animating={animating}
+            atEnd={frame >= totalFrames - 1}
+            onClick={() => {
+              if (frame >= totalFrames - 1) setFrame(0);
+              setAnimating((a) => !a);
+            }}
+            onReset={() => {
+              setFrame(0);
+              setAnimating(true);
+            }}
+          />
+        </ControlGroup>
       </div>
 
       <SurfacePlot
@@ -388,7 +403,7 @@ function SwarmSection() {
         swarm={swarmA}
         swarmB={swarmB}
         mode={mode}
-        height={420}
+        height={460}
         frame={frame}
         animate={animating}
         onFrameChange={(f) => {
@@ -418,7 +433,7 @@ function SwarmSection() {
       </div>
 
       {/* Hyperparameters (shared knobs that mean different things per algo) */}
-      <div className="mt-5 rounded-xl border border-neutral-200 dark:border-neutral-800 p-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="mt-5 grid grid-cols-2 gap-4 rounded-lg border border-neutral-200 bg-white/60 p-4 dark:border-neutral-800 dark:bg-neutral-950/35 sm:grid-cols-4">
         <Slider
           label="Population"
           value={hyper.popSize}
@@ -457,8 +472,8 @@ function SwarmSection() {
         />
       </div>
 
-      {/* Two essays side by side */}
-      <div className="mt-6 grid md:grid-cols-2 gap-4">
+      {/* Method notes */}
+      <div className="mt-6 grid gap-4 md:grid-cols-2">
         <EssayBlock accent="cyan" algo={algoMetaA} />
         {comparing && <EssayBlock accent="pink" algo={algoMetaB} />}
       </div>
@@ -473,16 +488,71 @@ function Footer() {
       <p className="text-xs text-neutral-500 leading-relaxed max-w-3xl">
         All algorithms run in your browser; the surface heightfield is sampled at 96×96 and re-rendered
         on every parameter change. The 3-D view uses three.js with orbit controls; the 2-D contour view
-        renders directly to a canvas. Click anywhere to drop the optimiser&apos;s starting point at that
-        location. Code lives in{" "}
-        <code className="font-mono text-[11px]">src/lib/optimization/</code> and{" "}
-        <code className="font-mono text-[11px]">src/components/optimization/</code>.
+        renders directly to a canvas.
       </p>
     </footer>
   );
 }
 
 // ─── Small UI bits ───────────────────────────────────────────────────────────
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="px-3">
+      <div className="text-lg font-semibold tabular-nums text-neutral-950 dark:text-neutral-50">
+        {value}
+      </div>
+      <div className="mt-1 text-[10px] font-mono uppercase tracking-[0.18em] text-neutral-500">
+        {label}
+      </div>
+    </div>
+  );
+}
+
+function PrimerPoint({ title, text }: { title: string; text: string }) {
+  return (
+    <div className="border-l border-neutral-300 pl-4 dark:border-neutral-700">
+      <h2 className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
+        {title}
+      </h2>
+      <p className="mt-2 text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
+        {text}
+      </p>
+    </div>
+  );
+}
+
+function Readout({ rows }: { rows: [string, string][] }) {
+  return (
+    <dl className="grid gap-2 border-y border-neutral-200 py-3 text-xs dark:border-neutral-800">
+      {rows.map(([label, value]) => (
+        <div key={label} className="flex items-baseline justify-between gap-4">
+          <dt className="font-mono uppercase tracking-[0.18em] text-neutral-500">{label}</dt>
+          <dd className="truncate text-right font-mono text-neutral-900 dark:text-neutral-100">
+            {value}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+function ControlGroup({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="grid gap-2 sm:grid-cols-[7rem_minmax(0,1fr)] sm:items-start">
+      <div className="pt-1 text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500">
+        {label}
+      </div>
+      <div className="flex min-w-0 flex-wrap items-center gap-2">{children}</div>
+    </div>
+  );
+}
+
 function SectionEyebrow({ children }: { children: React.ReactNode }) {
   return (
     <p className="mb-3 text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500 dark:text-neutral-400">
@@ -515,7 +585,7 @@ function Chips({
             key={it.id}
             type="button"
             onClick={() => onSelect(it.id)}
-            className={`rounded-full border px-3 py-1 text-xs font-mono transition ${
+            className={`rounded-md border px-3 py-1.5 text-xs font-mono transition ${
               active
                 ? activeCls
                 : "border-neutral-300 dark:border-neutral-700 text-neutral-500 hover:border-neutral-500"
@@ -531,11 +601,11 @@ function Chips({
 
 function ModeToggle({ mode, onChange }: { mode: PlotMode; onChange: (m: PlotMode) => void }) {
   return (
-    <div className="inline-flex rounded-md border border-neutral-300 dark:border-neutral-700 overflow-hidden text-[10px] font-mono uppercase tracking-[0.18em]">
+    <div className="inline-flex overflow-hidden rounded-md border border-neutral-300 text-[10px] font-mono uppercase tracking-[0.18em] dark:border-neutral-700">
       <button
         type="button"
         onClick={() => onChange("contour")}
-        className={`px-2.5 py-1 transition ${
+        className={`px-3 py-1.5 transition ${
           mode === "contour"
             ? "bg-cyan-500/10 text-cyan-700 dark:text-cyan-300"
             : "text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200"
@@ -546,7 +616,7 @@ function ModeToggle({ mode, onChange }: { mode: PlotMode; onChange: (m: PlotMode
       <button
         type="button"
         onClick={() => onChange("3d")}
-        className={`px-2.5 py-1 transition border-l border-neutral-300 dark:border-neutral-700 ${
+        className={`border-l border-neutral-300 px-3 py-1.5 transition dark:border-neutral-700 ${
           mode === "3d"
             ? "bg-cyan-500/10 text-cyan-700 dark:text-cyan-300"
             : "text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200"
@@ -574,14 +644,14 @@ function PlayPause({
       <button
         type="button"
         onClick={onClick}
-        className="px-2.5 py-1 rounded-md border border-neutral-300 dark:border-neutral-700 hover:border-neutral-500 transition"
+        className="rounded-md border border-neutral-300 px-3 py-1.5 transition hover:border-neutral-500 dark:border-neutral-700"
       >
         {atEnd ? "↻ Replay" : animating ? "⏸ Pause" : "▶ Play"}
       </button>
       <button
         type="button"
         onClick={onReset}
-        className="px-2.5 py-1 rounded-md border border-neutral-300 dark:border-neutral-700 hover:border-neutral-500 transition text-neutral-500"
+        className="rounded-md border border-neutral-300 px-3 py-1.5 text-neutral-500 transition hover:border-neutral-500 dark:border-neutral-700"
       >
         ↺ Reset
       </button>
@@ -643,15 +713,22 @@ function EssayBlock({
       ? "text-pink-600 dark:text-pink-400"
       : "text-cyan-600 dark:text-cyan-400";
   return (
-    <article className={`rounded-xl border p-5 ${borderCls}`}>
-      <div className={`text-[10px] font-mono uppercase tracking-[0.22em] mb-1 ${textCls}`}>
-        {algo.name}
-      </div>
-      <p className={`text-xs ${textCls} mb-3 italic`}>{algo.tagline}</p>
-      <div className="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed whitespace-pre-line">
+    <details className={`group rounded-lg border p-4 ${borderCls}`}>
+      <summary className="cursor-pointer list-none">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className={`text-[10px] font-mono uppercase tracking-[0.22em] ${textCls}`}>
+              {algo.name}
+            </div>
+            <p className={`mt-1 text-xs italic ${textCls}`}>{algo.tagline}</p>
+          </div>
+          <span className="font-mono text-xs text-neutral-500 transition group-open:rotate-45">+</span>
+        </div>
+      </summary>
+      <div className="mt-4 whitespace-pre-line text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
         {algo.essay}
       </div>
-    </article>
+    </details>
   );
 }
 
