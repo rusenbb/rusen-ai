@@ -146,10 +146,32 @@ export function SurfacePlot(props: SurfacePlotProps) {
     return 1;
   }, [swarm, trace]);
 
-  const [internalFrame, setInternalFrame] = useState(0);
+  const internalSource = useMemo(
+    () => ({ trace, swarm, surface, mode }),
+    [trace, swarm, surface, mode],
+  );
+  const [internalFrame, setInternalFrame] = useState<{
+    source: typeof internalSource | null;
+    value: number;
+  }>({ source: null, value: 0 });
+
+  const activeFrame =
+    frame ?? (internalFrame.source === internalSource ? internalFrame.value : 0);
+  const activeFrameRef = useRef(activeFrame);
+  const isControlledRef = useRef(frame !== undefined);
+  const onFrameChangeRef = useRef(onFrameChange);
+
   useEffect(() => {
-    setInternalFrame(0);
-  }, [trace, swarm, surface, mode]);
+    activeFrameRef.current = activeFrame;
+  }, [activeFrame]);
+
+  useEffect(() => {
+    isControlledRef.current = frame !== undefined;
+  }, [frame]);
+
+  useEffect(() => {
+    onFrameChangeRef.current = onFrameChange;
+  }, [onFrameChange]);
 
   // Animation loop (controlled or self-driven).
   useEffect(() => {
@@ -162,23 +184,17 @@ export function SurfacePlot(props: SurfacePlotProps) {
       const target = 1000 / fps;
       if (dt >= target) {
         last = t;
-        setInternalFrame((f) => {
-          const next = f + 1;
-          if (next >= totalFrames) {
-            onFrameChange?.(totalFrames - 1);
-            return totalFrames - 1;
-          }
-          onFrameChange?.(next);
-          return next;
-        });
+        const next = Math.min(activeFrameRef.current + 1, totalFrames - 1);
+        if (!isControlledRef.current) {
+          setInternalFrame({ source: internalSource, value: next });
+        }
+        onFrameChangeRef.current?.(next);
       }
       id = requestAnimationFrame(step);
     };
     id = requestAnimationFrame(step);
     return () => cancelAnimationFrame(id);
-  }, [animate, totalFrames, fps, onFrameChange]);
-
-  const activeFrame = frame ?? internalFrame;
+  }, [animate, totalFrames, fps, internalSource]);
 
   // ─── Contour mode ────────────────────────────────────────────────────────
   useEffect(() => {

@@ -64,9 +64,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="preload" as="image" href="/game-of-life/graph.png" fetchPriority="high" />
-        <link rel="preload" as="image" href="/game-of-life/anim.png" fetchPriority="high" />
-        <link rel="preload" as="image" href="/game-of-life/loc.png" fetchPriority="high" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
