@@ -57,23 +57,6 @@ export const PROJECTS: ProjectMeta[] = [
     featuredHome: true,
   },
   {
-    id: "voice-storm",
-    title: "Voice Storm",
-    slug: "voice-storm",
-    collection: "demos",
-    status: "live",
-    summary:
-      "Talk into your microphone. The waveform pulses with your voice and Whisper Tiny transcribes locally — nothing leaves the browser.",
-    description:
-      "In-browser speech-to-text via Whisper Tiny on WebAssembly, with a live amplitude visualization.",
-    tags: ["Audio", "Whisper", "Speech-to-Text"],
-    domains: ["Audio"],
-    capabilities: ["Transcription", "Live"],
-    tech: ["Whisper Tiny", "Web Audio API", "Transformers.js", "WASM"],
-    order: 55,
-    featuredHome: true,
-  },
-  {
     id: "vision-anything",
     title: "Vision Anything",
     slug: "vision-anything",
