@@ -13,7 +13,7 @@ simulation-heavy explainers, and portfolio content.
 The current site mixes:
 
 - browser-side ML demos such as classification, segmentation, tokenization, and embedding exploration
-- interactive essays and labs such as Emergence, Optimization, and Temperature Playground
+- interactive essays and labs such as Emergence and Optimization
 - game-like systems such as RL-Arena and the standalone Game of Life experience
 - portfolio pages such as the homepage, demos index, nerdy-stuff index, and CV
 
@@ -37,7 +37,6 @@ The current site mixes:
 | `/game-of-life` | Game of Life | Standalone playground for the site’s cellular automata world |
 | `/embedding-explorer` | Embedding Explorer | Visual semantic geometry with embeddings and UMAP |
 | `/rusenizer` | Rusenizer | Turkish tokenizer playground and comparison tool |
-| `/temperature-playground` | Temperature Playground | Pre-generated token trees for exploring sampling temperature and branching |
 
 Project metadata for the site lives in [src/lib/projects.ts](./src/lib/projects.ts).
 
@@ -69,20 +68,16 @@ src/
 │   ├── optimization/
 │   ├── pulse-board/
 │   ├── rusenizer/
-│   ├── segment-anything/
-│   └── temperature-playground/
+│   └── segment-anything/
 ├── components/ui/               # Shared layout and UI primitives
 ├── components/optimization/     # Shared optimization rendering primitives
 ├── content/                     # Site content such as CV data
 └── lib/                         # Shared helpers, registries, and math utilities
 
 public/
-├── segment-anything/            # Sample images and browser model assets
-└── temperature-playground/data/ # Pre-generated token-tree JSON
+└── segment-anything/            # Sample images and browser model assets
 
 scripts/
-├── generate_temperature_trees.py
-├── ship_temperature_data.py
 ├── prepare_sam3_webgpu_models.py
 ├── train_adaptive_arena.py
 └── train-adaptive-arena.ts
@@ -137,15 +132,12 @@ generation and RL-Arena training.
 Some experiences rely on precomputed or shipped assets rather than live backend
 calls.
 
-- `public/temperature-playground/data/` contains shipped token-tree data used by the Temperature Playground
-- `scripts/generate_temperature_trees.py` regenerates the raw branching data
-- `scripts/ship_temperature_data.py` trims and splits that data for frontend use
 - `public/segment-anything/` contains sample images and related browser assets for the segmentation demo
 
 ## Architecture Notes
 
 - The site is statically exported with `output: "export"` in [next.config.ts](./next.config.ts).
-- Routes are top-level app routes like `/segment-anything` and `/temperature-playground`, not nested under `/demos/...`.
+- Routes are top-level app routes like `/segment-anything` and `/embedding-explorer`, not nested under `/demos/...`.
 - Project cards and indexes are driven by the shared registry in [src/lib/projects.ts](./src/lib/projects.ts).
 - Several interactive pages use shipped JSON assets or browser-side inference to avoid needing a live backend.
 

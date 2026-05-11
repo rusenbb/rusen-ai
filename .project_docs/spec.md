@@ -496,7 +496,6 @@ OPENROUTER_API_KEY_01=sk-or-v1-...
 
 1. **Query Craft**: Will need SQL parsing/validation library
 2. **Embedding Explorer**: May need Transformers.js for embedding models
-3. **Temperature Playground**: Multiple parallel generations
 
 ### Potential Optimizations
 
