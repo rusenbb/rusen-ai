@@ -82,7 +82,7 @@
       "description": "Amazon lojistiğini taklit eden otonom depo robotu. Yol planlama, engel kaçınma ve görev programlama. Özel eğittiğim YOLO modeliyle insan/kargo tespiti.",
       "tags": ["Python", "ROS2", "YOLO", "Robotik"],
       "links": [
-        { "label": "GH", "url": "https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/Amazon-Warehouse-Robot" },
+        { "label": "GH", "url": "https://github.com/rusen-archive/Amazon-Warehouse-Robot" },
         { "label": "YT", "url": "https://youtu.be/h-Jxs_y9kNA" }
       ]
     },
@@ -93,7 +93,7 @@
       "description": "Türkçe metinlerdeki diakritik işaretleri (ş, ç, ı, ğ, ü, ö) geri kazandıran T5 tabanlı transformer modeli. Aksan ve özel karakterleri okunabilirlik için otomatik tamamlar.",
       "tags": ["NLP", "T5", "Transformers", "Türkçe"],
       "links": [
-        { "label": "GH", "url": "https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/Biting-The-Bytes" },
+        { "label": "GH", "url": "https://github.com/rusen-archive/Biting-The-Bytes" },
         { "label": "HF", "url": "https://huggingface.co/spaces/rusen/diacritizeTR" }
       ]
     },
@@ -104,7 +104,7 @@
       "description": "Stable Diffusion 2.1 modelinden seçili kavramları, diğer yetenekleri bozmadan çıkarma yöntemi. İçerik denetimi ve YZ çıktılarının özelleştirilmesine yönelik.",
       "tags": ["Stable Diffusion", "Makine Unutma", "Bilgisayarlı Görü"],
       "links": [
-        { "label": "GH", "url": "https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/AIzheimer" }
+        { "label": "GH", "url": "https://github.com/rusenbb/AIzheimer" }
       ]
     },
     {
@@ -114,7 +114,7 @@
       "description": "Üç ince ayarlı modelden oluşan topluluk yöntemiyle yapay zeka üretimi metinleri tespit eder. Akademik dürüstlük ve dezenformasyon sorunlarını hedefler.",
       "tags": ["NLP", "Topluluk", "Sınıflandırma"],
       "links": [
-        { "label": "GH", "url": "https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/To-AI-or-Not-to-AI" },
+        { "label": "GH", "url": "https://github.com/rusen-archive/To-AI-or-Not-to-AI" },
         { "label": "HF", "url": "https://huggingface.co/spaces/rusen/gpt_detector" }
       ]
     },
@@ -125,7 +125,7 @@
       "description": "İşbirlikli filtreleme ve içerik tabanlı yöntemleri birleştiren kişiselleştirilmiş anime önerisi. RMSE: 0,289 / MAE: 0,213.",
       "tags": ["Öneri Sistemi", "Matris Çarpanlara Ayırma"],
       "links": [
-        { "label": "GH", "url": "https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/Anime-Recommender" }
+        { "label": "GH", "url": "https://github.com/rusen-archive/Anime-Recommender" }
       ]
     }
   ],
