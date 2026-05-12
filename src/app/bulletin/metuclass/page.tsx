@@ -19,7 +19,7 @@ export default function MetuclassBulletinPage() {
       platform={["CLI", "macOS", "Linux", "Windows"]}
       tech={["Python 3.11+", "SQLite", "PyPI"]}
       links={[
-        { label: "Source", url: "https://github.com/rusenbb/metuclass" },
+        { label: "Source", url: "https://github.com/rusenbb/metu-class-automation" },
         { label: "PyPI", url: "https://pypi.org/project/metuclass/" },
       ]}
     >

@@ -300,7 +300,7 @@ export const PROJECTS: ProjectMeta[] = [
     capabilities: ["Incremental sync"],
     tech: ["Python 3.11+"],
     order: 30,
-    repoUrl: "https://github.com/rusenbb/metuclass",
+    repoUrl: "https://github.com/rusenbb/metu-class-automation",
     installCmd: "pip install metuclass",
     platform: ["CLI"],
   },

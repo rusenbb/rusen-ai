@@ -82,7 +82,7 @@
       "description": "Amazon 物流環境を再現した自律走行倉庫ロボット。経路計画、障害物回避、タスクスケジューリングを実装。独自に学習させた YOLO モデルで人体/貨物を検出。",
       "tags": ["Python", "ROS2", "YOLO", "ロボット工学"],
       "links": [
-        { "label": "GH", "url": "https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/Amazon-Warehouse-Robot" },
+        { "label": "GH", "url": "https://github.com/rusen-archive/Amazon-Warehouse-Robot" },
         { "label": "YT", "url": "https://youtu.be/h-Jxs_y9kNA" }
       ]
     },
@@ -93,7 +93,7 @@
       "description": "T5 ベースの Transformer によりトルコ語のダイアクリティカル記号（ş、ç、ı、ğ、ü、ö）を自動復元。可読性向上のためアクセント記号と特殊文字を補完。",
       "tags": ["NLP", "T5", "Transformers", "トルコ語"],
       "links": [
-        { "label": "GH", "url": "https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/Biting-The-Bytes" },
+        { "label": "GH", "url": "https://github.com/rusen-archive/Biting-The-Bytes" },
         { "label": "HF", "url": "https://huggingface.co/spaces/rusen/diacritizeTR" }
       ]
     },
@@ -104,7 +104,7 @@
       "description": "Stable Diffusion 2.1 から特定概念を選択的に削除しつつ、その他の生成能力を維持する手法。コンテンツモデレーションと AI 出力カスタマイズを目的とする。",
       "tags": ["Stable Diffusion", "機械忘却", "コンピュータビジョン"],
       "links": [
-        { "label": "GH", "url": "https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/AIzheimer" }
+        { "label": "GH", "url": "https://github.com/rusenbb/AIzheimer" }
       ]
     },
     {
@@ -114,7 +114,7 @@
       "description": "ファインチューニングした 3 モデルのアンサンブルにより AI 生成テキストを検出。学術倫理とディスインフォメーション対策を想定。",
       "tags": ["NLP", "アンサンブル", "分類"],
       "links": [
-        { "label": "GH", "url": "https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/To-AI-or-Not-to-AI" },
+        { "label": "GH", "url": "https://github.com/rusen-archive/To-AI-or-Not-to-AI" },
         { "label": "HF", "url": "https://huggingface.co/spaces/rusen/gpt_detector" }
       ]
     },
@@ -125,7 +125,7 @@
       "description": "協調フィルタリングと内容ベース手法を組み合わせたパーソナライズアニメ推薦システム。RMSE: 0.289 / MAE: 0.213。",
       "tags": ["推薦システム", "行列分解"],
       "links": [
-        { "label": "GH", "url": "https://github.com/rusenbb/TheArchive/tree/main/university/ai-data-engineering/Anime-Recommender" }
+        { "label": "GH", "url": "https://github.com/rusen-archive/Anime-Recommender" }
       ]
     }
   ],
