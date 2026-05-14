@@ -22,14 +22,17 @@ interface AlertProps {
   onDismiss?: () => void;
 }
 
+// Severity stays readable through the icon color + a 2px left accent bar.
+// Body sits on the neutral surface so alerts feel like part of the terminal
+// aesthetic rather than colored billboards.
 const variantStyles: Record<
   AlertVariant,
-  { bg: string; border: string; text: string; icon: ReactNode }
+  { accent: string; iconColor: string; titleColor: string; icon: ReactNode }
 > = {
   error: {
-    bg: "bg-red-50 dark:bg-red-900/20",
-    border: "border-red-200 dark:border-red-800",
-    text: "text-red-600 dark:text-red-400",
+    accent: "border-l-red-600 dark:border-l-red-400",
+    iconColor: "text-red-600 dark:text-red-400",
+    titleColor: "text-red-700 dark:text-red-300",
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path
@@ -42,9 +45,9 @@ const variantStyles: Record<
     ),
   },
   success: {
-    bg: "bg-green-50 dark:bg-green-900/20",
-    border: "border-green-200 dark:border-green-800",
-    text: "text-green-600 dark:text-green-400",
+    accent: "border-l-green-600 dark:border-l-green-400",
+    iconColor: "text-green-600 dark:text-green-400",
+    titleColor: "text-green-700 dark:text-green-300",
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path
@@ -57,9 +60,9 @@ const variantStyles: Record<
     ),
   },
   warning: {
-    bg: "bg-yellow-50 dark:bg-yellow-900/20",
-    border: "border-yellow-200 dark:border-yellow-800",
-    text: "text-yellow-600 dark:text-yellow-400",
+    accent: "border-l-yellow-600 dark:border-l-yellow-400",
+    iconColor: "text-yellow-600 dark:text-yellow-400",
+    titleColor: "text-yellow-700 dark:text-yellow-300",
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path
@@ -72,9 +75,9 @@ const variantStyles: Record<
     ),
   },
   info: {
-    bg: "bg-blue-50 dark:bg-blue-900/20",
-    border: "border-blue-200 dark:border-blue-800",
-    text: "text-blue-600 dark:text-blue-400",
+    accent: "border-l-blue-600 dark:border-l-blue-400",
+    iconColor: "text-blue-600 dark:text-blue-400",
+    titleColor: "text-blue-700 dark:text-blue-300",
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path
@@ -110,25 +113,25 @@ export function Alert({
 
   return (
     <div
-      className={`p-4 ${styles.bg} border ${styles.border} rounded-lg ${className}`}
+      className={`p-4 bg-[var(--surface)] border border-[var(--line)] border-l-2 ${styles.accent} ${className}`}
       role="alert"
     >
       <div className="flex items-start gap-3">
-        <span className={`shrink-0 mt-0.5 ${styles.text}`}>
+        <span className={`shrink-0 mt-0.5 ${styles.iconColor}`}>
           {icon || styles.icon}
         </span>
         <div className="flex-1 min-w-0">
           {title && (
-            <h3 className={`text-sm font-semibold ${styles.text} mb-1`}>
+            <h3 className={`text-sm font-mono font-semibold uppercase tracking-[0.08em] ${styles.titleColor} mb-1`}>
               {title}
             </h3>
           )}
-          <div className={`text-sm ${styles.text}`}>{children}</div>
+          <div className="text-sm text-[var(--muted)]">{children}</div>
         </div>
         {onDismiss && (
           <button
             onClick={onDismiss}
-            className={`shrink-0 ${styles.text} hover:opacity-70 transition-opacity`}
+            className="shrink-0 text-[var(--sub)] hover:text-[var(--foreground)] transition-colors cursor-pointer"
             aria-label="Dismiss"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">

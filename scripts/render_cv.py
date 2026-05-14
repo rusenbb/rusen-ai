@@ -17,17 +17,17 @@ CLI flags (PDF-only — not reflected in the public HTML CV):
                                  cv.json so the public web CV doesn't expose
                                  it; passed in here for specific recipients.
   --personal-email EMAIL         Inject an additional contact email line.
-  --locale {en,tr,all}           Pick a locale for content + output filename.
-                                 Default 'all' renders both en and tr.
+  --locale {en,tr,ja,all}        Pick a locale for content + output filename.
+                                 Default 'all' renders every supported locale.
 
-NOTE: Japanese (ja) lives at /cv/ja as HTML only. Adding a JA PDF requires a
-CJK-aware LaTeX setup (xeCJK + Noto CJK fonts in the build environment) which
-is intentionally out of scope here.
+The ja PDF requires Noto CJK fonts on the build host (Debian/Ubuntu:
+`apt install fonts-noto-cjk`). Tectonic auto-fetches the xeCJK package.
 """
 from __future__ import annotations
 
 import argparse
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -42,7 +42,8 @@ TEMPLATE_DIR = ROOT / "scripts" / "cv-template"
 TEMPLATE_NAME = "cv.tex.j2"
 PUBLIC_DIR = ROOT / "public"
 
-SUPPORTED_LOCALES = ("en", "tr")
+SUPPORTED_LOCALES = ("en", "tr", "ja")
+CJK_LOCALES = frozenset({"ja"})
 
 # LaTeX-side locale labels. Mirrors src/lib/cv.ts CVLabels but only the
 # parts the LaTeX template references — section names, contact-bar
@@ -77,6 +78,21 @@ LABELS: dict[str, dict[str, str]] = {
         "dobAbbr": "DOĞ",
         "licAbbr": "EHLİYET",
         "statusAbbr": "DURUM",
+    },
+    "ja": {
+        "summary": "概要",
+        "experience": "職務経歴",
+        "projects": "プロジェクト",
+        "education": "学歴",
+        "awards": "受賞歴",
+        "courses": "受講コース",
+        "skills": "スキル",
+        "languages": "言語",
+        "interests": "趣味",
+        "gpa": "GPA",
+        "dobAbbr": "生年月日",
+        "licAbbr": "免許",
+        "statusAbbr": "状況",
     },
 }
 
@@ -116,6 +132,28 @@ def latex_escape(value: object) -> str:
     for char, replacement in _LATEX_ESCAPES:
         text = text.replace(char, replacement)
     return text
+
+
+_MD_LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
+
+
+def latex_md(value: object) -> str:
+    """LaTeX-escape a string, but turn ``[text](url)`` into ``\\href{url}{text}``.
+
+    The label is escaped as normal body text; the URL only needs its own
+    special characters (% and #) escaped so hyperref accepts it verbatim.
+    """
+    text = "" if value is None else str(value)
+    parts: list[str] = []
+    last = 0
+    for match in _MD_LINK_RE.finditer(text):
+        parts.append(latex_escape(text[last : match.start()]))
+        label = latex_escape(match.group(1))
+        url = match.group(2).replace("%", r"\%").replace("#", r"\#")
+        parts.append(rf"\href{{{url}}}{{{label}}}")
+        last = match.end()
+    parts.append(latex_escape(text[last:]))
+    return "".join(parts)
 
 
 def latex_bullets(items: list) -> str:
@@ -161,6 +199,7 @@ def build_environment(locale: str) -> jinja2.Environment:
         keep_trailing_newline=True,
     )
     env.filters["latex"] = latex_escape
+    env.filters["latex_md"] = latex_md
     env.filters["latex_bullets"] = latex_bullets
     env.filters["upper"] = _UPPER_FILTERS.get(locale, _upper_default)
     return env
@@ -182,6 +221,7 @@ def render(
         cv=cv_data,
         labels=LABELS[locale],
         personal_email=personal_email,
+        is_cjk=locale in CJK_LOCALES,
     )
 
 

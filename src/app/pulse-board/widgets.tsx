@@ -510,15 +510,27 @@ function CryptoHubWidget() {
         <LiveBadge connected={wsConnected} updateCount={updateCount} />
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 gap-3">
         {COINS.map(({ sym, name, Icon, color }) => {
           const p = prices[sym];
           const ch = changes[sym];
           return (
-            <div key={sym} className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg overflow-hidden">
-              <div className="flex items-center gap-2 mb-1 min-w-0">
-                <Icon className="w-5 h-5 shrink-0" style={{ color }} />
-                <span className="text-xs font-medium truncate">{name}</span>
+            <div
+              key={sym}
+              className="rounded-lg border border-neutral-200/70 bg-white p-3 shadow-sm dark:border-neutral-700/70 dark:bg-neutral-900/80"
+            >
+              <div className="mb-2 flex min-w-0 items-start gap-2">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-neutral-100 dark:bg-neutral-800">
+                  <Icon className="h-5 w-5" style={{ color }} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold leading-tight text-neutral-950 dark:text-neutral-50">
+                    {name}
+                  </span>
+                  <span className="mt-0.5 block font-mono text-[10px] uppercase tracking-[0.18em] text-neutral-500 dark:text-neutral-400">
+                    {sym}
+                  </span>
+                </span>
               </div>
               <div className={`font-mono text-base font-bold truncate ${getPriceColor(p.price, p.prevPrice)}`}>
                 ${formatPrice(p.price)}
@@ -1061,31 +1073,61 @@ const FX_CODES = ["EUR", "GBP", "JPY", "CHF", "TRY", "CAD"] as const;
 const FX_FLAGS: Record<string, string> = {
   EUR: "EU", GBP: "GB", JPY: "JP", CHF: "CH", TRY: "TR", CAD: "CA",
 };
+const FRANKFURTER_BASE_URL = "https://api.frankfurter.dev/v1/latest";
+const FX_FALLBACK_URL = "https://open.er-api.com/v6/latest/USD";
+type FxSource = "Frankfurter" | "ExchangeRate API";
+
+async function fetchFrankfurterRates(): Promise<{ date: Date; rates: Record<string, number>; source: FxSource }> {
+  const codes = FX_CODES.join(",");
+  const res = await fetch(`${FRANKFURTER_BASE_URL}?base=USD&symbols=${codes}`);
+  if (!res.ok) throw new Error("Frankfurter fetch failed");
+  const data = await res.json();
+  return {
+    date: new Date(`${data.date}T00:00:00Z`),
+    rates: data.rates,
+    source: "Frankfurter",
+  };
+}
+
+async function fetchFallbackFxRates(): Promise<{ date: Date; rates: Record<string, number>; source: FxSource }> {
+  const res = await fetch(FX_FALLBACK_URL);
+  if (!res.ok) throw new Error("Fallback FX fetch failed");
+  const data = await res.json();
+  if (data.result !== "success") throw new Error("Fallback FX response failed");
+  return {
+    date: new Date(data.time_last_update_utc),
+    rates: data.rates,
+    source: "ExchangeRate API",
+  };
+}
 
 function FxPulseWidget() {
   const [rates, setRates] = useState<FxRate[]>([]);
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
+  const [source, setSource] = useState<FxSource>("Frankfurter");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchRates = useCallback(async () => {
     try {
-      const codes = FX_CODES.join(",");
-      const res = await fetch(`https://api.frankfurter.app/latest?from=USD&to=${codes}`);
-      if (!res.ok) throw new Error("Frankfurter fetch failed");
-      const data = await res.json();
-      const date = new Date(data.date + "T00:00:00Z");
+      let data: { date: Date; rates: Record<string, number>; source: FxSource };
+      try {
+        data = await fetchFrankfurterRates();
+      } catch {
+        data = await fetchFallbackFxRates();
+      }
 
       setRates((prev) => {
         const prevMap = new Map(prev.map((r) => [r.code, r.rate]));
         return FX_CODES.map((code) => ({
           code,
           flag: FX_FLAGS[code],
-          rate: data.rates[code],
-          prev: prevMap.get(code) ?? data.rates[code],
+          rate: data.rates[code] ?? 0,
+          prev: prevMap.get(code) ?? data.rates[code] ?? 0,
         }));
       });
-      setUpdatedAt(date);
+      setUpdatedAt(data.date);
+      setSource(data.source);
       setError(null);
     } catch {
       setError("FX feed unreachable");
@@ -1152,17 +1194,18 @@ function FxPulseWidget() {
 
       {updatedAt && (
         <p className="text-[10px] text-neutral-500 mt-3">
-          ECB reference rates &middot; {updatedAt.toLocaleDateString()}
+          {source === "Frankfurter" ? "ECB reference rates" : "Fallback FX rates"} &middot;{" "}
+          {updatedAt.toLocaleDateString()}
         </p>
       )}
 
       <a
-        href="https://www.frankfurter.app/"
+        href="https://www.frankfurter.dev/"
         target="_blank"
         rel="noopener noreferrer"
         className="text-xs text-neutral-500 hover:underline mt-1 inline-block"
       >
-        frankfurter.app &#8594;
+        frankfurter.dev &#8594;
       </a>
     </Card>
   );

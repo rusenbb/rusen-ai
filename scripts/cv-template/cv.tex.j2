@@ -17,6 +17,16 @@
 \setmonofont{Latin Modern Mono Light}[Scale=MatchLowercase]
 \renewcommand{\familydefault}{\sfdefault}
 
+\BLOCK{ if is_cjk }
+% CJK setup. xeCJK lets us mix Latin and CJK glyphs in a single document;
+% Noto Serif/Sans CJK JP cover the Japanese script range. The Latin fonts
+% above stay in charge of ASCII ranges (dates, URLs, mono headers).
+\usepackage{xeCJK}
+\setCJKmainfont{Noto Serif CJK JP}
+\setCJKsansfont{Noto Sans CJK JP}
+\setCJKmonofont{Noto Sans Mono CJK JP}
+\BLOCK{ endif }
+
 % fontawesome5 segfaults tectonic when combined with the volume of content
 % in this CV (reliably reproducible). fontawesome (v4) is rock-solid here
 % and covers every glyph we need.
@@ -123,7 +133,7 @@
 \needspace{4\baselineskip}%
 \noindent\textbf{\VAR{item.role | latex}}\rowdates{\VAR{item.period | latex}}\\
 {\itshape\BLOCK{ if item.link }\href{\VAR{item.link}}{\VAR{item.company | latex}\extarrow}\BLOCK{ else }\VAR{item.company | latex}\BLOCK{ endif }}\rowdates{\VAR{item.location | latex}}\\[2pt]
-{\small \VAR{item.description | latex}}\\[8pt]
+{\small \VAR{item.description | latex_md}}\\[8pt]
 \BLOCK{ endfor }
 
 % ======================================================================

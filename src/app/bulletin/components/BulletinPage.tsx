@@ -27,15 +27,13 @@ export default function BulletinPage({
 }: BulletinPageProps) {
   return (
     <div className={styles.container}>
-      <div className={styles.gridBg} />
-
       <header className={styles.hero}>
         <div className={styles.heroMain}>
           <div className={styles.heroTitleSection}>
             <span className={styles.heroLabel}>PROJECT</span>
             <h1 className={styles.heroTitle}>{title}</h1>
             <div className={styles.heroSubtitle}>
-              <span className={styles.subtitleIndicator}>►</span>
+              <span className={styles.subtitleIndicator} aria-hidden="true" />
               {subtitle}
             </div>
           </div>
