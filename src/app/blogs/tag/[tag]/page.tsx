@@ -115,7 +115,7 @@ export default async function TagPage({
           return (
             <Link
               key={`${t.lang}::${t.tag}`}
-              href={`/b/tag/${slug}`}
+              href={`/blogs/tag/${slug}`}
               data-tag-lang={t.lang}
               className={isActive ? "is-active" : ""}
             >
@@ -142,7 +142,7 @@ export default async function TagPage({
         {posts.map((p) => (
           <Link
             key={p.slug}
-            href={`/b/${p.slug}`}
+            href={`/blogs/${p.slug}`}
             className="entry-row"
             data-post-lang={p.lang}
           >

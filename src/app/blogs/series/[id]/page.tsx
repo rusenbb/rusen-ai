@@ -59,7 +59,7 @@ export default async function SeriesPage({
             ·
           </span>
           <span data-post-lang="en">
-            <Link href={`/b/${enPosts[0]?.slug}`}>
+            <Link href={`/blogs/${enPosts[0]?.slug}`}>
               {enPosts[0]?.title ? "Start the series →" : ""}
             </Link>
           </span>
@@ -71,7 +71,7 @@ export default async function SeriesPage({
             ·
           </span>
           <span data-post-lang="tr">
-            <Link href={`/b/${trPosts[0]?.slug}`}>
+            <Link href={`/blogs/${trPosts[0]?.slug}`}>
               {trPosts[0]?.title ? "Seriye başla →" : ""}
             </Link>
           </span>
@@ -93,7 +93,7 @@ export default async function SeriesPage({
                 data-post-lang={p.lang}
               >
                 <Link
-                  href={`/b/${p.slug}`}
+                  href={`/blogs/${p.slug}`}
                   className="series-entry-cover"
                   aria-label={p.title}
                 >
@@ -110,7 +110,7 @@ export default async function SeriesPage({
                 <div className="meta">
                   <span className="lang-badge">{p.lang.toUpperCase()}</span>
                   {sib && (
-                    <Link href={`/b/${sib.slug}`} className="sib">
+                    <Link href={`/blogs/${sib.slug}`} className="sib">
                       ⇄ {sib.lang.toUpperCase()}
                     </Link>
                   )}

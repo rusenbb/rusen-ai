@@ -2,10 +2,10 @@
 
 import { useSyncExternalStore } from "react";
 
-type Lang = "all" | "en" | "tr";
+type Lang = "en" | "tr";
 
 // useSyncExternalStore is the canonical way to read non-React state (here,
-// the html attribute set by the inline script in /b/layout.tsx). The
+// the html attribute set by the inline script in /blogs/layout.tsx). The
 // MutationObserver triggers a re-render whenever the attribute changes,
 // whether from this picker or from somewhere else (e.g. the tag page's
 // force-language script).
@@ -43,7 +43,7 @@ export default function LangPicker() {
 
   return (
     <div className="lang-pills" role="group" aria-label="Language filter">
-      {(["all", "en", "tr"] as const).map((l) => (
+      {(["en", "tr"] as const).map((l) => (
         <button
           key={l}
           type="button"
@@ -51,7 +51,7 @@ export default function LangPicker() {
           className={lang === l ? "is-active" : ""}
           aria-pressed={lang === l}
         >
-          {l === "all" ? "All" : l.toUpperCase()}
+          {l.toUpperCase()}
         </button>
       ))}
     </div>
