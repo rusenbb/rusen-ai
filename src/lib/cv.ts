@@ -204,9 +204,7 @@ export function getCvLabels(locale: CVLocale = "en"): CVLabels {
   return LABELS_BY_LOCALE[locale];
 }
 
-/** A locale entry. `hasPdf` gates the download dropdown — Japanese is HTML-only
- *  for now because the LaTeX template needs CJK fonts (xeCJK + Noto CJK) before
- *  it can render. */
+/** A locale entry. `hasPdf` gates the download dropdown. */
 export const SUPPORTED_CV_LOCALES: ReadonlyArray<{
   locale: CVLocale;
   label: string;
@@ -215,5 +213,5 @@ export const SUPPORTED_CV_LOCALES: ReadonlyArray<{
 }> = [
   { locale: "en", label: "EN", href: "/cv", hasPdf: true },
   { locale: "tr", label: "TR", href: "/cv/tr", hasPdf: true },
-  { locale: "ja", label: "JP", href: "/cv/ja", hasPdf: false },
+  { locale: "ja", label: "JP", href: "/cv/ja", hasPdf: true },
 ];

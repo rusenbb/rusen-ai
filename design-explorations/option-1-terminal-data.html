@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Option 1 — Terminal / Data-Ops</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg:        #fafafa;
+    --surface:   #ffffff;
+    --fg:        #171717;
+    --fg-muted:  #525252;
+    --fg-sub:    #8a8a8a;
+    --line:      #d4d4d4;
+    --line-hard: #171717;
+    --accent:    #16a34a;       /* signal-green for "live" */
+    --mono: "Geist Mono", "JetBrains Mono", ui-monospace, monospace;
+    --sans: "Geist", system-ui, -apple-system, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:        #0c0c0f;
+      --surface:   #131316;
+      --fg:        #ededed;
+      --fg-muted:  #a3a3a3;
+      --fg-sub:    #6a6a6f;
+      --line:      #2a2a2e;
+      --line-hard: #ededed;
+      --accent:    #4ade80;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.55;
+    min-height: 100vh;
+  }
+
+  /* ===== ASCII background ===== */
+  #ascii-bg {
+    position: fixed; inset: 0; z-index: 0;
+    pointer-events: none;
+    font-family: var(--mono);
+    font-size: 14px;
+    line-height: 1.0;
+    color: var(--fg);
+    opacity: 0.10;
+    white-space: pre;
+    overflow: hidden;
+    user-select: none;
+  }
+  @media (prefers-color-scheme: dark) {
+    #ascii-bg { opacity: 0.12; }
+  }
+
+  .shell { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; padding: 2rem 1.25rem; }
+
+  /* ===== header ===== */
+  header.top {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.75rem 0 2.25rem;
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+  }
+  header.top .brand { font-weight: 700; }
+  header.top nav a {
+    margin-left: 1.25rem; color: var(--fg-muted); text-decoration: none;
+    border-bottom: 1px solid transparent;
+  }
+  header.top nav a:hover { color: var(--fg); border-bottom-color: var(--line-hard); }
+
+  /* ===== hero ===== */
+  .kicker {
+    display: inline-flex; align-items: center; gap: 0.55rem;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    color: var(--fg-muted);
+    padding: 0.35rem 0.6rem;
+    border: 1px solid var(--line);
+    margin-bottom: 1.25rem;
+  }
+  .kicker .blip {
+    width: 6px; height: 6px; background: var(--accent); border-radius: 50%;
+    animation: blip 1.4s ease-in-out infinite;
+  }
+  @keyframes blip { 0%,100% { opacity: 1 } 50% { opacity: 0.25 } }
+
+  h1.title {
+    font-family: var(--sans);
+    font-size: clamp(2rem, 5vw, 3.25rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0 0 0.75rem;
+    line-height: 1.05;
+  }
+  .lead {
+    font-size: 1.05rem;
+    color: var(--fg-muted);
+    max-width: 56ch;
+    margin: 0 0 1.75rem;
+  }
+  .cta { display: flex; flex-wrap: wrap; gap: 0.65rem; }
+  .btn {
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    letter-spacing: 0.06em;
+    padding: 0.7rem 1.1rem;
+    text-decoration: none;
+    border: 1px solid var(--line-hard);
+    display: inline-flex; align-items: center; gap: 0.55rem;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .btn.primary { background: var(--line-hard); color: var(--bg); }
+  .btn.primary:hover { background: transparent; color: var(--fg); }
+  .btn.ghost     { background: transparent; color: var(--fg); }
+  .btn.ghost:hover { background: var(--line-hard); color: var(--bg); }
+  .btn .arrow { transition: transform 0.15s ease; }
+  .btn:hover .arrow { transform: translateX(3px); }
+
+  /* ===== section heading ===== */
+  .sec { margin-top: 4rem; }
+  .sec-head {
+    display: flex; align-items: center; gap: 1rem; margin-bottom: 1.25rem;
+  }
+  .sec-num {
+    font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.2em;
+    color: var(--fg-sub);
+  }
+  .sec-title {
+    font-family: var(--mono); font-size: 0.95rem; font-weight: 700;
+    letter-spacing: 0.18em; text-transform: uppercase; margin: 0;
+  }
+  .sec-rule {
+    flex: 1; height: 1px;
+    background: repeating-linear-gradient(90deg,
+      var(--line) 0, var(--line) 6px, transparent 6px, transparent 10px);
+  }
+
+  /* ===== cards ===== */
+  .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    padding: 1.25rem;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+    position: relative;
+  }
+  .card:hover { border-color: var(--line-hard); transform: translateY(-2px); }
+  .card .tag {
+    font-family: var(--mono); font-size: 0.65rem;
+    letter-spacing: 0.12em; color: var(--fg-sub);
+    position: absolute; top: 0.9rem; right: 1rem;
+  }
+  .card h3 {
+    font-family: var(--sans);
+    font-size: 1.05rem;
+    margin: 0 0 0.4rem;
+    font-weight: 600;
+  }
+  .card p {
+    font-size: 0.9rem; color: var(--fg-muted); margin: 0;
+  }
+  .card .row {
+    display: flex; align-items: center; gap: 0.5rem;
+    margin-top: 0.85rem;
+    font-family: var(--mono); font-size: 0.72rem; color: var(--fg-sub);
+    letter-spacing: 0.08em;
+  }
+  .card .row .dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; }
+
+  /* ===== timeline row (CV-style) ===== */
+  .timeline-card {
+    display: grid; grid-template-columns: 16px 1fr; gap: 1rem;
+    align-items: stretch;
+    padding: 1.25rem 1.25rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    margin-top: 0.75rem;
+  }
+  .timeline-card .marker {
+    width: 8px; height: 8px; margin-top: 6px;
+    background: var(--line-hard);
+    transform: rotate(45deg);
+  }
+  .timeline-card .row1 {
+    display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; flex-wrap: wrap;
+    font-family: var(--mono);
+  }
+  .timeline-card .role { font-weight: 700; font-size: 1rem; }
+  .timeline-card .at   { color: var(--fg-sub); }
+  .timeline-card .co   {
+    color: var(--fg); border-bottom: 1px solid var(--line-hard);
+  }
+  .timeline-card .period { font-size: 0.78rem; color: var(--fg-sub); letter-spacing: 0.05em; }
+  .timeline-card .loc {
+    font-family: var(--mono); font-size: 0.72rem; color: var(--fg-sub);
+    letter-spacing: 0.1em; margin-top: 0.25rem;
+  }
+  .timeline-card .desc { font-size: 0.9rem; color: var(--fg-muted); margin: 0.6rem 0 0; line-height: 1.55; }
+
+  footer.bot {
+    margin-top: 4rem; padding-top: 1rem;
+    border-top: 1px solid var(--line);
+    font-family: var(--mono); font-size: 0.72rem; color: var(--fg-sub);
+    letter-spacing: 0.08em;
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;
+  }
+</style>
+</head>
+<body>
+<pre id="ascii-bg" aria-hidden="true"></pre>
+
+<div class="shell">
+  <header class="top">
+    <div class="brand">rusen<span style="color:var(--fg-sub)">.ai</span></div>
+    <nav>
+      <a href="#">demos</a>
+      <a href="#">nerdy</a>
+      <a href="#">cv</a>
+    </nav>
+  </header>
+
+  <section>
+    <span class="kicker"><span class="blip"></span> DATA, DATA EVERYWHERE</span>
+    <h1 class="title">Data is eating the world.</h1>
+    <p class="lead">I'm Rusen, an AI &amp; Data Engineer building tools to make sense of it all — in your browser, on the edge, end-to-end.</p>
+    <div class="cta">
+      <a class="btn primary" href="#"><span class="arrow">→</span> EXPLORE DEMOS</a>
+      <a class="btn ghost"   href="#"><span class="arrow">↗</span> NERDY STUFF</a>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head">
+      <span class="sec-num">01 //</span>
+      <h2 class="sec-title">Featured Demos</h2>
+      <span class="sec-rule"></span>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <span class="tag">CLASSIFY</span>
+        <h3>Classify Anything</h3>
+        <p>Zero-shot text classification that runs entirely in your browser.</p>
+        <div class="row"><span class="dot"></span> LIVE · NO SERVER</div>
+      </div>
+      <div class="card">
+        <span class="tag">DASHBOARD</span>
+        <h3>Pulse Board</h3>
+        <p>Live multi-signal dashboard — crypto, weather, quakes — composable widgets.</p>
+        <div class="row"><span class="dot"></span> LIVE · STREAMING</div>
+      </div>
+      <div class="card">
+        <span class="tag">TOKENIZER</span>
+        <h3>Rusenizer</h3>
+        <p>Turkish-focused BPE tokenizer playground with side-by-side comparison.</p>
+        <div class="row"><span class="dot"></span> LIVE · IN-BROWSER</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head">
+      <span class="sec-num">02 //</span>
+      <h2 class="sec-title">Experience</h2>
+      <span class="sec-rule"></span>
+    </div>
+    <div class="timeline-card">
+      <span class="marker"></span>
+      <div>
+        <div class="row1">
+          <div>
+            <span class="role">AI Engineer</span>
+            <span class="at">@</span>
+            <a class="co" href="#">Acme Labs ↗</a>
+          </div>
+          <span class="period">2024 — present</span>
+        </div>
+        <div class="loc">REMOTE · BERLIN</div>
+        <p class="desc">Building real-time inference systems for streaming pipelines. Lead the platform team's migration from batch to event-driven evaluation.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="bot">
+    <span>rusen.ai · v0.1.0</span>
+    <span>BUILD 24a · BERLIN/IST</span>
+  </footer>
+</div>
+
+<script>
+  // Density-mapped ASCII background. Pulses "DATA" + click ripples.
+  // Same idea as your LegacyDataGridBackground but rendering characters
+  // instead of dots, so it reads as ASCII art at a glance.
+  const RAMP = " .·:-=+*#%@";
+  const CELL_W = 8, CELL_H = 14; // px per char (Geist Mono ~14px)
+  const PATTERNS = {
+    D:[[1,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,1,1,1,0]],
+    A:[[0,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[1,1,1,1,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1]],
+    T:[[1,1,1,1,1],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0]],
+  };
+  const WORD = ["D","A","T","A"];
+  const LW = 5, LH = 7, GAP = 2;
+  const el = document.getElementById("ascii-bg");
+  let cols = 0, rows = 0, letterMap = new Map(), ripples = [];
+
+  function layout() {
+    cols = Math.ceil(window.innerWidth  / CELL_W);
+    rows = Math.ceil(window.innerHeight / CELL_H);
+    letterMap.clear();
+    const totalW = WORD.length * LW + (WORD.length - 1) * GAP;
+    const startC = Math.floor((cols - totalW) / 2);
+    const startR = Math.floor((rows - LH)     / 2);
+    WORD.forEach((ch, i) => {
+      const p = PATTERNS[ch];
+      const c0 = startC + i * (LW + GAP);
+      for (let r = 0; r < LH; r++) for (let c = 0; c < LW; c++)
+        if (p[r][c]) letterMap.set(`${c0+c},${startR+r}`, i);
+    });
+  }
+  layout();
+  window.addEventListener("resize", layout);
+  window.addEventListener("click", (e) => {
+    ripples.push({ x: e.clientX, y: e.clientY, t: performance.now() });
+  });
+
+  function frame(now) {
+    ripples = ripples.filter(r => now - r.t < 1600);
+    const t = now / 1000;
+    const cycle = 4, dur = 1;
+    let out = "";
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        // ambient slow noise
+        let v = 0.12 + 0.06 * Math.sin((c * 0.18) + (r * 0.22) + t * 0.7);
+        // letter pulse
+        const li = letterMap.get(`${c},${r}`);
+        if (li !== undefined) {
+          const start = li * dur;
+          const ct = t % cycle;
+          if (ct >= start && ct < start + dur) {
+            const p = (ct - start) / dur;
+            v += Math.sin(p * Math.PI) * 0.55;
+          } else {
+            v += 0.10;
+          }
+        }
+        // ripples
+        const px = c * CELL_W + CELL_W/2, py = r * CELL_H + CELL_H/2;
+        for (const rp of ripples) {
+          const elapsed = (now - rp.t) / 1000;
+          const dist = Math.hypot(px - rp.x, py - rp.y);
+          const ring = elapsed * 240;
+          const band = Math.abs(dist - ring);
+          if (band < 28) v += (1 - band/28) * (1 - elapsed/1.6) * 0.5;
+        }
+        v = Math.max(0, Math.min(1, v));
+        out += RAMP[Math.floor(v * (RAMP.length - 1))];
+      }
+      out += "\n";
+    }
+    el.textContent = out;
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+</script>
+</body>
+</html>

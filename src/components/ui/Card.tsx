@@ -52,27 +52,25 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(function Card(
   },
   ref
 ) {
-  const borderClasses = noBorder
-    ? ""
-    : "border border-neutral-200 dark:border-neutral-800";
+  const borderClasses = noBorder ? "" : "border border-[var(--line)]";
   const interactiveClasses = interactive
-    ? "cursor-pointer hover:border-neutral-300 dark:hover:border-neutral-700 hover:shadow-sm transition-all"
+    ? "cursor-pointer hover:border-[var(--line-strong)] transition-colors"
     : "";
 
   return (
     <div
       ref={ref}
-      className={`ui-card rounded-lg ${borderClasses} ${interactiveClasses} ${className}`}
+      className={`bg-[var(--surface)] ${borderClasses} ${interactiveClasses} ${className}`}
       {...props}
     >
       {header && (
-        <div className="px-4 py-3 border-b border-neutral-200 dark:border-neutral-800">
+        <div className="px-4 py-3 border-b border-[var(--line)]">
           {header}
         </div>
       )}
       <div className={paddingClasses[padding]}>{children}</div>
       {footer && (
-        <div className="px-4 py-3 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800/50 rounded-b-lg">
+        <div className="px-4 py-3 border-t border-[var(--line)] bg-[color-mix(in_srgb,var(--foreground)_4%,transparent)]">
           {footer}
         </div>
       )}

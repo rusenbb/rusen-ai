@@ -531,10 +531,7 @@ export default function SchellingSegregation() {
               type="button"
               onClick={doStep}
               disabled={running}
-              className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-300 dark:border-neutral-700
-                bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300
-                hover:border-neutral-500 dark:hover:border-neutral-500 transition
-                disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 hover:border-neutral-500 dark:hover:border-neutral-500 transition disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Step
             </button>
@@ -552,9 +549,7 @@ export default function SchellingSegregation() {
             <button
               type="button"
               onClick={handleReset}
-              className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-300 dark:border-neutral-700
-                bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300
-                hover:border-neutral-500 dark:hover:border-neutral-500 transition"
+              className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 hover:border-neutral-500 dark:hover:border-neutral-500 transition"
             >
               Reset
             </button>

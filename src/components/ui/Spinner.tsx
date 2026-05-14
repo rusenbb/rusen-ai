@@ -6,8 +6,8 @@
 interface SpinnerProps {
   /** Size variant */
   size?: "sm" | "md" | "lg";
-  /** Color variant - defaults to blue (accent color) */
-  color?: "blue" | "indigo" | "white" | "neutral";
+  /** Color variant - defaults to neutral. Use "currentColor" to inherit parent text color. */
+  color?: "blue" | "indigo" | "white" | "neutral" | "currentColor";
   /** Additional CSS classes */
   className?: string;
 }
@@ -23,6 +23,7 @@ const colorClasses = {
   indigo: "border-indigo-500 border-t-transparent",
   white: "border-white border-t-transparent",
   neutral: "border-neutral-600 border-t-transparent dark:border-neutral-400",
+  currentColor: "border-current border-t-transparent",
 };
 
 /**

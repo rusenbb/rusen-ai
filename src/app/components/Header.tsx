@@ -63,7 +63,7 @@ export default function Header() {
             <button
               type="button"
               onClick={() => setMobileNavOpen((v) => !v)}
-              className="inline-flex items-center justify-center w-11 h-11 rounded-md border border-neutral-300/70 dark:border-neutral-700/70 text-neutral-700 dark:text-neutral-200"
+              className="inline-flex items-center justify-center w-11 h-11 border border-[var(--line)] text-neutral-700 dark:text-neutral-200"
               aria-label="Toggle menu"
               aria-expanded={mobileNavOpen}
               aria-controls="mobile-nav"
@@ -103,7 +103,7 @@ export default function Header() {
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileNavOpen(false)}
-                className="block px-3 py-2.5 rounded-md text-sm font-medium text-neutral-800 dark:text-neutral-100 hover:bg-neutral-100/80 dark:hover:bg-neutral-800/70"
+                className="block px-3 py-2.5 text-sm font-medium text-neutral-800 dark:text-neutral-100 hover:bg-neutral-100/80 dark:hover:bg-neutral-800/70"
               >
                 {item.label}
               </Link>
