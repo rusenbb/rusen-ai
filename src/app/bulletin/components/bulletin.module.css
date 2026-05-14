@@ -1,28 +1,21 @@
 /* ========================================
-   BULLETIN — Neo-brutalist project showcase
-   Shares visual language with /cv but sized for prose-heavy content.
+   BULLETIN — Terminal / Data-Ops project showcase
+   Shares visual language with /cv. Prose-heavy.
+   Inherits tokens from globals.css.
    ======================================== */
 
 :root {
-  --bul-bg: #ffffff;
-  --bul-surface: #f5f5f5;
-  --bul-border: #000000;
-  --bul-text: #000000;
-  --bul-text-muted: #555555;
-  --bul-text-sub: #888888;
-  --bul-shadow-offset: 4px;
-  --bul-border-thick: 3px;
+  --bul-bg: var(--surface);
+  --bul-surface: color-mix(in srgb, var(--foreground) 4%, transparent);
+  --bul-border: var(--line);
+  --bul-border-strong: var(--line-strong);
+  --bul-text: var(--foreground);
+  --bul-text-muted: var(--muted);
+  --bul-text-sub: var(--sub);
+  --bul-accent: var(--signal);
+  --bul-border-thick: 1px;
   --bul-font-mono: var(--font-geist-mono), "Courier New", monospace;
   --bul-font-sans: var(--font-geist-sans), system-ui, sans-serif;
-}
-
-:global(html[data-theme="dark"]) {
-  --bul-bg: #0a0a0a;
-  --bul-surface: #141414;
-  --bul-border: #ffffff;
-  --bul-text: #ffffff;
-  --bul-text-muted: #aaaaaa;
-  --bul-text-sub: #777777;
 }
 
 .container {
@@ -32,22 +25,6 @@
   position: relative;
   font-family: var(--bul-font-sans);
   color: var(--bul-text);
-  background: var(--bul-bg);
-}
-
-.gridBg {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.03;
-  background-image:
-    linear-gradient(var(--bul-border) 1px, transparent 1px),
-    linear-gradient(90deg, var(--bul-border) 1px, transparent 1px);
-  background-size: 50px 50px;
 }
 
 .container > * {
@@ -60,7 +37,6 @@
 .hero {
   border: var(--bul-border-thick) solid var(--bul-border);
   background: var(--bul-bg);
-  box-shadow: var(--bul-shadow-offset) var(--bul-shadow-offset) 0 0 var(--bul-border);
   margin-bottom: 3rem;
 }
 
@@ -85,8 +61,8 @@
   font-size: 0.7rem;
   letter-spacing: 0.2em;
   padding: 0.25rem 0.5rem;
-  background: var(--bul-border);
-  color: var(--bul-bg);
+  background: var(--bul-border-strong);
+  color: var(--background);
   margin-bottom: 1rem;
 }
 
@@ -112,8 +88,19 @@
 }
 
 .subtitleIndicator {
-  color: var(--bul-border);
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--bul-accent);
+  display: inline-block;
   flex-shrink: 0;
+  margin-top: 0.45rem;
+  animation: bulPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes bulPulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.3; }
 }
 
 .heroMeta {
@@ -157,7 +144,7 @@
   font-size: 0.7rem;
   letter-spacing: 0.05em;
   padding: 0.25rem 0.5rem;
-  border: 2px solid var(--bul-border);
+  border: 1px solid var(--bul-border-strong);
   background: var(--bul-bg);
   color: var(--bul-text);
 }
@@ -202,8 +189,8 @@
 }
 
 .linkBtn:hover {
-  background: var(--bul-border);
-  color: var(--bul-bg);
+  background: var(--bul-border-strong);
+  color: var(--background);
 }
 
 /* SECTION HEADERS */
@@ -221,10 +208,10 @@
 
 .sectionNumber {
   font-family: var(--bul-font-mono);
-  font-size: 2rem;
+  font-size: 0.78rem;
   font-weight: 700;
-  color: var(--bul-border);
-  opacity: 0.3;
+  letter-spacing: 0.2em;
+  color: var(--bul-text-sub);
   line-height: 1;
 }
 
@@ -240,11 +227,11 @@
 
 .sectionLine {
   flex: 1;
-  height: var(--bul-border-thick);
+  height: 1px;
   background: repeating-linear-gradient(
     90deg,
-    var(--bul-border) 0,
-    var(--bul-border) 8px,
+    var(--bul-border-strong) 0,
+    var(--bul-border-strong) 8px,
     transparent 8px,
     transparent 12px
   );
@@ -284,13 +271,13 @@
 .prose a {
   color: var(--bul-text);
   text-decoration: none;
-  border-bottom: 2px solid var(--bul-border);
-  transition: all 0.15s ease;
+  border-bottom: 1px solid var(--bul-border-strong);
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .prose a:hover {
-  background: var(--bul-border);
-  color: var(--bul-bg);
+  background: var(--bul-border-strong);
+  color: var(--background);
 }
 
 /* CARD — bordered block for grouped content */
@@ -298,14 +285,13 @@
 .card {
   border: var(--bul-border-thick) solid var(--bul-border);
   background: var(--bul-bg);
-  box-shadow: var(--bul-shadow-offset) var(--bul-shadow-offset) 0 0 var(--bul-border);
   padding: 1.5rem;
-  transition: all 0.15s ease;
+  transition: border-color 0.15s ease, transform 0.15s ease;
 }
 
 .card:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: calc(var(--bul-shadow-offset) + 2px) calc(var(--bul-shadow-offset) + 2px) 0 0 var(--bul-border);
+  border-color: var(--bul-border-strong);
+  transform: translateY(-2px);
 }
 
 .cardTitle {
@@ -331,7 +317,6 @@
   padding: 1.25rem 1.5rem;
   border: var(--bul-border-thick) solid var(--bul-border);
   background: var(--bul-surface);
-  box-shadow: var(--bul-shadow-offset) var(--bul-shadow-offset) 0 0 var(--bul-border);
   overflow-x: auto;
   white-space: pre;
   color: var(--bul-text);
@@ -359,8 +344,9 @@
 }
 
 .footerLine {
-  height: var(--bul-border-thick);
-  background: var(--bul-border);
+  height: 1px;
+  background: var(--bul-border-strong);
+  opacity: 0.3;
   margin-bottom: 1rem;
 }
 
@@ -390,13 +376,12 @@
   font-size: 0.75rem;
   color: var(--bul-text-muted);
   text-decoration: none;
-  border-bottom: 1px solid var(--bul-border);
-  transition: all 0.15s ease;
+  border-bottom: 1px solid var(--bul-border-strong);
+  transition: color 0.15s ease, border-bottom-color 0.15s ease;
 }
 
 .footerLink:hover {
   color: var(--bul-text);
-  border-bottom-width: 2px;
 }
 
 /* RESPONSIVE */
@@ -433,10 +418,6 @@
 
   .sectionHeader {
     gap: 0.75rem;
-  }
-
-  .sectionNumber {
-    font-size: 1.5rem;
   }
 
   .sectionTitle {

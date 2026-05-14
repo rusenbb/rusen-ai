@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { LuBookOpen, LuCoffee, LuDumbbell, LuTv } from "react-icons/lu";
 import {
   type CVData,
   type CVLabels,
@@ -9,6 +10,13 @@ import {
   SUPPORTED_CV_LOCALES,
 } from "@/lib/cv";
 import styles from "./cv.module.css";
+
+const INTEREST_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  coffee: LuCoffee,
+  book: LuBookOpen,
+  tv: LuTv,
+  dumbbell: LuDumbbell,
+};
 
 type CVDocumentProps = {
   cv: CVData;
@@ -19,6 +27,32 @@ type CVDocumentProps = {
 };
 
 type OpenMenu = "language" | "download" | null;
+
+const MD_LINK_RE = /\[([^\]]+)\]\(([^)]+)\)/g;
+
+function renderDescription(text: string): React.ReactNode {
+  const parts: React.ReactNode[] = [];
+  let last = 0;
+  let match: RegExpExecArray | null;
+  MD_LINK_RE.lastIndex = 0;
+  while ((match = MD_LINK_RE.exec(text)) !== null) {
+    if (match.index > last) parts.push(text.slice(last, match.index));
+    parts.push(
+      <a
+        key={`lnk-${match.index}`}
+        href={match[2]}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={styles.descLink}
+      >
+        {match[1]}
+      </a>,
+    );
+    last = match.index + match[0].length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return parts;
+}
 
 export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumentProps) {
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
@@ -46,15 +80,13 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
 
   return (
     <div className={styles.container}>
-      <div className={styles.gridBg} />
-
       <header className={styles.hero}>
         <div className={styles.heroMain}>
           <div className={styles.heroNameSection}>
             <span className={styles.heroLabel}>{labels.identity}</span>
             <h1 className={styles.heroName}>{cv.basics.name}</h1>
             <div className={styles.heroRole}>
-              <span className={styles.roleIndicator}>►</span>
+              <span className={styles.roleIndicator} aria-hidden="true" />
               {cv.basics.role.toUpperCase()}
             </div>
           </div>
@@ -203,7 +235,7 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
                   <span className={styles.cardPeriod}>{item.period}</span>
                 </div>
                 <div className={styles.cardLocation}>{item.location}</div>
-                <p className={styles.cardDesc}>{item.description}</p>
+                <p className={styles.cardDesc}>{renderDescription(item.description)}</p>
               </div>
             </div>
           ))}
@@ -367,15 +399,20 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
         </div>
 
         <div className={styles.interestsGrid}>
-          {cv.interests.map((item) => (
-            <div key={item.title} className={styles.interestCard}>
-              <div className={styles.interestIcon}>{item.icon}</div>
-              <div className={styles.interestContent}>
-                <h4 className={styles.interestTitle}>{item.title}</h4>
-                <p className={styles.interestDesc}>{item.desc}</p>
+          {cv.interests.map((item) => {
+            const Icon = INTEREST_ICONS[item.icon];
+            return (
+              <div key={item.title} className={styles.interestCard}>
+                <div className={styles.interestIcon} aria-hidden="true">
+                  {Icon ? <Icon /> : null}
+                </div>
+                <div className={styles.interestContent}>
+                  <h4 className={styles.interestTitle}>{item.title}</h4>
+                  <p className={styles.interestDesc}>{item.desc}</p>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 

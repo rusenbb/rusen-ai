@@ -1,31 +1,21 @@
 /* ========================================
-   INDUSTRIAL NEO-BRUTALIST CV
-   Thick borders · Hard shadows · Monospace
+   TERMINAL / DATA-OPS CV
+   Hairline borders · No hard shadows · Mono labels + sans body
+   Inherits tokens from globals.css so it tracks the rest of the site.
    ======================================== */
 
-/* CSS Custom Properties - Monochrome */
 :root {
-  --cbg: #ffffff;
-  --csurface: #f5f5f5;
-  --cborder: #000000;
-  --ctext: #000000;
-  --ctext-muted: #666666;
-  --ctext-sub: #888888;
-  --caccent: #000000;
-  --shadow-offset: 4px;
-  --border-thick: 3px;
+  --cbg: var(--surface);
+  --csurface: color-mix(in srgb, var(--foreground) 4%, transparent);
+  --cborder: var(--line);
+  --cborder-strong: var(--line-strong);
+  --ctext: var(--foreground);
+  --ctext-muted: var(--muted);
+  --ctext-sub: var(--sub);
+  --caccent: var(--signal);
+  --border-thick: 1px;
   --font-mono: var(--font-geist-mono), "Courier New", monospace;
   --font-sans: var(--font-geist-sans), system-ui, sans-serif;
-}
-
-:global(html[data-theme="dark"]) {
-  --cbg: #0a0a0a;
-  --csurface: #141414;
-  --cborder: #ffffff;
-  --ctext: #ffffff;
-  --ctext-muted: #888888;
-  --ctext-sub: #666666;
-  --caccent: #ffffff;
 }
 
 /* Container */
@@ -36,23 +26,6 @@
   position: relative;
   font-family: var(--font-sans);
   color: var(--ctext);
-  background: var(--cbg);
-}
-
-/* Grid Background */
-.gridBg {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.03;
-  background-image: 
-    linear-gradient(var(--cborder) 1px, transparent 1px),
-    linear-gradient(90deg, var(--cborder) 1px, transparent 1px);
-  background-size: 50px 50px;
 }
 
 .container > * {
@@ -66,14 +39,10 @@
 
 .hero {
   position: relative;
-  /* Override `.container > * { z-index: 1 }` so that the dropdown panels
-     inside heroLinks (which extend below the hero box) paint above the
-     subsequent sections, even when the page is zoomed in and the panels
-     overlap a section's first card. */
+  /* Stay above subsequent sections so dropdown panels paint on top. */
   z-index: 20;
   border: var(--border-thick) solid var(--cborder);
   background: var(--cbg);
-  box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 var(--cborder);
   margin-bottom: 3rem;
 }
 
@@ -96,7 +65,7 @@
   font-size: 0.7rem;
   letter-spacing: 0.2em;
   padding: 0.25rem 0.5rem;
-  background: var(--cborder);
+  background: var(--cborder-strong);
   color: var(--cbg);
   margin-bottom: 1rem;
 }
@@ -122,7 +91,11 @@
 }
 
 .roleIndicator {
-  color: var(--cborder);
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--caccent);
+  display: inline-block;
   animation: pulse 1.5s ease-in-out infinite;
 }
 
@@ -220,7 +193,7 @@
 }
 
 .printBtn:hover {
-  background: var(--cborder);
+  background: var(--cborder-strong);
   color: var(--cbg);
 }
 
@@ -259,12 +232,12 @@
 }
 
 .localeBtnActive {
-  background: var(--cborder);
+  background: var(--cborder-strong);
   color: var(--cbg);
 }
 
 .localeBtnActive:hover {
-  background: var(--cborder);
+  background: var(--cborder-strong);
   color: var(--cbg);
 }
 
@@ -317,7 +290,6 @@
   background: var(--cbg);
   border: var(--border-thick) solid var(--cborder);
   min-width: 100%;
-  box-shadow: 4px 4px 0 0 var(--cborder);
 }
 
 .langDropdown .dropdownPanel {
@@ -349,12 +321,12 @@
 }
 
 .dropdownItem:hover {
-  background: var(--cborder);
+  background: var(--cborder-strong);
   color: var(--cbg);
 }
 
 .dropdownItemActive {
-  background: var(--cborder);
+  background: var(--cborder-strong);
   color: var(--cbg);
 }
 
@@ -375,10 +347,10 @@
 
 .sectionNumber {
   font-family: var(--font-mono);
-  font-size: 2rem;
+  font-size: 0.78rem;
   font-weight: 700;
-  color: var(--cborder);
-  opacity: 0.3;
+  letter-spacing: 0.2em;
+  color: var(--ctext-sub);
   line-height: 1;
 }
 
@@ -397,8 +369,8 @@
   height: var(--border-thick);
   background: repeating-linear-gradient(
     90deg,
-    var(--cborder) 0,
-    var(--cborder) 8px,
+    var(--cborder-strong) 0,
+    var(--cborder-strong) 8px,
     transparent 8px,
     transparent 12px
   );
@@ -431,19 +403,18 @@
 }
 
 .markerDot {
-  width: 12px;
-  height: 12px;
-  border: var(--border-thick) solid var(--cborder);
-  background: var(--cbg);
-  transform: rotate(45deg);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cborder-strong);
   flex-shrink: 0;
 }
 
 .markerLine {
   flex: 1;
-  width: var(--border-thick);
-  background: var(--cborder);
-  opacity: 0.2;
+  width: 1px;
+  background: var(--cborder-strong);
+  opacity: 0.15;
   margin: 0.5rem 0;
   min-height: 40px;
 }
@@ -452,15 +423,13 @@
   flex: 1;
   border: var(--border-thick) solid var(--cborder);
   background: var(--cbg);
-  box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 var(--cborder);
   padding: 1.5rem;
   margin-bottom: 1.5rem;
   transition: all 0.15s ease;
 }
 
 .timelineCard:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: calc(var(--shadow-offset) + 2px) calc(var(--shadow-offset) + 2px) 0 0 var(--cborder);
+  transform: translateY(-2px);
 }
 
 .cardHeader {
@@ -502,12 +471,12 @@
   font-size: 1rem;
   color: var(--ctext);
   text-decoration: none;
-  border-bottom: 2px solid var(--cborder);
+  border-bottom: 1px solid var(--cborder-strong);
   transition: all 0.15s ease;
 }
 
 .cardCompanyLink:hover {
-  background: var(--cborder);
+  background: var(--cborder-strong);
   color: var(--cbg);
 }
 
@@ -534,6 +503,18 @@
   margin: 0;
 }
 
+.descLink {
+  color: var(--ctext);
+  text-decoration: none;
+  border-bottom: 1px solid var(--cborder);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.descLink:hover {
+  background: var(--cborder-strong);
+  color: var(--cbg);
+}
+
 /* ========================================
    PROJECTS GRID
    ======================================== */
@@ -547,7 +528,6 @@
 .projectCard {
   border: var(--border-thick) solid var(--cborder);
   background: var(--cbg);
-  box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 var(--cborder);
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
@@ -555,8 +535,7 @@
 }
 
 .projectCard:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: calc(var(--shadow-offset) + 2px) calc(var(--shadow-offset) + 2px) 0 0 var(--cborder);
+  transform: translateY(-2px);
 }
 
 .projectCardHeader {
@@ -565,7 +544,7 @@
   align-items: flex-start;
   gap: 1rem;
   margin-bottom: 0.75rem;
-  border-bottom: 2px solid var(--cborder);
+  border-bottom: 1px solid var(--cborder-strong);
   padding-bottom: 0.75rem;
 }
 
@@ -615,7 +594,7 @@
   font-size: 0.65rem;
   letter-spacing: 0.05em;
   padding: 0.25rem 0.5rem;
-  border: 2px solid var(--cborder);
+  border: 1px solid var(--cborder-strong);
   background: var(--csurface);
   color: var(--ctext);
 }
@@ -630,14 +609,14 @@
   font-size: 0.75rem;
   font-weight: 600;
   padding: 0.4rem 0.75rem;
-  border: 2px solid var(--cborder);
+  border: 1px solid var(--cborder-strong);
   color: var(--ctext);
   text-decoration: none;
   transition: all 0.15s ease;
 }
 
 .projectLink:hover {
-  background: var(--cborder);
+  background: var(--cborder-strong);
   color: var(--cbg);
 }
 
@@ -654,14 +633,12 @@
 .educationCard {
   border: var(--border-thick) solid var(--cborder);
   background: var(--cbg);
-  box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 var(--cborder);
   padding: 1.25rem 1.5rem;
   transition: all 0.15s ease;
 }
 
 .educationCard:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: calc(var(--shadow-offset) + 2px) calc(var(--shadow-offset) + 2px) 0 0 var(--cborder);
+  transform: translateY(-2px);
 }
 
 .eduHeader {
@@ -733,7 +710,6 @@
 .interestCard {
   border: var(--border-thick) solid var(--cborder);
   background: var(--cbg);
-  box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 var(--cborder);
   padding: 1.25rem;
   display: flex;
   align-items: flex-start;
@@ -742,8 +718,7 @@
 }
 
 .interestCard:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: calc(var(--shadow-offset) + 2px) calc(var(--shadow-offset) + 2px) 0 0 var(--cborder);
+  transform: translateY(-2px);
 }
 
 .interestIcon {
@@ -779,8 +754,9 @@
 }
 
 .footerLine {
-  height: var(--border-thick);
-  background: var(--cborder);
+  height: 1px;
+  background: var(--cborder-strong);
+  opacity: 0.3;
   margin-bottom: 1rem;
 }
 
@@ -935,7 +911,6 @@
   }
 
   /* Hide all web content */
-  .gridBg,
   .hero,
   .section,
   .footer,

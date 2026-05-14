@@ -252,6 +252,7 @@ export const PROJECTS: ProjectMeta[] = [
     slug: "eduport",
     collection: "bulletin",
     status: "live",
+    featuredHome: true,
     summary:
       "Single-user desktop app for tracking university applications. Storage is plain Markdown + YAML, sync-friendly and Obsidian-compatible.",
     description:
@@ -271,6 +272,7 @@ export const PROJECTS: ProjectMeta[] = [
     slug: "vaultdb",
     collection: "bulletin",
     status: "live",
+    featuredHome: true,
     summary:
       "A database engine for your markdown files. Query, filter, mutate, and traverse Obsidian vaults from the command line.",
     description:
@@ -291,6 +293,7 @@ export const PROJECTS: ProjectMeta[] = [
     slug: "metuclass",
     collection: "bulletin",
     status: "live",
+    featuredHome: true,
     summary:
       "CLI tool to sync ODTUClass course files to your local machine. Tracks changes so subsequent syncs only pull new or updated files.",
     description:

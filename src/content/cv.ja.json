@@ -38,7 +38,7 @@
       "company": "中東工科大学 応用NLPグループ",
       "period": "04/2026 - 現在",
       "location": "アンカラ、トルコ",
-      "description": "研究室の YouTube チャンネル「METU NLP Connect」を運営。専門家インタビュー、LLM・現代 NLP の解説動画、最新論文の紹介を制作。Çağrı Toraman 助教が主導する応用 NLP グループの一員として、LLM、生成 AI、トルコ語自然言語処理に取り組んでいます。",
+      "description": "研究室の YouTube チャンネル「[METU NLP Connect](https://www.youtube.com/@metunlpconnect)」を運営。専門家インタビュー、LLM・現代 NLP の解説動画、最新論文の紹介を制作。Çağrı Toraman 助教が主導する応用 NLP グループの一員として、LLM、生成 AI、トルコ語自然言語処理に取り組んでいます。",
       "link": "https://nlp.ceng.metu.edu.tr"
     },
     {
@@ -156,10 +156,10 @@
     }
   ],
   "interests": [
-    { "title": "コーヒー", "desc": "V60 - エアロプレス - モカポット", "icon": "☕" },
-    { "title": "読書", "desc": "哲学 - AI/CS - 金融", "icon": "📚" },
-    { "title": "アニメ・漫画", "desc": "視聴 - 読書 - コレクション", "icon": "📺" },
-    { "title": "フィットネス", "desc": "ウェイト - ランニング - 自重トレ", "icon": "💪" }
+    { "title": "コーヒー", "desc": "V60 - エアロプレス - モカポット", "icon": "coffee" },
+    { "title": "読書", "desc": "哲学 - AI/CS - 金融", "icon": "book" },
+    { "title": "アニメ・漫画", "desc": "視聴 - 読書 - コレクション", "icon": "tv" },
+    { "title": "フィットネス", "desc": "ウェイト - ランニング - 自重トレ", "icon": "dumbbell" }
   ],
   "courses": [
     {

@@ -23,11 +23,6 @@ const VARIANTS: NotFoundVariant[] = [
     randomLabel: "investigate a point",
   },
   {
-    message: "optimizer got stuck",
-    homeLabel: "escape the local minima",
-    randomLabel: "random explore",
-  },
-  {
     message: "model hallucinated",
     homeLabel: "return to ground truth",
     randomLabel: "do not hallucinate",

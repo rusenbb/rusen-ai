@@ -127,7 +127,7 @@ export function DemoPanel({
       padding={padding}
       header={header}
       footer={footer}
-      className={cx("rounded-xl", className)}
+      className={className}
       {...props}
     >
       {children}
@@ -144,12 +144,16 @@ export function DemoMutedSection({
   return (
     <section
       className={cx(
-        "rounded-xl border border-neutral-200/80 bg-neutral-50/90 p-6 dark:border-neutral-800 dark:bg-neutral-800/50",
+        "border border-[var(--line)] bg-[color-mix(in_srgb,var(--foreground)_4%,transparent)] p-6",
         className,
       )}
       {...props}
     >
-      {title && <h2 className="mb-3 text-lg font-semibold">{title}</h2>}
+      {title && (
+        <h2 className="mb-3 text-sm font-mono font-bold uppercase tracking-[0.18em]">
+          {title}
+        </h2>
+      )}
       {children}
     </section>
   );

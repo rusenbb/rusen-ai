@@ -38,7 +38,7 @@
       "company": "ODTÜ Uygulamalı NLP Grubu",
       "period": "04/2026 - Bugün",
       "location": "Ankara, TR",
-      "description": "Laboratuvarın YouTube kanalı METU NLP Connect'i yönetiyorum: uzmanlarla röportajlar, LLM ve modern NLP üzerine anlatım videoları, güncel makale incelemeleri. Dr. Öğr. Üyesi Çağrı Toraman'ın yürüttüğü Uygulamalı NLP Grubu'nda LLM, üretken yapay zeka ve Türkçe dil teknolojileri üzerine çalışıyorum.",
+      "description": "Laboratuvarın YouTube kanalı [METU NLP Connect](https://www.youtube.com/@metunlpconnect)'i yönetiyorum: uzmanlarla röportajlar, LLM ve modern NLP üzerine anlatım videoları, güncel makale incelemeleri. Dr. Öğr. Üyesi Çağrı Toraman'ın yürüttüğü Uygulamalı NLP Grubu'nda LLM, üretken yapay zeka ve Türkçe dil teknolojileri üzerine çalışıyorum.",
       "link": "https://nlp.ceng.metu.edu.tr"
     },
     {
@@ -156,10 +156,10 @@
     }
   ],
   "interests": [
-    { "title": "Kahve", "desc": "V60 - Aeropress - Moka Pot", "icon": "☕" },
-    { "title": "Kitap", "desc": "Felsefe - YZ/Bilgisayar - Finans", "icon": "📚" },
-    { "title": "Anime ve Manga", "desc": "İzleyici - Okuyucu - Koleksiyoncu", "icon": "📺" },
-    { "title": "Spor", "desc": "Halter - Koşu - Kalistenik", "icon": "💪" }
+    { "title": "Kahve", "desc": "V60 - Aeropress - Moka Pot", "icon": "coffee" },
+    { "title": "Kitap", "desc": "Felsefe - YZ/Bilgisayar - Finans", "icon": "book" },
+    { "title": "Anime ve Manga", "desc": "İzleyici - Okuyucu - Koleksiyoncu", "icon": "tv" },
+    { "title": "Spor", "desc": "Halter - Koşu - Kalistenik", "icon": "dumbbell" }
   ],
   "courses": [
     {
