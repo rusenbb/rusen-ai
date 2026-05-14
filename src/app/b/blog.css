@@ -1,0 +1,663 @@
+/* Blog-specific styles. Loaded by /b/layout.tsx so it only ships on blog pages. */
+
+/* Selection color for reading material — soft green tint that matches the
+   site's signal-blip accent. Subtle on cream, subtle on dark. Browser
+   default blue would feel completely out of register. */
+[data-allow-select]::selection,
+[data-allow-select] ::selection {
+  background: color-mix(in oklab, var(--signal) 32%, transparent);
+  color: var(--foreground);
+}
+
+/* Language filter — same pattern as the dark-mode data-theme switching. */
+html[data-blog-lang="en"] [data-post-lang="tr"],
+html[data-blog-lang="en"] [data-tag-lang="tr"] {
+  display: none;
+}
+html[data-blog-lang="tr"] [data-post-lang="en"],
+html[data-blog-lang="tr"] [data-tag-lang="en"] {
+  display: none;
+}
+/* TR tags get a green tint only in ALL view, where both languages mix. */
+html[data-blog-lang="all"] [data-tag-lang="tr"] {
+  color: var(--signal);
+}
+html[data-blog-lang="all"] [data-tag-lang="tr"]:hover {
+  border-color: var(--signal) !important;
+}
+
+.blog-shell {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 4rem;
+}
+
+.blog-kicker {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  color: var(--muted);
+  text-transform: uppercase;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid var(--line);
+  display: inline-block;
+  margin-bottom: 1rem;
+}
+
+.lang-pills {
+  display: inline-flex;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.lang-pills button {
+  padding: 0.35rem 0.65rem;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  cursor: pointer;
+  background: transparent;
+  margin-left: -1px;
+  font-family: inherit;
+  font-size: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+}
+.lang-pills button:first-child { margin-left: 0; }
+.lang-pills button.is-active {
+  background: var(--line-strong);
+  color: var(--background);
+  border-color: var(--line-strong);
+}
+
+.lang-badge {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+  text-transform: uppercase;
+  padding: 0.15rem 0.4rem;
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+/* ============================================================
+   POST PAGE — operator's log style
+   ============================================================ */
+
+.post-shell {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  line-height: 1.65;
+}
+
+.prompt-line {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-bottom: 0.25rem;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+}
+.prompt-line .p { color: var(--signal); font-weight: 600; }
+.prompt-line .c { color: var(--foreground); }
+
+.ascii-frame {
+  border: 1px solid var(--line-strong);
+  margin: 1.5rem 0 2.5rem;
+}
+.ascii-frame-head {
+  background: var(--line-strong);
+  color: var(--background);
+  padding: 0.35rem 0.75rem;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.ascii-frame-body {
+  padding: 1rem 1.1rem;
+  font-size: 0.78rem;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+}
+.ascii-frame-body dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 0.25rem 1rem;
+}
+.ascii-frame-body dt {
+  color: var(--sub);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.68rem;
+}
+.ascii-frame-body dd { margin: 0; color: var(--foreground); }
+.ascii-frame-body dd a { color: var(--signal); text-decoration: none; }
+.ascii-frame-body dd a:hover { text-decoration: underline; }
+
+.signal-blip-sm {
+  display: inline-block;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: var(--signal);
+  margin-right: 0.35rem;
+  vertical-align: middle;
+}
+
+.post-title {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 1.65rem;
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 0 0 0.9rem;
+  letter-spacing: -0.005em;
+}
+.post-title::before {
+  content: '>> ';
+  color: var(--signal);
+  font-weight: 400;
+}
+.post-subtitle {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.92rem;
+  color: var(--muted);
+  margin: 0 0 2.5rem;
+  line-height: 1.65;
+  padding-left: 1.3rem;
+  border-left: 2px solid var(--line);
+}
+
+/* MDX prose styles — also in operator's-log register.
+   data-allow-select on the article re-enables text selection (body sets
+   user-select: none site-wide). draggable={false} + -webkit-user-drag: none
+   on descendants stops readers from dragging links or images out. */
+.post-prose {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.92rem;
+  line-height: 1.82;
+}
+.post-prose,
+.post-prose * {
+  -webkit-user-drag: none;
+}
+.post-prose img,
+.post-prose a {
+  -webkit-user-drag: none;
+  user-select: text;
+}
+.post-prose p { margin: 0 0 1.3rem; }
+.post-prose h2 {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin: 2.5rem 0 1rem;
+  color: var(--foreground);
+}
+.post-prose h2::before {
+  content: '§ ';
+  color: var(--signal);
+  font-weight: 400;
+}
+.post-prose h3 {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin: 2rem 0 0.75rem;
+}
+.post-prose em { font-style: italic; }
+.post-prose strong { font-weight: 700; color: var(--foreground); }
+.post-prose a {
+  color: var(--foreground);
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+  text-decoration-color: var(--sub);
+}
+.post-prose a:hover { text-decoration-color: var(--foreground); }
+.post-prose blockquote {
+  margin: 1.75rem 0;
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--line);
+  background: color-mix(in oklab, var(--surface) 60%, transparent);
+  color: var(--muted);
+  position: relative;
+}
+.post-prose blockquote::before {
+  content: 'NOTE';
+  position: absolute;
+  top: -0.55rem;
+  left: 1rem;
+  background: var(--background);
+  padding: 0 0.35rem;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  color: var(--sub);
+}
+.post-prose blockquote p:last-child { margin-bottom: 0; }
+.post-prose ul, .post-prose ol {
+  padding-left: 1.5rem;
+  margin: 0 0 1.3rem;
+}
+.post-prose li { margin-bottom: 0.5rem; }
+.post-prose hr {
+  border: none;
+  height: 1px;
+  background: var(--line);
+  margin: 2rem 0;
+}
+
+/* Inline code */
+.post-prose :not(pre) > code {
+  background: color-mix(in oklab, var(--surface) 70%, transparent);
+  padding: 0.1rem 0.3rem;
+  border: 1px solid var(--line);
+  font-size: 0.88em;
+}
+
+/* Shiki / rehype-pretty-code code blocks */
+.post-prose pre {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  padding: 1rem 1.1rem;
+  margin: 1.5rem 0;
+  overflow-x: auto;
+  font-size: 0.85rem;
+  line-height: 1.65;
+}
+.post-prose pre code { background: transparent; border: none; padding: 0; }
+.post-prose pre [data-line] { display: block; }
+
+.post-foot {
+  margin-top: 3rem;
+  padding: 1rem 0;
+  border-top: 1px dashed var(--line);
+  border-bottom: 1px dashed var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  color: var(--sub);
+  text-transform: uppercase;
+}
+.post-foot a { color: var(--muted); text-decoration: none; }
+.post-foot a:hover { color: var(--foreground); }
+
+@keyframes blog-blink { 50% { opacity: 0; } }
+.cursor-blink { animation: blog-blink 1s step-end infinite; color: var(--sub); }
+
+/* ============================================================
+   INDEX PAGE — accordion + series-first
+   ============================================================ */
+
+.idx-head { margin-bottom: 2rem; }
+
+/* Opaque panel behind the article list so the ASCII DATA bg doesn't bleed
+   through the rows. Hero/lede above stays transparent on purpose. */
+.idx-content-panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  padding: 0 1.5rem 1rem;
+}
+.idx-content-panel > .acc:first-child {
+  margin-top: 0;
+  border-top: none;
+}
+@media (max-width: 540px) {
+  .idx-content-panel { padding: 0 1rem 1rem; }
+}
+.idx-head h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 0.6rem;
+  letter-spacing: -0.01em;
+}
+.idx-head .lede {
+  color: var(--muted);
+  margin: 0;
+  max-width: 65ch;
+}
+
+/* Renamed from .group to avoid collision with Tailwind's `group` utility,
+   which the ThemeToggle uses and which is everywhere across the site. */
+.acc { border-top: 1px solid var(--line-strong); margin-top: 1rem; }
+.acc-toggle {
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 1.25rem 0 1.25rem 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  color: inherit;
+  text-align: left;
+  font-family: inherit;
+}
+.acc-toggle .sec-num {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.2em;
+  color: var(--sub);
+}
+.acc-toggle .sec-title {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin: 0;
+}
+.acc-toggle .dashed-rule {
+  flex: 1;
+  height: 1px;
+  opacity: 0.3;
+  background: repeating-linear-gradient(90deg, var(--line-strong) 0 6px, transparent 6px 10px);
+}
+.acc-toggle .sec-count {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  color: var(--sub);
+}
+.acc-toggle .chevron {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  color: var(--sub);
+  font-size: 0.9rem;
+  transition: transform 0.2s ease;
+  display: inline-block;
+}
+.acc-toggle[aria-expanded="true"] .chevron {
+  transform: rotate(90deg);
+  color: var(--foreground);
+}
+.acc-body { display: none; padding: 0 0 1.5rem; }
+.acc-toggle[aria-expanded="true"] + .acc-body { display: block; }
+
+.series-blurb {
+  color: var(--muted);
+  margin: 0.5rem 0 1.5rem;
+  max-width: 60ch;
+  font-size: 0.95rem;
+}
+
+.series-list {
+  border-left: 1px solid var(--line-strong);
+  padding-left: 1.5rem;
+  margin-left: 0.35rem;
+  position: relative;
+}
+.series-entry {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  padding: 1rem 0;
+  border-bottom: 1px dashed var(--line);
+  position: relative;
+}
+/* Cover-link: sits over the whole .series-entry to make the card clickable.
+   z-index: 1 puts it above the visible siblings (which are at z-index: 0). */
+.series-entry-cover {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  text-indent: -9999px;
+  font-size: 0;
+}
+.series-entry:last-child { border-bottom: none; }
+.series-entry::before {
+  content: '';
+  position: absolute;
+  left: -1.875rem;
+  top: 1.5rem;
+  width: 0.7rem;
+  height: 1px;
+  background: var(--line-strong);
+}
+.series-entry .part {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  color: var(--sub);
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+  display: block;
+}
+.series-entry h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0 0 0.35rem;
+  letter-spacing: -0.005em;
+  line-height: 1.3;
+}
+.series-entry .desc {
+  color: var(--muted);
+  font-size: 0.92rem;
+  margin: 0 0 0.5rem;
+  max-width: 62ch;
+}
+.series-entry .meta {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  color: var(--sub);
+  text-transform: uppercase;
+}
+.series-entry .meta .dot {
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.series-entry:hover h3 {
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+  text-decoration-thickness: 1px;
+}
+/* Visible children sit below the cover-link. The cover catches clicks. */
+.series-entry > *:not(.series-entry-cover) {
+  position: relative;
+  z-index: 0;
+}
+
+.standalone-entry {
+  display: flex;
+  gap: 1.5rem;
+  padding: 1rem 0;
+  border-bottom: 1px dashed var(--line);
+  text-decoration: none;
+  color: inherit;
+  align-items: baseline;
+}
+.standalone-entry:last-child { border-bottom: none; }
+.standalone-entry .date {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.78rem;
+  color: var(--sub);
+  white-space: nowrap;
+  min-width: 90px;
+}
+.standalone-entry h3 {
+  margin: 0 0 0.2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+.standalone-entry p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  max-width: 62ch;
+}
+.standalone-entry:hover h3 {
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+.standalone-entry .right {
+  margin-left: auto;
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  color: var(--sub);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* ============================================================
+   TAG PAGE
+   ============================================================ */
+
+.tag-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 1rem 0 1.5rem;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 2rem;
+}
+.tag-strip a {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--line);
+}
+.tag-strip a:hover {
+  border-color: var(--line-strong);
+  color: var(--foreground);
+}
+.tag-strip a.is-active {
+  background: var(--line-strong);
+  color: var(--background);
+  border-color: var(--line-strong);
+}
+.tag-strip a .count {
+  margin-left: 0.35rem;
+  color: var(--sub);
+  font-size: 0.58rem;
+}
+.tag-strip a.is-active .count {
+  color: color-mix(in oklab, var(--background) 70%, transparent);
+}
+
+.tag-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.tag-header h1 {
+  font-size: 2.4rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+.tag-header h1 .hash {
+  color: var(--sub);
+  font-weight: 400;
+}
+.tag-header .count {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.entries {
+  display: grid;
+  gap: 0;
+  border-top: 1px solid var(--line-strong);
+}
+.entry-row {
+  display: grid;
+  grid-template-columns: 110px 1fr auto;
+  gap: 1.25rem;
+  padding: 1rem 0.25rem;
+  text-decoration: none;
+  color: inherit;
+  border-bottom: 1px dashed var(--line);
+  align-items: baseline;
+}
+.entry-row .date {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.8rem;
+  color: var(--sub);
+  padding-top: 0.15rem;
+}
+.entry-row .body h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1.1rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+.entry-row .body .desc {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  max-width: 54ch;
+}
+.entry-row .body .meta {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  color: var(--sub);
+  text-transform: uppercase;
+  margin-top: 0.35rem;
+}
+.entry-row:hover .body h3 {
+  text-decoration: underline;
+  text-underline-offset: 0.3em;
+}
+
+@media (max-width: 540px) {
+  .entry-row { grid-template-columns: 1fr; gap: 0.35rem; }
+}
+
+/* ============================================================
+   SERIES PAGE — timeline + intro slot
+   ============================================================ */
+
+.series-intro {
+  border: 1px solid var(--line);
+  padding: 1.5rem 1.5rem;
+  margin-bottom: 2rem;
+  background: color-mix(in oklab, var(--surface) 88%, transparent);
+}
+.series-intro h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 0.6rem;
+  letter-spacing: -0.01em;
+}
+.series-intro .meta {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-top: 1rem;
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+.series-intro .meta .dot { color: var(--sub); }

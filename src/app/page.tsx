@@ -1,11 +1,13 @@
 import Link from "next/link";
 import BgKickerToggle from "./components/BgKickerToggle";
 import { getFeaturedProjects, getProjectPath } from "@/lib/projects";
+import { getLatestUniquePosts, formatDate, readUnit } from "@/lib/blog";
 
 export default function Home() {
   const featuredDemos = getFeaturedProjects("demos", 3);
   const featuredNerdy = getFeaturedProjects("nerdy-stuff", 3);
   const featuredBulletin = getFeaturedProjects("bulletin", 3);
+  const latestWritings = getLatestUniquePosts(3, "en");
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-10 sm:py-12 md:py-16">
@@ -82,7 +84,7 @@ export default function Home() {
       </section>
 
       {/* Bulletin */}
-      <section className="mb-4 sm:mb-8">
+      <section className="mb-12 sm:mb-16 md:mb-20">
         <SectionHeader num="03" title="Bulletin" href="/bulletin" />
         <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-500 mb-5 sm:mb-8">
           Software that lives outside the browser.
@@ -99,7 +101,61 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      {/* Latest Writings */}
+      <section className="mb-4 sm:mb-8">
+        <SectionHeader num="04" title="Latest Writings" href="/b" />
+        <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-500 mb-5 sm:mb-8">
+          Long-form notes on AI and the practice of programming.
+        </p>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {latestWritings.map((post) => (
+            <WritingPreview
+              key={post.slug}
+              title={post.title}
+              description={post.description}
+              href={`/b/${post.slug}`}
+              date={formatDate(post.date, post.lang)}
+              minutes={post.readingMinutes}
+              lang={post.lang}
+            />
+          ))}
+        </div>
+      </section>
     </div>
+  );
+}
+
+function WritingPreview({
+  title,
+  description,
+  href,
+  date,
+  minutes,
+  lang,
+}: {
+  title: string;
+  description: string;
+  href: string;
+  date: string;
+  minutes: number;
+  lang: "en" | "tr";
+}) {
+  return (
+    <Link href={href} className="term-card block group">
+      <div className="flex items-start justify-between gap-3 mb-2">
+        <h3 className="font-semibold text-base sm:text-lg group-hover:opacity-80 transition">
+          {title}
+        </h3>
+        <span className="term-tag shrink-0">{lang.toUpperCase()}</span>
+      </div>
+      <p className="text-neutral-600 dark:text-neutral-400 text-sm leading-relaxed">
+        {description}
+      </p>
+      <div className="term-status mt-3">
+        {date} · {minutes} {readUnit(lang)}
+      </div>
+    </Link>
   );
 }
 

@@ -34,6 +34,7 @@ export default function Header() {
     { href: "/demos", label: "Demos" },
     { href: "/nerdy-stuff", label: "Nerdy Stuff" },
     { href: "/bulletin", label: "Bulletin" },
+    { href: "/b", label: "Blog" },
     { href: "/cv", label: "CV" },
   ];
 

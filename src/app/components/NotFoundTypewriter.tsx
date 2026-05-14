@@ -98,7 +98,7 @@ export default function NotFoundTypewriter() {
   }, []);
 
   return (
-    <div className="absolute inset-0 z-10 flex items-center justify-center px-6">
+    <div className="relative z-10 mt-12 flex w-full items-center justify-center sm:mt-16">
       {variant ? (
         <div className="flex flex-col items-center gap-10">
           <p className="pointer-events-none font-mono text-lg tracking-[0.14em] text-neutral-700 dark:text-neutral-200 sm:text-2xl">

@@ -26,7 +26,7 @@ export default function BulletinPage({
   children,
 }: BulletinPageProps) {
   return (
-    <div className={styles.container}>
+    <div className={styles.container} data-no-ripple>
       <header className={styles.hero}>
         <div className={styles.heroMain}>
           <div className={styles.heroTitleSection}>
