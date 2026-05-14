@@ -2,12 +2,14 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #fafafa;
-  --surface:    #ffffff;
-  --foreground: #171717;
+  /* Light mode is paper-warm (cream tones) instead of pure white to drop the
+     blue cast and reduce eye strain — fits the terminal/notebook aesthetic. */
+  --background: #f7f4ee;
+  --surface:    #fdfaf4;
+  --foreground: #1c1a16;
   /* Terminal / Data-Ops design tokens (shared across CV, home, cards, bg). */
   --line: rgba(0, 0, 0, 0.10);
-  --line-strong: #171717;
+  --line-strong: #1c1a16;
   --muted: #525252;
   --sub: #8a8a8a;
   --signal: #16a34a;
@@ -36,11 +38,11 @@
 }
 
 html[data-theme="light"] {
-  --background: #fafafa;
-  --surface:    #ffffff;
-  --foreground: #171717;
+  --background: #f7f4ee;
+  --surface:    #fdfaf4;
+  --foreground: #1c1a16;
   --line: rgba(0, 0, 0, 0.10);
-  --line-strong: #171717;
+  --line-strong: #1c1a16;
   --muted: #525252;
   --sub: #8a8a8a;
   --signal: #16a34a;
