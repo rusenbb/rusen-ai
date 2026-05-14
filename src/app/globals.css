@@ -95,11 +95,11 @@ select,
 }
 
 .ui-surface {
-  background: rgb(255 255 255 / 0.88);
+  background: rgb(253 250 244 / 0.88);
 }
 
 .ui-card {
-  background: rgb(255 255 255 / 0.94);
+  background: rgb(253 250 244 / 0.94);
   border-color: rgb(226 232 240 / 0.72);
   backdrop-filter: saturate(1.1);
 }
@@ -138,11 +138,11 @@ body[data-game-life-fullscreen="on"] header {
 }
 
 html[data-theme="light"] .ui-surface {
-  background: rgb(255 255 255 / 0.88);
+  background: rgb(253 250 244 / 0.88);
 }
 
 html[data-theme="light"] .ui-card {
-  background: rgb(255 255 255 / 0.94);
+  background: rgb(253 250 244 / 0.94);
   border-color: rgb(226 232 240 / 0.72);
 }
 
