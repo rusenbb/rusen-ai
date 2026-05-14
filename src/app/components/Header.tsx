@@ -42,7 +42,7 @@ export default function Header() {
       <nav className="max-w-6xl mx-auto px-4 py-3 sm:py-4" ref={mobileMenuRef}>
         <div className="flex items-center justify-between gap-3">
           <Link href="/" className="text-lg sm:text-xl font-bold hover:opacity-80 transition">
-            rusen<span className="text-red-600 dark:text-red-400">.ai</span>
+            rusen.ai
           </Link>
 
           <div className="hidden md:flex gap-4 items-center">
