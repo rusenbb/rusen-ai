@@ -1,4 +1,4 @@
-/* Blog-specific styles. Loaded by /b/layout.tsx so it only ships on blog pages. */
+/* Blog-specific styles. Loaded by /blogs/layout.tsx so it only ships on blog pages. */
 
 /* Selection color for reading material — soft green tint that matches the
    site's signal-blip accent. Subtle on cream, subtle on dark. Browser
@@ -18,14 +18,6 @@ html[data-blog-lang="tr"] [data-post-lang="en"],
 html[data-blog-lang="tr"] [data-tag-lang="en"] {
   display: none;
 }
-/* TR tags get a green tint only in ALL view, where both languages mix. */
-html[data-blog-lang="all"] [data-tag-lang="tr"] {
-  color: var(--signal);
-}
-html[data-blog-lang="all"] [data-tag-lang="tr"]:hover {
-  border-color: var(--signal) !important;
-}
-
 .blog-shell {
   max-width: 56rem;
   margin: 0 auto;

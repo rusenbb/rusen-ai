@@ -13,12 +13,12 @@ const NOISE_PATHS: ReadonlySet<string> = new Set([
   "/demos",
   "/nerdy-stuff",
   "/bulletin",
-  "/b",
+  "/blogs",
 ]);
 
 // Path prefixes that should also get the full noise field — covers dynamic
-// listing-style routes like /b/tag/[tag] and /b/series/[id].
-const NOISE_PREFIXES: readonly string[] = ["/b/tag", "/b/series"];
+// listing-style routes like /blogs/tag/[tag] and /blogs/series/[id].
+const NOISE_PREFIXES: readonly string[] = ["/blogs/tag", "/blogs/series"];
 
 export default function DataBackground() {
   const pathname = usePathname();
