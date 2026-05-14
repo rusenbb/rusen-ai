@@ -58,7 +58,7 @@ export default function BlogIndex() {
                 data-post-lang={p.lang}
               >
                 <Link
-                  href={`/b/${p.slug}`}
+                  href={`/blogs/${p.slug}`}
                   className="series-entry-cover"
                   aria-label={p.title}
                 >
@@ -96,7 +96,7 @@ export default function BlogIndex() {
           {standalone.map((p) => (
             <Link
               key={p.slug}
-              href={`/b/${p.slug}`}
+              href={`/blogs/${p.slug}`}
               className="standalone-entry"
               data-post-lang={p.lang}
             >

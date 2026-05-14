@@ -116,7 +116,7 @@ export default function AsciiDataBackground({
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
       // Routes can opt out of ripples by wrapping their content in an
-      // element with [data-no-ripple] (e.g. /b/* keeps clicks quiet for
+      // element with [data-no-ripple] (e.g. /blogs/* keeps clicks quiet for
       // reading material). Header/footer clicks are unaffected.
       const target = e.target as Element | null;
       if (target?.closest("[data-no-ripple]")) return;

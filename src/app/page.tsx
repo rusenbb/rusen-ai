@@ -104,7 +104,7 @@ export default function Home() {
 
       {/* Latest Writings */}
       <section className="mb-4 sm:mb-8">
-        <SectionHeader num="04" title="Latest Writings" href="/b" />
+        <SectionHeader num="04" title="Latest Writings" href="/blogs" />
         <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-500 mb-5 sm:mb-8">
           Long-form notes on AI and the practice of programming.
         </p>
@@ -114,7 +114,7 @@ export default function Home() {
               key={post.slug}
               title={post.title}
               description={post.description}
-              href={`/b/${post.slug}`}
+              href={`/blogs/${post.slug}`}
               date={formatDate(post.date, post.lang)}
               minutes={post.readingMinutes}
               lang={post.lang}

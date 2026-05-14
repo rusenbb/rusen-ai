@@ -22,7 +22,7 @@ export async function GET() {
 
   const items = posts
     .map((p) => {
-      const link = `${SITE}/b/${p.slug}/`;
+      const link = `${SITE}/blogs/${p.slug}/`;
       const pubDate = new Date(p.date).toUTCString();
       return `    <item>
       <title>${esc(p.title)}</title>
@@ -42,11 +42,11 @@ ${p.tags.map((t) => `      <category>${esc(t)}</category>`).join("\n")}
      xmlns:dc="http://purl.org/dc/elements/1.1/">
   <channel>
     <title>${esc(FEED_TITLE)}</title>
-    <link>${SITE}/b</link>
+    <link>${SITE}/blogs</link>
     <description>${esc(FEED_DESC)}</description>
     <language>en</language>
     <lastBuildDate>${new Date(updated).toUTCString()}</lastBuildDate>
-    <atom:link href="${SITE}/b/feed.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="${SITE}/blogs/feed.xml" rel="self" type="application/rss+xml" />
 ${items}
   </channel>
 </rss>

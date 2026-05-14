@@ -108,7 +108,7 @@ export default async function PostPage({
     <main className="post-shell" data-no-ripple>
       <div className="prompt-line">
         <span className="p">rusen@rusen.ai</span>
-        :<span style={{ color: "var(--muted)" }}>/b</span>${" "}
+        :<span style={{ color: "var(--muted)" }}>/blogs</span>${" "}
         <span className="c">cat {post.slug}.md</span>
       </div>
 
@@ -129,7 +129,7 @@ export default async function PostPage({
                 <dt>Series</dt>
                 <dd>
                   <Link
-                    href={`/b/series/${series.id}`}
+                    href={`/blogs/series/${series.id}`}
                     style={{ color: "var(--foreground)" }}
                   >
                     {series.title[post.lang]}
@@ -144,7 +144,7 @@ export default async function PostPage({
               {post.tags.map((t, i) => (
                 <span key={t}>
                   {i > 0 && " · "}
-                  <Link href={`/b/tag/${tagSlug(t)}`}>{tagDisplay(t)}</Link>
+                  <Link href={`/blogs/tag/${tagSlug(t)}`}>{tagDisplay(t)}</Link>
                 </span>
               ))}
             </dd>
@@ -159,7 +159,7 @@ export default async function PostPage({
               {sibling && (
                 <>
                   {" · "}
-                  <Link href={`/b/${sibling.slug}`}>
+                  <Link href={`/blogs/${sibling.slug}`}>
                     [ ⇄ {sibling.lang.toUpperCase()} ]
                   </Link>
                 </>
@@ -182,14 +182,14 @@ export default async function PostPage({
 
       <div className="post-foot">
         {prev ? (
-          <Link href={`/b/${prev.slug}`}>← prev · {prev.title}</Link>
+          <Link href={`/blogs/${prev.slug}`}>← prev · {prev.title}</Link>
         ) : (
           <span>{post.lang === "tr" ? "BAŞLANGIÇ" : "START"}</span>
         )}
         <span>
           <span className="signal-blip-sm" />
           {next ? (
-            <Link href={`/b/${next.slug}`}>
+            <Link href={`/blogs/${next.slug}`}>
               next · {next.title.length > 28 ? next.title.slice(0, 28) + "…" : next.title} →
             </Link>
           ) : (
@@ -200,7 +200,7 @@ export default async function PostPage({
 
       <div className="prompt-line" style={{ marginTop: "1rem" }}>
         <span className="p">rusen@rusen.ai</span>
-        :<span style={{ color: "var(--muted)" }}>/b</span>${" "}
+        :<span style={{ color: "var(--muted)" }}>/blogs</span>${" "}
         <span className="cursor-blink">_</span>
       </div>
     </main>
