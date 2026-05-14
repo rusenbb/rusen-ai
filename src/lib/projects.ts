@@ -89,21 +89,6 @@ export const PROJECTS: ProjectMeta[] = [
     featuredHome: true,
   },
   {
-    id: "voice-morph",
-    title: "Voice Morph",
-    slug: "voice-morph",
-    collection: "demos",
-    status: "coming-soon",
-    summary:
-      "Prompt-guided voice transformation. Change how audio sounds with text descriptions.",
-    description: "Prompt-guided voice transformation.",
-    tags: ["Audio", "Gradio", "Advanced"],
-    domains: ["Audio"],
-    capabilities: ["Generation", "Transformation"],
-    tech: ["Audio models", "Gradio"],
-    order: 70,
-  },
-  {
     id: "emergence",
     title: "Emergence",
     slug: "emergence",

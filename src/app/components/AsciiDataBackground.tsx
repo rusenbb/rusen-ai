@@ -40,8 +40,25 @@ const letterPatterns: Record<string, number[][]> = {
     [0, 0, 1, 0, 0],
     [0, 0, 1, 0, 0],
   ],
+  "0": [
+    [0, 1, 1, 1, 0],
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 1, 1],
+    [1, 0, 1, 0, 1],
+    [1, 1, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+    [0, 1, 1, 1, 0],
+  ],
+  "4": [
+    [0, 0, 0, 1, 0],
+    [0, 0, 1, 1, 0],
+    [0, 1, 0, 1, 0],
+    [1, 0, 0, 1, 0],
+    [1, 1, 1, 1, 1],
+    [0, 0, 0, 1, 0],
+    [0, 0, 0, 1, 0],
+  ],
 };
-const WORD = ["D", "A", "T", "A"] as const;
 
 const CYCLE_DURATION = 4;
 const LETTER_DURATION = 1;
@@ -72,11 +89,17 @@ type LiveRipple = {
 
 type Props = {
   /** When false, only click ripples render — the ambient noise field AND the
-   *  DATA letter pulse are both suppressed. Defaults to true. */
+   *  letter pulse are both suppressed. Defaults to true. */
   noise?: boolean;
+  /** Word to pulse in the background. Defaults to "DATA". Characters without
+   *  a pattern in `letterPatterns` are silently skipped. */
+  word?: string;
 };
 
-export default function AsciiDataBackground({ noise = true }: Props) {
+export default function AsciiDataBackground({
+  noise = true,
+  word = "DATA",
+}: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ripplesRef = useRef<Ripple[]>([]);
   const animRef = useRef(0);
@@ -85,9 +108,18 @@ export default function AsciiDataBackground({ noise = true }: Props) {
   useEffect(() => {
     noiseRef.current = noise;
   }, [noise]);
+  const wordRef = useRef(word);
+  useEffect(() => {
+    wordRef.current = word;
+  }, [word]);
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
+      // Routes can opt out of ripples by wrapping their content in an
+      // element with [data-no-ripple] (e.g. /b/* keeps clicks quiet for
+      // reading material). Header/footer clicks are unaffected.
+      const target = e.target as Element | null;
+      if (target?.closest("[data-no-ripple]")) return;
       const rs = ripplesRef.current;
       rs.push({ x: e.clientX, y: e.clientY, t: performance.now() });
       if (rs.length > MAX_RIPPLES) rs.shift();
@@ -156,9 +188,6 @@ export default function AsciiDataBackground({ noise = true }: Props) {
       cols = Math.ceil(w / CELL_W);
       rows = Math.ceil(h / CELL_H);
 
-      const totalW = WORD.length * PATTERN_COLS + (WORD.length - 1) * LETTER_GAP_COLS;
-      startC = Math.floor((cols - totalW) / 2);
-
       buildAtlas();
     };
     layout();
@@ -166,8 +195,12 @@ export default function AsciiDataBackground({ noise = true }: Props) {
 
     const rebuildLetterMap = (startR: number) => {
       letterMap.clear();
-      for (let i = 0; i < WORD.length; i++) {
-        const p = letterPatterns[WORD[i]];
+      const word = wordRef.current;
+      const totalW = word.length * PATTERN_COLS + (word.length - 1) * LETTER_GAP_COLS;
+      startC = Math.floor((cols - totalW) / 2);
+      for (let i = 0; i < word.length; i++) {
+        const p = letterPatterns[word[i]];
+        if (!p) continue;
         const c0 = startC + i * (PATTERN_COLS + LETTER_GAP_COLS);
         for (let r = 0; r < PATTERN_ROWS; r++) {
           for (let c = 0; c < PATTERN_COLS; c++) {
