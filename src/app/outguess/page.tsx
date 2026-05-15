@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   DemoFootnote,
@@ -77,6 +77,10 @@ function Session({ alphabet }: { alphabet: 2 | 4 }) {
   );
   const [trials, setTrials] = useState<DiscreteTrial[]>([]);
   const trialsRef = useRef<DiscreteTrial[]>([]);
+  // Synced from `predictedNext` via useEffect so handlePress always reads the
+  // value that was visible at press time (without rebuilding the callback on
+  // every render — that would churn the keyboard listener).
+  const predictedNextRef = useRef<DiscreteSymbol | null>(null);
   const [showHint, setShowHint] = useState(true);
 
   const symbolLabels = alphabet === 2 ? LABELS_2 : LABELS_4;
@@ -93,7 +97,11 @@ function Session({ alphabet }: { alphabet: 2 | 4 }) {
       for (const p of predictors) {
         p.observe(history, symbol);
       }
-      const next = [...prev, { t: prev.length, symbol, predictions }];
+      const shownGuess = predictedNextRef.current ?? 0;
+      const next = [
+        ...prev,
+        { t: prev.length, symbol, shownGuess, predictions },
+      ];
       trialsRef.current = next;
       setTrials(next);
     },
@@ -148,17 +156,16 @@ function Session({ alphabet }: { alphabet: 2 | 4 }) {
   const arenaShownLabel =
     predictors.find((p) => p.meta.id === arenaShownId)?.meta.label ?? "—";
 
-  // Lifetime tally for the predictor currently being shown in the arena.
-  // Recomputed retrospectively over all trials; jumps when the leader changes
-  // mid-session (rare after warmup, and the label below makes the swap explicit).
+  // Lifetime tally of the AI guess that was visibly shown at each press.
+  // Aggregates across leader changes — counts what the user actually saw, not
+  // whichever predictor is currently leading.
   const tally = useMemo(() => {
-    if (!arenaShownId) return { right: 0, total: trials.length };
     let right = 0;
     for (const t of trials) {
-      if (t.predictions[arenaShownId]?.argmax === t.symbol) right += 1;
+      if (t.shownGuess === t.symbol) right += 1;
     }
     return { right, total: trials.length };
-  }, [trials, arenaShownId]);
+  }, [trials]);
 
   // predict() does not mutate — safe to call during render.
   const predictedNext = useMemo<DiscreteSymbol | null>(() => {
@@ -167,6 +174,11 @@ function Session({ alphabet }: { alphabet: 2 | 4 }) {
     if (!leader) return null;
     return leader.predict(trials.map((t) => t.symbol)).argmax;
   }, [predictors, arenaShownId, trials]);
+
+  // Sync the always-fresh predictedNext into a ref handlePress can read.
+  useEffect(() => {
+    predictedNextRef.current = predictedNext;
+  }, [predictedNext]);
 
   const entropySeries = useMemo(() => {
     const symbols = trials.map((t) => t.symbol);
@@ -185,13 +197,19 @@ function Session({ alphabet }: { alphabet: 2 | 4 }) {
   }, [trials, alphabet, leaderId]);
 
   const lastResult = useMemo(() => {
-    if (trials.length === 0 || !arenaShownId) return null;
+    if (trials.length === 0) return null;
     const t = trials[trials.length - 1];
+    // `index` is the trial number — monotonic, unique per press. Without it,
+    // two consecutive presses with the same {symbol, predicted} produce
+    // structurally identical objects, and React Compiler can dedupe the
+    // memoized result; the arena's pulse effect then sees no change and
+    // no pulse fires for that press.
     return {
+      index: t.t,
       symbol: t.symbol,
-      predicted: t.predictions[arenaShownId]?.argmax ?? -1,
+      predicted: t.shownGuess,
     };
-  }, [trials, arenaShownId]);
+  }, [trials]);
 
   const sessionDone = trials.length >= SESSION_TARGET;
   const tallyPct = tally.total === 0 ? 0 : (tally.right / tally.total) * 100;
