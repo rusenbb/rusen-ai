@@ -10,36 +10,32 @@ Status legend:
 
 | Project | Status | Path | Summary |
 |---|---|---|---|
-| Paper Pilot | `live` | `/demos/paper-pilot` | Summarize and explain academic papers from DOI input. |
-| Data Forge | `live` | `/demos/data-forge` | Generate realistic relational fake datasets from schema prompts. |
-| Query Craft | `live` | `/demos/query-craft` | Generate SQL from plain-language intents. |
-| Classify Anything | `live` | `/demos/classify-anything` | Zero-shot text classification in the browser. |
-| Vision Anything | `to-do` | `/demos/vision-anything` | Zero-shot image classification with custom labels. |
-| Pulse Board | `live` | `/demos/pulse-board` | Live multi-signal dashboard with streaming data sources. |
-| Adaptive Arena | `live` | `/adaptive-arena` | 30x30 tactical arena where a seeded bot learns the player's habits and adapts online. |
-| Voice Morph | `to-do` | `/demos/voice-morph` | Prompt-guided voice transformation. |
+| Classify Anything | `live` | `/classify-anything` | Zero-shot text classification in the browser. |
+| Segment Anything | `live` | `/segment-anything` | Click-to-segment with SAM 2.1 Tiny via WebAssembly. |
+| Vision Anything | `live` | `/vision-anything` | Zero-shot image classification with custom labels via CLIP. |
+| Pulse Board | `live` | `/pulse-board` | Live multi-signal dashboard (crypto, weather, quakes). |
+| RL-Arena | `live` | `/adaptive-arena` | 30x30 tactical arena where a trained bot adapts online. |
+| Outguess | `live` | `/outguess` | Be unpredictable. A tiny in-browser n-gram predictor races to call your next key press. |
 
 ## Nerdy Stuff
 
 | Project | Status | Path | Summary |
 |---|---|---|---|
-| Game of Life | `live` | `/nerdy-stuff/game-of-life` | Interactive cellular automata world and camera controls. |
-| Embedding Explorer | `live` | `/nerdy-stuff/embedding-explorer` | Visual semantic geometry with embeddings, UMAP, and steering-style arithmetic. |
-| Rusenizer | `live` | `/nerdy-stuff/rusenizer` | Turkish-focused tokenizer experimentation playground. |
-| Attention Heatmap | `to-do` | `/nerdy-stuff/attention-heatmap` | Transformer attention visualization toolkit. |
-| RuseN-Gram | `to-do` | `/nerdy-stuff/rusen-gram` | Classic N-gram language modeling playground. |
-
-## Additional To-do
-
-| Project | Status | Proposed Area | Summary |
-|---|---|---|---|
-| Steering LLMs | `to-do` | Interpretability / Control | Explore whether concepts can be induced or strengthened in a model through steering vectors, interventions, and explainability tools. |
+| Emergence | `live` | `/emergence` | Interactive essay on cellular automata, synchrony, segregation, and criticality. |
+| Game of Life | `live` | `/game-of-life` | Interactive cellular automata world and camera controls. |
+| Embedding Explorer | `live` | `/embedding-explorer` | Visual semantic geometry with embeddings and UMAP. |
+| Sentence Surgeon | `live` | `/sentence-surgeon` | Mask any word and watch a small BERT graft predictions back in. |
+| Rusenizer | `live` | `/rusenizer` | Turkish-focused tokenizer experimentation playground. |
+| Attention Heatmap | `to-do` | `/attention-heatmap` | Transformer attention visualization toolkit. |
+| Steering LLMs | `to-do` | `/steering-llms` | Concept steering and intervention playground for local language models. |
+| RuseN-Gram | `to-do` | `/rusen-gram` | Classic N-gram language modeling playground. |
 
 ## Active Planning
 
 | Project | Plan |
 |---|---|
-| Adaptive Arena | [docs/plans/adaptive-arena.md](./docs/plans/adaptive-arena.md) |
+| RL-Arena | [docs/plans/adaptive-arena.md](./docs/plans/adaptive-arena.md) |
+| Outguess | [docs/plans/outguess.md](./docs/plans/outguess.md) |
 
 ## Notes
 
