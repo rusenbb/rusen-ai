@@ -46,9 +46,9 @@ export default function OutguessPage() {
   return (
     <DemoPage>
       <DemoHeader
-        eyebrow="Forecasting / Game"
+        eyebrow="Prediction Game"
         title="Outguess"
-        description="Try to be unpredictable. Tiny in-browser predictors race to call your next key press. No GPU, no model files — every model is a few KB of plain JavaScript."
+        description="Try to be unpredictable. A tiny AI predicts your next key press — and catches humans about 70% of the time."
       />
 
       <div className="mb-6 flex flex-wrap items-center gap-3">
