@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 import type { DiscreteSymbol } from "../modes";
 
-type Result = { symbol: DiscreteSymbol; predicted: DiscreteSymbol };
+type Result = { index: number; symbol: DiscreteSymbol; predicted: DiscreteSymbol };
 
 export function ArenaDiscrete({
   symbolLabels,
@@ -28,17 +28,20 @@ export function ArenaDiscrete({
   );
 
   // Transient visual flash on each new trial; auto-clears via setTimeout.
-  // The source of truth is a prop; the timed cleanup needs JS not CSS.
+  // Keyed on `lastResult.index` (trial counter) rather than `lastResult` itself:
+  // structurally-identical results (same symbol + same prediction two presses
+  // in a row) would otherwise be deduped by React Compiler's useMemo
+  // memoization and the effect would silently skip those presses.
   useEffect(() => {
     if (!lastResult) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPulse({
       symbol: lastResult.symbol,
       correct: lastResult.symbol === lastResult.predicted,
     });
-    const id = window.setTimeout(() => setPulse(null), 240);
+    const id = window.setTimeout(() => setPulse(null), 700);
     return () => window.clearTimeout(id);
-  }, [lastResult]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastResult?.index]);
 
   useEffect(() => {
     if (disabled) return;
