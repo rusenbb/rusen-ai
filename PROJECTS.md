@@ -15,7 +15,7 @@ Status legend:
 | Vision Anything | `live` | `/vision-anything` | Zero-shot image classification with custom labels via CLIP. |
 | Pulse Board | `live` | `/pulse-board` | Live multi-signal dashboard (crypto, weather, quakes). |
 | RL-Arena | `live` | `/adaptive-arena` | 30x30 tactical arena where a trained bot adapts online. |
-| Outguess | `live` | `/outguess` | Be unpredictable. A tiny in-browser n-gram predictor races to call your next key press. |
+| Outguess | `live` | `/outguess` | Try to be unpredictable. A tiny AI predicts your next key press — and catches humans about 70% of the time. |
 
 ## Nerdy Stuff
 

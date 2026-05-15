@@ -175,9 +175,9 @@ export const PROJECTS: ProjectMeta[] = [
     collection: "demos",
     status: "live",
     summary:
-      "You try to be unpredictable. A tiny in-browser n-gram predictor races to call your next key press. No GPU, no model files.",
+      "Try to be unpredictable. A tiny AI predicts your next key press — and catches humans about 70% of the time.",
     description:
-      "Predictor-vs-human key-tapping game. Five online predictors (random, frequency, Markov-1, Markov-5, PPM-8) race to call your next press. Pure JS.",
+      "Predictor-vs-human key-tapping game. You try to be random; a small AI tries to call each next press. Most people get caught about 70% of the time.",
     tags: ["N-Gram", "PPM", "Game", "Aaronson Oracle"],
     domains: ["Computational Tools"],
     capabilities: ["Inference", "Visualization"],
