@@ -169,6 +169,22 @@ export const PROJECTS: ProjectMeta[] = [
     order: 80,
   },
   {
+    id: "outguess",
+    title: "Outguess",
+    slug: "outguess",
+    collection: "demos",
+    status: "live",
+    summary:
+      "You try to be unpredictable. A tiny in-browser n-gram predictor races to call your next key press. No GPU, no model files.",
+    description:
+      "Predictor-vs-human key-tapping game. Five online predictors (random, frequency, Markov-1, Markov-5, PPM-8) race to call your next press. Pure JS.",
+    tags: ["N-Gram", "PPM", "Game", "Aaronson Oracle"],
+    domains: ["Computational Tools"],
+    capabilities: ["Inference", "Visualization"],
+    tech: ["Markov Chains", "PPM"],
+    order: 90,
+  },
+  {
     id: "attention-heatmap",
     title: "Attention Heatmap",
     slug: "attention-heatmap",
