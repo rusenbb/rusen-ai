@@ -13,11 +13,13 @@ import {
   getTranslation,
   getPrevNextInSeries,
   getAllSeries,
+  extractHeadings,
   formatDate,
   readUnit,
   tagSlug,
   tagDisplay,
 } from "@/lib/blog";
+import TableOfContents from "../components/TableOfContents";
 
 export async function generateStaticParams() {
   return getAllPosts().map((p) => ({ slug: p.slug }));
@@ -79,6 +81,9 @@ export default async function PostPage({
   const seriesTotal = seriesPosts.length;
   const seriesOrder = post.seriesOrder ?? 0;
 
+  const headings = extractHeadings(post.body);
+  const tocLabel = post.lang === "tr" ? "İçindekiler" : "Contents";
+
   const { content } = await compileMDX({
     source: escapeForMdx(post.body),
     components: {
@@ -106,6 +111,10 @@ export default async function PostPage({
 
   return (
     <main className="post-shell" data-no-ripple>
+      {headings.length >= 2 && (
+        <TableOfContents headings={headings} label={tocLabel} />
+      )}
+
       <div className="prompt-line">
         <span className="p">rusen@rusen.ai</span>
         :<span style={{ color: "var(--muted)" }}>/blogs</span>${" "}

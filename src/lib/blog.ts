@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
+import GithubSlugger from "github-slugger";
 
 const CONTENT_ROOT = path.join(process.cwd(), "src", "content");
 const BLOG_DIR = path.join(CONTENT_ROOT, "blog");
@@ -221,6 +222,60 @@ export function getLatestUniquePosts(n: number, preferLang: Lang = "en"): Post[]
     if (out.length >= n) break;
   }
   return out;
+}
+
+export interface Heading {
+  id: string;
+  text: string;
+  depth: number;
+}
+
+/** Strip inline markdown so heading text matches the rendered (parsed) text. */
+function stripInlineMd(s: string): string {
+  return s
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/__([^_]+)__/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1")
+    .replace(/_([^_]+)_/g, "$1")
+    .replace(/~~([^~]+)~~/g, "$1")
+    .trim();
+}
+
+/**
+ * Pull ATX headings from raw markdown for the table of contents. IDs are
+ * generated with the same github-slugger that rehype-slug uses at render time
+ * (one fresh instance per document, walked in order) so the anchors the TOC
+ * links to exactly match the `id`s stamped onto the rendered headings —
+ * including the `-1`/`-2` suffixes github-slugger adds to duplicate titles.
+ * Fenced code blocks are skipped so a commented `# foo` inside code isn't
+ * mistaken for a heading.
+ */
+export function extractHeadings(body: string): Heading[] {
+  const slugger = new GithubSlugger();
+  const headings: Heading[] = [];
+  let fence = "";
+
+  for (const line of body.split("\n")) {
+    const fenceMatch = line.match(/^\s*(```+|~~~+)/);
+    if (fenceMatch) {
+      const marker = fenceMatch[1][0];
+      if (!fence) fence = marker;
+      else if (marker === fence) fence = "";
+      continue;
+    }
+    if (fence) continue;
+
+    const m = line.match(/^(#{1,6})\s+(.+?)\s*#*\s*$/);
+    if (!m) continue;
+    const text = stripInlineMd(m[2]);
+    if (!text) continue;
+    headings.push({ id: slugger.slug(text), text, depth: m[1].length });
+  }
+
+  return headings;
 }
 
 export function formatDate(iso: string, lang: Lang): string {
