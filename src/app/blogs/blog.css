@@ -286,6 +286,84 @@ html[data-blog-lang="tr"] [data-tag-lang="en"] {
 .cursor-blink { animation: blog-blink 1s step-end infinite; color: var(--sub); }
 
 /* ============================================================
+   TABLE OF CONTENTS — floating scroll-spy rail
+   ============================================================ */
+
+/* Anchor offset so a clicked heading clears the sticky site header, and
+   in-page jumps glide rather than snap (respecting reduced-motion). blog.css
+   is only loaded on /blogs routes, so this smooth-scroll stays scoped here. */
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+.post-prose :is(h1, h2, h3, h4, h5, h6) { scroll-margin-top: 6rem; }
+
+/* Lives in the left gutter of the centered .post-shell. The left offset keeps
+   it clear of the 44rem column; below 1280px there isn't room, so it hides. */
+.post-toc {
+  display: none;
+  position: fixed;
+  top: 7rem;
+  left: max(1.25rem, calc(50% - 37.25rem));
+  width: 14rem;
+  max-height: calc(100vh - 9rem);
+  overflow-y: auto;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  z-index: 50;
+}
+@media (min-width: 1280px) {
+  .post-toc { display: block; }
+}
+
+.post-toc-head {
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--sub);
+  padding-bottom: 0.55rem;
+  margin-bottom: 0.55rem;
+  border-bottom: 1px dashed var(--line);
+}
+
+.post-toc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-left: 1px solid var(--line);
+}
+
+.post-toc-item { font-size: 0.72rem; line-height: 1.35; }
+.post-toc-item a {
+  display: flex;
+  gap: 0.4rem;
+  align-items: baseline;
+  padding: 0.3rem 0.5rem;
+  margin-left: -1px;
+  color: var(--sub);
+  text-decoration: none;
+  border-left: 2px solid transparent;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.post-toc-item a:hover { color: var(--foreground); }
+
+.post-toc-marker { flex: none; width: 0.55rem; color: var(--sub); }
+.post-toc-marker::before { content: "·"; }
+.post-toc-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.post-toc-item.is-active a {
+  color: var(--foreground);
+  border-left-color: var(--signal);
+}
+.post-toc-item.is-active .post-toc-marker { color: var(--signal); }
+.post-toc-item.is-active .post-toc-marker::before { content: "▸"; }
+
+/* ============================================================
    INDEX PAGE — accordion + series-first
    ============================================================ */
 
