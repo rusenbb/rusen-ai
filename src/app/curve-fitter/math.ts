@@ -238,10 +238,19 @@ function activationDerivative(value: number, activation: HiddenActivation): numb
   return activation === "tanh" ? 1 - value * value : 1;
 }
 
-function forward(network: Omit<TinyNetwork, "loss">, point: ClassificationPoint | { x: number; y: number }) {
-  const hidden = network.w1.map((weights, index) =>
-    activate(weights[0] * point.x + weights[1] * point.y + network.b1[index], network.activation),
+export function inspectHiddenLayer(
+  network: Pick<TinyNetwork, "activation" | "w1" | "b1">,
+  point: ClassificationPoint | { x: number; y: number },
+) {
+  const preActivations = network.w1.map(
+    (weights, index) => weights[0] * point.x + weights[1] * point.y + network.b1[index],
   );
+  const activations = preActivations.map((value) => activate(value, network.activation));
+  return { preActivations, activations };
+}
+
+function forward(network: Omit<TinyNetwork, "loss">, point: ClassificationPoint | { x: number; y: number }) {
+  const { activations: hidden } = inspectHiddenLayer(network, point);
   const logit = hidden.reduce((total, value, index) => total + value * network.w2[index], network.b2);
   return { hidden, probability: sigmoid(logit) };
 }
@@ -354,10 +363,35 @@ export function predictTinyNetwork(network: TinyNetwork, point: { x: number; y: 
   return forward(network, point).probability;
 }
 
+export function predictTinyNetworkWithHiddenCount(
+  network: TinyNetwork,
+  point: { x: number; y: number },
+  hiddenCount: number,
+): number {
+  const count = Math.max(1, Math.min(network.w2.length, Math.floor(hiddenCount)));
+  const { activations } = inspectHiddenLayer(network, point);
+  const logit = activations
+    .slice(0, count)
+    .reduce((total, value, index) => total + value * network.w2[index], network.b2);
+  return sigmoid(logit);
+}
+
 export function classificationAccuracy(network: TinyNetwork, points: ClassificationPoint[]): number {
   if (points.length === 0) return 0;
   const correct = points.filter(
     (point) => (predictTinyNetwork(network, point) >= 0.5 ? 1 : 0) === point.label,
+  ).length;
+  return correct / points.length;
+}
+
+export function classificationAccuracyWithHiddenCount(
+  network: TinyNetwork,
+  points: ClassificationPoint[],
+  hiddenCount: number,
+): number {
+  if (points.length === 0) return 0;
+  const correct = points.filter(
+    (point) => (predictTinyNetworkWithHiddenCount(network, point, hiddenCount) >= 0.5 ? 1 : 0) === point.label,
   ).length;
   return correct / points.length;
 }
