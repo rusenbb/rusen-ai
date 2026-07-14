@@ -26,10 +26,8 @@ The current site mixes:
 | `/classify-anything` | Classify Anything | Zero-shot text classification in the browser with custom labels |
 | `/segment-anything` | Segment Anything | In-browser image segmentation with SAM 2.1 Tiny via WebAssembly |
 | `/vision-anything` | Vision Anything | Zero-shot image classification with custom labels via CLIP |
-| `/forest-inspector` | Forest Inspector | Categorical weather splits, information gain, and small random-forest voting |
-| `/curve-fitter` | Curve Fitter | Scrubbable gradient-descent traces for regression and tiny nonlinear networks |
+| `/curve-fitter` | Curve Fitter | Scrubbable gradient-descent traces and a gate-by-gate tanh nonlinearity view |
 | `/convolution-lab` | Convolution Lab | Real RGB/B&W kernels with linked receptive fields and honest pooling |
-| `/adversarial-sketch` | Adversarial Sketch | Gradient-based pixel nudges against a live handwritten-digit classifier |
 | `/pathfinding-showdown` | Pathfinding Showdown | Step through BFS, Dijkstra, greedy best-first, and A* frontier decisions |
 | `/pulse-board` | Pulse Board | Multi-signal live dashboard for crypto, weather, earthquakes, and public data |
 | `/adaptive-arena` | RL-Arena | Tactical arena game against trained RL checkpoints |
@@ -45,9 +43,6 @@ The current site mixes:
 | `/sentence-surgeon` | Sentence Surgeon | Mask a word and inspect a small BERT's ranked replacements |
 | `/rusenizer` | Rusenizer | Turkish tokenizer playground and comparison tool |
 | `/fourier-sketch` | Fourier Sketch | Draw a path and reconstruct it with DFT epicycles |
-| `/backprop-microscope` | Backprop Microscope | Make one neuron move a tanh curve toward a target with exact gradients |
-| `/causal-sandbox` | Causal Sandbox | See how rain confounds the apparent umbrella and wet-shoes relationship |
-| `/attention-arena` | Attention Arena | Turn visible feature matches into a softmax-weighted memory lookup |
 | `/optimizer-racetrack` | Optimizer Racetrack | Race common optimizers across a visible loss landscape |
 
 Project metadata for the site lives in [src/lib/projects.ts](./src/lib/projects.ts).

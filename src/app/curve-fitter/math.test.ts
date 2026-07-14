@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   classificationAccuracy,
+  classificationAccuracyWithHiddenCount,
   createClassificationDataset,
   createPolynomialTrainingTrace,
   createRegressionDataset,
@@ -9,7 +10,10 @@ import {
   evaluatePolynomial,
   fitPolynomial,
   initializeTinyNetwork,
+  inspectHiddenLayer,
   meanSquaredError,
+  predictTinyNetwork,
+  predictTinyNetworkWithHiddenCount,
   stepTinyNetwork,
   trainTinyNetwork,
 } from "./math";
@@ -63,6 +67,21 @@ describe("curve fitter mathematics", () => {
 
     expect(classificationAccuracy(linear, xor)).toBeLessThan(0.8);
     expect(classificationAccuracy(nonlinear, xor)).toBeGreaterThan(0.95);
+  });
+
+  it("exposes each learned tanh gate and lets the illustration combine a real subset", () => {
+    const xor = createClassificationDataset("xor");
+    const nonlinear = trainTinyNetwork(xor, "tanh");
+    const inspection = inspectHiddenLayer(nonlinear, { x: 0.5, y: -0.5 });
+
+    expect(inspection.preActivations).toHaveLength(nonlinear.w1.length);
+    expect(inspection.activations.every((value) => value >= -1 && value <= 1)).toBe(true);
+    expect(predictTinyNetworkWithHiddenCount(nonlinear, { x: 0.5, y: -0.5 }, 99)).toBeCloseTo(
+      predictTinyNetwork(nonlinear, { x: 0.5, y: -0.5 }),
+    );
+    expect(classificationAccuracyWithHiddenCount(nonlinear, xor, 99)).toBeCloseTo(
+      classificationAccuracy(nonlinear, xor),
+    );
   });
 
   it("stores network snapshots from the same real updates used by training", () => {
