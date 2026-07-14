@@ -1,4 +1,4 @@
-// Port of Universe.hx — camera management and recursive zoom normalization
+// Port of Universe.hx - camera management and recursive zoom normalization
 
 import { Level } from "./level";
 import { Sampler } from "./sampler";

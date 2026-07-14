@@ -1,4 +1,4 @@
-// Port of Graph.hx — quadtree node storage for OTCA metapixel data
+// Port of Graph.hx - quadtree node storage for OTCA metapixel data
 
 export interface Node {
   indexInLevel: number;

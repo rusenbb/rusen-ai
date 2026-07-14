@@ -1,4 +1,4 @@
-// Port of Sampler.hx — samples individual bits and patterns from the quadtree
+// Port of Sampler.hx - samples individual bits and patterns from the quadtree
 
 import { Graph } from "./graph";
 import { Frames } from "./frames";

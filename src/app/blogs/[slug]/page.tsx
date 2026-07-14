@@ -52,7 +52,7 @@ export async function generateMetadata({
   const post = getPostBySlug(slug);
   if (!post) return {};
   return {
-    title: `${post.title} — rusen.ai`,
+    title: `${post.title} - rusen.ai`,
     description: post.description,
     openGraph: {
       title: post.title,
@@ -87,7 +87,7 @@ export default async function PostPage({
   const { content } = await compileMDX({
     source: escapeForMdx(post.body),
     components: {
-      // Demote body h1 to h2 — frontmatter title is the only real h1 on the page.
+      // Demote body h1 to h2 - frontmatter title is the only real h1 on the page.
       h1: (props) => <h2 {...props} />,
     },
     options: {

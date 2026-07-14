@@ -1,4 +1,4 @@
-// Port of Frames.hx — animation frame storage and pattern decompression
+// Port of Frames.hx - animation frame storage and pattern decompression
 
 export interface Pattern {
   pattern: number[];

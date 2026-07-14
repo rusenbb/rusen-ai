@@ -8,7 +8,7 @@ const MASK_TOKEN = "[MASK]";
 
 /**
  * Stitch a WordPiece token list back into a sentence string.
- * Subword tokens are prefixed with "##" — these glue to the previous
+ * Subword tokens are prefixed with "##" - these glue to the previous
  * token without a space; everything else gets a leading space.
  * If `maskIdx` is set, that token is replaced with [MASK]
  * (and the leading space is preserved so the model sees a clean gap).
@@ -277,7 +277,7 @@ export default function SentenceSurgeonPage() {
         {/* Token strip */}
         <div className="mt-4">
           <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500 mb-2">
-            Tokens — click one to mask it
+            Tokens - click one to mask it
           </div>
           {tokenStrip}
           {tokens.some((t) => t.startsWith("##")) && (
@@ -355,7 +355,7 @@ export default function SentenceSurgeonPage() {
         <p>
           The model is <code className="font-mono text-[11px]">distilbert-base-uncased</code> (~66 MB),
           a distilled BERT trained on English Wikipedia and BookCorpus, so its world model and biases
-          reflect that. WordPiece is uncased, which is why predictions come back lowercased — and why
+          reflect that. WordPiece is uncased, which is why predictions come back lowercased - and why
           rare words split into multiple <code className="font-mono">##</code>-prefixed subwords.
         </p>
       </div>

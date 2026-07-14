@@ -1,7 +1,7 @@
 ---
 title: "AI Recommendations"
 date: "2026-03-04"
-description: "A guide for aspiring AI researchers and engineers — from finding your motivation to mastering deep learning, computer vision, NLP, and data engineering."
+description: "A guide for aspiring AI researchers and engineers - from finding your motivation to mastering deep learning, computer vision, NLP, and data engineering."
 tags:
   - "ai"
   - "guide"
@@ -222,20 +222,20 @@ Remember: no resource is better teacher than your own effort.
 
 ## Computer Vision
 
-Computer vision is one of the most exciting and tangible areas in AI — you get to build systems that can *see*. Unlike NLP where the data is abstract text, here the inputs and outputs are visual, which makes both the successes and failures immediately intuitive.
+Computer vision is one of the most exciting and tangible areas in AI - you get to build systems that can *see*. Unlike NLP where the data is abstract text, here the inputs and outputs are visual, which makes both the successes and failures immediately intuitive.
 
-Start with **classical computer vision** before diving into deep learning approaches. Understanding image filtering, edge detection (Canny, Sobel), feature extraction (SIFT, HOG), and geometric transformations gives you the vocabulary to understand what neural networks are actually learning. OpenCV is your best friend here — it's been the backbone of CV for decades and remains essential for preprocessing, data augmentation, and deployment.
+Start with **classical computer vision** before diving into deep learning approaches. Understanding image filtering, edge detection (Canny, Sobel), feature extraction (SIFT, HOG), and geometric transformations gives you the vocabulary to understand what neural networks are actually learning. OpenCV is your best friend here - it's been the backbone of CV for decades and remains essential for preprocessing, data augmentation, and deployment.
 
 Once you have the classical foundation, move into **deep learning for vision**. You've already encountered CNNs in the deep learning section, but here's where you go deeper:
 
 - **Image Classification:** The "hello world" of CV. Start with ResNet, understand skip connections and why they matter. Then explore EfficientNet and how architecture search changed the game.
-- **Object Detection:** Understand the evolution from R-CNN (slow, two-stage) to YOLO (fast, single-stage). The YOLO family (especially Ultralytics' implementations) is incredibly practical — you can have a working detector in minutes. But understand *why* anchor boxes work, what non-max suppression does, and the trade-offs between speed and accuracy.
+- **Object Detection:** Understand the evolution from R-CNN (slow, two-stage) to YOLO (fast, single-stage). The YOLO family (especially Ultralytics' implementations) is incredibly practical - you can have a working detector in minutes. But understand *why* anchor boxes work, what non-max suppression does, and the trade-offs between speed and accuracy.
 - **Semantic & Instance Segmentation:** Pixel-level understanding. U-Net for medical imaging, Mask R-CNN for instance segmentation. Understanding how feature pyramid networks (FPN) enable multi-scale detection is key.
 - **Vision Transformers (ViT):** The transformer invasion reached vision too. ViTs split images into patches and treat them as tokens. Understanding why this works (and when CNNs still win) is important. Look into DINOv2 and SAM (Segment Anything) for the state of the art.
 - **Generative Models for Vision:** GANs were covered in the DL section, but here's where diffusion models shine. Understanding the denoising process and how models like Stable Diffusion generate images from text is both fascinating and increasingly practical.
 - **Multimodal Models:** CLIP connected vision and language in a way that changed the field. Understanding contrastive learning and how vision-language models work opens the door to modern applications like image search, zero-shot classification, and visual question answering.
 
-A practical note: CV projects are extremely rewarding because the results are *visual*. Build things you can show — a real-time object detector on your webcam, a style transfer app, a medical image classifier. These projects are not only great for learning but also make excellent portfolio pieces.
+A practical note: CV projects are extremely rewarding because the results are *visual*. Build things you can show - a real-time object detector on your webcam, a style transfer app, a medical image classifier. These projects are not only great for learning but also make excellent portfolio pieces.
 
 Here are some resources to make your life easier:
 
@@ -251,16 +251,16 @@ Remember: no resource is better teacher than your own effort.
 
 ## Natural Language Processing
 
-NLP is where some of the most dramatic progress in AI has happened. To truly understand modern NLP, you need to understand the journey — not just where we are, but how we got here and *why* the shifts happened.
+NLP is where some of the most dramatic progress in AI has happened. To truly understand modern NLP, you need to understand the journey - not just where we are, but how we got here and *why* the shifts happened.
 
-Start with the **foundations**: tokenization, stemming, lemmatization, bag-of-words, TF-IDF. These may seem old-fashioned, but they teach you how to think about text as data. Understanding word embeddings (Word2Vec, GloVe) is crucial — the idea that words can be represented as dense vectors where semantic relationships are captured geometrically ("king - man + woman = queen") was a paradigm shift.
+Start with the **foundations**: tokenization, stemming, lemmatization, bag-of-words, TF-IDF. These may seem old-fashioned, but they teach you how to think about text as data. Understanding word embeddings (Word2Vec, GloVe) is crucial - the idea that words can be represented as dense vectors where semantic relationships are captured geometrically ("king - man + woman = queen") was a paradigm shift.
 
 Then comes the most important architectural transition in modern AI: **the shift from recurrent models to transformers**. Understanding *why* this happened is more important than memorizing architectures:
 
 - **RNNs and LSTMs** process sequences one token at a time, left to right. This sequential nature means they can't be parallelized effectively, and they struggle with long-range dependencies despite gating mechanisms. Training is slow and scaling is painful.
-- **Transformers** replaced this with the self-attention mechanism, which lets every token attend to every other token *simultaneously*. This is the key insight: **parallelism**. Transformers can process entire sequences at once on GPUs, which means they scale with hardware. This isn't just an engineering convenience — it fundamentally changed what's possible. The ability to train on massive datasets efficiently is what gave birth to LLMs.
+- **Transformers** replaced this with the self-attention mechanism, which lets every token attend to every other token *simultaneously*. This is the key insight: **parallelism**. Transformers can process entire sequences at once on GPUs, which means they scale with hardware. This isn't just an engineering convenience - it fundamentally changed what's possible. The ability to train on massive datasets efficiently is what gave birth to LLMs.
 
-Understanding **what exactly LLMs are learning** is critical. They are not databases of facts. They are not search engines. At their core, they are next-token predictors trained on massive amounts of text. But through this simple objective, they develop internal representations that capture syntax, semantics, reasoning patterns, world knowledge, and even something that resembles understanding. The debate about whether this constitutes "real" understanding is fascinating and ongoing — but what's undeniable is that the representations they learn are remarkably rich. Studying mechanistic interpretability (how individual neurons and circuits implement specific behaviors) will give you deeper insight into what's actually happening inside these models.
+Understanding **what exactly LLMs are learning** is critical. They are not databases of facts. They are not search engines. At their core, they are next-token predictors trained on massive amounts of text. But through this simple objective, they develop internal representations that capture syntax, semantics, reasoning patterns, world knowledge, and even something that resembles understanding. The debate about whether this constitutes "real" understanding is fascinating and ongoing - but what's undeniable is that the representations they learn are remarkably rich. Studying mechanistic interpretability (how individual neurons and circuits implement specific behaviors) will give you deeper insight into what's actually happening inside these models.
 
 The modern NLP landscape is built on this foundation:
 
@@ -275,7 +275,7 @@ For practical NLP work, the essential tools are:
 - **Hugging Face Transformers:** The de facto library for working with pre-trained models. Learn to fine-tune, do inference, and explore the model hub.
 - **spaCy:** Production-ready NLP with great tokenization, NER, and dependency parsing. Fast and practical.
 - **NLTK:** The classic library for learning NLP fundamentals. Great for understanding tokenization, POS tagging, and parsing from first principles.
-- **Zemberek:** Essential for Turkish NLP — morphological analysis, tokenization, and spell-checking for Turkish text. Turkish is an agglutinative language, which means standard English-centric NLP tools often fail on it. Zemberek fills this gap.
+- **Zemberek:** Essential for Turkish NLP - morphological analysis, tokenization, and spell-checking for Turkish text. Turkish is an agglutinative language, which means standard English-centric NLP tools often fail on it. Zemberek fills this gap.
 
 Here are some resources to make your life easier:
 
@@ -291,11 +291,11 @@ Remember: no resource is better teacher than your own effort.
 
 ## Data Engineering
 
-Data engineering is the unsexy but absolutely critical foundation that everything else in AI runs on. You can have the most brilliant model architecture in the world, but if your data pipeline is broken, your features are stale, or your training data is garbage — none of it matters. As the saying goes: **garbage in, garbage out**.
+Data engineering is the unsexy but absolutely critical foundation that everything else in AI runs on. You can have the most brilliant model architecture in the world, but if your data pipeline is broken, your features are stale, or your training data is garbage - none of it matters. As the saying goes: **garbage in, garbage out**.
 
 If machine learning is the engine, data engineering is the fuel system, the roads, and the gas stations. Here's how to approach it:
 
-**Start with SQL.** This is non-negotiable. SQL has been around for decades and it's not going anywhere. Master it — not just SELECT and WHERE, but window functions, CTEs, query optimization, and understanding execution plans. You'll use SQL every single day, whether you're an ML engineer, data scientist, or data engineer. Most of the "data work" in the real world is SQL, not Python.
+**Start with SQL.** This is non-negotiable. SQL has been around for decades and it's not going anywhere. Master it - not just SELECT and WHERE, but window functions, CTEs, query optimization, and understanding execution plans. You'll use SQL every single day, whether you're an ML engineer, data scientist, or data engineer. Most of the "data work" in the real world is SQL, not Python.
 
 **Understand data modeling and storage:**
 - Learn the difference between OLTP (transactional) and OLAP (analytical) databases and when to use each.
@@ -306,7 +306,7 @@ If machine learning is the engine, data engineering is the fuel system, the road
 **Learn to build data pipelines:**
 - **ETL vs ELT:** The classic debate. ETL (Extract, Transform, Load) transforms data before loading. ELT (Extract, Load, Transform) loads raw data first and transforms in the warehouse. Modern data stacks lean towards ELT because cloud warehouses are powerful enough to handle transformations.
 - **Orchestration:** Apache Airflow is the standard for scheduling and managing data pipelines. Understand DAGs (directed acyclic graphs), task dependencies, and how to handle failures and retries.
-- **Batch vs Streaming:** Most data work is batch processing (process data in chunks, e.g., daily). But some applications need real-time data — that's where streaming comes in. Apache Kafka for event streaming and Apache Spark Structured Streaming or Flink for stream processing are the go-to tools.
+- **Batch vs Streaming:** Most data work is batch processing (process data in chunks, e.g., daily). But some applications need real-time data - that's where streaming comes in. Apache Kafka for event streaming and Apache Spark Structured Streaming or Flink for stream processing are the go-to tools.
 
 **Cloud platforms are essential:**
 - Pick one (AWS, GCP, or Azure) and learn it well. The concepts transfer across platforms. Learn about object storage (S3/GCS), managed databases (RDS, BigQuery, Redshift), and serverless compute.
@@ -314,7 +314,7 @@ If machine learning is the engine, data engineering is the fuel system, the road
 
 **Data quality and observability:**
 - Data testing (Great Expectations, dbt tests) ensures your data is correct before it reaches models.
-- Data lineage — knowing where your data came from and how it was transformed — is critical for debugging and compliance.
+- Data lineage - knowing where your data came from and how it was transformed - is critical for debugging and compliance.
 - Monitoring data pipelines is just as important as monitoring ML models.
 
 **The modern data stack** to be familiar with:
@@ -323,7 +323,7 @@ If machine learning is the engine, data engineering is the fuel system, the road
 - **Apache Kafka:** Event streaming platform for real-time data pipelines.
 - **Apache Airflow:** Workflow orchestration and scheduling.
 
-A practical note: data engineering is one of the most in-demand roles in tech, and it pays well. Even if your goal is to be an ML researcher, understanding data engineering will make you significantly more effective. The best ML engineers I know are the ones who can own the entire pipeline — from raw data ingestion to model serving.
+A practical note: data engineering is one of the most in-demand roles in tech, and it pays well. Even if your goal is to be an ML researcher, understanding data engineering will make you significantly more effective. The best ML engineers I know are the ones who can own the entire pipeline - from raw data ingestion to model serving.
 
 Here are some resources to make your life easier:
 

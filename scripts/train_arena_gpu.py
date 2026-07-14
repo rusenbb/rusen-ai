@@ -1175,7 +1175,7 @@ def train_checkpoint(
                 elapsed = time.time() - t0
                 print(
                     f"  [{cfg.difficulty}] round {min(completed_rounds, cfg.training_rounds)}/{cfg.training_rounds}"
-                    f" — win: {win_rate * 100:.1f}%, pool: {len(pool.active_entries())}"
+                    f" - win: {win_rate * 100:.1f}%, pool: {len(pool.active_entries())}"
                     f", replay: {replay.size}, steps: {step_count}, {elapsed:.1f}s",
                     flush=True,
                 )
@@ -1295,7 +1295,7 @@ def serialize_weights(model: DQN) -> dict:
     for name, layer in [("fc1", model.fc1), ("fc2", model.fc2), ("fc3", model.fc3)]:
         w = (
             layer.weight.detach().cpu()
-        )  # [out, in] — same as TS row-major [outDim × inDim]
+        )  # [out, in] - same as TS row-major [outDim × inDim]
         b = layer.bias.detach().cpu()
         layers.append(
             {
@@ -1496,7 +1496,7 @@ def create_train_config(diff_cfg: dict, args) -> TrainConfig:
 
 
 def _train_one_difficulty(args: tuple) -> dict:
-    """Train a single difficulty — runs in a separate process."""
+    """Train a single difficulty - runs in a separate process."""
     # Limit PyTorch intra-op threads per worker to avoid CPU contention
     torch.set_num_threads(2)
     diff_cfg, cli_args = args
@@ -1561,7 +1561,7 @@ def main():
 
     processes = args.processes or min(len(selected), os.cpu_count() or 1)
 
-    print(f"\nTraining self-play DQN — network: {STATE_DIM} → 128 → 64 → {NUM_ACTIONS}")
+    print(f"\nTraining self-play DQN - network: {STATE_DIM} → 128 → 64 → {NUM_ACTIONS}")
     print(
         f"Vectorized environments: {args.n_envs or default_n_envs()} parallel games per difficulty"
     )

@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { isBgDisabled, setBgDisabled, subscribeBgToggle } from "./bgToggle";
+import { isBgDisabled, setBgDisabled, subscribeBgToggle } from "./backgroundToggle";
 
 export default function BgToggle() {
   const disabled = useSyncExternalStore<boolean>(

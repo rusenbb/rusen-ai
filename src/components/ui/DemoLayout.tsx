@@ -87,7 +87,10 @@ export function DemoHeader({
         )}
         <h1 className="text-3xl font-bold sm:text-4xl">{title}</h1>
         {description && (
-          <p className="mt-3 max-w-3xl text-sm text-neutral-600 dark:text-neutral-400 sm:text-base">
+          <p
+            data-allow-select
+            className="mt-3 max-w-3xl text-sm text-neutral-600 dark:text-neutral-400 sm:text-base"
+          >
             {description}
           </p>
         )}
@@ -115,7 +118,10 @@ export function DemoPanel({
           </h2>
         )}
         {description && (
-          <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
+          <p
+            data-allow-select
+            className="mt-2 text-sm text-neutral-500 dark:text-neutral-400"
+          >
             {description}
           </p>
         )}
@@ -126,7 +132,7 @@ export function DemoPanel({
     <Card
       padding={padding}
       header={header}
-      footer={footer}
+      footer={footer ? <div data-allow-select>{footer}</div> : undefined}
       className={className}
       {...props}
     >
@@ -154,7 +160,7 @@ export function DemoMutedSection({
           {title}
         </h2>
       )}
-      {children}
+      <div data-allow-select>{children}</div>
     </section>
   );
 }
@@ -167,6 +173,7 @@ export function DemoFootnote({
 }: DemoFootnoteProps) {
   return (
     <p
+      data-allow-select
       className={cx(
         "mt-4 text-xs text-neutral-500 dark:text-neutral-400",
         align === "center" ? "text-center" : "text-left",

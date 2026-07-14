@@ -1,6 +1,6 @@
 /* Blog-specific styles. Loaded by /blogs/layout.tsx so it only ships on blog pages. */
 
-/* Selection color for reading material — soft green tint that matches the
+/* Selection color for reading material - soft green tint that matches the
    site's signal-blip accent. Subtle on cream, subtle on dark. Browser
    default blue would feel completely out of register. */
 [data-allow-select]::selection,
@@ -9,7 +9,7 @@
   color: var(--foreground);
 }
 
-/* Language filter — same pattern as the dark-mode data-theme switching. */
+/* Language filter - same pattern as the dark-mode data-theme switching. */
 html[data-blog-lang="en"] [data-post-lang="tr"],
 html[data-blog-lang="en"] [data-tag-lang="tr"] {
   display: none;
@@ -74,7 +74,7 @@ html[data-blog-lang="tr"] [data-tag-lang="en"] {
 }
 
 /* ============================================================
-   POST PAGE — operator's log style
+   POST PAGE - operator's log style
    ============================================================ */
 
 .post-shell {
@@ -164,7 +164,7 @@ html[data-blog-lang="tr"] [data-tag-lang="en"] {
   border-left: 2px solid var(--line);
 }
 
-/* MDX prose styles — also in operator's-log register.
+/* MDX prose styles - also in operator's-log register.
    data-allow-select on the article re-enables text selection (body sets
    user-select: none site-wide). draggable={false} + -webkit-user-drag: none
    on descendants stops readers from dragging links or images out. */
@@ -286,7 +286,7 @@ html[data-blog-lang="tr"] [data-tag-lang="en"] {
 .cursor-blink { animation: blog-blink 1s step-end infinite; color: var(--sub); }
 
 /* ============================================================
-   TABLE OF CONTENTS — floating scroll-spy rail
+   TABLE OF CONTENTS - floating scroll-spy rail
    ============================================================ */
 
 /* Anchor offset so a clicked heading clears the sticky site header, and
@@ -364,7 +364,7 @@ html { scroll-behavior: smooth; }
 .post-toc-item.is-active .post-toc-marker::before { content: "▸"; }
 
 /* ============================================================
-   INDEX PAGE — accordion + series-first
+   INDEX PAGE - accordion + series-first
    ============================================================ */
 
 .idx-head { margin-bottom: 2rem; }
@@ -704,7 +704,7 @@ html { scroll-behavior: smooth; }
 }
 
 /* ============================================================
-   SERIES PAGE — timeline + intro slot
+   SERIES PAGE - timeline + intro slot
    ============================================================ */
 
 .series-intro {

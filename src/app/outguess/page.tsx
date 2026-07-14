@@ -48,7 +48,7 @@ export default function OutguessPage() {
       <DemoHeader
         eyebrow="Prediction Game"
         title="Outguess"
-        description="Try to be unpredictable. A tiny AI predicts your next key press — and catches humans about 70% of the time."
+        description="Try to be unpredictable. A tiny AI predicts your next key press and catches humans about 70% of the time."
       />
 
       <div className="mb-6 flex flex-wrap items-center gap-3">
@@ -68,7 +68,7 @@ export default function OutguessPage() {
 }
 
 // ============================================================================
-// Session — the actual game. Remounts on alphabet change to reset cleanly.
+// Session - the actual game. Remounts on alphabet change to reset cleanly.
 // ============================================================================
 
 function Session({ alphabet }: { alphabet: 2 | 4 }) {
@@ -79,7 +79,7 @@ function Session({ alphabet }: { alphabet: 2 | 4 }) {
   const trialsRef = useRef<DiscreteTrial[]>([]);
   // Synced from `predictedNext` via useEffect so handlePress always reads the
   // value that was visible at press time (without rebuilding the callback on
-  // every render — that would churn the keyboard listener).
+  // every render - that would churn the keyboard listener).
   const predictedNextRef = useRef<DiscreteSymbol | null>(null);
   const [showHint, setShowHint] = useState(true);
 
@@ -139,7 +139,7 @@ function Session({ alphabet }: { alphabet: 2 | 4 }) {
   }, [trials, alphabet, predictors]);
 
   const leaderId = leaderboardRows.find((r) => r.isLeader)?.meta.id ?? null;
-  const leaderLabel = leaderboardRows.find((r) => r.isLeader)?.meta.label ?? "—";
+  const leaderLabel = leaderboardRows.find((r) => r.isLeader)?.meta.label ?? "-";
   const leaderAcc = leaderboardRows.find((r) => r.isLeader)?.primary ?? 0;
 
   // The predictor whose guess is shown in the arena. Falls back to first
@@ -154,10 +154,10 @@ function Session({ alphabet }: { alphabet: 2 | 4 }) {
   }, [predictors, leaderId]);
 
   const arenaShownLabel =
-    predictors.find((p) => p.meta.id === arenaShownId)?.meta.label ?? "—";
+    predictors.find((p) => p.meta.id === arenaShownId)?.meta.label ?? "-";
 
   // Lifetime tally of the AI guess that was visibly shown at each press.
-  // Aggregates across leader changes — counts what the user actually saw, not
+  // Aggregates across leader changes - counts what the user actually saw, not
   // whichever predictor is currently leading.
   const tally = useMemo(() => {
     let right = 0;
@@ -167,7 +167,7 @@ function Session({ alphabet }: { alphabet: 2 | 4 }) {
     return { right, total: trials.length };
   }, [trials]);
 
-  // predict() does not mutate — safe to call during render.
+  // predict() does not mutate - safe to call during render.
   const predictedNext = useMemo<DiscreteSymbol | null>(() => {
     if (!arenaShownId) return null;
     const leader = predictors.find((p) => p.meta.id === arenaShownId);
@@ -199,7 +199,7 @@ function Session({ alphabet }: { alphabet: 2 | 4 }) {
   const lastResult = useMemo(() => {
     if (trials.length === 0) return null;
     const t = trials[trials.length - 1];
-    // `index` is the trial number — monotonic, unique per press. Without it,
+    // `index` is the trial number - monotonic, unique per press. Without it,
     // two consecutive presses with the same {symbol, predicted} produce
     // structurally identical objects, and React Compiler can dedupe the
     // memoized result; the arena's pulse effect then sees no change and

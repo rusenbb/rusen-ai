@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import AsciiDataBackground from "./AsciiDataBackground";
-import { isBgDisabled, subscribeBgToggle } from "./bgToggle";
+import { isBgDisabled, subscribeBgToggle } from "./backgroundToggle";
 
 // Index pages where the full ambient noise field is welcome. Anywhere else
 // keeps the DATA pulse + click ripples but drops the noise so dense content
@@ -16,7 +16,7 @@ const NOISE_PATHS: ReadonlySet<string> = new Set([
   "/blogs",
 ]);
 
-// Path prefixes that should also get the full noise field — covers dynamic
+// Path prefixes that should also get the full noise field - covers dynamic
 // listing-style routes like /blogs/tag/[tag] and /blogs/series/[id].
 const NOISE_PREFIXES: readonly string[] = ["/blogs/tag", "/blogs/series"];
 

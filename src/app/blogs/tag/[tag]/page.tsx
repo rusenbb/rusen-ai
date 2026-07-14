@@ -12,7 +12,7 @@ import {
 import LangPicker from "../../components/LangPicker";
 
 export async function generateStaticParams() {
-  // Unique slugs only — different-language tags ("ai" vs "yapay zeka") slug
+  // Unique slugs only - different-language tags ("ai" vs "yapay zeka") slug
   // differently, so no collision. If two tags slugged identically across
   // languages, we'd return the slug once and let the page show both languages
   // (with the per-row data-tag-lang doing the visual split).
@@ -28,7 +28,7 @@ export async function generateMetadata({
 }) {
   const { tag } = await params;
   return {
-    title: `#${tagDisplay(tag)} — Blog — rusen.ai`,
+    title: `#${tagDisplay(tag)} - Blog - rusen.ai`,
   };
 }
 
@@ -56,7 +56,7 @@ export default async function TagPage({
   // If every post under this tag is in one language, force the visible
   // filter to that language for this page only. Prevents the "I clicked
   // a TR tag and saw nothing because my preference is EN" case. We do
-  // NOT write to localStorage — the user's global preference is preserved
+  // NOT write to localStorage - the user's global preference is preserved
   // for everywhere else. The script runs as the first body element so
   // CSS attribute selectors apply before any content paints (no flash).
   const presentLangs = new Set(posts.map((p) => p.lang));

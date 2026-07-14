@@ -16,15 +16,37 @@ const argmax = (pmf: number[]): number => {
 const uniform = (alphabet: number): number[] =>
   Array.from({ length: alphabet }, () => 1 / alphabet);
 
+const randomSeed = (): number => Math.floor(Math.random() * 0x1_0000_0000);
+
+// Generate a reproducible pseudo-random value for a trial. predict() is used
+// both to paint the arena and to snapshot a scored prediction, so it must give
+// the same answer for the same point in a session.
+const randomUnitForTrial = (seed: number, trial: number): number => {
+  let state = (seed + Math.imul(trial + 1, 0x6d2b79f5)) >>> 0;
+  state = Math.imul(state ^ (state >>> 15), state | 1);
+  state ^= state + Math.imul(state ^ (state >>> 7), state | 61);
+  return ((state ^ (state >>> 14)) >>> 0) / 0x1_0000_0000;
+};
+
 export function makeRandomPredictor(alphabet: number): DiscretePredictor {
+  let seed = randomSeed();
+
   return {
     meta: { id: "random", label: "Random", blurb: "Coin flip baseline." },
-    predict: () => {
+    predict: (history) => {
       const pmf = uniform(alphabet);
-      return { pmf, argmax: 0 };
+      return {
+        pmf,
+        argmax: Math.min(
+          alphabet - 1,
+          Math.floor(randomUnitForTrial(seed, history.length) * alphabet),
+        ),
+      };
     },
     observe: () => {},
-    reset: () => {},
+    reset: () => {
+      seed = randomSeed();
+    },
   };
 }
 

@@ -173,7 +173,7 @@ export default function VisionAnythingPage() {
         )}
       </div>
 
-      {/* Full attention panel — when active, takes over above the regular layout. */}
+      {/* Full attention panel - when active, takes over above the regular layout. */}
       {fullAttention && imageUrl && results && results.length >= 1 && (
         <FullAttentionPanel
           imageUrl={imageUrl}

@@ -2,8 +2,8 @@ import type { CVData, CVLabels, CVLocale } from "./cv";
 
 /**
  * Renders the structured CV (src/content/cv*.json) into a plain Markdown
- * document. Served verbatim at /cv.md, /cv.tr.md, /cv.ja.md so that humans —
- * and agents like Claude — can fetch the CV as text without scraping HTML.
+ * document. Served verbatim at /cv.md, /cv.tr.md, /cv.ja.md so that humans -
+ * and agents like Claude - can fetch the CV as text without scraping HTML.
  *
  * The JSON files remain the single source of truth: this is a pure projection.
  * Section ordering mirrors the LaTeX/PDF build (scripts/cv-template/cv.tex.j2):
@@ -48,14 +48,14 @@ export function renderCvMarkdown(
   out.push("", `## ${labels.experience}`);
   for (const x of cv.experience) {
     const company = x.link ? `[${x.company}](${x.link})` : x.company;
-    out.push("", `### ${x.role} — ${company}`);
+    out.push("", `### ${x.role} - ${company}`);
     out.push(`*${x.period} · ${x.location}*`, "", x.description);
   }
 
   // ── Projects ─────────────────────────────────────────────────────────
   out.push("", `## ${labels.projects}`);
   for (const p of cv.projects) {
-    out.push("", `### ${p.title} — ${p.subtitle}`);
+    out.push("", `### ${p.title} - ${p.subtitle}`);
     out.push(`*${p.period}*`, "", p.description);
     if (p.tags.length) out.push("", `Tags: ${p.tags.join(", ")}`);
     if (p.links.length) {
@@ -67,7 +67,7 @@ export function renderCvMarkdown(
   // ── Education ─────────────────────────────────────────────────────────
   out.push("", `## ${labels.education}`);
   for (const e of cv.education) {
-    out.push("", `### ${e.degree} — ${e.school}`);
+    out.push("", `### ${e.degree} - ${e.school}`);
     const meta = [`*${e.period}*`];
     if (e.gpa) meta.push(`${labels.gpa}: ${e.gpa}`);
     out.push(meta.join(" · "));
@@ -77,7 +77,7 @@ export function renderCvMarkdown(
   // ── Awards ───────────────────────────────────────────────────────────
   out.push("", `## ${labels.awards}`);
   for (const a of cv.awards) {
-    out.push("", `### ${a.title} — ${a.issuer}`);
+    out.push("", `### ${a.title} - ${a.issuer}`);
     if (a.period) out.push(`*${a.period}*`);
     out.push("", a.summary);
   }
@@ -85,7 +85,7 @@ export function renderCvMarkdown(
   // ── Courses ──────────────────────────────────────────────────────────
   out.push("", `## ${labels.courses}`);
   for (const c of cv.courses) {
-    out.push("", `### ${c.title} — ${c.issuer}`, "", c.summary);
+    out.push("", `### ${c.title} - ${c.issuer}`, "", c.summary);
     if (c.url) out.push(`<${c.url}>`);
   }
 
@@ -98,13 +98,13 @@ export function renderCvMarkdown(
   // ── Languages ────────────────────────────────────────────────────────
   out.push("", `## ${labels.languages}`, "");
   for (const l of cv.languages) {
-    out.push(`- **${l.name}** — ${l.level}`);
+    out.push(`- **${l.name}** - ${l.level}`);
   }
 
   // ── Interests ────────────────────────────────────────────────────────
   out.push("", `## ${labels.interests}`, "");
   for (const i of cv.interests) {
-    out.push(`- **${i.title}** — ${i.desc}`);
+    out.push(`- **${i.title}** - ${i.desc}`);
   }
 
   // ── Footer ───────────────────────────────────────────────────────────
