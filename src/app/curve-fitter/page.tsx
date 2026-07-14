@@ -6,13 +6,16 @@ import { Button, DemoFootnote, DemoHeader, DemoPage, DemoPanel } from "@/compone
 
 import {
   classificationAccuracy,
+  classificationAccuracyWithHiddenCount,
   createClassificationDataset,
   createPolynomialTrainingTrace,
   createRegressionDataset,
   createTinyNetworkTrainingTrace,
   evaluatePolynomial,
+  inspectHiddenLayer,
   meanSquaredError,
   predictTinyNetwork,
+  predictTinyNetworkWithHiddenCount,
   type ClassificationKind,
   type CurveKind,
   type RegressionPoint,
@@ -259,7 +262,17 @@ function RegressionChart({
   );
 }
 
-function DecisionMap({ network, points, label }: { network: TinyNetwork; points: ReturnType<typeof createClassificationDataset>; label: string }) {
+function DecisionMap({
+  network,
+  points,
+  label,
+  hiddenCount,
+}: {
+  network: TinyNetwork;
+  points: ReturnType<typeof createClassificationDataset>;
+  label: string;
+  hiddenCount?: number;
+}) {
   const cells = useMemo(
     () =>
       Array.from({ length: 26 * 26 }, (_, index) => {
@@ -267,9 +280,15 @@ function DecisionMap({ network, points, label }: { network: TinyNetwork; points:
         const column = index % 26;
         const x = -1 + ((column + 0.5) / 26) * 2;
         const y = 1 - ((row + 0.5) / 26) * 2;
-        return { row, column, probability: predictTinyNetwork(network, { x, y }) };
+        return {
+          row,
+          column,
+          probability: hiddenCount === undefined
+            ? predictTinyNetwork(network, { x, y })
+            : predictTinyNetworkWithHiddenCount(network, { x, y }, hiddenCount),
+        };
       }),
-    [network],
+    [hiddenCount, network],
   );
   const svg = (value: number) => value.toFixed(3);
 
@@ -289,6 +308,76 @@ function DecisionMap({ network, points, label }: { network: TinyNetwork; points:
   );
 }
 
+function HiddenGateMap({
+  network,
+  gateIndex,
+  transformed,
+}: {
+  network: TinyNetwork;
+  gateIndex: number;
+  transformed: boolean;
+}) {
+  const cells = useMemo(
+    () =>
+      Array.from({ length: 24 * 24 }, (_, index) => {
+        const row = Math.floor(index / 24);
+        const column = index % 24;
+        const x = -1 + ((column + 0.5) / 24) * 2;
+        const y = 1 - ((row + 0.5) / 24) * 2;
+        const values = inspectHiddenLayer(network, { x, y });
+        const raw = values.preActivations[gateIndex] ?? 0;
+        const value = transformed ? values.activations[gateIndex] ?? 0 : Math.tanh(raw / 1.5);
+        return { row, column, value };
+      }),
+    [gateIndex, network, transformed],
+  );
+  const svg = (value: number) => value.toFixed(3);
+
+  return (
+    <div className="overflow-hidden border border-[var(--line)] bg-[#0c1117]">
+      <svg viewBox="0 0 100 100" className="block aspect-square w-full" role="img" aria-label={transformed ? "Tanh-bounded hidden gate" : "Raw linear hidden score"}>
+        <title>{transformed ? "tanh-bounded hidden gate" : "raw linear hidden score"}</title>
+        {cells.map((cell) => {
+          const positive = cell.value >= 0;
+          return (
+            <rect
+              key={`${cell.row}-${cell.column}`}
+              x={svg((cell.column / 24) * 100)}
+              y={svg((cell.row / 24) * 100)}
+              width={svg(100 / 24 + 0.05)}
+              height={svg(100 / 24 + 0.05)}
+              fill={positive ? "#22d3ee" : "#fb7185"}
+              opacity={svg(0.12 + Math.abs(cell.value) * 0.78)}
+            />
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+function TanhTransferCurve() {
+  const samples = Array.from({ length: 81 }, (_, index) => {
+    const x = -3 + (index / 80) * 6;
+    return { x, y: Math.tanh(x) };
+  });
+  const toX = (value: number) => ((value + 3) / 6) * 100;
+  const toY = (value: number) => 50 - value * 38;
+  const path = pathFromSamples(samples, toX, toY);
+
+  return (
+    <svg viewBox="0 0 100 100" className="block w-full" role="img" aria-label="The tanh transfer curve limits any score to the range minus one through one">
+      <title>tanh turns an unbounded score into a bounded gate</title>
+      <line x1="0" x2="100" y1="50" y2="50" stroke="white" strokeOpacity="0.18" strokeWidth="0.45" />
+      <line x1="50" x2="50" y1="8" y2="92" stroke="white" strokeOpacity="0.18" strokeWidth="0.45" />
+      <path d={path} fill="none" stroke="#22d3ee" strokeWidth="2.2" strokeLinecap="round" />
+      <text x="4" y="14" fill="white" fillOpacity="0.62" fontSize="7">+1 ceiling</text>
+      <text x="4" y="92" fill="white" fillOpacity="0.62" fontSize="7">−1 floor</text>
+      <text x="67" y="57" fill="white" fillOpacity="0.72" fontSize="7">raw score z</text>
+    </svg>
+  );
+}
+
 function ErrorStat({ label, value, accent }: { label: string; value: number; accent: string }) {
   return (
     <div className="border border-[var(--line)] p-3">
@@ -303,8 +392,10 @@ export default function CurveFitterPage() {
   const [curveKind, setCurveKind] = useState<CurveKind>("arc");
   const [degree, setDegree] = useState(2);
   const [classificationKind, setClassificationKind] = useState<ClassificationKind>("xor");
+  const [selectedGate, setSelectedGate] = useState(0);
+  const [combinedGateCount, setCombinedGateCount] = useState(5);
   const regressionPlayback = useEpochPlayback(REGRESSION_MAX_EPOCHS, 0);
-  const networkPlayback = useEpochPlayback(NETWORK_MAX_EPOCHS, 0);
+  const networkPlayback = useEpochPlayback(NETWORK_MAX_EPOCHS, 500);
 
   const regressionPoints = useMemo(() => createRegressionDataset(curveKind), [curveKind]);
   const trainPoints = useMemo(() => regressionPoints.filter((point) => point.split === "train"), [regressionPoints]);
@@ -341,7 +432,7 @@ export default function CurveFitterPage() {
   const linearNetwork = linearNetworkTrace[networkPlayback.epoch];
   const nonlinearNetwork = tanhNetworkTrace[networkPlayback.epoch];
   const linearAccuracy = classificationAccuracy(linearNetwork, classificationPoints);
-  const nonlinearAccuracy = classificationAccuracy(nonlinearNetwork, classificationPoints);
+  const combinedGateAccuracy = classificationAccuracyWithHiddenCount(nonlinearNetwork, classificationPoints, combinedGateCount);
 
   return (
     <DemoPage width="2xl">
@@ -408,7 +499,7 @@ export default function CurveFitterPage() {
         </div>
       ) : (
         <>
-          <DemoPanel title="The same network, one decisive change" description="Both models have a 2 to 5 to 1 shape and start from the same deterministic weights. The amber model keeps its hidden layer linear; the cyan model uses tanh.">
+          <DemoPanel title="See the break in linearity" description="Both models have the same 2 to 5 to 1 shape and begin from the same deterministic weights. The only change is that cyan runs each hidden score through tanh before the final vote.">
             <div className="space-y-5">
               <div className="flex flex-wrap gap-2">
                 {CLASSIFICATION_OPTIONS.map((option) => (
@@ -416,10 +507,10 @@ export default function CurveFitterPage() {
                 ))}
               </div>
               <p className="max-w-3xl text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
-                {classificationKind === "xor" ? "XOR needs two diagonal islands. One straight boundary cannot isolate both." : classificationKind === "circles" ? "The inner class needs a boundary that wraps around it. A line cannot close that loop." : "This is the control case: a straight boundary is enough, so both models should learn it."}
+                {classificationKind === "xor" ? "XOR needs two diagonal islands. A stack of linear layers still collapses to one straight cut, but several tanh gates can carve separate islands." : classificationKind === "circles" ? "The inner class needs a boundary that wraps around it. A line cannot close that loop, while tanh gates can combine into one." : "This is the control case: a straight boundary is enough, so the extra flexibility should not be necessary."}
               </p>
               <EpochScrubber
-                label="Shared training progress"
+                label="Shared training progress, reset to replay from zero"
                 epoch={networkPlayback.epoch}
                 maxEpoch={NETWORK_MAX_EPOCHS}
                 isPlaying={networkPlayback.isPlaying}
@@ -439,24 +530,58 @@ export default function CurveFitterPage() {
             </div>
           </DemoPanel>
 
-          <section className="mt-5 grid gap-5 md:grid-cols-2" aria-labelledby="network-boundaries">
-            <DemoPanel title="Hidden layer without an activation" description="It can rotate and shift a boundary, but the whole stack still acts like one linear transformation.">
+          <section className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,0.85fr)_minmax(20rem,1.3fr)_minmax(0,0.85fr)]" aria-labelledby="network-boundaries">
+            <DemoPanel title="No tanh: still one cut" description="Five affine hidden scores followed by another affine layer are algebraically still one straight decision boundary.">
               <div className="space-y-4">
                 <DecisionMap network={linearNetwork} points={classificationPoints} label="Linear hidden-layer model" />
                 <div className="flex items-end justify-between border-t border-[var(--line)] pt-3"><span className="text-xs text-neutral-500">accuracy at this epoch</span><strong className="font-mono text-2xl tabular-nums text-amber-600 dark:text-amber-300">{(linearAccuracy * 100).toFixed(1)}%</strong></div>
               </div>
             </DemoPanel>
-            <DemoPanel title="The same network with tanh" description="tanh lets the hidden units bend and combine regions that a single line cannot express.">
+
+            <DemoPanel title="One learned score becomes a bounded gate" description="Choose a hidden unit. Before tanh it is a straight ramp across the input plane. After tanh, its output saturates near plus or minus one, so multiple gates can combine into shapes a line cannot make.">
               <div className="space-y-4">
-                <DecisionMap network={nonlinearNetwork} points={classificationPoints} label="Tanh hidden-layer model" />
-                <div className="flex items-end justify-between border-t border-[var(--line)] pt-3"><span className="text-xs text-neutral-500">accuracy at this epoch</span><strong className="font-mono text-2xl tabular-nums text-cyan-700 dark:text-cyan-300">{(nonlinearAccuracy * 100).toFixed(1)}%</strong></div>
+                <div className="flex flex-wrap gap-2" role="group" aria-label="Inspect a learned tanh gate">
+                  {nonlinearNetwork.w1.map((_, index) => (
+                    <Button key={index} type="button" size="sm" variant={selectedGate === index ? "primary" : "secondary"} onClick={() => setSelectedGate(index)}>gate {index + 1}</Button>
+                  ))}
+                </div>
+                <div className="grid gap-3 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
+                  <div>
+                    <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.13em] text-rose-500">raw score z</p>
+                    <HiddenGateMap network={nonlinearNetwork} gateIndex={selectedGate} transformed={false} />
+                  </div>
+                  <div className="hidden font-mono text-xl text-neutral-500 sm:block">→</div>
+                  <div>
+                    <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.13em] text-cyan-500">tanh(z), bounded gate</p>
+                    <HiddenGateMap network={nonlinearNetwork} gateIndex={selectedGate} transformed />
+                  </div>
+                </div>
+                <div className="border-t border-[var(--line)] pt-3">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.13em] text-neutral-500">What tanh physically changes</p>
+                  <div className="mt-2 grid gap-3 sm:grid-cols-[minmax(0,1fr)_10rem] sm:items-center">
+                    <p className="text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">The raw score can grow without limit. tanh compresses it to the range minus one through one, turning this straight ramp into a soft on or off feature that can be mixed with other gates.</p>
+                    <TanhTransferCurve />
+                  </div>
+                </div>
+              </div>
+            </DemoPanel>
+
+            <DemoPanel title="Tanh gates combine into shape" description="Use the dial to add actual learned hidden gates into the final vote. At five gates, the model uses its full learned representation.">
+              <div className="space-y-4">
+                <DecisionMap network={nonlinearNetwork} points={classificationPoints} label={`${combinedGateCount} learned tanh gates combined`} hiddenCount={combinedGateCount} />
+                <label className="block border-t border-[var(--line)] pt-3">
+                  <span className="flex items-baseline justify-between font-mono text-xs uppercase tracking-[0.13em]"><span>Gates combined</span><strong className="text-lg text-cyan-700 dark:text-cyan-300">{combinedGateCount} / {nonlinearNetwork.w1.length}</strong></span>
+                  <input aria-label="Number of learned tanh gates combined" className="mt-3 w-full accent-cyan-500" type="range" min="1" max={nonlinearNetwork.w1.length} step="1" value={combinedGateCount} onChange={(event) => setCombinedGateCount(Number(event.target.value))} />
+                  <p className="mt-2 text-xs leading-relaxed text-neutral-500">This is not a separate model: it is the current tanh network with the first {combinedGateCount} learned hidden gates included in its final score.</p>
+                </label>
+                <div className="flex items-end justify-between border-t border-[var(--line)] pt-3"><span className="text-xs text-neutral-500">accuracy with {combinedGateCount} gate{combinedGateCount === 1 ? "" : "s"}</span><strong className="font-mono text-2xl tabular-nums text-cyan-700 dark:text-cyan-300">{(combinedGateAccuracy * 100).toFixed(1)}%</strong></div>
               </div>
             </DemoPanel>
           </section>
 
           <details className="mt-5 border border-[var(--line)] p-4">
             <summary className="cursor-pointer font-mono text-xs font-bold uppercase tracking-[0.13em]">Inspect the one changed ingredient</summary>
-            <p data-allow-select className="mt-3 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">A linear stack remains linear: σ(W₂(W₁x + b₁) + b₂). Adding tanh changes the representation: σ(W₂ tanh(W₁x + b₁) + b₂).</p>
+            <p data-allow-select className="mt-3 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">A linear stack remains linear: σ(W₂(W₁x + b₁) + b₂). Adding tanh changes the representation: σ(W₂ tanh(W₁x + b₁) + b₂). The center panel shows that transformation for one learned hidden unit; the right panel shows the real learned gates being combined.</p>
           </details>
         </>
       )}

@@ -73,31 +73,15 @@ export const PROJECTS: ProjectMeta[] = [
     featuredHome: true,
   },
   {
-    id: "forest-inspector",
-    title: "Forest Inspector",
-    slug: "forest-inspector",
-    collection: "demos",
-    status: "live",
-    summary:
-      "Ask whether to play outside: inspect a categorical split's information gain, then see a small forest vote on the same weather.",
-    description:
-      "Interactive categorical decision-tree and random-forest lab with visible information gain, paths, and ensemble voting.",
-    tags: ["Decision Trees", "Random Forest", "Information Gain"],
-    domains: ["ML", "Computational Tools"],
-    capabilities: ["Classification", "Interpretability"],
-    tech: ["TypeScript", "Information Gain", "Bagging"],
-    order: 50,
-  },
-  {
     id: "curve-fitter",
     title: "Curve Fitter",
     slug: "curve-fitter",
     collection: "demos",
     status: "live",
     summary:
-      "Scrub real gradient updates as lines, polynomials, and tiny networks learn what their hypotheses can and cannot represent.",
+      "Scrub real gradient updates, then inspect how tanh turns straight hidden scores into bounded gates that combine into nonlinear shapes.",
     description:
-      "Interactive regression and neural-network playground with actual training traces, held-out fitting, XOR, and nonlinear boundaries.",
+      "Interactive regression and neural-network playground with actual training traces, held-out fitting, and an inspectable tanh gate-by-gate view.",
     tags: ["Regression", "Neural Networks", "Nonlinearity"],
     domains: ["ML"],
     capabilities: ["Regression", "Visualization"],
@@ -119,22 +103,6 @@ export const PROJECTS: ProjectMeta[] = [
     capabilities: ["Visualization", "Image Processing"],
     tech: ["Canvas", "TypeScript"],
     order: 54,
-  },
-  {
-    id: "adversarial-sketch",
-    title: "Adversarial Sketch",
-    slug: "adversarial-sketch",
-    collection: "demos",
-    status: "live",
-    summary:
-      "Nudge a held-out handwritten digit along a real model gradient and see why a tiny pixel change can change a prediction.",
-    description:
-      "Transparent browser-side adversarial-example lab training a logistic classifier on real 8x8 handwritten digits.",
-    tags: ["Robustness", "Gradients", "Adversarial Examples"],
-    domains: ["ML"],
-    capabilities: ["Interpretability", "Visualization"],
-    tech: ["TypeScript", "Logistic Regression", "Gradient Descent"],
-    order: 56,
   },
   {
     id: "pathfinding-showdown",
@@ -279,53 +247,6 @@ export const PROJECTS: ProjectMeta[] = [
     capabilities: ["Visualization", "Simulation"],
     tech: ["Canvas", "TypeScript"],
     order: 35,
-  },
-  {
-    id: "backprop-microscope",
-    title: "Backprop Microscope",
-    slug: "backprop-microscope",
-    collection: "nerdy-stuff",
-    status: "live",
-    summary:
-      "Move one target dot and watch an exact gradient update bend a single neuron's curve toward it.",
-    description:
-      "Interactive one-neuron backpropagation lab with an exact chain rule and finite-difference check.",
-    tags: ["Backpropagation", "Autodiff", "Neural Networks"],
-    domains: ["ML"],
-    capabilities: ["Interpretability", "Visualization"],
-    tech: ["TypeScript", "Gradient Descent", "SVG"],
-    order: 40,
-  },
-  {
-    id: "causal-sandbox",
-    title: "Causal Sandbox",
-    slug: "causal-sandbox",
-    collection: "nerdy-stuff",
-    status: "live",
-    summary:
-      "See why umbrella carriers can have wetter shoes even when umbrellas do not cause wet shoes.",
-    description:
-      "Interactive causal-inference illustration of confounding, observation, and fair assignment.",
-    tags: ["Causality", "DAGs", "Simpson's Paradox"],
-    domains: ["ML", "Data Science"],
-    capabilities: ["Simulation", "Visualization"],
-    tech: ["TypeScript", "Probability", "SVG"],
-    order: 45,
-  },
-  {
-    id: "attention-arena",
-    title: "Attention Arena",
-    slug: "attention-arena",
-    collection: "nerdy-stuff",
-    status: "live",
-    summary:
-      "Ask a visible query, then see softmax turn matching memory keys into a weighted answer.",
-    description: "Interactive attention mechanics lab using an explicit soft weighted lookup.",
-    tags: ["Attention", "Transformers", "Interpretability"],
-    domains: ["NLP"],
-    capabilities: ["Visualization", "Interpretability"],
-    tech: ["TypeScript", "Softmax", "Linear Algebra"],
-    order: 50,
   },
   {
     id: "optimizer-racetrack",
