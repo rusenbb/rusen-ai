@@ -1758,7 +1758,7 @@ export function advanceMatch(options: {
         : "Bot exploited the strongest learned action for this state.",
   };
 
-  // Online learning — store transition in replay buffer
+  // Online learning - store transition in replay buffer
   if (onlineLearning) {
     const nextStateVec = terminalOutcome
       ? null

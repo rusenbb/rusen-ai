@@ -192,7 +192,7 @@ function LiveBadge({ connected, updateCount }: { connected: boolean; updateCount
 // Relative time helper
 function formatTimeAgo(date: Date | null, nowMs: number): string {
   if (!date) return "";
-  const seconds = Math.floor((nowMs - date.getTime()) / 1000);
+  const seconds = Math.max(0, Math.floor((nowMs - date.getTime()) / 1000));
   if (seconds < 60) return `${seconds}s ago`;
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
   return `${Math.floor(seconds / 3600)}h ago`;
@@ -769,7 +769,7 @@ function EarthquakeWidget() {
   };
 
   const timeAgo = (timestamp: number) => {
-    const seconds = Math.floor((nowMs - timestamp) / 1000);
+    const seconds = Math.max(0, Math.floor((nowMs - timestamp) / 1000));
     if (seconds < 60) return `${seconds}s ago`;
     const minutes = Math.floor(seconds / 60);
     if (minutes < 60) return `${minutes}m ago`;
@@ -1012,7 +1012,7 @@ function WikipediaLiveWidget() {
   };
 
   const timeAgo = (timestamp: number) => {
-    const seconds = Math.floor((nowMs - timestamp) / 1000);
+    const seconds = Math.max(0, Math.floor((nowMs - timestamp) / 1000));
     if (seconds < 60) return `${seconds}s`;
     return `${Math.floor(seconds / 60)}m`;
   };
@@ -1626,7 +1626,7 @@ function GitHubActivityWidget() {
   };
 
   const timeAgo = (timestamp: number) => {
-    const seconds = Math.floor((nowMs - timestamp) / 1000);
+    const seconds = Math.max(0, Math.floor((nowMs - timestamp) / 1000));
     if (seconds < 60) return `${seconds}s`;
     if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
     return `${Math.floor(seconds / 3600)}h`;
@@ -1639,7 +1639,7 @@ function GitHubActivityWidget() {
 
   const formatLastFetch = () => {
     if (!lastFetch) return "";
-    const seconds = Math.floor((nowMs - lastFetch.getTime()) / 1000);
+    const seconds = Math.max(0, Math.floor((nowMs - lastFetch.getTime()) / 1000));
     if (seconds < 60) return `${seconds}s ago`;
     return `${Math.floor(seconds / 60)}m ago`;
   };

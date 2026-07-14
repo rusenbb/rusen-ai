@@ -10,7 +10,7 @@ import LangPicker from "./components/LangPicker";
 import AccordionGroup from "./components/AccordionGroup";
 
 export const metadata = {
-  title: "Blog — rusen.ai",
+  title: "Blog - rusen.ai",
   description:
     "Essays on AI, programming, and how the two are reshaping each other.",
 };

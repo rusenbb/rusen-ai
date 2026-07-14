@@ -21,7 +21,7 @@ export default function Home() {
         </p>
       </section>
 
-      {/* Reserved viewport space for the ASCII background's DATA pulse —
+      {/* Reserved viewport space for the ASCII background's DATA pulse -
           AsciiDataBackground anchors the letters to this element so they
           sit between the hero and the cards instead of behind them. */}
       <div
@@ -30,7 +30,7 @@ export default function Home() {
         className="h-40 sm:h-48 md:h-56 mt-10 sm:mt-12"
       />
 
-      {/* Caption for the DATA pulse — flanking dashes give it the look of a
+      {/* Caption for the DATA pulse - flanking dashes give it the look of a
           deliberate label, not a stray badge. The kicker itself toggles the
           bg (mirrors the footer toggle). */}
       <div className="flex items-center justify-center gap-4 mb-12 sm:mb-16 md:mb-20">

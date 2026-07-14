@@ -13,7 +13,7 @@ Hard constraints:
 
 ## Why this works as a demo
 
-The "Aaronson Oracle" pattern — an order-5 Markov chain that calls F vs J presses ~70% of the time — is one of the most legible "AI beats you" demos that exists. It is small, fast, explainable, and delivers a punchline within 30 seconds of arriving on the page.
+The "Aaronson Oracle" pattern - an order-5 Markov chain that calls F vs J presses ~70% of the time - is one of the most legible "AI beats you" demos that exists. It is small, fast, explainable, and delivers a punchline within 30 seconds of arriving on the page.
 
 Adding a hide-the-AI-guess toggle lets the player run a fair test of their own randomness: the model still scores in the background, the lifetime tally still moves, but the buttons no longer hint where the model expects them to press.
 
@@ -48,12 +48,12 @@ All trained online. State for `markov-5` over 2 symbols is at most 2⁶ = 64 cou
 ## Scoring
 
 - **Accuracy** per predictor over a rolling window of the last 50 trials (leaderboard).
-- **Bits saved per trial** (= log₂(P(actual)) under the predictor's distribution) — the right metric, since calibration matters more than raw hits when the player tries mixed strategies.
-- **Lifetime tally** for the predictor currently shown in the arena: `right / total (%)`. Recomputed retrospectively over all trials. Jumps when the leader changes mid-session — rare after warmup, and the predictor name is shown alongside the tally so the swap is explicit.
+- **Bits saved per trial** (= log₂(P(actual)) under the predictor's distribution) - the right metric, since calibration matters more than raw hits when the player tries mixed strategies.
+- **Lifetime tally** for the predictor currently shown in the arena: `right / total (%)`. Recomputed retrospectively over all trials. Jumps when the leader changes mid-session - rare after warmup, and the predictor name is shown alongside the tally so the swap is explicit.
 
 ## The hide-the-guess toggle
 
-A small `AI guess: show / hide` pill in the toolbar. When `hide`, the arena no longer rings the predicted button or shows the "AI guess" badge — but the leaderboard, entropy plot, Why? panel, and lifetime tally keep updating. This is the "fair test" mode.
+A small `AI guess: show / hide` pill in the toolbar. When `hide`, the arena no longer rings the predicted button or shows the "AI guess" badge - but the leaderboard, entropy plot, Why? panel, and lifetime tally keep updating. This is the "fair test" mode.
 
 ## The "Why?" panel
 
@@ -67,14 +67,14 @@ This is the part that converts the game from a stunt into a lesson.
 
 Top to bottom on a single scrollable page:
 
-- **Header** — title, eyebrow, one-line description
-- **Alphabet picker** — 2 keys / 4 keys (remounts the session on change)
-- **Toolbar** — Reset · AI guess show/hide · AI tally · trials counter
-- **Arena** — the input surface (large key targets, with optional ring on the AI's predicted button)
-- **Leaderboard** — accuracy / bits-saved per predictor, current and rolling
-- **Entropy plot** — conditional bigram entropy over the session
-- **Why?** panel — context-matching distribution for the leading model
-- **Footnote** — the punchline
+- **Header** - title, eyebrow, one-line description
+- **Alphabet picker** - 2 keys / 4 keys (remounts the session on change)
+- **Toolbar** - Reset · AI guess show/hide · AI tally · trials counter
+- **Arena** - the input surface (large key targets, with optional ring on the AI's predicted button)
+- **Leaderboard** - accuracy / bits-saved per predictor, current and rolling
+- **Entropy plot** - conditional bigram entropy over the session
+- **Why?** panel - context-matching distribution for the leading model
+- **Footnote** - the punchline
 
 Settings stay collapsed by default (in fact, MVP has none beyond the alphabet picker). The page should be playable in ten seconds with zero reading.
 
@@ -99,27 +99,27 @@ src/app/outguess/
 
 ## Stretch Goals
 
-- **Aaronson classic mode** — F/J only, 100 trials, global anonymous leaderboard via Cloudflare KV (the only optional backend touch; can be skipped)
-- **Replay / share** — encode a session as a URL fragment so a friend can see the same game
-- **Suffix tree visualizer** for the n-gram predictor — watch the trie grow as the player plays
-- **"Adversarial pair" mode** — two humans take turns, both try to make the other's input unpredictable to the AI
-- **Auto-coach** — after the session, suggest one concrete thing the player did predictably ("you avoided three F's in a row")
+- **Aaronson classic mode** - F/J only, 100 trials, global anonymous leaderboard via Cloudflare KV (the only optional backend touch; can be skipped)
+- **Replay / share** - encode a session as a URL fragment so a friend can see the same game
+- **Suffix tree visualizer** for the n-gram predictor - watch the trie grow as the player plays
+- **"Adversarial pair" mode** - two humans take turns, both try to make the other's input unpredictable to the AI
+- **Auto-coach** - after the session, suggest one concrete thing the player did predictably ("you avoided three F's in a row")
 
 ## Risks
 
 - **Boredom after 50 trials.** Mitigate with short default sessions, immediate visual reward per trial, and an end-of-session screen worth seeing.
 - **Markov needs warmup; the leaderboard looks unfair early.** Mitigate by showing per-model "warmup" badge alongside the score until 20 trials are seen.
 - **Mobile drag conflicts with page scroll.** N/A in tap-only mode (no drag).
-- **Predictors look too good and feel scripted.** Mitigate by showing the Why? panel — when the player can see the matching context, "scripted" becomes "obvious."
+- **Predictors look too good and feel scripted.** Mitigate by showing the Why? panel - when the player can see the matching context, "scripted" becomes "obvious."
 
 ## Naming
 
 Working title: **Outguess**.
 
 Alternatives considered:
-- `Oracle` — too generic, also taken (Aaronson, the database)
-- `Try To Be Random` — funny, hard to link
-- `Predictor` — bland
+- `Oracle` - too generic, also taken (Aaronson, the database)
+- `Try To Be Random` - funny, hard to link
+- `Predictor` - bland
 
 `Outguess` names the interaction in one verb. Player tries to outguess the model; model tries to outguess the player.
 

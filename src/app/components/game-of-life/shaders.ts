@@ -1,4 +1,4 @@
-// GLSL shaders — ported from GolShader.hx with monochrome theming
+// GLSL shaders - ported from GolShader.hx with monochrome theming
 
 export const vertexShader = `#version 300 es
 precision highp float;

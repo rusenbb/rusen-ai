@@ -278,22 +278,22 @@ export default function FullAttentionPanel({
           <p>
             CLIP, the model behind classification, encodes the image and each text label
             into a shared embedding space and measures cosine similarity. That gives one
-            number per label — useful for ranking, but it doesn&apos;t say <em>where</em>{" "}
+            number per label - useful for ranking, but it doesn&apos;t say <em>where</em>{" "}
             in the image the label applies.
           </p>
           <p>
             CLIPSeg adds a small Transformer decoder on top of CLIP that, given the same
-            image and a text prompt, predicts a per-pixel logit map — &ldquo;does this pixel
+            image and a text prompt, predicts a per-pixel logit map - &ldquo;does this pixel
             match this concept?&rdquo;. We pass it the sigmoid, normalise to [0, 1] for
             visibility, and paint the result. This is not classical attention rollout
-            from the image encoder — CLIPSeg is its own decoder trained on the PhraseCut
+            from the image encoder - CLIPSeg is its own decoder trained on the PhraseCut
             dataset.
           </p>
           <p>
             <strong className="text-neutral-200">Per-label maps</strong> show what the
             model finds for one concept; the{" "}
             <strong className="text-neutral-200">average</strong> entry is the per-pixel
-            mean across every label, renormalised — a rough &ldquo;saliency&rdquo; pass
+            mean across every label, renormalised - a rough &ldquo;saliency&rdquo; pass
             highlighting regions the model finds informative no matter what you&apos;re
             looking for.
           </p>

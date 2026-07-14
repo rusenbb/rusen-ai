@@ -1,7 +1,7 @@
 ---
 title: "Yapay Zeka Önerileri"
 date: "2026-03-04"
-description: "Yapay zeka araştırmacısı ve mühendisi olmak isteyenler için bir rehber — motivasyonunu bulmaktan derin öğrenme, bilgisayarlı görü, doğal dil işleme ve veri mühendisliğinde ustalaşmaya kadar."
+description: "Yapay zeka araştırmacısı ve mühendisi olmak isteyenler için bir rehber - motivasyonunu bulmaktan derin öğrenme, bilgisayarlı görü, doğal dil işleme ve veri mühendisliğinde ustalaşmaya kadar."
 tags:
   - "yapay zeka"
   - "rehber"
@@ -36,7 +36,7 @@ Yukarıdaki başlığı okuyunca bu sayfanın bir kişisel gelişim sayfası gib
 
 **Kısa bir gerekçe:**
 
-**İçsel motivasyon**, etkinliklere kendi doğal tatminleri için katılmayı içerirken, **dışsal motivasyon** dışsal ödüller ya da cezadan kaçınma ile yönlendirilir. Araştırmalar, içsel motivasyonun daha yüksek yaratıcılık, kararlılık ve genel iyi oluş ile ilişkili olduğunu gösteriyor (Ryan & Deci, 2000). Buna karşılık, dışsal motivasyon kaynakları —özellikle kontrol edici olarak algılandıklarında— bazen içsel ilgiyi azaltabilir (Deci, Koestner, & Ryan, 1999). *Her iki motivasyon türü arasında bir denge kurmak, optimal performans ve tatmine yol açabilir.*
+**İçsel motivasyon**, etkinliklere kendi doğal tatminleri için katılmayı içerirken, **dışsal motivasyon** dışsal ödüller ya da cezadan kaçınma ile yönlendirilir. Araştırmalar, içsel motivasyonun daha yüksek yaratıcılık, kararlılık ve genel iyi oluş ile ilişkili olduğunu gösteriyor (Ryan & Deci, 2000). Buna karşılık, dışsal motivasyon kaynakları -özellikle kontrol edici olarak algılandıklarında- bazen içsel ilgiyi azaltabilir (Deci, Koestner, & Ryan, 1999). *Her iki motivasyon türü arasında bir denge kurmak, optimal performans ve tatmine yol açabilir.*
 
 Değerli beceriler öğrenmek, gerçek bağlar kurmak ve başkalarına değer katmak gibi iyi hedefler, tipik olarak içsel motivasyonla yönlendirilir. Bu hedefler tatmin edicidir çünkü **büyüme, bağ kurma ve katkıda bulunma yönündeki daha derin ihtiyaçlarımızı** karşılarlar. Örneğin yeni şeyler öğrenmek bir başarı ve kişisel gelişim duygusu getirirken, insanlarla gerçek bağlar kurmak sosyal ihtiyaçlarımızı karşılar ve bir aidiyet duygusu besler. Başkalarına değer katmak ise, eylemlerimizin olumlu etkisine tanık oldukça derin bir amaç ve tatmin duygusu sunar.
 
@@ -222,20 +222,20 @@ Unutma: hiçbir kaynak kendi çabandan daha iyi bir öğretmen değildir.
 
 ## Bilgisayarlı Görü
 
-Bilgisayarlı görü, yapay zekadaki en heyecan verici ve somut alanlardan biridir — *görebilen* sistemler inşa edersin. Verinin soyut metin olduğu NLP'nin aksine, burada girdiler ve çıktılar görseldir; bu da hem başarıları hem de başarısızlıkları anında sezgisel kılar.
+Bilgisayarlı görü, yapay zekadaki en heyecan verici ve somut alanlardan biridir - *görebilen* sistemler inşa edersin. Verinin soyut metin olduğu NLP'nin aksine, burada girdiler ve çıktılar görseldir; bu da hem başarıları hem de başarısızlıkları anında sezgisel kılar.
 
-Derin öğrenme yaklaşımlarına dalmadan önce **klasik bilgisayarlı görü** ile başla. Görüntü filtreleme, kenar tespiti (Canny, Sobel), öznitelik çıkarımı (SIFT, HOG) ve geometrik dönüşümleri anlamak, sinir ağlarının aslında ne öğrendiğini anlamak için sana gereken sözcük dağarcığını verir. OpenCV burada en iyi dostundur — onlarca yıldır CV'nin bel kemiği olmuştur ve ön işleme, veri artırma (data augmentation) ve dağıtım (deployment) için hâlâ vazgeçilmezdir.
+Derin öğrenme yaklaşımlarına dalmadan önce **klasik bilgisayarlı görü** ile başla. Görüntü filtreleme, kenar tespiti (Canny, Sobel), öznitelik çıkarımı (SIFT, HOG) ve geometrik dönüşümleri anlamak, sinir ağlarının aslında ne öğrendiğini anlamak için sana gereken sözcük dağarcığını verir. OpenCV burada en iyi dostundur - onlarca yıldır CV'nin bel kemiği olmuştur ve ön işleme, veri artırma (data augmentation) ve dağıtım (deployment) için hâlâ vazgeçilmezdir.
 
 Klasik temele sahip olduğunda, **görü için derin öğrenmeye** geç. CNN'lerle derin öğrenme bölümünde zaten karşılaştın, ama işte burada daha derine iniyorsun:
 
 - **Görüntü Sınıflandırma:** CV'nin "merhaba dünya"sı. ResNet ile başla, atlama bağlantılarını (skip connections) ve neden önemli olduklarını anla. Sonra EfficientNet'i ve mimari aramanın (architecture search) oyunu nasıl değiştirdiğini keşfet.
-- **Nesne Tespiti:** R-CNN'den (yavaş, iki aşamalı) YOLO'ya (hızlı, tek aşamalı) doğru evrimi anla. YOLO ailesi (özellikle Ultralytics'in uygulamaları) inanılmaz pratik — dakikalar içinde çalışan bir tespit modeline sahip olabilirsin. Ama çapa kutularının (anchor boxes) *neden* çalıştığını, maksimum olmayanı bastırmanın (non-max suppression) ne yaptığını ve hız ile doğruluk arasındaki ödünleşimleri anla.
+- **Nesne Tespiti:** R-CNN'den (yavaş, iki aşamalı) YOLO'ya (hızlı, tek aşamalı) doğru evrimi anla. YOLO ailesi (özellikle Ultralytics'in uygulamaları) inanılmaz pratik - dakikalar içinde çalışan bir tespit modeline sahip olabilirsin. Ama çapa kutularının (anchor boxes) *neden* çalıştığını, maksimum olmayanı bastırmanın (non-max suppression) ne yaptığını ve hız ile doğruluk arasındaki ödünleşimleri anla.
 - **Anlamsal & Örnek Bölütleme:** Piksel düzeyinde anlama. Tıbbi görüntüleme için U-Net, örnek bölütleme için Mask R-CNN. Öznitelik piramidi ağlarının (FPN) çok ölçekli tespiti nasıl mümkün kıldığını anlamak kilit noktadır.
 - **Görü Transformer'ları (ViT):** Transformer istilası görüye de ulaştı. ViT'ler görüntüleri yamalara böler ve onları token olarak ele alır. Bunun neden çalıştığını (ve CNN'lerin hâlâ ne zaman kazandığını) anlamak önemli. Son teknoloji için DINOv2 ve SAM'e (Segment Anything) bak.
 - **Görü için Üretici Modeller:** GAN'ler DL bölümünde işlendi, ama difüzyon modelleri burada parlıyor. Gürültü giderme (denoising) sürecini ve Stable Diffusion gibi modellerin metinden görüntü nasıl ürettiğini anlamak hem büyüleyici hem de giderek daha pratik.
 - **Çok Kipli (Multimodal) Modeller:** CLIP, görü ile dili alanı değiştirecek şekilde birbirine bağladı. Karşılaştırmalı öğrenmeyi (contrastive learning) ve görü-dil modellerinin nasıl çalıştığını anlamak, görüntü arama, sıfır-atış (zero-shot) sınıflandırma ve görsel soru yanıtlama gibi modern uygulamaların kapısını açar.
 
-Pratik bir not: CV projeleri son derece tatmin edicidir çünkü sonuçlar *görseldir*. Gösterebileceğin şeyler inşa et — web kameranda gerçek zamanlı bir nesne tespit modeli, bir stil aktarımı uygulaması, bir tıbbi görüntü sınıflandırıcısı. Bu projeler yalnızca öğrenmek için harika olmakla kalmaz, aynı zamanda mükemmel portföy parçaları da olur.
+Pratik bir not: CV projeleri son derece tatmin edicidir çünkü sonuçlar *görseldir*. Gösterebileceğin şeyler inşa et - web kameranda gerçek zamanlı bir nesne tespit modeli, bir stil aktarımı uygulaması, bir tıbbi görüntü sınıflandırıcısı. Bu projeler yalnızca öğrenmek için harika olmakla kalmaz, aynı zamanda mükemmel portföy parçaları da olur.
 
 İşte hayatını kolaylaştıracak bazı kaynaklar:
 
@@ -251,16 +251,16 @@ Unutma: hiçbir kaynak kendi çabandan daha iyi bir öğretmen değildir.
 
 ## Doğal Dil İşleme
 
-NLP, yapay zekadaki en çarpıcı ilerlemelerden bazılarının yaşandığı yerdir. Modern NLP'yi gerçekten anlamak için yolculuğu anlaman gerekir — yalnızca nerede olduğumuzu değil, buraya nasıl geldiğimizi ve değişimlerin *neden* olduğunu.
+NLP, yapay zekadaki en çarpıcı ilerlemelerden bazılarının yaşandığı yerdir. Modern NLP'yi gerçekten anlamak için yolculuğu anlaman gerekir - yalnızca nerede olduğumuzu değil, buraya nasıl geldiğimizi ve değişimlerin *neden* olduğunu.
 
-**Temellerle** başla: tokenizasyon, gövdeleme (stemming), kök bulma (lemmatization), kelime torbası (bag-of-words), TF-IDF. Bunlar eski moda görünebilir, ama sana metni veri olarak düşünmeyi öğretirler. Kelime gömmelerini (word embeddings) (Word2Vec, GloVe) anlamak çok önemli — kelimelerin, anlamsal ilişkilerin geometrik olarak yakalandığı yoğun vektörler olarak temsil edilebileceği fikri ("kral - erkek + kadın = kraliçe") bir paradigma değişimiydi.
+**Temellerle** başla: tokenizasyon, gövdeleme (stemming), kök bulma (lemmatization), kelime torbası (bag-of-words), TF-IDF. Bunlar eski moda görünebilir, ama sana metni veri olarak düşünmeyi öğretirler. Kelime gömmelerini (word embeddings) (Word2Vec, GloVe) anlamak çok önemli - kelimelerin, anlamsal ilişkilerin geometrik olarak yakalandığı yoğun vektörler olarak temsil edilebileceği fikri ("kral - erkek + kadın = kraliçe") bir paradigma değişimiydi.
 
 Sonra modern yapay zekadaki en önemli mimari geçiş geliyor: **yinelemeli modellerden transformer'lara geçiş**. Bunun *neden* olduğunu anlamak, mimarileri ezberlemekten daha önemli:
 
 - **RNN'ler ve LSTM'ler** dizileri her seferinde bir token, soldan sağa işler. Bu sıralı doğa, etkili bir şekilde paralelleştirilememeleri anlamına gelir ve kapı mekanizmalarına rağmen uzun menzilli bağımlılıklarla mücadele ederler. Eğitim yavaş ve ölçeklendirme zahmetlidir.
-- **Transformer'lar** bunu, her token'ın diğer her token'a *eşzamanlı olarak* dikkat etmesini sağlayan öz-dikkat mekanizmasıyla değiştirdi. Asıl içgörü budur: **paralellik**. Transformer'lar tüm dizileri GPU'larda bir anda işleyebilir, bu da donanımla ölçeklendikleri anlamına gelir. Bu yalnızca bir mühendislik kolaylığı değildi — neyin mümkün olduğunu temelden değiştirdi. Devasa veri kümeleri üzerinde verimli eğitim yapabilme yeteneği, LLM'leri doğuran şeydir.
+- **Transformer'lar** bunu, her token'ın diğer her token'a *eşzamanlı olarak* dikkat etmesini sağlayan öz-dikkat mekanizmasıyla değiştirdi. Asıl içgörü budur: **paralellik**. Transformer'lar tüm dizileri GPU'larda bir anda işleyebilir, bu da donanımla ölçeklendikleri anlamına gelir. Bu yalnızca bir mühendislik kolaylığı değildi - neyin mümkün olduğunu temelden değiştirdi. Devasa veri kümeleri üzerinde verimli eğitim yapabilme yeteneği, LLM'leri doğuran şeydir.
 
-**LLM'lerin tam olarak ne öğrendiğini** anlamak kritik. Onlar gerçeklerin veritabanları değil. Arama motorları değil. Özünde, devasa miktarda metin üzerinde eğitilmiş bir sonraki token tahmincisidirler. Ama bu basit hedef aracılığıyla, sözdizimini, anlambilimi, akıl yürütme örüntülerini, dünya bilgisini ve hatta anlamaya benzeyen bir şeyi yakalayan içsel temsiller geliştirirler. Bunun "gerçek" bir anlama oluşturup oluşturmadığı tartışması büyüleyici ve sürmekte — ama yadsınamaz olan, öğrendikleri temsillerin dikkat çekici biçimde zengin olduğudur. Mekanistik yorumlanabilirliği (mechanistic interpretability) (bireysel nöronların ve devrelerin belirli davranışları nasıl uyguladığını) incelemek, bu modellerin içinde aslında ne olup bittiğine dair daha derin bir kavrayış kazandırır.
+**LLM'lerin tam olarak ne öğrendiğini** anlamak kritik. Onlar gerçeklerin veritabanları değil. Arama motorları değil. Özünde, devasa miktarda metin üzerinde eğitilmiş bir sonraki token tahmincisidirler. Ama bu basit hedef aracılığıyla, sözdizimini, anlambilimi, akıl yürütme örüntülerini, dünya bilgisini ve hatta anlamaya benzeyen bir şeyi yakalayan içsel temsiller geliştirirler. Bunun "gerçek" bir anlama oluşturup oluşturmadığı tartışması büyüleyici ve sürmekte - ama yadsınamaz olan, öğrendikleri temsillerin dikkat çekici biçimde zengin olduğudur. Mekanistik yorumlanabilirliği (mechanistic interpretability) (bireysel nöronların ve devrelerin belirli davranışları nasıl uyguladığını) incelemek, bu modellerin içinde aslında ne olup bittiğine dair daha derin bir kavrayış kazandırır.
 
 Modern NLP manzarası bu temel üzerine kuruludur:
 
@@ -275,7 +275,7 @@ Pratik NLP çalışması için temel araçlar:
 - **Hugging Face Transformers:** Önceden eğitilmiş modellerle çalışmak için fiili (de facto) kütüphane. İnce ayar yapmayı, çıkarım yapmayı ve model hub'ını keşfetmeyi öğren.
 - **spaCy:** Harika tokenizasyon, NER ve bağımlılık ayrıştırma ile üretime hazır NLP. Hızlı ve pratik.
 - **NLTK:** NLP temellerini öğrenmek için klasik kütüphane. Tokenizasyonu, sözcük türü etiketlemeyi (POS tagging) ve ayrıştırmayı ilk ilkelerden anlamak için harika.
-- **Zemberek:** Türkçe NLP için vazgeçilmez — Türkçe metin için biçimbilimsel analiz, tokenizasyon ve yazım denetimi. Türkçe sondan eklemeli (agglutinative) bir dildir; bu da standart, İngilizce merkezli NLP araçlarının onda sıklıkla başarısız olması anlamına gelir. Zemberek bu boşluğu doldurur.
+- **Zemberek:** Türkçe NLP için vazgeçilmez - Türkçe metin için biçimbilimsel analiz, tokenizasyon ve yazım denetimi. Türkçe sondan eklemeli (agglutinative) bir dildir; bu da standart, İngilizce merkezli NLP araçlarının onda sıklıkla başarısız olması anlamına gelir. Zemberek bu boşluğu doldurur.
 
 İşte hayatını kolaylaştıracak bazı kaynaklar:
 
@@ -291,11 +291,11 @@ Unutma: hiçbir kaynak kendi çabandan daha iyi bir öğretmen değildir.
 
 ## Veri Mühendisliği
 
-Veri mühendisliği, yapay zekadaki her şeyin üzerinde koştuğu, cazibesiz ama kesinlikle kritik bir temeldir. Dünyanın en parlak model mimarisine sahip olabilirsin, ama veri hattın (pipeline) bozuksa, özniteliklerin bayatsa ya da eğitim verin çöpse — hiçbirinin önemi kalmaz. Deyişte olduğu gibi: **çöp girer, çöp çıkar (garbage in, garbage out)**.
+Veri mühendisliği, yapay zekadaki her şeyin üzerinde koştuğu, cazibesiz ama kesinlikle kritik bir temeldir. Dünyanın en parlak model mimarisine sahip olabilirsin, ama veri hattın (pipeline) bozuksa, özniteliklerin bayatsa ya da eğitim verin çöpse - hiçbirinin önemi kalmaz. Deyişte olduğu gibi: **çöp girer, çöp çıkar (garbage in, garbage out)**.
 
 Makine öğrenmesi motorsa, veri mühendisliği yakıt sistemi, yollar ve benzin istasyonlarıdır. İşte buna nasıl yaklaşacağın:
 
-**SQL ile başla.** Bu tartışmaya kapalı. SQL onlarca yıldır var ve hiçbir yere gitmiyor. Onda ustalaş — sadece SELECT ve WHERE değil, pencere fonksiyonları (window functions), CTE'ler, sorgu optimizasyonu ve yürütme planlarını (execution plans) anlamak. İster bir ML mühendisi, ister veri bilimci, ister veri mühendisi ol, SQL'i her gün kullanacaksın. Gerçek dünyadaki "veri işinin" çoğu Python değil, SQL'dir.
+**SQL ile başla.** Bu tartışmaya kapalı. SQL onlarca yıldır var ve hiçbir yere gitmiyor. Onda ustalaş - sadece SELECT ve WHERE değil, pencere fonksiyonları (window functions), CTE'ler, sorgu optimizasyonu ve yürütme planlarını (execution plans) anlamak. İster bir ML mühendisi, ister veri bilimci, ister veri mühendisi ol, SQL'i her gün kullanacaksın. Gerçek dünyadaki "veri işinin" çoğu Python değil, SQL'dir.
 
 **Veri modellemeyi ve depolamayı anla:**
 - OLTP (işlemsel) ile OLAP (analitik) veritabanları arasındaki farkı ve her birini ne zaman kullanacağını öğren.
@@ -306,7 +306,7 @@ Makine öğrenmesi motorsa, veri mühendisliği yakıt sistemi, yollar ve benzin
 **Veri hatları inşa etmeyi öğren:**
 - **ETL ve ELT:** Klasik tartışma. ETL (Extract, Transform, Load) veriyi yüklemeden önce dönüştürür. ELT (Extract, Load, Transform) önce ham veriyi yükler ve ambarda dönüştürür. Modern veri yığınları ELT'ye yöneliyor çünkü bulut ambarları dönüşümleri kaldıracak kadar güçlü.
 - **Orkestrasyon:** Apache Airflow, veri hatlarını zamanlamak ve yönetmek için standart. DAG'leri (yönlü çevrimsiz çizgeler), görev bağımlılıklarını ve başarısızlıklar ile yeniden denemelerin nasıl ele alınacağını anla.
-- **Toplu (Batch) ve Akış (Streaming):** Veri işinin çoğu toplu işlemedir (veriyi parçalar hâlinde işle, ör. günlük). Ama bazı uygulamalar gerçek zamanlı veriye ihtiyaç duyar — işte akış burada devreye girer. Olay akışı için Apache Kafka ve akış işleme için Apache Spark Structured Streaming ya da Flink tercih edilen araçlardır.
+- **Toplu (Batch) ve Akış (Streaming):** Veri işinin çoğu toplu işlemedir (veriyi parçalar hâlinde işle, ör. günlük). Ama bazı uygulamalar gerçek zamanlı veriye ihtiyaç duyar - işte akış burada devreye girer. Olay akışı için Apache Kafka ve akış işleme için Apache Spark Structured Streaming ya da Flink tercih edilen araçlardır.
 
 **Bulut platformları şarttır:**
 - Birini seç (AWS, GCP ya da Azure) ve onu iyi öğren. Kavramlar platformlar arasında aktarılabilir. Nesne depolama (S3/GCS), yönetilen veritabanları (RDS, BigQuery, Redshift) ve sunucusuz hesaplama (serverless compute) hakkında bilgi edin.
@@ -314,7 +314,7 @@ Makine öğrenmesi motorsa, veri mühendisliği yakıt sistemi, yollar ve benzin
 
 **Veri kalitesi ve gözlemlenebilirlik:**
 - Veri testi (Great Expectations, dbt testleri), verinin modellere ulaşmadan önce doğru olmasını sağlar.
-- Veri soyağacı (data lineage) — verinin nereden geldiğini ve nasıl dönüştürüldüğünü bilmek — hata ayıklama ve uyumluluk için kritiktir.
+- Veri soyağacı (data lineage) - verinin nereden geldiğini ve nasıl dönüştürüldüğünü bilmek - hata ayıklama ve uyumluluk için kritiktir.
 - Veri hatlarını izlemek, ML modellerini izlemek kadar önemlidir.
 
 Aşina olunması gereken **modern veri yığını**:
@@ -323,7 +323,7 @@ Aşina olunması gereken **modern veri yığını**:
 - **Apache Kafka:** Gerçek zamanlı veri hatları için olay akışı platformu.
 - **Apache Airflow:** İş akışı orkestrasyonu ve zamanlama.
 
-Pratik bir not: veri mühendisliği teknolojide en çok talep gören rollerden biridir ve iyi kazandırır. Hedefin bir ML araştırmacısı olmak olsa bile, veri mühendisliğini anlamak seni belirgin biçimde daha etkili kılar. Tanıdığım en iyi ML mühendisleri, tüm hattı —ham veri alımından model sunumuna kadar— sahiplenebilenlerdir.
+Pratik bir not: veri mühendisliği teknolojide en çok talep gören rollerden biridir ve iyi kazandırır. Hedefin bir ML araştırmacısı olmak olsa bile, veri mühendisliğini anlamak seni belirgin biçimde daha etkili kılar. Tanıdığım en iyi ML mühendisleri, tüm hattı -ham veri alımından model sunumuna kadar- sahiplenebilenlerdir.
 
 İşte hayatını kolaylaştıracak bazı kaynaklar:
 

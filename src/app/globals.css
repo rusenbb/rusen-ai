@@ -3,7 +3,7 @@
 
 :root {
   /* Light mode is paper-warm (cream tones) instead of pure white to drop the
-     blue cast and reduce eye strain — fits the terminal/notebook aesthetic. */
+     blue cast and reduce eye strain; fits the terminal/notebook aesthetic. */
   --background: #f7f4ee;
   --surface:    #fdfaf4;
   --foreground: #1c1a16;
@@ -73,21 +73,60 @@ body {
   line-height: 1.5;
   overflow-x: hidden;
   transition: background-color 220ms ease, color 220ms ease;
-  /* Treat the site like an app surface, not a document. Inputs and any
-     element opted in via [data-allow-select] still take selection. */
+  /* Treat the site like an app surface, not a document. Reading material,
+     code, formulas, and tabular data opt back in below. */
   -webkit-user-select: none;
   -moz-user-select: none;
   user-select: none;
 }
 
-input,
-textarea,
-select,
-[contenteditable="true"],
-[data-allow-select] {
+/*
+ * Selection policy
+ *
+ * App controls should not leave accidental blue highlights while someone is
+ * dragging a canvas, changing a slider, or pressing a button. Keep content
+ * that has an obvious copy or study use selectable. Use data-allow-select for
+ * prose and formulas that do not have one of the semantic elements below.
+ */
+:where(
+  input,
+  textarea,
+  select,
+  [contenteditable="true"],
+  [data-allow-select],
+  pre,
+  code,
+  samp,
+  kbd,
+  math,
+  output,
+  table
+) {
   -webkit-user-select: text;
   -moz-user-select: text;
   user-select: text;
+}
+
+/* Explicitly keep controls non-selectable when they appear inside prose or
+   data containers. This preserves keyboard and pointer interaction. */
+:where(
+  button,
+  [role="button"],
+  [role="tab"],
+  [role="menuitem"],
+  [role="option"],
+  label,
+  summary
+) {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+:where([data-allow-select], pre, code, samp, kbd, math, output, table)::selection,
+:where([data-allow-select], pre, code, samp, kbd, math, output, table) ::selection {
+  background: color-mix(in oklab, var(--signal) 32%, transparent);
+  color: var(--foreground);
 }
 
 .content-shell {
@@ -330,6 +369,13 @@ html[data-theme="dark"] .ui-card {
   letter-spacing: 0.12em;
   color: var(--sub);
   text-transform: uppercase;
+}
+.term-tag--soon {
+  color: #dc2626;
+}
+html[data-theme="dark"] .term-tag--soon,
+html.dark .term-tag--soon {
+  color: #f87171;
 }
 .term-status {
   display: inline-flex;

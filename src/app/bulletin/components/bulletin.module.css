@@ -1,5 +1,5 @@
 /* ========================================
-   BULLETIN — Terminal / Data-Ops project showcase
+   BULLETIN - Terminal / Data-Ops project showcase
    Shares visual language with /cv. Prose-heavy.
    Inherits tokens from globals.css.
    ======================================== */
@@ -280,7 +280,7 @@
   color: var(--background);
 }
 
-/* CARD — bordered block for grouped content */
+/* CARD - bordered block for grouped content */
 
 .card {
   border: var(--bul-border-thick) solid var(--bul-border);

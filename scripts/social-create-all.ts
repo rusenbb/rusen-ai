@@ -43,7 +43,7 @@ function parseModeArg(): "network" | "tiles" {
 
 function defaultWordForTitle(title: string): string {
   const normalized = title
-    .replace(/[-–—]/g, " ")
+    .replace(/\p{Pd}/gu, " ")
     .replace(/\s+/g, " ")
     .trim()
     .toLowerCase();

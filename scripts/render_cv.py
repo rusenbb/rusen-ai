@@ -12,7 +12,7 @@ Outputs:
 Single source of truth lives in src/content/cv.json. Run this whenever the JSON
 changes; commit both outputs alongside.
 
-CLI flags (PDF-only — not reflected in the public HTML CV):
+CLI flags (PDF-only - not reflected in the public HTML CV):
   --phone PHONE                  Inject a phone number. Intentionally not in
                                  cv.json so the public web CV doesn't expose
                                  it; passed in here for specific recipients.
@@ -46,7 +46,7 @@ SUPPORTED_LOCALES = ("en", "tr", "ja")
 CJK_LOCALES = frozenset({"ja"})
 
 # LaTeX-side locale labels. Mirrors src/lib/cv.ts CVLabels but only the
-# parts the LaTeX template references — section names, contact-bar
+# parts the LaTeX template references - section names, contact-bar
 # abbreviations, and a couple of inline labels (GPA, summary).
 LABELS: dict[str, dict[str, str]] = {
     "en": {

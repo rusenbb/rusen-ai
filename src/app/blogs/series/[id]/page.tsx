@@ -23,7 +23,7 @@ export async function generateMetadata({
   const series = getSeriesById(id);
   if (!series) return {};
   return {
-    title: `${series.title.en} — rusen.ai`,
+    title: `${series.title.en} - rusen.ai`,
   };
 }
 
@@ -48,7 +48,7 @@ export default async function SeriesPage({
         <span className="blog-kicker">Series</span>
         <h1>{series.title.en}</h1>
         <p style={{ color: "var(--muted)", margin: 0, maxWidth: "65ch" }}>
-          A running arc — each part builds on what came before. Read them in
+          A running arc - each part builds on what came before. Read them in
           order for the strongest payoff, or dip in anywhere.
         </p>
         <div className="meta">

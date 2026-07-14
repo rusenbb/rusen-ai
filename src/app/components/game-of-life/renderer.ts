@@ -1,5 +1,5 @@
 // WebGL renderer for the fractal Game of Life
-// Port of Main.hx rendering logic — raw WebGL, no framework
+// Port of Main.hx rendering logic - raw WebGL, no framework
 
 import { Graph, Node } from "./graph";
 import { Frames } from "./frames";
@@ -308,7 +308,7 @@ export class Renderer {
 
     // Pass 1: pre-render top tiles into framebuffer
     // IMPORTANT: unbind prerendered texture from unit 3 during pass 1
-    // because it's the framebuffer's color attachment — reading and writing
+    // because it's the framebuffer's color attachment - reading and writing
     // the same texture simultaneously is undefined behavior in WebGL.
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.prerenderedFB);
     gl.viewport(0, 0, neededW, neededH);
@@ -325,7 +325,7 @@ export class Renderer {
     gl.activeTexture(gl.TEXTURE2);
     gl.bindTexture(gl.TEXTURE_2D, this.topTilesTexture);
     gl.activeTexture(gl.TEXTURE3);
-    gl.bindTexture(gl.TEXTURE_2D, null); // unbind — we're writing to it
+    gl.bindTexture(gl.TEXTURE_2D, null); // unbind - we're writing to it
 
     this.drawQuad();
 

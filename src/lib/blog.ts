@@ -124,7 +124,7 @@ export function getPostsByTag(tag: string): Post[] {
 /**
  * Strip Turkish diacritics (ö ü ş ç ğ via NFD, ı/İ explicitly since they
  * don't decompose). Used by both tagSlug and tagDisplay so the URL and
- * the on-screen text agree — no more mixed "DEGISIM" / "DÖNÜŞÜM" rows.
+ * the on-screen text agree - no more mixed "DEGISIM" / "DÖNÜŞÜM" rows.
  */
 function asciiizeTag(tag: string): string {
   return tag
@@ -142,7 +142,7 @@ export function tagSlug(tag: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-/** Display form — diacritics stripped, spaces preserved. */
+/** Display form - diacritics stripped, spaces preserved. */
 export function tagDisplay(tag: string): string {
   return asciiizeTag(tag);
 }
@@ -248,7 +248,7 @@ function stripInlineMd(s: string): string {
  * Pull ATX headings from raw markdown for the table of contents. IDs are
  * generated with the same github-slugger that rehype-slug uses at render time
  * (one fresh instance per document, walked in order) so the anchors the TOC
- * links to exactly match the `id`s stamped onto the rendered headings —
+ * links to exactly match the `id`s stamped onto the rendered headings -
  * including the `-1`/`-2` suffixes github-slugger adds to duplicate titles.
  * Fenced code blocks are skipped so a commented `# foo` inside code isn't
  * mistaken for a heading.

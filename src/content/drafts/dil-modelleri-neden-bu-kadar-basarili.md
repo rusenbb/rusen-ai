@@ -55,7 +55,7 @@ Değil. Yeterince büyük ve yeterince iyi eğitilmiş modellerin iç gösteriml
 
 Bu tesadüf olamaz. Neden oluyor peki?
 
-Çünkü **dışarıda tek bir gerçeklik var.** Bir kedinin dört bacağı var, tüylü, miyavlıyor — bunu ister metinden öğren ister görselden, yakınsadığın şey aynı. Gerçeklik bir tane olduğu için, onu yeterince iyi modellemeye çalışan her sistem kaçınılmaz olarak benzer bir iç gösterime ulaşıyor.
+Çünkü **dışarıda tek bir gerçeklik var.** Bir kedinin dört bacağı var, tüylü, miyavlıyor - bunu ister metinden öğren ister görselden, yakınsadığın şey aynı. Gerçeklik bir tane olduğu için, onu yeterince iyi modellemeye çalışan her sistem kaçınılmaz olarak benzer bir iç gösterime ulaşıyor.
 
 Bu size çok trivial gelebilir, çünkü siz zaten gerçekliğin içinde yaşıyorsunuz. Ama dışarıdan bir "sanal ruhu" bu gerçekliğin içine sokmaya çalıştığınız zaman, gerçekliğin bir tane olması gerçekten çok önemli bir şey. Çünkü dışarıdaki X tane zeka gerektiren işi yapabilecek bir sistemin, aslında sadece bir tane modellemeye ihtiyacı var! Çeviri, tıbbi teşhis, kod yazma, hukuki analiz... hepsinin altında aynı gerçeklik yatıyor. Yapay zeka modellerinin embedding uzaylarının sadece ve sadece gerçeklik ile örtüşmesi yeterli yani! (bu kadar sevindik ama o kadar da kolay değil bu :d)
 

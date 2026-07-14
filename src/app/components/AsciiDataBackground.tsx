@@ -67,7 +67,7 @@ const RIPPLE_DURATION = 1.6;
 const RIPPLE_RING_WIDTH = 36;
 const HALF_RING = RIPPLE_RING_WIDTH / 2;
 
-// Bound concurrent ripples — beyond this the screen is saturated and extra
+// Bound concurrent ripples - beyond this the screen is saturated and extra
 // ripples just heat the CPU without adding visible signal. New clicks evict
 // the oldest, so rapid-fire input stays responsive without piling up cost.
 const MAX_RIPPLES = 10;
@@ -88,7 +88,7 @@ type LiveRipple = {
 };
 
 type Props = {
-  /** When false, only click ripples render — the ambient noise field AND the
+  /** When false, only click ripples render - the ambient noise field AND the
    *  letter pulse are both suppressed. Defaults to true. */
   noise?: boolean;
   /** Word to pulse in the background. Defaults to "DATA". Characters without

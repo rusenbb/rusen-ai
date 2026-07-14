@@ -320,7 +320,7 @@ function trainCheckpoint(
       if (completedRounds % 200 === 0) {
         const winRate = average(recentWins);
         console.log(
-          `  [${difficulty}] round ${completedRounds}/${setting.trainingRounds} — win: ${(winRate * 100).toFixed(1)}%, ε: ${agent.config.epsilon.toFixed(4)}, pool: ${pool.entries.length}, steps: ${agent.stepCount}`,
+          `  [${difficulty}] round ${completedRounds}/${setting.trainingRounds} - win: ${(winRate * 100).toFixed(1)}%, ε: ${agent.config.epsilon.toFixed(4)}, pool: ${pool.entries.length}, steps: ${agent.stepCount}`,
         );
       }
     }
@@ -461,7 +461,7 @@ async function main() {
   mkdirSync(payloadDir, { recursive: true });
 
   console.log(
-    `Training DQN (pure self-play) — network: ${DQN_LAYER_SIZES.join(" → ")} (${countParameters(DQN_LAYER_SIZES)} params)`,
+    `Training DQN (pure self-play) - network: ${DQN_LAYER_SIZES.join(" → ")} (${countParameters(DQN_LAYER_SIZES)} params)`,
   );
   console.log(
     `Batch size: ${BATCH_SIZE}, weight decay: ${WEIGHT_DECAY}, round ticks: ${TRAINING_ROUND_TICKS}`,

@@ -1,4 +1,4 @@
-// Port of Decoder.hx — decodes pre-computed PNG pixel data into Graph + Frames
+// Port of Decoder.hx - decodes pre-computed PNG pixel data into Graph + Frames
 
 import { Graph } from "./graph";
 import { Frames } from "./frames";
