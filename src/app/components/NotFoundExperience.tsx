@@ -6,7 +6,7 @@ export default function NotFoundExperience() {
     <>
       <NotFoundPageFlags />
       <section className="relative isolate flex min-h-[calc(100vh-4.5rem)] flex-col items-center overflow-hidden px-6 pt-16 sm:pt-24 md:pt-32">
-        {/* Anchor for the AsciiDataBackground "404" pulse — the bg centers
+        {/* Anchor for the AsciiDataBackground "404" pulse - the bg centers
             the letters vertically on this element. Keeping the anchor in
             the upper third leaves room for the typewriter to flow below. */}
         <div

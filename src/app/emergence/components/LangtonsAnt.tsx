@@ -40,7 +40,7 @@ type EditTool = "draw" | "erase" | "pan";
  * Manual viewport override. While set, the viewport keeps a fixed cell size
  * and stays centered on (centerX, centerY) regardless of how the bounding
  * box of visited cells grows. Cleared by Reset, by seed change, and by the
- * Fit button — at which point the viewport returns to auto-fit.
+ * Fit button - at which point the viewport returns to auto-fit.
  */
 type ViewLock = { cellSize: number; centerX: number; centerY: number };
 
@@ -536,7 +536,7 @@ export default function LangtonsAnt(): React.ReactElement {
   } | null>(null);
   // Tracked in a ref so callbacks can read the latest lock without
   // re-binding on every change. Mirrored into state purely so React
-  // can use it for memoization / dev tools — we don't read state for
+  // can use it for memoization / dev tools - we don't read state for
   // logic, only the ref.
   const viewLockRef = useRef<ViewLock | null>(null);
   const [, setViewLockTick] = useState<number>(0);
@@ -746,7 +746,7 @@ export default function LangtonsAnt(): React.ReactElement {
       const canvas = canvasRef.current;
       if (!canvas) return;
 
-      // Pan mode works whether the simulation is playing or paused — the
+      // Pan mode works whether the simulation is playing or paused - the
       // user is just changing where they're looking, not editing cells.
       if (editTool === "pan") {
         lockCurrentView();

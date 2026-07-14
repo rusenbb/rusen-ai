@@ -4,7 +4,7 @@ Text-prompted image segmentation running entirely in the browser. No backend, no
 
 ## Goal
 
-Build a page on rusen.ai where anyone can upload an image, type a word like "cat" or "car", and get a pixel-perfect segmentation mask — all running client-side in the browser using SAM3 (Segment Anything Model 3) via ONNX Runtime Web.
+Build a page on rusen.ai where anyone can upload an image, type a word like "cat" or "car", and get a pixel-perfect segmentation mask - all running client-side in the browser using SAM3 (Segment Anything Model 3) via ONNX Runtime Web.
 
 This is a portfolio showpiece: a 840M-parameter computer vision model running at production quality in a browser tab, with zero server costs.
 
@@ -55,13 +55,13 @@ User types text prompt ──────────┐
 Canvas overlay (mask + bounding box)
 ```
 
-Key detail: the image encoder is the bottleneck (85s on WASM, ~3.6s on CPU). Language encoder is fast (0.29s). Decoder is moderate (9.13s on WASM). The image only needs to be encoded once — multiple text prompts can reuse the same image embedding.
+Key detail: the image encoder is the bottleneck (85s on WASM, ~3.6s on CPU). Language encoder is fast (0.29s). Decoder is moderate (9.13s on WASM). The image only needs to be encoded once - multiple text prompts can reuse the same image embedding.
 
 ## Execution Providers
 
 Priority order:
-1. **WebGPU** — fastest, requires Chrome 113+ with WebGPU enabled. On Linux, may need `chrome://flags/#enable-unsafe-webgpu`
-2. **WASM** — fallback, works everywhere, 5-15x slower
+1. **WebGPU** - fastest, requires Chrome 113+ with WebGPU enabled. On Linux, may need `chrome://flags/#enable-unsafe-webgpu`
+2. **WASM** - fallback, works everywhere, 5-15x slower
 
 The page should detect WebGPU availability and show the user which provider is active. If WebGPU is unavailable, show a non-blocking note about how to enable it.
 
@@ -86,9 +86,9 @@ This is a problem. The image encoder is 466 MB and the language encoder is 387 M
 The validation used hardcoded token IDs for common words. Production needs a real CLIP BPE tokenizer.
 
 Options:
-1. **Port the CLIP tokenizer to JS** — the vocab is ~49K tokens, the BPE merges file is ~500 KB. This is a one-time implementation
-2. **Use an existing JS CLIP tokenizer** — `@anthropic-ai/tokenizer` won't work (different tokenizer). `clip-bpe-js` or similar packages exist
-3. **Bundle the Python tokenizer output** — pre-tokenize a vocabulary of common words server-side, ship as JSON lookup
+1. **Port the CLIP tokenizer to JS** - the vocab is ~49K tokens, the BPE merges file is ~500 KB. This is a one-time implementation
+2. **Use an existing JS CLIP tokenizer** - `@anthropic-ai/tokenizer` won't work (different tokenizer). `clip-bpe-js` or similar packages exist
+3. **Bundle the Python tokenizer output** - pre-tokenize a vocabulary of common words server-side, ship as JSON lookup
 
 Recommended: Option 1. The CLIP tokenizer is well-documented (OpenAI published the BPE merges). A standalone ~200-line JS implementation covers it. Ship `bpe_simple_vocab_16e6.txt.gz` (~1.3 MB compressed) alongside the models.
 
@@ -127,7 +127,7 @@ Recommended: Option 1. The CLIP tokenizer is well-documented (OpenAI published t
 
 1. **First visit**: Show a "Load Models" button. Display model sizes and estimated download time. User must opt-in (888 MB is not a casual download).
 
-2. **Model loading**: Show per-model progress bars. Once loaded, models are cached — subsequent visits skip download.
+2. **Model loading**: Show per-model progress bars. Once loaded, models are cached - subsequent visits skip download.
 
 3. **Image upload**: Drag-and-drop or file picker. Show the image on canvas. Automatically run the image encoder. Show encoding progress/time.
 
@@ -139,11 +139,11 @@ Recommended: Option 1. The CLIP tokenizer is well-documented (OpenAI published t
 
 ### Key UX Decisions
 
-- **No automatic model loading on page load** — 888 MB must be opt-in
-- **Cache image embeddings** — re-prompting the same image should be instant for the encoder step
-- **Show timing breakdowns** — users should see what's happening and how long each step takes
-- **Graceful degradation** — WASM fallback works everywhere, just slower
-- **Mobile note** — 888 MB models won't work well on mobile. Show a note for small screens
+- **No automatic model loading on page load** - 888 MB must be opt-in
+- **Cache image embeddings** - re-prompting the same image should be instant for the encoder step
+- **Show timing breakdowns** - users should see what's happening and how long each step takes
+- **Graceful degradation** - WASM fallback works everywhere, just slower
+- **Mobile note** - 888 MB models won't work well on mobile. Show a note for small screens
 
 ## State Management
 
@@ -225,7 +225,7 @@ Add to `src/lib/projects.ts`:
 }
 ```
 
-Order 5 puts it first in the demos list. `featuredHome: true` because this is a flagship project — the first CV demo on the site, and running an 840M model in-browser is genuinely impressive.
+Order 5 puts it first in the demos list. `featuredHome: true` because this is a flagship project - the first CV demo on the site, and running an 840M model in-browser is genuinely impressive.
 
 ## CLIP Tokenizer Implementation
 
@@ -314,9 +314,9 @@ The validation used hardcoded tokens. A full BPE implementation must produce ide
 
 Working title: **Segment Anything**
 
-It's direct, immediately communicates what it does, and the "Anything" suffix matches the existing "Classify Anything" in the portfolio. The connection to Meta's SAM (Segment Anything Model) is a feature, not a bug — users who know SAM will be impressed it's running in their browser.
+It's direct, immediately communicates what it does, and the "Anything" suffix matches the existing "Classify Anything" in the portfolio. The connection to Meta's SAM (Segment Anything Model) is a feature, not a bug - users who know SAM will be impressed it's running in their browser.
 
 Alternatives:
-- `Segment It` — shorter, punchier
-- `Text2Mask` — technical, describes the I/O
-- `Mask Anything` — variant
+- `Segment It` - shorter, punchier
+- `Text2Mask` - technical, describes the I/O
+- `Mask Anything` - variant

@@ -4,7 +4,7 @@ import CVDocument from "../CVDocument";
 
 export const metadata: Metadata = {
   title: "Özgeçmiş | Rusen.ai",
-  description: "Rusen Birben'in özgeçmişi — Yapay Zeka ve Veri Mühendisi.",
+  description: "Rusen Birben'in özgeçmişi - Yapay Zeka ve Veri Mühendisi.",
   alternates: {
     canonical: "/cv/tr",
     languages: {

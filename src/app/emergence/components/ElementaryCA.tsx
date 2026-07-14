@@ -50,7 +50,7 @@ function stepRow(row: Uint8Array, table: Uint8Array): Uint8Array {
 /**
  * Create an initial grid for a given rule.
  *
- * Most rules read clearly from a single seed cell — they fan out from one
+ * Most rules read clearly from a single seed cell - they fan out from one
  * point, so the diagonal/triangle patterns are the demo. Rule 184 is a
  * traffic-flow rule (1 = car, 0 = empty road, cars move right), and a
  * single seed just gives a lonely diagonal. Seeding it with a random
@@ -178,7 +178,7 @@ function RuleTableEntry({
 
   return (
     <div className="flex flex-col items-center gap-1.5">
-      {/* Input neighborhood — 3 cells in a row */}
+      {/* Input neighborhood - 3 cells in a row */}
       <svg width={totalW} height={cellSize} aria-hidden="true">
         {pattern.map((val: number, i: number) => (
           <rect

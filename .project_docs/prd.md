@@ -8,7 +8,7 @@
 
 ### Vision
 
-A portfolio website that demonstrates practical AI applications with interactive demos. Unlike typical portfolio sites that showcase static projects, rusen.ai provides tools where visitors can experience AI firsthand—free of charge and with no signup required.
+A portfolio website that demonstrates practical AI applications with interactive demos. Unlike typical portfolio sites that showcase static projects, rusen.ai provides tools where visitors can experience AI firsthand, free of charge and with no signup required.
 
 ### Target Audience
 

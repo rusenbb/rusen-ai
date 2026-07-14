@@ -4,7 +4,7 @@ import CVDocument from "../CVDocument";
 
 export const metadata: Metadata = {
   title: "履歴書 | Rusen.ai",
-  description: "Rusen Birben の履歴書 — AI・データエンジニア。",
+  description: "Rusen Birben の履歴書 - AI・データエンジニア。",
   alternates: {
     canonical: "/cv/ja",
     languages: {

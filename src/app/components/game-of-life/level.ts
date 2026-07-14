@@ -1,4 +1,4 @@
-// Port of Level.hx — recursive level hierarchy for infinite zoom
+// Port of Level.hx - recursive level hierarchy for infinite zoom
 
 import { Sampler } from "./sampler";
 
@@ -174,7 +174,7 @@ export class Level {
     return Level.getPatternOfCellImpl(this, relX, relY, this.sampler);
   }
 
-  // Manual stack-based recursion elimination — direct port from Haxe
+  // Manual stack-based recursion elimination - direct port from Haxe
   private static getPatternOfCellImpl(
     level: Level,
     relX: number,

@@ -1,11 +1,11 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { isBgDisabled, setBgDisabled, subscribeBgToggle } from "./bgToggle";
+import { isBgDisabled, setBgDisabled, subscribeBgToggle } from "./backgroundToggle";
 
 /**
  * Home-page kicker chip rendered as a button: same look as the static
- * kicker, but clicking it toggles the global ASCII background — mirrors
+ * kicker, but clicking it toggles the global ASCII background - mirrors
  * the BgToggle in the Footer so the home gets a discoverable second
  * affordance for the same setting.
  */

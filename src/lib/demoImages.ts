@@ -1,6 +1,6 @@
 /**
  * Shared sample images for in-browser demos. Lives at /public/demo-images/.
- * Add new files there and add an entry below — every demo that wants a
+ * Add new files there and add an entry below - every demo that wants a
  * "try one of these" gallery imports from here.
  */
 export type DemoImage = {

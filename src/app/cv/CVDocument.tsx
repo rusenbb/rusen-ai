@@ -127,7 +127,7 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
             </a>
           ))}
 
-          {/* Download dropdown (PDF / TeX) — hidden for locales without artifacts. */}
+          {/* Download dropdown (PDF / TeX) - hidden for locales without artifacts. */}
           {showDownload && (
             <div className={styles.dropdown}>
               <button

@@ -3,7 +3,7 @@ import { getAllPosts } from "@/lib/blog";
 export const dynamic = "force-static";
 
 const SITE = "https://rusen.ai";
-const FEED_TITLE = "rusen.ai — blog";
+const FEED_TITLE = "rusen.ai - blog";
 const FEED_DESC =
   "Essays on AI, programming, and how the two are reshaping each other.";
 

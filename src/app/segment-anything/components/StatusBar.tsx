@@ -49,7 +49,7 @@ export default function StatusBar({
 
       {phase === "ready" && (
         <span className="text-neutral-500 dark:text-neutral-400">
-          Model ready &mdash; select an image to begin
+          Model ready; select an image to begin
         </span>
       )}
 
