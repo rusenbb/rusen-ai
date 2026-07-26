@@ -7,12 +7,13 @@ import {
   subscribeTheme,
   type ThemeMode,
 } from "./theme";
+import NavWord from "./NavWord";
 
 function nextTheme(current: ThemeMode): ThemeMode {
   return current === "dark" ? "light" : "dark";
 }
 
-export default function ThemeToggle() {
+export default function ThemeToggle({ label }: { label: string }) {
   const theme = useSyncExternalStore<ThemeMode>(
     subscribeTheme,
     getResolvedTheme,
@@ -32,11 +33,9 @@ export default function ThemeToggle() {
       onClick={handleToggle}
       aria-label={`Switch to ${isDark ? "light" : "dark"} theme`}
       title={`Switch to ${isDark ? "light" : "dark"} theme`}
-      className="group inline-flex items-center justify-center self-center font-mono tabular-nums leading-none text-neutral-700 transition hover:text-neutral-950 dark:text-neutral-300 dark:hover:text-neutral-50"
+      className="theme-toggle group inline-flex items-center justify-center self-center font-mono tabular-nums leading-none text-neutral-700 transition hover:text-neutral-950 dark:text-neutral-300 dark:hover:text-neutral-50"
     >
-      <span className="text-[1.15rem] font-medium tracking-[-0.08em] transition-transform duration-200 group-hover:-translate-y-px">
-        {isDark ? "0" : "1"}
-      </span>
+      <NavWord word={`${label}: ${isDark ? "0" : "1"}`} preserveCase />
       <span className="sr-only">
         Current theme: {isDark ? "dark" : "light"}
       </span>

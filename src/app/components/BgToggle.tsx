@@ -1,16 +1,24 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useSyncExternalStore } from "react";
-import { isBgDisabled, setBgDisabled, subscribeBgToggle } from "./backgroundToggle";
+import {
+  getBackgroundScope,
+  isBgDisabled,
+  isBgDisabledByDefault,
+  setBgDisabled,
+  subscribeBgToggle,
+} from "./backgroundToggle";
 
 export default function BgToggle() {
+  const scope = getBackgroundScope(usePathname());
   const disabled = useSyncExternalStore<boolean>(
     subscribeBgToggle,
-    isBgDisabled,
-    () => false,
+    () => isBgDisabled(scope),
+    () => isBgDisabledByDefault(scope),
   );
 
-  const onClick = () => setBgDisabled(!disabled);
+  const onClick = () => setBgDisabled(!disabled, scope);
   const aria = disabled ? "Enable background animation" : "Disable background animation";
 
   return (
