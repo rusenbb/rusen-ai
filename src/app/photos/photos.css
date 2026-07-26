@@ -551,30 +551,9 @@
 }
 
 .photo-ending-handle {
-  position: relative;
-  padding-bottom: 0.12em;
   font-family: Georgia, "Times New Roman", serif;
   font-size: clamp(1.5rem, 3vw, 2.8rem);
   letter-spacing: -0.04em;
-}
-
-.photo-ending-handle::after {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  height: 1px;
-  background: currentColor;
-  content: "";
-  opacity: 0.34;
-  transform: scaleX(0.42);
-  transform-origin: left;
-  transition: opacity 180ms ease, transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.photo-ending a:is(:hover, :focus-visible) .photo-ending-handle::after {
-  opacity: 1;
-  transform: scaleX(1);
 }
 
 .photo-lightbox {
