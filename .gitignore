@@ -12,6 +12,8 @@
 
 # testing
 /coverage
+/.playwright-cli/
+/output/playwright/
 
 # next.js
 /.next/
@@ -63,6 +65,8 @@ CLAUDE.md
 
 # generated local data artifacts
 /generated/
+/.photo-build/
+/public/photos/
 
 # syncthing
 *.sync-conflict-*
