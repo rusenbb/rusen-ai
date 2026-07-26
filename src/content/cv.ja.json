@@ -158,6 +158,7 @@
   "interests": [
     { "title": "コーヒー", "desc": "V60 - エアロプレス - モカポット", "icon": "coffee" },
     { "title": "読書", "desc": "哲学 - AI/CS - 金融", "icon": "book" },
+    { "title": "写真", "desc": "光 - 色 - 多重露光", "icon": "camera" },
     { "title": "アニメ・漫画", "desc": "視聴 - 読書 - コレクション", "icon": "tv" },
     { "title": "フィットネス", "desc": "ウェイト - ランニング - 自重トレ", "icon": "dumbbell" }
   ],

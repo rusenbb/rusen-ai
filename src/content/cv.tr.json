@@ -158,6 +158,7 @@
   "interests": [
     { "title": "Kahve", "desc": "V60 - Aeropress - Moka Pot", "icon": "coffee" },
     { "title": "Kitap", "desc": "Felsefe - YZ/Bilgisayar - Finans", "icon": "book" },
+    { "title": "Fotoğrafçılık", "desc": "Işık - Renk - Çift Pozlama", "icon": "camera" },
     { "title": "Anime ve Manga", "desc": "İzleyici - Okuyucu - Koleksiyoncu", "icon": "tv" },
     { "title": "Spor", "desc": "Halter - Koşu - Kalistenik", "icon": "dumbbell" }
   ],

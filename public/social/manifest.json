@@ -1,0 +1,492 @@
+{
+  "assets": [
+    {
+      "route": "/",
+      "image": "/social/pages/home.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 29315,
+      "format": "png"
+    },
+    {
+      "route": "/demos",
+      "image": "/social/pages/demos.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 28253,
+      "format": "png"
+    },
+    {
+      "route": "/nerdy-stuff",
+      "image": "/social/pages/nerdy-stuff.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 27156,
+      "format": "png"
+    },
+    {
+      "route": "/bulletin",
+      "image": "/social/pages/bulletin.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 27923,
+      "format": "png"
+    },
+    {
+      "route": "/blogs",
+      "image": "/social/pages/blogs.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 29678,
+      "format": "png"
+    },
+    {
+      "route": "/cv",
+      "image": "/social/pages/cv.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 28589,
+      "format": "png"
+    },
+    {
+      "route": "/cv/tr",
+      "image": "/social/pages/cv-tr.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 28226,
+      "format": "png"
+    },
+    {
+      "route": "/cv/ja",
+      "image": "/social/pages/cv-ja.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 27613,
+      "format": "png"
+    },
+    {
+      "route": "/classify-anything",
+      "image": "/social/projects/classify-anything.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 25754,
+      "format": "png"
+    },
+    {
+      "route": "/segment-anything",
+      "image": "/social/projects/segment-anything.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 25006,
+      "format": "png"
+    },
+    {
+      "route": "/vision-anything",
+      "image": "/social/projects/vision-anything.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 25446,
+      "format": "png"
+    },
+    {
+      "route": "/curve-fitter",
+      "image": "/social/projects/curve-fitter.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 23512,
+      "format": "png"
+    },
+    {
+      "route": "/convolution-lab",
+      "image": "/social/projects/convolution-lab.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 27344,
+      "format": "png"
+    },
+    {
+      "route": "/pathfinding-showdown",
+      "image": "/social/projects/pathfinding-showdown.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 27704,
+      "format": "png"
+    },
+    {
+      "route": "/pulse-board",
+      "image": "/social/projects/pulse-board.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 25020,
+      "format": "png"
+    },
+    {
+      "route": "/emergence",
+      "image": "/social/projects/emergence.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 23763,
+      "format": "png"
+    },
+    {
+      "route": "/game-of-life",
+      "image": "/social/projects/game-of-life.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 23892,
+      "format": "png"
+    },
+    {
+      "route": "/embedding-explorer",
+      "image": "/social/projects/embedding-explorer.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 27998,
+      "format": "png"
+    },
+    {
+      "route": "/rusenizer",
+      "image": "/social/projects/rusenizer.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 24255,
+      "format": "png"
+    },
+    {
+      "route": "/adaptive-arena",
+      "image": "/social/projects/adaptive-arena.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 23567,
+      "format": "png"
+    },
+    {
+      "route": "/outguess",
+      "image": "/social/projects/outguess.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 23899,
+      "format": "png"
+    },
+    {
+      "route": "/fourier-sketch",
+      "image": "/social/projects/fourier-sketch.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 25755,
+      "format": "png"
+    },
+    {
+      "route": "/optimizer-racetrack",
+      "image": "/social/projects/optimizer-racetrack.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 26769,
+      "format": "png"
+    },
+    {
+      "route": "/steering-llms",
+      "image": "/social/projects/steering-llms.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 25265,
+      "format": "png"
+    },
+    {
+      "route": "/sentence-surgeon",
+      "image": "/social/projects/sentence-surgeon.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 25911,
+      "format": "png"
+    },
+    {
+      "route": "/rusen-gram",
+      "image": "/social/projects/rusen-gram.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 25287,
+      "format": "png"
+    },
+    {
+      "route": "/bulletin/eduport",
+      "image": "/social/projects/eduport.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 24175,
+      "format": "png"
+    },
+    {
+      "route": "/bulletin/vaultdb",
+      "image": "/social/projects/vaultdb.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 24442,
+      "format": "png"
+    },
+    {
+      "route": "/bulletin/metuclass",
+      "image": "/social/projects/metuclass.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 24193,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/prompt-is-not-enough-intent-engineering",
+      "image": "/social/blog/posts/prompt-is-not-enough-intent-engineering.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 31505,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/prompt-yetmez-intent-engineering",
+      "image": "/social/blog/posts/prompt-yetmez-intent-engineering.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 28760,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/ai-recommendations",
+      "image": "/social/blog/posts/ai-recommendations.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 28740,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/yapay-zeka-onerileri",
+      "image": "/social/blog/posts/yapay-zeka-onerileri.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 26964,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/building-with-ai",
+      "image": "/social/blog/posts/building-with-ai.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 26724,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/yapay-zeka-ile-birlikte-insa-etme",
+      "image": "/social/blog/posts/yapay-zeka-ile-birlikte-insa-etme.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 31044,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/ai-and-the-future-of-programming",
+      "image": "/social/blog/posts/ai-and-the-future-of-programming.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 31158,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/yapay-zeka-ve-programlamanin-gelecegi",
+      "image": "/social/blog/posts/yapay-zeka-ve-programlamanin-gelecegi.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 33767,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/tag/ai",
+      "image": "/social/blog/tags/ai.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 18216,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/tag/yapay-zeka",
+      "image": "/social/blog/tags/yapay-zeka.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 21912,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/tag/programlama",
+      "image": "/social/blog/tags/programlama.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 23004,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/tag/programming",
+      "image": "/social/blog/tags/programming.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 22832,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/tag/agents",
+      "image": "/social/blog/tags/agents.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 20150,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/tag/ajanlar",
+      "image": "/social/blog/tags/ajanlar.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 20656,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/tag/change",
+      "image": "/social/blog/tags/change.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 20107,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/tag/deep-learning",
+      "image": "/social/blog/tags/deep-learning.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 21848,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/tag/degisim",
+      "image": "/social/blog/tags/degisim.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 20293,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/tag/derin-ogrenme",
+      "image": "/social/blog/tags/derin-ogrenme.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 22129,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/tag/donusum",
+      "image": "/social/blog/tags/donusum.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 21018,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/tag/guide",
+      "image": "/social/blog/tags/guide.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 19425,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/tag/human",
+      "image": "/social/blog/tags/human.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 19519,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/tag/insan",
+      "image": "/social/blog/tags/insan.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 19914,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/tag/intent-engineering",
+      "image": "/social/blog/tags/intent-engineering.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 21766,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/tag/machine-learning",
+      "image": "/social/blog/tags/machine-learning.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 22906,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/tag/makine-ogrenmesi",
+      "image": "/social/blog/tags/makine-ogrenmesi.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 23442,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/tag/prompt",
+      "image": "/social/blog/tags/prompt.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 20265,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/tag/rehber",
+      "image": "/social/blog/tags/rehber.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 19449,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/tag/skill",
+      "image": "/social/blog/tags/skill.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 19174,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/tag/transformation",
+      "image": "/social/blog/tags/transformation.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 23769,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/tag/yetenek",
+      "image": "/social/blog/tags/yetenek.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 19506,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/series/ai-programming",
+      "image": "/social/blog/series/ai-programming.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 27105,
+      "format": "png"
+    },
+    {
+      "route": "/photos",
+      "image": "/social/pages/photos.jpg",
+      "width": 1200,
+      "height": 630,
+      "bytes": 376873,
+      "format": "jpeg"
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 
 import {
   getAllSeries,
@@ -8,12 +9,9 @@ import {
 } from "@/lib/blog";
 import LangPicker from "./components/LangPicker";
 import AccordionGroup from "./components/AccordionGroup";
+import { buildStaticPageMetadata } from "@/lib/social-metadata";
 
-export const metadata = {
-  title: "Blog - rusen.ai",
-  description:
-    "Essays on AI, programming, and how the two are reshaping each other.",
-};
+export const metadata: Metadata = buildStaticPageMetadata("blogs");
 
 export default function BlogIndex() {
   const series = getAllSeries();

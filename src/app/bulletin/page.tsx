@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
 import DemoCard from "../components/DemoCard";
 import { getProjectPath, getProjectsByCollection } from "@/lib/projects";
+import { buildStaticPageMetadata } from "@/lib/social-metadata";
 
-export const metadata: Metadata = {
-  title: "Bulletin | Rusen.ai",
-  description: "Software I've built: desktop apps, CLI tools, and other things that live outside the browser.",
-  alternates: { canonical: "/bulletin" },
-};
+export const metadata: Metadata = buildStaticPageMetadata("bulletin");
 
 export default function BulletinPage() {
   const projects = getProjectsByCollection("bulletin");

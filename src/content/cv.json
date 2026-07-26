@@ -159,6 +159,7 @@
   "interests": [
     { "title": "Coffee", "desc": "V60 - Aeropress - Moka Pot", "icon": "coffee" },
     { "title": "Books", "desc": "Philosophy - AI/CS - Finance", "icon": "book" },
+    { "title": "Photography", "desc": "Light - Colour - Double Exposure", "icon": "camera" },
     { "title": "Anime & Manga", "desc": "Watcher - Reader - Collector", "icon": "tv" },
     { "title": "Fitness", "desc": "Lifting - Running - Calisthenics", "icon": "dumbbell" }
   ],

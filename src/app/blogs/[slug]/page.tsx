@@ -19,6 +19,7 @@ import {
   tagSlug,
   tagDisplay,
 } from "@/lib/blog";
+import { blogPostImagePath, buildSocialMetadata } from "@/lib/social-metadata";
 import TableOfContents from "../components/TableOfContents";
 
 export async function generateStaticParams() {
@@ -51,16 +52,15 @@ export async function generateMetadata({
   const { slug } = await params;
   const post = getPostBySlug(slug);
   if (!post) return {};
-  return {
-    title: `${post.title} - rusen.ai`,
+  return buildSocialMetadata({
+    title: `${post.title} | Rusen.ai`,
     description: post.description,
-    openGraph: {
-      title: post.title,
-      description: post.description,
-      type: "article",
-      locale: post.lang === "tr" ? "tr_TR" : "en_US",
-    },
-  };
+    path: `/blogs/${post.slug}`,
+    image: blogPostImagePath(post.slug),
+    imageAlt: `${post.title} — Rusen.ai blog`,
+    type: "article",
+    locale: post.lang === "tr" ? "tr_TR" : "en_US",
+  });
 }
 
 export default async function PostPage({
