@@ -13,14 +13,27 @@ import {
   useSyncExternalStore,
 } from "react";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
+import editorialManifest from "@/content/photos.json";
 import type { Photo, PhotoLocale, PhotoSeries } from "@/lib/photos";
 
+const PHOTO_LOCALES = editorialManifest.locales as readonly {
+  id: PhotoLocale;
+  label: string;
+  name: string;
+}[];
+const PHOTO_LOCALE_IDS = new Set<PhotoLocale>(
+  PHOTO_LOCALES.map((locale) => locale.id),
+);
+const UI_COPY = editorialManifest.ui;
+const DEFAULT_PHOTO_LOCALE = editorialManifest.defaultLocale as PhotoLocale;
+const BROWSER_FALLBACK_LOCALE = editorialManifest.browserFallbackLocale as PhotoLocale;
+const ENDING_LINK = editorialManifest.endingLink;
 const PHOTO_LANGUAGE_KEY = "photoLanguage";
 const PHOTO_LANGUAGE_EVENT = "photo-language-change";
 let inMemoryLocale: PhotoLocale | null = null;
 
 function isPhotoLocale(value: string | null): value is PhotoLocale {
-  return value === "tr" || value === "en" || value === "ja";
+  return value !== null && PHOTO_LOCALE_IDS.has(value as PhotoLocale);
 }
 
 function getPhotoLocale(): PhotoLocale {
@@ -32,9 +45,8 @@ function getPhotoLocale(): PhotoLocale {
   }
   if (inMemoryLocale) return inMemoryLocale;
   const preferred = window.navigator.language.toLowerCase();
-  if (preferred.startsWith("ja")) return "ja";
-  if (preferred.startsWith("tr")) return "tr";
-  return "en";
+  return PHOTO_LOCALES.find((locale) => preferred.startsWith(locale.id))?.id
+    ?? BROWSER_FALLBACK_LOCALE;
 }
 
 function subscribePhotoLocale(onStoreChange: () => void) {
@@ -56,83 +68,16 @@ function setPhotoLocale(locale: PhotoLocale) {
   window.dispatchEvent(new Event(PHOTO_LANGUAGE_EVENT));
 }
 
-const PHOTO_LOCALES: readonly { id: PhotoLocale; label: string; name: string }[] = [
-  { id: "tr", label: "TR", name: "Türkçe" },
-  { id: "en", label: "EN", name: "English" },
-  { id: "ja", label: "日本語", name: "日本語" },
-];
+type PhotoUiCopy = (typeof UI_COPY)[PhotoLocale];
 
-const UI_COPY = {
-  tr: {
-    archive: "RUSEN BİRBEN / FOTOĞRAFLAR",
-    heroTitle: "Işık, kısacık.",
-    heroSubtitle: "Renk, gölge ve fark edilmeye değer sıradan şeyler.",
-    count: (photos: number, series: number) => `${photos} kare · ${series} seri`,
-    prologue: "ÖNSÖZ",
-    view: "Gör",
-    viewPhoto: "Fotoğrafı gör",
-    selectedKicker: "SEÇKİ / DÖRT BÖLÜM",
-    selectedTitle: "Geçerken kalanlar.",
-    selectedIntro:
-      "Fotoğrafları yan yana getirdikçe aralarında daha önce görmediğim ilişkiler belirdi. Geçip giden her an, yanındaki karede kendinden bir iz bıraktı.",
-    series: "SERİ",
-    more: "Yoldan geçen başka anlar",
-    close: "Kapat",
-    previous: "Önceki fotoğraf",
-    next: "Sonraki fotoğraf",
-    language: "Fotoğraf dili",
-    openLabel: (title: string, index: number, total: number) =>
-      `“${title}” fotoğrafını aç; ${index} / ${total}`,
-    dialogLabel: (title: string, index: number, total: number) =>
-      `“${title}”, fotoğraf ${index} / ${total}`,
-  },
-  en: {
-    archive: "RUSEN BIRBEN / PHOTOGRAPHS",
-    heroTitle: "Light, briefly.",
-    heroSubtitle: "Color, shadow, and ordinary things worth noticing.",
-    count: (photos: number, series: number) => `${photos} frames · ${series} series`,
-    prologue: "PROLOGUE",
-    view: "View",
-    viewPhoto: "View photograph",
-    selectedKicker: "SELECTED WORK / FOUR CHAPTERS",
-    selectedTitle: "Stories in passing.",
-    selectedIntro:
-      "As I placed the photographs beside one another, relationships I had not noticed before began to emerge. Each passing moment left something of itself in the frame beside it.",
-    series: "SERIES",
-    more: "More passing moments",
-    close: "Close",
-    previous: "Previous photograph",
-    next: "Next photograph",
-    language: "Photography language",
-    openLabel: (title: string, index: number, total: number) =>
-      `Open “${title}”, photograph ${index} of ${total}`,
-    dialogLabel: (title: string, index: number, total: number) =>
-      `“${title}”, photograph ${index} of ${total}`,
-  },
-  ja: {
-    archive: "RUSEN BIRBEN / 写真",
-    heroTitle: "光は、束の間。",
-    heroSubtitle: "色と影、そして目を向ける価値のある日常。",
-    count: (photos: number, series: number) => `${photos}枚 · ${series}シリーズ`,
-    prologue: "序章",
-    view: "見る",
-    viewPhoto: "写真を見る",
-    selectedKicker: "作品選 / 四章",
-    selectedTitle: "通り過ぎる物語。",
-    selectedIntro:
-      "写真を並べていくうちに、それまで気づかなかった関係が一枚一枚のあいだに現れた。通り過ぎた瞬間は、それぞれ隣の一枚に自らの痕跡を残していった。",
-    series: "シリーズ",
-    more: "通り過ぎる、さらに多くの瞬間",
-    close: "閉じる",
-    previous: "前の写真",
-    next: "次の写真",
-    language: "写真ページの言語",
-    openLabel: (title: string, index: number, total: number) =>
-      `「${title}」を開く、${index} / ${total}`,
-    dialogLabel: (title: string, index: number, total: number) =>
-      `「${title}」、写真 ${index} / ${total}`,
-  },
-} as const;
+function formatUiCopy(
+  template: string,
+  values: Record<string, string | number>,
+): string {
+  return template.replace(/\{(\w+)\}/g, (placeholder, key: string) =>
+    key in values ? String(values[key]) : placeholder,
+  );
+}
 
 type PhotoGalleryProps = {
   hero: Photo;
@@ -143,7 +88,7 @@ type PhotoGalleryProps = {
 type PhotoFrameProps = {
   photo: Photo;
   locale: PhotoLocale;
-  ui: (typeof UI_COPY)[PhotoLocale];
+  ui: PhotoUiCopy;
   index: number;
   total: number;
   priority?: boolean;
@@ -179,7 +124,11 @@ function PhotoFrame({
       className={hero ? "photo-hero-frame" : "photo-frame"}
       style={style}
       onClick={(event) => onOpen(index, event.currentTarget)}
-      aria-label={ui.openLabel(copy.title, index + 1, total)}
+      aria-label={formatUiCopy(ui.openLabel, {
+        title: copy.title,
+        index: index + 1,
+        total,
+      })}
     >
       <img
         src={hero ? photo.sources.large.url : photo.sources.display.url}
@@ -227,7 +176,7 @@ export default function PhotoGallery({ hero, series, photos }: PhotoGalleryProps
   const locale = useSyncExternalStore<PhotoLocale>(
     subscribePhotoLocale,
     getPhotoLocale,
-    () => "tr",
+    () => DEFAULT_PHOTO_LOCALE,
   );
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const openerRef = useRef<HTMLButtonElement | null>(null);
@@ -340,7 +289,10 @@ export default function PhotoGallery({ hero, series, photos }: PhotoGalleryProps
           <span>{ui.heroSubtitle}</span>
         </div>
         <a className="photo-scroll-cue" href="#prologue">
-          <span>{ui.count(photos.length, series.length)}</span>
+          <span>{formatUiCopy(ui.count, {
+            photos: photos.length,
+            series: series.length,
+          })}</span>
           <span aria-hidden="true">↓</span>
         </a>
       </section>
@@ -405,9 +357,9 @@ export default function PhotoGallery({ hero, series, photos }: PhotoGalleryProps
 
       <footer className="photo-ending">
         <p>{ui.more}</p>
-        <a href="https://instagram.com/rusen_birben" target="_blank" rel="noopener noreferrer">
-          <span className="photo-ending-platform">Instagram</span>
-          <span className="photo-ending-handle">@rusen_birben</span>
+        <a href={ENDING_LINK.href} target="_blank" rel="noopener noreferrer">
+          <span className="photo-ending-platform">{ENDING_LINK.platform}</span>
+          <span className="photo-ending-handle">{ENDING_LINK.handle}</span>
         </a>
       </footer>
 
@@ -417,7 +369,11 @@ export default function PhotoGallery({ hero, series, photos }: PhotoGalleryProps
           className="photo-lightbox"
           role="dialog"
           aria-modal="true"
-          aria-label={ui.dialogLabel(activeCopy.title, activeIndex + 1, photos.length)}
+          aria-label={formatUiCopy(ui.dialogLabel, {
+            title: activeCopy.title,
+            index: activeIndex + 1,
+            total: photos.length,
+          })}
           onPointerDown={onPointerDown}
           onPointerUp={onPointerUp}
         >

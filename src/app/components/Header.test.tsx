@@ -25,52 +25,110 @@ vi.mock("./ThemeToggle", () => ({
   default: () => <button type="button">Theme</button>,
 }));
 
-describe("Header navigation tape", () => {
+describe("Header navigation", () => {
   beforeEach(() => {
     pathname = "/photos";
   });
 
-  it("assigns every destination a stable tape cell", () => {
+  it("renders stable text destinations without tape mechanics", () => {
     const { container } = render(<Header />);
     const photosLink = screen.getByRole("link", { name: "Photos" });
     const nerdyLink = screen.getByRole("link", { name: "Nerdy Stuff" });
 
-    expect(photosLink.querySelector(".site-nav-cell-code")).toHaveTextContent("011");
-    expect(photosLink.querySelector(".site-nav-cell-label")).toHaveTextContent("Photos");
-    expect(nerdyLink.querySelector(".site-nav-cell-code")).toHaveTextContent("001");
-    expect(nerdyLink.querySelector(".site-nav-cell-label")).toHaveTextContent("Nerdy");
-    expect(container.querySelectorAll(".site-nav-icon")).toHaveLength(6);
-    expect(container.querySelector(".site-nav-tape-leader")).toHaveTextContent("TuringTapeNAV::07");
-    expect(container.querySelector(".site-nav-tape-leader")).toHaveAttribute("href", "/");
-    expect(container.querySelector(".site-nav-read-head")).toBeEmptyDOMElement();
+    expect(photosLink.querySelector(".site-nav-word-frame")).toHaveAttribute(
+      "data-nav-word",
+      "PHOTOS",
+    );
+    expect(nerdyLink.querySelector(".site-nav-word-frame")).toHaveAttribute(
+      "data-nav-word",
+      "NERDY",
+    );
+    expect(container.querySelectorAll(".site-nav-link")).toHaveLength(6);
+    expect(container.querySelector(".site-nav-home")).toHaveAttribute("href", "/");
+    expect(container.querySelector(".site-nav-home .site-nav-word-frame"))
+      .toHaveAttribute("data-nav-word", "rusen.ai");
+    expect(container.querySelector(".site-nav-home .site-brand-dot"))
+      .toHaveTextContent(".");
     expect(photosLink).toHaveAttribute("aria-current", "page");
+    expect(photosLink).toHaveAttribute("data-nav-selected", "true");
+
+    expect(container.querySelectorAll(".site-nav-row .site-nav-word-frame")).toHaveLength(7);
+    expect(container.querySelector(".site-nav-cell-code")).not.toBeInTheDocument();
+    expect(container.querySelector(".site-nav-read-head")).not.toBeInTheDocument();
+    expect(container.querySelector(".site-nav-step")).not.toBeInTheDocument();
+    expect(container.querySelector(".site-nav-rail")).not.toBeInTheDocument();
   });
 
-  it("keeps the theme bit on the same tape without changing accessible names", () => {
+  it("marks the home word as selected on the home page", () => {
+    pathname = "/";
+    const { container } = render(<Header />);
+
+    expect(container.querySelector(".site-nav-home")).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(container.querySelector(".site-nav-home")).toHaveAttribute(
+      "data-nav-selected",
+      "true",
+    );
+  });
+
+  it("does not mislabel an unknown route as home", () => {
+    pathname = "/missing-page";
+    const { container } = render(<Header />);
+
+    expect(container.querySelector(".site-nav-home")).not.toHaveAttribute(
+      "data-nav-selected",
+    );
+    expect(container.querySelector("[data-nav-selected=true]")).not.toBeInTheDocument();
+  });
+
+  it("keeps the theme bit as a simple trailing control", () => {
     const { container } = render(<Header />);
 
     expect(screen.getByRole("link", { name: "Demos" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "CV" })).toBeInTheDocument();
-    expect(container.querySelector(".site-nav-theme-cell .site-nav-cell-code"))
-      .toHaveTextContent("110");
-    expect(container.querySelector(".site-nav-theme-cell button"))
-      .toHaveAccessibleName("Theme");
+    expect(container.querySelector(".site-nav-theme button")).toHaveAccessibleName("Theme");
   });
 
-  it("opens the same navigation as a vertical mobile tape", () => {
+  it.each([
+    ["/curve-fitter", "Demos"],
+    ["/emergence", "Nerdy Stuff"],
+    ["/bulletin/vaultdb", "Bulletin"],
+    ["/blogs/example-post", "Blog"],
+    ["/cv/tr", "CV"],
+  ])("selects the parent nav item for %s", (subpage, parentLabel) => {
+    pathname = subpage;
+    render(<Header />);
+
+    expect(screen.getByRole("link", { name: parentLabel })).toHaveAttribute(
+      "data-nav-selected",
+      "true",
+    );
+    expect(screen.getByRole("link", { name: parentLabel })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+  });
+
+  it("opens the same words in a simple mobile list", () => {
     const { container } = render(<Header />);
 
     fireEvent.click(screen.getByRole("button", { name: "Toggle menu" }));
 
-    expect(screen.getByRole("group", { name: "Mobile navigation tape" }))
+    expect(screen.getByRole("group", { name: "Mobile navigation" }))
       .toBeInTheDocument();
-    expect(container.querySelectorAll("[data-mobile-tape-cell]")).toHaveLength(7);
-    expect(container.querySelector('[data-mobile-index="3"]')).toHaveAttribute(
-      "data-focused",
-      "true",
-    );
-    expect(container.querySelector(".site-mobile-tape-theme .site-mobile-tape-code"))
-      .toHaveTextContent("110");
-    expect(container.querySelector(".site-mobile-tape-home")).toHaveAttribute("href", "/");
+    expect(container.querySelectorAll(".site-mobile-nav-link")).toHaveLength(6);
+    expect(
+      container.querySelector('.site-mobile-nav-link[aria-label="Photos"]'),
+    ).toHaveAttribute("data-nav-selected", "true");
+    expect(
+      container.querySelector('.site-mobile-nav-link[aria-label="Photos"] .site-nav-word-frame'),
+    ).toHaveAttribute("data-nav-word", "PHOTOS");
+    expect(container.querySelector(".site-mobile-nav-theme button"))
+      .toHaveAccessibleName("Theme");
+    expect(container.querySelector(".site-mobile-nav-home")).toHaveAttribute("href", "/");
+    expect(container.querySelector(".site-mobile-nav-home"))
+      .toHaveAccessibleName("Home");
   });
 });

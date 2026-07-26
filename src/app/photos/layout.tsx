@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
+import editorialManifest from "@/content/photos.json";
 import { heroPhoto } from "@/lib/photos";
 import "./photos.css";
 
+const { metadata: photoMetadata } = editorialManifest;
+
 export const metadata: Metadata = {
-  title: "Photographs — Rusen Birben",
-  description: "A personal archive of light, color, shadow, and ordinary things worth noticing.",
-  alternates: { canonical: "/photos" },
+  title: photoMetadata.title,
+  description: photoMetadata.description,
+  alternates: { canonical: photoMetadata.canonical },
   openGraph: {
-    title: "Photographs — Rusen Birben",
-    description: "A personal archive of light, color, shadow, and ordinary things worth noticing.",
-    url: "/photos",
+    title: photoMetadata.title,
+    description: photoMetadata.description,
+    url: photoMetadata.canonical,
     type: "website",
     images: [
       {
@@ -22,8 +25,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Photographs — Rusen Birben",
-    description: "A personal archive of light, color, shadow, and ordinary things worth noticing.",
+    title: photoMetadata.title,
+    description: photoMetadata.description,
     images: [heroPhoto.sources.large.url],
   },
 };
