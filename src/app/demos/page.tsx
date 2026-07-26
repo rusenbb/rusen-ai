@@ -1,5 +1,9 @@
+import type { Metadata } from "next";
 import DemoCard from "../components/DemoCard";
 import { getProjectPath, getProjectsByCollection } from "@/lib/projects";
+import { buildStaticPageMetadata } from "@/lib/social-metadata";
+
+export const metadata: Metadata = buildStaticPageMetadata("demos");
 
 export default function DemosPage() {
   const demoProjects = getProjectsByCollection("demos");

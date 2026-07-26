@@ -11,6 +11,12 @@
   transition: color 220ms ease, background-color 220ms ease;
 }
 
+.photos-page[lang="ja"] {
+  font-family: "Hiragino Sans", "Yu Gothic", YuGothic, "Noto Sans JP", sans-serif;
+  font-feature-settings: "palt" 1;
+  line-break: strict;
+}
+
 .photo-hero {
   position: relative;
   min-height: calc(100svh - 65px);
@@ -192,8 +198,41 @@
   .photo-caption h3,
   .photo-lightbox aside h2
 ) {
-  font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
-  letter-spacing: -0.035em;
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", YuMincho, serif;
+  letter-spacing: -0.015em;
+  line-break: strict;
+}
+
+.photos-page[lang="ja"] :is(
+  .photo-hero-copy h1,
+  .photo-prologue h2,
+  .photo-section-heading h2
+) {
+  white-space: pre-line;
+  word-break: keep-all;
+}
+
+.photos-page[lang="ja"] :is(
+  .photo-hero-copy > span,
+  .photo-prologue > div > p,
+  .photo-section-heading > span,
+  .photo-series-heading > span,
+  .photo-caption > p,
+  .photo-lightbox-story
+) {
+  letter-spacing: 0.025em;
+  line-height: 1.8;
+}
+
+.photos-page[lang="ja"] .photo-hero-copy h1 {
+  max-width: 9ch;
+  font-size: clamp(3rem, 6.1vw, 5.6rem);
+  line-height: 0.96;
+}
+
+.photos-page[lang="ja"] .photo-prologue h2,
+.photos-page[lang="ja"] .photo-section-heading h2 {
+  line-height: 1;
 }
 
 .photo-hero-copy p,
@@ -791,6 +830,14 @@
 
   .photo-hero-copy h1 {
     font-size: clamp(2.8rem, 13vw, 4.3rem);
+  }
+
+  .photos-page[lang="ja"] .photo-hero-copy h1 {
+    font-size: clamp(2.65rem, 10.8vw, 3.75rem);
+  }
+
+  .photos-page[lang="ja"] .photo-section-heading h2 {
+    font-size: clamp(2.85rem, 12vw, 3.5rem);
   }
 
   .photo-scroll-cue {

@@ -10,6 +10,10 @@ import {
   tagDisplay,
 } from "@/lib/blog";
 import LangPicker from "../../components/LangPicker";
+import {
+  blogTagImagePath,
+  buildSocialMetadata,
+} from "@/lib/social-metadata";
 
 export async function generateStaticParams() {
   // Unique slugs only - different-language tags ("ai" vs "yapay zeka") slug
@@ -27,9 +31,20 @@ export async function generateMetadata({
   params: Promise<{ tag: string }>;
 }) {
   const { tag } = await params;
-  return {
-    title: `#${tagDisplay(tag)} - Blog - rusen.ai`,
-  };
+  const allTags = getAllTags();
+  const matching = allTags.filter((item) => tagSlug(item.tag) === tag);
+  if (matching.length === 0) return {};
+  const displayTag = tagDisplay(matching[0].tag);
+  const postCount = matching.reduce((sum, item) => sum + item.count, 0);
+  const description = `${postCount} ${postCount === 1 ? "essay" : "essays"} filed under #${displayTag} on Rusen.ai.`;
+
+  return buildSocialMetadata({
+    title: `#${displayTag} | Rusen.ai Blog`,
+    description,
+    path: `/blogs/tag/${tag}`,
+    image: blogTagImagePath(tag),
+    imageAlt: `#${displayTag} — Rusen.ai blog archive`,
+  });
 }
 
 export default async function TagPage({

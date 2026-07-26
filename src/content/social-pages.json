@@ -1,0 +1,92 @@
+{
+  "home": {
+    "path": "/",
+    "title": "Rusen.ai - AI & Data Engineering Portfolio",
+    "description": "Interactive AI demos and experiments by Rusen Birben. Explore machine learning tools that run in your browser.",
+    "locale": "en_US",
+    "label": "HOME / AI & DATA ENGINEERING",
+    "headline": ["DATA IS EATING", "THE WORLD."],
+    "detail": "TOOLS, EXPERIMENTS, ESSAYS, AND SYSTEMS",
+    "image": "/social/pages/home.png"
+  },
+  "demos": {
+    "path": "/demos",
+    "title": "Demos | Rusen.ai",
+    "description": "Interactive AI tools you can try right now, running directly in your browser.",
+    "locale": "en_US",
+    "label": "COLLECTION / DEMOS",
+    "headline": ["TOOLS YOU CAN", "TOUCH."],
+    "detail": "INTERACTIVE AI, BUILT FOR THE BROWSER",
+    "image": "/social/pages/demos.png"
+  },
+  "nerdyStuff": {
+    "path": "/nerdy-stuff",
+    "title": "Nerdy Stuff | Rusen.ai",
+    "description": "Interactive explorations of the systems, algorithms, and ideas beneath modern AI.",
+    "locale": "en_US",
+    "label": "COLLECTION / NERDY STUFF",
+    "headline": ["UNDER", "THE HOOD."],
+    "detail": "ALGORITHMS, MODELS, SIMULATIONS, AND QUESTIONS",
+    "image": "/social/pages/nerdy-stuff.png"
+  },
+  "bulletin": {
+    "path": "/bulletin",
+    "title": "Bulletin | Rusen.ai",
+    "description": "Software I've built: desktop apps, CLI tools, and other things that live outside the browser.",
+    "locale": "en_US",
+    "label": "COLLECTION / BULLETIN",
+    "headline": ["BUILT BEYOND", "THE BROWSER."],
+    "detail": "PRODUCTS, RELEASES, AND FIELD NOTES",
+    "image": "/social/pages/bulletin.png"
+  },
+  "blogs": {
+    "path": "/blogs",
+    "title": "Blog | Rusen.ai",
+    "description": "Essays on AI, programming, and how the two are reshaping each other.",
+    "locale": "en_US",
+    "label": "ARCHIVE / WRITINGS",
+    "headline": ["ESSAYS,", "ORGANISED BY", "ARGUMENT."],
+    "detail": "AI, PROGRAMMING, AND THE SPACE BETWEEN THEM",
+    "image": "/social/pages/blogs.png"
+  },
+  "photos": {
+    "path": "/photos",
+    "title": "Photographs — Rusen Birben",
+    "description": "A personal archive of light, color, shadow, and ordinary things worth noticing.",
+    "locale": "en_US",
+    "label": "ARCHIVE / PHOTOGRAPHS",
+    "headline": ["RUŞEN MEANS", "LIGHT."],
+    "detail": "COLOR, SHADOW, AND ORDINARY THINGS WORTH NOTICING",
+    "image": "/social/pages/photos.jpg"
+  },
+  "cv": {
+    "path": "/cv",
+    "title": "CV | Rusen.ai",
+    "description": "Curriculum vitae of Rusen Birben, AI & Data Engineer.",
+    "locale": "en_US",
+    "label": "DOCUMENT / CURRICULUM VITAE",
+    "headline": ["RUSEN BIRBEN", "AI & DATA ENGINEER"],
+    "detail": "RESEARCH, ENGINEERING, AND THINGS BUILT",
+    "image": "/social/pages/cv.png"
+  },
+  "cvTr": {
+    "path": "/cv/tr",
+    "title": "Özgeçmiş | Rusen.ai",
+    "description": "Rusen Birben'in özgeçmişi - Yapay Zeka ve Veri Mühendisi.",
+    "locale": "tr_TR",
+    "label": "BELGE / ÖZGEÇMİŞ",
+    "headline": ["RUSEN BIRBEN", "YZ & VERİ MÜHENDİSİ"],
+    "detail": "ARAŞTIRMA, MÜHENDİSLİK VE ÜRETİLEN İŞLER",
+    "image": "/social/pages/cv-tr.png"
+  },
+  "cvJa": {
+    "path": "/cv/ja",
+    "title": "履歴書 | Rusen.ai",
+    "description": "Rusen Birben の履歴書 - AI・データエンジニア。",
+    "locale": "ja_JP",
+    "label": "DOCUMENT / 履歴書",
+    "headline": ["RUSEN BIRBEN", "AI・データエンジニア"],
+    "detail": "研究、エンジニアリング、そして制作",
+    "image": "/social/pages/cv-ja.png"
+  }
+}
