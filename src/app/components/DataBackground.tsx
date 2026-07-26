@@ -3,7 +3,12 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import AsciiDataBackground from "./AsciiDataBackground";
-import { isBgDisabled, subscribeBgToggle } from "./backgroundToggle";
+import {
+  getBackgroundScope,
+  isBgDisabled,
+  isBgDisabledByDefault,
+  subscribeBgToggle,
+} from "./backgroundToggle";
 
 // Index pages where the full ambient noise field is welcome. Anywhere else
 // keeps the DATA pulse + click ripples but drops the noise so dense content
@@ -22,10 +27,11 @@ const NOISE_PREFIXES: readonly string[] = ["/blogs/tag", "/blogs/series"];
 
 export default function DataBackground() {
   const pathname = usePathname();
+  const scope = getBackgroundScope(pathname);
   const disabled = useSyncExternalStore<boolean>(
     subscribeBgToggle,
-    isBgDisabled,
-    () => false,
+    () => isBgDisabled(scope),
+    () => isBgDisabledByDefault(scope),
   );
 
   // The 404 page doesn't have a stable pathname (it's whatever the user
@@ -46,7 +52,6 @@ export default function DataBackground() {
 
   if (disabled) return null;
   if (
-    pathname === "/photos" ||
     pathname === "/embedding-explorer" ||
     pathname === "/game-of-life" ||
     pathname?.startsWith("/game-of-life/")

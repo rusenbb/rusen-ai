@@ -52,7 +52,7 @@ describe("ThemeToggle", () => {
     expect(document.documentElement.style.colorScheme).toBe("dark");
     expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe("dark");
     expect(screen.getByRole("button", { name: "Switch to light theme" }))
-      .toHaveTextContent("Theme:0");
+      .toContainElement(document.querySelector('[data-nav-word="Theme: 0"]'));
 
     fireEvent.click(screen.getByRole("button", { name: "Switch to light theme" }));
 
@@ -61,6 +61,6 @@ describe("ThemeToggle", () => {
     expect(document.documentElement.style.colorScheme).toBe("light");
     expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe("light");
     expect(screen.getByRole("button", { name: "Switch to dark theme" }))
-      .toHaveTextContent("Theme:1");
+      .toContainElement(document.querySelector('[data-nav-word="Theme: 1"]'));
   });
 });

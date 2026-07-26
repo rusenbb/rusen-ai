@@ -306,6 +306,7 @@ body[data-game-life-fullscreen="on"] header {
 
 .site-nav-home:is(:hover, :focus-visible) .site-nav-glyph-source,
 .site-nav-link:is(:hover, :focus-visible) .site-nav-glyph-source,
+.theme-toggle:is(:hover, :focus-visible) .site-nav-glyph-source,
 .site-mobile-nav-home:is(:hover, :focus-visible) .site-nav-glyph-source,
 .site-mobile-nav-link:is(:hover, :focus-visible) .site-nav-glyph-source {
   animation: nav-glyph-read 360ms steps(1, end) var(--glyph-delay) 1 both;
@@ -313,6 +314,7 @@ body[data-game-life-fullscreen="on"] header {
 
 .site-nav-home:is(:hover, :focus-visible) .site-nav-glyph-write,
 .site-nav-link:is(:hover, :focus-visible) .site-nav-glyph-write,
+.theme-toggle:is(:hover, :focus-visible) .site-nav-glyph-write,
 .site-mobile-nav-home:is(:hover, :focus-visible) .site-nav-glyph-write,
 .site-mobile-nav-link:is(:hover, :focus-visible) .site-nav-glyph-write {
   animation: nav-glyph-write 360ms steps(1, end) var(--glyph-delay) 1 both;
@@ -320,6 +322,7 @@ body[data-game-life-fullscreen="on"] header {
 
 .site-nav-home:is(:hover, :focus-visible) .site-nav-word-cursor,
 .site-nav-link:is(:hover, :focus-visible) .site-nav-word-cursor,
+.theme-toggle:is(:hover, :focus-visible) .site-nav-word-cursor,
 .site-mobile-nav-home:is(:hover, :focus-visible) .site-nav-word-cursor,
 .site-mobile-nav-link:is(:hover, :focus-visible) .site-nav-word-cursor {
   animation: nav-word-scan 820ms steps(8, end) 120ms 1 both;
@@ -337,7 +340,7 @@ body[data-game-life-fullscreen="on"] header {
 
 .site-nav-theme {
   display: grid;
-  width: 4.7rem;
+  width: 5.1rem;
   height: 2rem;
   place-items: center;
   margin-left: 0.05rem;
@@ -353,24 +356,9 @@ body[data-game-life-fullscreen="on"] header {
   outline: none;
 }
 
-.site-nav-theme .theme-toggle-label,
-.site-mobile-nav-theme .theme-toggle-label {
+.site-nav-theme .site-nav-word-frame {
   font-size: 0.68rem;
-  font-weight: 620;
   letter-spacing: 0.025em;
-}
-
-.site-nav-theme .theme-toggle-bit {
-  color: var(--foreground);
-  font-size: 0.78rem;
-  font-weight: 720;
-  letter-spacing: 0;
-  transition: color 160ms ease, transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.site-nav-theme:has(.theme-toggle:is(:hover, :focus-visible)) .theme-toggle-bit {
-  color: var(--signal);
-  transform: translateY(-0.06rem);
 }
 
 .site-nav-theme:has(.theme-toggle:focus-visible) {
@@ -474,14 +462,9 @@ body[data-game-life-fullscreen="on"] header {
   outline: none;
 }
 
-.site-mobile-nav-theme .theme-toggle-bit {
-  color: var(--foreground);
-  font-size: 0.78rem;
-  letter-spacing: 0;
-}
-
-.site-mobile-nav-theme .theme-toggle:is(:hover, :focus-visible) .theme-toggle-bit {
-  color: var(--signal);
+.site-mobile-nav-theme .site-nav-word-frame {
+  font-size: 0.74rem;
+  letter-spacing: 0.04em;
 }
 
 .site-mobile-nav-theme .theme-toggle:focus-visible {
@@ -491,7 +474,6 @@ body[data-game-life-fullscreen="on"] header {
 @media (prefers-reduced-motion: reduce) {
   .site-nav-home,
   .site-nav-link,
-  .site-nav-theme .theme-toggle-bit,
   .site-mobile-nav-home,
   .site-mobile-nav-link,
   .site-nav-glyph-source,
