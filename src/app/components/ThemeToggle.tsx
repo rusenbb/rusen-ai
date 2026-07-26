@@ -12,7 +12,7 @@ function nextTheme(current: ThemeMode): ThemeMode {
   return current === "dark" ? "light" : "dark";
 }
 
-export default function ThemeToggle() {
+export default function ThemeToggle({ label }: { label: string }) {
   const theme = useSyncExternalStore<ThemeMode>(
     subscribeTheme,
     getResolvedTheme,
@@ -34,7 +34,8 @@ export default function ThemeToggle() {
       title={`Switch to ${isDark ? "light" : "dark"} theme`}
       className="theme-toggle group inline-flex items-center justify-center self-center font-mono tabular-nums leading-none text-neutral-700 transition hover:text-neutral-950 dark:text-neutral-300 dark:hover:text-neutral-50"
     >
-      <span className="theme-toggle-bit text-[1.15rem] font-medium tracking-[-0.08em] transition-transform duration-200 group-hover:-translate-y-px">
+      <span className="theme-toggle-label">{label}:</span>
+      <span className="theme-toggle-bit">
         {isDark ? "0" : "1"}
       </span>
       <span className="sr-only">

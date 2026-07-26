@@ -43,7 +43,7 @@ describe("ThemeToggle", () => {
   });
 
   it("updates the document theme, persisted preference, and accessible state", () => {
-    render(<ThemeToggle />);
+    render(<ThemeToggle label="Theme" />);
 
     fireEvent.click(screen.getByRole("button", { name: "Switch to dark theme" }));
 
@@ -52,7 +52,7 @@ describe("ThemeToggle", () => {
     expect(document.documentElement.style.colorScheme).toBe("dark");
     expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe("dark");
     expect(screen.getByRole("button", { name: "Switch to light theme" }))
-      .toHaveTextContent("0");
+      .toHaveTextContent("Theme:0");
 
     fireEvent.click(screen.getByRole("button", { name: "Switch to light theme" }));
 
@@ -60,5 +60,7 @@ describe("ThemeToggle", () => {
     expect(document.documentElement).not.toHaveClass("dark");
     expect(document.documentElement.style.colorScheme).toBe("light");
     expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe("light");
+    expect(screen.getByRole("button", { name: "Switch to dark theme" }))
+      .toHaveTextContent("Theme:1");
   });
 });
