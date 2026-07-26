@@ -46,6 +46,7 @@ export default function DataBackground() {
 
   if (disabled) return null;
   if (
+    pathname === "/photos" ||
     pathname === "/embedding-explorer" ||
     pathname === "/game-of-life" ||
     pathname?.startsWith("/game-of-life/")
