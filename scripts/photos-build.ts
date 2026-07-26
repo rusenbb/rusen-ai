@@ -15,11 +15,16 @@ type CliOptions = {
   sourceDir: string;
   outputDir: string;
   manifestPath: string;
+  editorialPath: string;
   baseUrl: string;
 };
 
 type PhotoTransform = {
   rotateDegrees: number;
+};
+
+type EditorialManifest = {
+  photos: Record<string, { transform?: PhotoTransform }>;
 };
 
 type PreparedPhoto = {
@@ -38,11 +43,6 @@ const VARIANTS: readonly VariantConfig[] = [
   { name: "display", width: 1600, quality: 86 },
   { name: "large", width: 3200, quality: 90 },
 ];
-
-// Keep one-off editorial corrections here so the selected masters remain untouched.
-const PHOTO_TRANSFORMS: Readonly<Partial<Record<string, PhotoTransform>>> = {
-  dscf3613: { rotateDegrees: 6.33 },
-};
 
 function rawInput(
   width: number,
@@ -155,6 +155,7 @@ function parseArgs(args: string[]): CliOptions {
   let sourceDir = process.env.PHOTO_SOURCE_DIR ?? "";
   let outputDir = "public/photos";
   let manifestPath = "src/content/photos.generated.json";
+  let editorialPath = "src/content/photos.json";
   let baseUrl = "/photos";
 
   for (let index = 0; index < args.length; index += 1) {
@@ -162,11 +163,13 @@ function parseArgs(args: string[]): CliOptions {
     if (arg === "--source") sourceDir = requireValue(args, index++, arg);
     else if (arg === "--output") outputDir = requireValue(args, index++, arg);
     else if (arg === "--manifest") manifestPath = requireValue(args, index++, arg);
+    else if (arg === "--editorial") editorialPath = requireValue(args, index++, arg);
     else if (arg === "--base-url") baseUrl = requireValue(args, index++, arg);
     else if (arg === "--help") {
       console.log(
         "Usage: npm run photos:build -- --source <selected-dir> " +
-          "[--output public/photos] [--base-url /photos]",
+          "[--output public/photos] [--editorial src/content/photos.json] " +
+          "[--base-url /photos]",
       );
       process.exit(0);
     } else {
@@ -182,6 +185,7 @@ function parseArgs(args: string[]): CliOptions {
     sourceDir: path.resolve(sourceDir),
     outputDir: path.resolve(outputDir),
     manifestPath: path.resolve(manifestPath),
+    editorialPath: path.resolve(editorialPath),
     baseUrl: baseUrl.replace(/\/+$/, ""),
   };
 }
@@ -196,6 +200,9 @@ function photoId(filename: string): string {
 
 async function main(): Promise<void> {
   const options = parseArgs(process.argv.slice(2));
+  const editorial = JSON.parse(
+    await fs.readFile(options.editorialPath, "utf8"),
+  ) as EditorialManifest;
   const entries = await fs.readdir(options.sourceDir, { withFileTypes: true });
   const filenames = entries
     .filter((entry) => entry.isFile() && /\.jpe?g$/i.test(entry.name))
@@ -213,7 +220,7 @@ async function main(): Promise<void> {
     const sourcePath = path.join(options.sourceDir, filename);
     const source = await fs.readFile(sourcePath);
     const id = photoId(filename);
-    const transform = PHOTO_TRANSFORMS[id];
+    const transform = editorial.photos[id]?.transform;
     const hash = createHash("sha256").update(source);
     if (transform) hash.update(`\ntransform:${JSON.stringify(transform)}`);
     const sourceHash = hash.digest("hex");

@@ -1,0 +1,69 @@
+{
+  "home": {
+    "href": "/",
+    "label": "Home",
+    "word": "rusen.ai",
+    "accentGlyph": "."
+  },
+  "ui": {
+    "menuLabel": "Toggle menu",
+    "mobileHeading": "NAVIGATION",
+    "themeLabel": "THEME"
+  },
+  "items": [
+    {
+      "href": "/demos",
+      "label": "Demos",
+      "word": "DEMOS",
+      "routeAliases": [
+        "/adaptive-arena",
+        "/classify-anything",
+        "/convolution-lab",
+        "/curve-fitter",
+        "/outguess",
+        "/pathfinding-showdown",
+        "/pulse-board",
+        "/segment-anything",
+        "/vision-anything"
+      ]
+    },
+    {
+      "href": "/nerdy-stuff",
+      "label": "Nerdy Stuff",
+      "word": "NERDY",
+      "routeAliases": [
+        "/embedding-explorer",
+        "/emergence",
+        "/fourier-sketch",
+        "/game-of-life",
+        "/optimizer-racetrack",
+        "/rusenizer",
+        "/sentence-surgeon"
+      ]
+    },
+    {
+      "href": "/bulletin",
+      "label": "Bulletin",
+      "word": "BULLETIN",
+      "routeAliases": []
+    },
+    {
+      "href": "/photos",
+      "label": "Photos",
+      "word": "PHOTOS",
+      "routeAliases": []
+    },
+    {
+      "href": "/blogs",
+      "label": "Blog",
+      "word": "BLOG",
+      "routeAliases": []
+    },
+    {
+      "href": "/cv",
+      "label": "CV",
+      "word": "CV",
+      "routeAliases": []
+    }
+  ]
+}
