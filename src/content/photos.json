@@ -33,7 +33,7 @@
   "ui": {
     "tr": {
       "archive": "RUSEN BİRBEN / FOTOĞRAFLAR",
-      "heroTitle": "Gözümün tuttuğu.",
+      "heroTitle": "Ruşen, aydınlık demek.",
       "heroSubtitle": "Renk, gölge ve fark edilmeye değer sıradan şeyler.",
       "count": "{photos} kare · {series} seri",
       "prologue": "ÖNSÖZ",
@@ -53,7 +53,7 @@
     },
     "en": {
       "archive": "RUSEN BIRBEN / PHOTOGRAPHS",
-      "heroTitle": "Light, briefly.",
+      "heroTitle": "Ruşen means light.",
       "heroSubtitle": "Color, shadow, and ordinary things worth noticing.",
       "count": "{photos} frames · {series} series",
       "prologue": "PROLOGUE",
@@ -73,7 +73,7 @@
     },
     "ja": {
       "archive": "RUSEN BIRBEN / 写真",
-      "heroTitle": "光は、束の間。",
+      "heroTitle": "Ruşenは「光」という意味。",
       "heroSubtitle": "色と影、そして目を向ける価値のある日常。",
       "count": "{photos}枚 · {series}シリーズ",
       "prologue": "序章",
