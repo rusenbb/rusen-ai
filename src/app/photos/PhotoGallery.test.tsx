@@ -34,5 +34,9 @@ describe("PhotoGallery language scope", () => {
     expect(document.documentElement).toHaveAttribute("lang", "en");
     expect(container.querySelector(".photos-page")).toHaveAttribute("lang", "tr");
     expect(container.querySelector(".photo-hero-telemetry")).toHaveAttribute("lang", "en");
+    expect(container).toHaveTextContent(
+      "Fotoğrafları yan yana getirdikçe aralarında daha önce görmediğim ilişkiler belirdi.",
+    );
+    expect(container).not.toHaveTextContent("Bir kronoloji değil");
   });
 });

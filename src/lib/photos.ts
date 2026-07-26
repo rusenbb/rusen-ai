@@ -578,17 +578,17 @@ const SERIES = [
       tr: {
         title: "Komşular",
         description:
-          "Şehrin hızına kendi ritimleriyle karşılık veren dört karşılaşma: iki kedi ve bakışın yönünü değiştiren bir güvercin.",
+          "Şehir yalnızca acele edenlere ait değil. Kediler bütün ağırlıklarıyla duruyor, bir güvercin bakışımızı geri veriyor; komşuluk, başka bir hayatın da bizi fark ettiğini anladığımız yerde başlıyor.",
       },
       en: {
         title: "The Neighbours",
         description:
-          "Four encounters answering the city’s pace with rhythms of their own: two cats, and one pigeon that turns the direction of the gaze.",
+          "The city does not belong only to those in a hurry. The cats hold their ground and a pigeon returns our gaze; neighbourliness begins where we realise that another life has noticed us, too.",
       },
       ja: {
         title: "隣人たち",
         description:
-          "街の速さにそれぞれのリズムで応える四つの出会い。二匹の猫と、視線の向きを反転させる一羽の鳩。",
+          "街は、急ぐ者だけのものではない。猫たちはその場にどっしりと留まり、鳩はこちらの視線を返す。隣人であることは、別の命もまた自分を見ていると気づく場所から始まる。",
       },
     },
     rows: [["dscf0538", "dscf3613"], ["dscf2138", "dscf2137"]],
@@ -600,17 +600,17 @@ const SERIES = [
       tr: {
         title: "Bir Bahçe, Bir Mesai",
         description:
-          "Çiçekler sevginin farklı hâllerini taşırken, arı kılığına girmiş küçük bir sinek tekrarın, ısrarın ve görünüşün dersini veriyor.",
+          "Biz güllere aşkı yakıştırırken, arı sandığım küçük sinek hiçbir metafora aldırmadan mesaisini sürdürüyor. Bahçe, anlam yüklediğimiz güzellikle kendi ritminde devam eden hayatın yan yana çalıştığı yer.",
       },
       en: {
         title: "A Garden Is a Workplace",
         description:
-          "Flowers carry different states of love, while a small fly disguised as a bee offers a lesson in repetition, persistence, and appearance.",
+          "While we ask roses to speak for love, the little fly I mistook for a bee carries on with its shift, indifferent to metaphor. A garden is where the beauty we interpret and the life that simply continues work side by side.",
       },
       ja: {
         title: "庭は仕事場",
         description:
-          "花々が愛のさまざまな姿を宿し、ハチの姿を借りた小さな虫が、反復と粘り強さ、そして見かけについて教えてくれる。",
+          "私たちが薔薇に愛を語らせているあいだ、ハチだと思った小さなハナアブは、比喩など気にも留めず仕事を続けている。庭とは、私たちが意味を託す美しさと、自らのリズムで続く命が並んで働く場所だ。",
       },
     },
     rows: [
@@ -626,17 +626,17 @@ const SERIES = [
       tr: {
         title: "Bakmanın Yolları",
         description:
-          "Su, ışık ve üst üste binen yüzeyler dünyayı kopyalamıyor; Rize’yi, gölgeyi ve masalı yeniden kuruyor.",
+          "Bazı görüntüler doğrudan karşımızda değildir; suya, yaprağa ya da başka bir kareye uğradıktan sonra kendini gösterir. Dünya aynı kalsa bile, bakışın geçtiği yüzey onu yeniden kurar.",
       },
       en: {
         title: "Ways of Looking",
         description:
-          "Water, light, and overlapping surfaces do not copy the world; they remake Rize, the shadow, and the tale.",
+          "Some images do not appear directly before us; they reveal themselves only after passing through water, leaves, or another frame. The world may remain the same, yet every surface the gaze crosses builds it anew.",
       },
       ja: {
         title: "見るということ",
         description:
-          "水と光、重なり合う面は世界を写し取るのではなく、リゼと影と物語を新しく組み立てる。",
+          "いくつかの像は、正面からは現れない。水や葉、あるいは別の一枚を通り抜けて、ようやく姿を見せる。世界が同じままでも、視線の通過する面がそれを新しく組み直す。",
       },
     },
     rows: [
@@ -651,17 +651,17 @@ const SERIES = [
       tr: {
         title: "Işık Çekilirken",
         description:
-          "Bulut, sokak, filtre ve akşamın son mavisi: renk kaybolmadan hemen önce, görmek için seçtiğimiz şeyler.",
+          "Gündüz her şeyi aynı anda gösterir; karanlık seçim yaptırır. Geriye bulutların arasındaki ışık, yoluna devam eden bir yabancı, süzülmüş bir mor ve aşkın iki ayrı odağı kalır.",
       },
       en: {
         title: "Light on Its Way Out",
         description:
-          "Cloud, street, filter, and the last blue of evening: what we choose to see just before colour disappears.",
+          "Daylight shows everything at once; darkness forces a choice. What remains is light between clouds, a stranger still moving, purple distilled from the noise, and two different places for love to put its focus.",
       },
       ja: {
         title: "光が去るまで",
         description:
-          "雲、通り、フィルター、夕暮れに残る最後の青。色が消える直前に、私たちが見ることを選んだもの。",
+          "昼の光はすべてを同時に見せるが、暗闇は何を見るかを選ばせる。残るのは、雲間の光、歩き続ける誰か、雑音から濾し取られた紫、そして愛が焦点を結ぶ二つの場所。",
       },
     },
     rows: [["dscf2353"], ["dscf4130", "dscf4251"], ["dscf4267", "dscf4269"]],

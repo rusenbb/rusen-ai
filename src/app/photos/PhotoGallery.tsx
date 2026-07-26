@@ -74,7 +74,7 @@ const UI_COPY = {
     selectedKicker: "SEÇKİ / DÖRT BÖLÜM",
     selectedTitle: "Geçerken kalanlar.",
     selectedIntro:
-      "Bir kronoloji değil. Fotoğraflar yan yana geldiğinde ortaya çıkan küçük ilişkilerden oluşan bir seçki.",
+      "Fotoğrafları yan yana getirdikçe aralarında daha önce görmediğim ilişkiler belirdi. Geçip giden her an, yanındaki karede kendinden bir iz bıraktı.",
     series: "SERİ",
     more: "Yoldan geçen başka anlar",
     close: "Kapat",
@@ -97,7 +97,7 @@ const UI_COPY = {
     selectedKicker: "SELECTED WORK / FOUR CHAPTERS",
     selectedTitle: "Stories in passing.",
     selectedIntro:
-      "Not a chronology. A collection of small relationships that appeared only after the photographs were placed beside one another.",
+      "As I placed the photographs beside one another, relationships I had not noticed before began to emerge. Each passing moment left something of itself in the frame beside it.",
     series: "SERIES",
     more: "More passing moments",
     close: "Close",
@@ -120,7 +120,7 @@ const UI_COPY = {
     selectedKicker: "作品選 / 四章",
     selectedTitle: "通り過ぎる物語。",
     selectedIntro:
-      "これは年代記ではない。写真を隣り合わせたときに初めて現れた、小さな関係の集まり。",
+      "写真を並べていくうちに、それまで気づかなかった関係が一枚一枚のあいだに現れた。通り過ぎた瞬間は、それぞれ隣の一枚に自らの痕跡を残していった。",
     series: "シリーズ",
     more: "通り過ぎる、さらに多くの瞬間",
     close: "閉じる",
