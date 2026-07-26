@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { LuBookOpen, LuCoffee, LuDumbbell, LuTv } from "react-icons/lu";
+import { LuBookOpen, LuCamera, LuCoffee, LuDumbbell, LuTv } from "react-icons/lu";
 import {
   type CVData,
   type CVLabels,
@@ -14,6 +14,7 @@ import styles from "./cv.module.css";
 const INTEREST_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   coffee: LuCoffee,
   book: LuBookOpen,
+  camera: LuCamera,
   tv: LuTv,
   dumbbell: LuDumbbell,
 };

@@ -8,11 +8,6 @@
     "handle": "@rusen_birben",
     "href": "https://instagram.com/rusen_birben"
   },
-  "metadata": {
-    "title": "Photographs — Rusen Birben",
-    "description": "A personal archive of light, color, shadow, and ordinary things worth noticing.",
-    "canonical": "/photos"
-  },
   "locales": [
     {
       "id": "tr",
@@ -73,23 +68,23 @@
     },
     "ja": {
       "archive": "RUSEN BIRBEN / 写真",
-      "heroTitle": "Ruşenは「光」という意味。",
+      "heroTitle": "Ruşen\nその名は「光」。",
       "heroSubtitle": "色と影、そして目を向ける価値のある日常。",
       "count": "{photos}枚 · {series}シリーズ",
       "prologue": "序章",
       "view": "見る",
       "viewPhoto": "写真を見る",
       "selectedKicker": "作品選 / 四章",
-      "selectedTitle": "通り過ぎる物語。",
+      "selectedTitle": "過ぎ去って、\nなお残るもの。",
       "selectedIntro": "写真を並べていくうちに、それまで気づかなかった関係が一枚一枚のあいだに現れた。通り過ぎた瞬間は、それぞれ隣の一枚に自らの痕跡を残していった。",
       "series": "シリーズ",
-      "more": "通り過ぎる、さらに多くの瞬間",
+      "more": "さらに、通り過ぎる瞬間",
       "close": "閉じる",
       "previous": "前の写真",
       "next": "次の写真",
       "language": "写真ページの言語",
-      "openLabel": "「{title}」を開く、{index} / {total}",
-      "dialogLabel": "「{title}」、写真 {index} / {total}"
+      "openLabel": "「{title}」を開く。{total}枚中{index}枚目",
+      "dialogLabel": "「{title}」。{total}枚中{index}枚目"
     }
   },
   "prologueTitles": {
@@ -236,7 +231,7 @@
         },
         "ja": {
           "alt": "リゼの海辺にある赤い遊歩道で、海と写真家の影を重ねた二重露光の自画像。",
-          "title": "始まりの自画像",
+          "title": "始まりの\n自画像",
           "story": "リゼの海辺にある赤い遊歩道と海、そして自分の影が、この二重露光の中でひとつの面に重なった。この一枚で見つけたのは、新しい技法だけではない。目に留まった細部を結び合わせ、美しいひとつの形として残すための、自分自身の表現の言葉だった。写真に本気で向き合い、「これは自分に合っている」と確信した瞬間は、顔の写らないこの自画像から始まった。"
         }
       }
