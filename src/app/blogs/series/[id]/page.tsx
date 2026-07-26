@@ -9,6 +9,10 @@ import {
   readUnit,
 } from "@/lib/blog";
 import LangPicker from "../../components/LangPicker";
+import {
+  blogSeriesImagePath,
+  buildSocialMetadata,
+} from "@/lib/social-metadata";
 
 export async function generateStaticParams() {
   return getAllSeries().map((s) => ({ id: s.id }));
@@ -22,9 +26,14 @@ export async function generateMetadata({
   const { id } = await params;
   const series = getSeriesById(id);
   if (!series) return {};
-  return {
-    title: `${series.title.en} - rusen.ai`,
-  };
+  const description = `${series.posts.length} connected essays in the ${series.title.en} series.`;
+  return buildSocialMetadata({
+    title: `${series.title.en} | Rusen.ai`,
+    description,
+    path: `/blogs/series/${series.id}`,
+    image: blogSeriesImagePath(series.id),
+    imageAlt: `${series.title.en} — Rusen.ai essay series`,
+  });
 }
 
 export default async function SeriesPage({
