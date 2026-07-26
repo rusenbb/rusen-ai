@@ -22,7 +22,9 @@ vi.mock("next/link", () => ({
 }));
 
 vi.mock("./ThemeToggle", () => ({
-  default: () => <button type="button">Theme</button>,
+  default: ({ label }: { label: string }) => (
+    <button type="button">{label}: 1</button>
+  ),
 }));
 
 describe("Header navigation", () => {
@@ -83,12 +85,12 @@ describe("Header navigation", () => {
     expect(container.querySelector("[data-nav-selected=true]")).not.toBeInTheDocument();
   });
 
-  it("keeps the theme bit as a simple trailing control", () => {
+  it("keeps the labeled theme state as a simple trailing control", () => {
     const { container } = render(<Header />);
 
     expect(screen.getByRole("link", { name: "Demos" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "CV" })).toBeInTheDocument();
-    expect(container.querySelector(".site-nav-theme button")).toHaveAccessibleName("Theme");
+    expect(container.querySelector(".site-nav-theme button")).toHaveAccessibleName("Theme: 1");
   });
 
   it.each([
@@ -126,7 +128,7 @@ describe("Header navigation", () => {
       container.querySelector('.site-mobile-nav-link[aria-label="Photos"] .site-nav-word-frame'),
     ).toHaveAttribute("data-nav-word", "PHOTOS");
     expect(container.querySelector(".site-mobile-nav-theme button"))
-      .toHaveAccessibleName("Theme");
+      .toHaveAccessibleName("Theme: 1");
     expect(container.querySelector(".site-mobile-nav-home")).toHaveAttribute("href", "/");
     expect(container.querySelector(".site-mobile-nav-home"))
       .toHaveAccessibleName("Home");

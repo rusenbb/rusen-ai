@@ -143,7 +143,7 @@ export default function Header() {
               );
             })}
             <div className="site-nav-theme">
-              <ThemeToggle />
+              <ThemeToggle label={navUi.themeLabel} />
             </div>
           </div>
 
@@ -217,8 +217,7 @@ export default function Header() {
                 );
               })}
               <div className="site-mobile-nav-theme">
-                <span aria-hidden="true">{navUi.themeLabel}</span>
-                <ThemeToggle />
+                <ThemeToggle label={navUi.themeLabel} />
               </div>
             </div>
           </div>
