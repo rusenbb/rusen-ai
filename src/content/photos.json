@@ -34,7 +34,7 @@
       "prologue": "ÖNSÖZ",
       "view": "Gör",
       "viewPhoto": "Fotoğrafı gör",
-      "selectedKicker": "SEÇKİ / DÖRT BÖLÜM",
+      "selectedKicker": "SEÇKİ / {series} BÖLÜM",
       "selectedTitle": "Geçerken kalanlar.",
       "selectedIntro": "Fotoğrafları yan yana getirdikçe aralarında daha önce görmediğim ilişkiler belirdi. Geçip giden her an, yanındaki karede kendinden bir iz bıraktı.",
       "series": "SERİ",
@@ -54,7 +54,7 @@
       "prologue": "PROLOGUE",
       "view": "View",
       "viewPhoto": "View photograph",
-      "selectedKicker": "SELECTED WORK / FOUR CHAPTERS",
+      "selectedKicker": "SELECTED WORK / {series} CHAPTERS",
       "selectedTitle": "Stories in passing.",
       "selectedIntro": "As I placed the photographs beside one another, relationships I had not noticed before began to emerge. Each passing moment left something of itself in the frame beside it.",
       "series": "SERIES",
@@ -74,7 +74,7 @@
       "prologue": "序章",
       "view": "見る",
       "viewPhoto": "写真を見る",
-      "selectedKicker": "作品選 / 四章",
+      "selectedKicker": "作品選 / {series}章",
       "selectedTitle": "過ぎ去って、\nなお残るもの。",
       "selectedIntro": "写真を並べていくうちに、それまで気づかなかった関係が一枚一枚のあいだに現れた。通り過ぎた瞬間は、それぞれ隣の一枚に自らの痕跡を残していった。",
       "series": "シリーズ",
@@ -122,8 +122,41 @@
       ]
     },
     {
-      "id": "garden",
+      "id": "city-stage",
       "number": "02",
+      "translations": {
+        "tr": {
+          "title": "Herkesin Tanıdığı Yabancı",
+          "description": "Üsküdar sahilinin gündelik akışı içinde beliren Örümcek Adam, birkaç dakika içinde çevresinde küçük bir kalabalık topladı. Burak Soylu’nun performansı, trafiği kısa süreliğine bir sahneye dönüştürdü."
+        },
+        "en": {
+          "title": "The Stranger Everyone Knows",
+          "description": "Spider-Man appeared in the everyday flow of Üsküdar’s waterfront and drew a small crowd within minutes. Burak Soylu’s performance briefly turned traffic into a stage."
+        },
+        "ja": {
+          "title": "誰もが知る、見知らぬ人",
+          "description": "ユスキュダルの海辺の日常にスパイダーマンが現れると、わずか数分で小さな人だかりができた。Burak Soylu のパフォーマンスは、行き交う車の流れをひととき舞台へと変えた。"
+        }
+      },
+      "credit": {
+        "href": "https://www.instagram.com/theburaksoylu/",
+        "translations": {
+          "tr": "Performans: Burak Soylu · @theburaksoylu",
+          "en": "Performance: Burak Soylu · @theburaksoylu",
+          "ja": "パフォーマンス：Burak Soylu · @theburaksoylu"
+        }
+      },
+      "rows": [
+        [
+          "dscf0492",
+          "dscf0495",
+          "dscf0497"
+        ]
+      ]
+    },
+    {
+      "id": "garden",
+      "number": "03",
       "translations": {
         "tr": {
           "title": "Bir Bahçe, Bir Mesai",
@@ -156,7 +189,7 @@
     },
     {
       "id": "reflections",
-      "number": "03",
+      "number": "04",
       "translations": {
         "tr": {
           "title": "Bakmanın Yolları",
@@ -180,12 +213,15 @@
         [
           "dscf3718",
           "dscf3728"
+        ],
+        [
+          "dscf0920"
         ]
       ]
     },
     {
       "id": "after-light",
-      "number": "04",
+      "number": "05",
       "translations": {
         "tr": {
           "title": "Işık Çekilirken",
@@ -211,6 +247,36 @@
         [
           "dscf4267",
           "dscf4269"
+        ]
+      ]
+    },
+    {
+      "id": "encounter",
+      "number": "06",
+      "translations": {
+        "tr": {
+          "title": "Karşılaşma",
+          "description": "Gün batımında yolları kesişen iki teknenin, ışıklarıyla birbirlerine anlattığı kısa bir hikâye."
+        },
+        "en": {
+          "title": "Encounter",
+          "description": "A brief story told in light by two boats whose paths crossed at sunset."
+        },
+        "ja": {
+          "title": "邂逅",
+          "description": "夕暮れに航路を交えた二艘の船が、互いの光で語り合った短い物語。"
+        }
+      },
+      "rows": [
+        [
+          "dscf1835"
+        ],
+        [
+          "dscf1914",
+          "dscf1916"
+        ],
+        [
+          "dscf1928"
         ]
       ]
     }
@@ -656,6 +722,166 @@
           "alt": "葉と青い空を背景に、逆光で浮かぶ赤い薔薇。",
           "title": "まだ青を抱いて",
           "story": "愛が目を閉ざさないとき、その周りにある人生も見えるようになる。ここでは薔薇が空とともに意味を持つ。世界を消さず、その中へ溶けていく、人生の中の愛。"
+        }
+      }
+    },
+    "dscf0492": {
+      "seriesId": "city-stage",
+      "translations": {
+        "tr": {
+          "alt": "Üsküdar trafiğinde siyah ve kırmızı klasik bir otomobilin içinde oturan Örümcek Adam.",
+          "title": "Sahneye Giriş",
+          "caption": "Siyah ve kırmızı otomobil, Üsküdar’ın gündelik trafiğine beklenmedik bir karakter taşıdı."
+        },
+        "en": {
+          "alt": "Spider-Man seated inside a black-and-red classic car amid traffic in Üsküdar.",
+          "title": "Entering the Stage",
+          "caption": "The black-and-red car carried an unexpected character into Üsküdar’s everyday traffic."
+        },
+        "ja": {
+          "alt": "ユスキュダルの交通の中、黒と赤のクラシックカーに座るスパイダーマン。",
+          "title": "舞台へ",
+          "caption": "黒と赤のクラシックカーが、ユスキュダルの日常の交通に思いがけない人物を運んできた。"
+        }
+      }
+    },
+    "dscf0495": {
+      "seriesId": "city-stage",
+      "translations": {
+        "tr": {
+          "alt": "Park edilmiş otomobillerin arasında siyah ve kırmızı klasik arabanın sürücü koltuğunda görünen Örümcek Adam.",
+          "title": "Şehrin İçinde",
+          "caption": "Maske görünür olduğunda çevredeki bakışların yönü bir anda değişti."
+        },
+        "en": {
+          "alt": "Spider-Man visible in the driver’s seat of a black-and-red classic car among parked vehicles.",
+          "title": "Within the City",
+          "caption": "The moment the mask came into view, every gaze nearby changed direction."
+        },
+        "ja": {
+          "alt": "駐車中の車に囲まれた黒と赤のクラシックカー、その運転席に見えるスパイダーマン。",
+          "title": "街の中で",
+          "caption": "マスクが見えた瞬間、周囲の視線はいっせいに向きを変えた。"
+        }
+      }
+    },
+    "dscf0497": {
+      "seriesId": "city-stage",
+      "translations": {
+        "tr": {
+          "alt": "Siyah ve kırmızı klasik otomobilin açık penceresinden görünen Örümcek Adam portresi.",
+          "title": "Herkesin Tanıdığı Yabancı",
+          "caption": "Yüzünü saklayan bu yabancıyı herkes tanıyordu."
+        },
+        "en": {
+          "alt": "A portrait of Spider-Man seen through the open window of a black-and-red classic car.",
+          "title": "The Stranger Everyone Knows",
+          "caption": "Everyone recognised this stranger whose face remained hidden."
+        },
+        "ja": {
+          "alt": "黒と赤のクラシックカーの開いた窓越しに見えるスパイダーマンの肖像。",
+          "title": "誰もが知る、見知らぬ人",
+          "caption": "顔を隠したこの見知らぬ人を、誰もが知っていた。"
+        }
+      }
+    },
+    "dscf0920": {
+      "seriesId": "reflections",
+      "translations": {
+        "tr": {
+          "alt": "Yeşil filtreli karanlık bir kadrajda beyaz telleri ayrıntılı biçimde görünen bir karahindiba.",
+          "title": "Yeşilin Gösterdiği",
+          "story": "Fuji’nin filtreleriyle tanıştığım günlerde yeşil bir filtreyle çekildi. Filtre, karahindibanın beyaz telleri arasındaki inceliği beklediğimden daha görünür kıldı."
+        },
+        "en": {
+          "alt": "A dandelion whose fine white filaments stand out in a dark frame made with a green filter.",
+          "title": "What Green Revealed",
+          "story": "I made this photograph with a green filter while first getting to know Fuji’s film simulations. The filter made the fine structure of the dandelion’s white filaments more visible than I expected."
+        },
+        "ja": {
+          "alt": "緑のフィルターで撮られた暗い画面の中、白い綿毛の細部が浮かび上がるタンポポ。",
+          "title": "緑が見せたもの",
+          "story": "Fujiのフィルムシミュレーションを試し始めた頃、緑のフィルターで撮った一枚。フィルターは、タンポポの白い綿毛一本一本の繊細さを、思いがけないほど鮮明に浮かび上がらせた。"
+        }
+      }
+    },
+    "dscf1835": {
+      "seriesId": "encounter",
+      "translations": {
+        "tr": {
+          "alt": "Gün batımında güneşin denizdeki yansımasının önünden geçen küçük bir tekne.",
+          "title": "Peşinden",
+          "caption": "Küçük tekne, gün batımının nereye vardığını merak ederek ufka doğru ilerledi."
+        },
+        "en": {
+          "alt": "A small boat crossing the reflection of the setting sun on the sea.",
+          "title": "Following",
+          "caption": "The little boat moved toward the horizon, wondering where the sunset would lead."
+        },
+        "ja": {
+          "alt": "夕陽が海に落とす光の道を横切る小さな船。",
+          "title": "あとを追って",
+          "caption": "小さな船は、夕陽がどこへ辿り着くのか知りたくて、水平線へ進んでいった。"
+        }
+      }
+    },
+    "dscf1914": {
+      "seriesId": "encounter",
+      "translations": {
+        "tr": {
+          "alt": "Kızıl akşam göğünün altında, karanlık denizde birbirine doğru ilerleyen iki ışıklı tekne.",
+          "title": "Ufukta Biri",
+          "caption": "Güneş çekildiğinde, karanlığın içinden başka bir ışık ona karşılık verdi."
+        },
+        "en": {
+          "alt": "Two lit boats moving toward one another on a dark sea beneath a crimson evening sky.",
+          "title": "Someone on the Horizon",
+          "caption": "When the sun withdrew, another light answered from the dark."
+        },
+        "ja": {
+          "alt": "深紅の夕空の下、暗い海を互いに向かって進む光を灯した二艘の船。",
+          "title": "水平線に誰か",
+          "caption": "太陽が退くと、暗闇の中から別の光が応えた。"
+        }
+      }
+    },
+    "dscf1916": {
+      "seriesId": "encounter",
+      "translations": {
+        "tr": {
+          "alt": "Karanlık denizde kırmızı ve beyaz ışıklarının yansımalarıyla birbirine yaklaşan iki tekne.",
+          "title": "Yaklaşırken",
+          "caption": "İzleri suyun üzerinde uzandı ve teknelerden önce birbirine dokundu."
+        },
+        "en": {
+          "alt": "Two boats drawing near on the dark sea, their red and white lights reflected on the water.",
+          "title": "Drawing Near",
+          "caption": "Their reflections reached across the water and touched before the boats did."
+        },
+        "ja": {
+          "alt": "赤と白の光を水面に映しながら、暗い海で近づいていく二艘の船。",
+          "title": "近づきながら",
+          "caption": "水面に伸びた光の跡は、船より先に触れ合った。"
+        }
+      }
+    },
+    "dscf1928": {
+      "seriesId": "encounter",
+      "translations": {
+        "tr": {
+          "alt": "Gece denizinde tek başına duran, kırmızı ışığı suya uzun bir iz bırakan küçük bir tekne.",
+          "title": "Yalnız",
+          "caption": "Deniz yollarını yeniden ayırdı; gece, geride kalan teknenin ışığını taşıdı."
+        },
+        "en": {
+          "alt": "A small boat alone on the night sea, its red light leaving a long reflection on the water.",
+          "title": "Alone",
+          "caption": "The sea parted their courses again; the night carried the light of the boat left behind."
+        },
+        "ja": {
+          "alt": "夜の海に一艘だけ残り、赤い光が水面へ長い跡を落とす小さな船。",
+          "title": "ひとり",
+          "caption": "海は再び二艘の航路を分け、夜は残された船の光を運んだ。"
         }
       }
     }
