@@ -65,6 +65,13 @@ html.dark {
   color-scheme: dark;
 }
 
+/* Keep Safari's elastic page-edge overscroll from exposing the fixed ASCII
+   canvas above the sticky header or below the footer. Normal scrolling and
+   momentum remain unchanged. */
+html,
+body {
+  overscroll-behavior-y: none;
+}
 
 body {
   background: var(--background);
