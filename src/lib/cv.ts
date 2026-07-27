@@ -119,6 +119,101 @@ export type CVLabels = {
   download: string;
 };
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function requireStringFields(
+  value: unknown,
+  fields: readonly string[],
+  context: string,
+): Record<string, unknown> {
+  if (!isRecord(value)) throw new Error(`${context} must be an object`);
+  for (const field of fields) {
+    if (typeof value[field] !== "string" || !(value[field] as string).trim()) {
+      throw new Error(`${context}.${field} must be a non-empty string`);
+    }
+  }
+  return value;
+}
+
+function requireObjectArray(
+  value: unknown,
+  fields: readonly string[],
+  context: string,
+): Record<string, unknown>[] {
+  if (!Array.isArray(value)) throw new Error(`${context} must be an array`);
+  return value.map((entry, index) =>
+    requireStringFields(entry, fields, `${context}[${index}]`),
+  );
+}
+
+function parseCvData(value: unknown, locale: CVLocale): CVData {
+  if (!isRecord(value)) throw new Error(`CV ${locale} must contain an object`);
+  const context = `CV ${locale}`;
+  requireStringFields(
+    value.basics,
+    [
+      "name", "role", "location", "locationLong", "status", "email",
+      "birthday", "drivingLicense", "website", "websiteUrl", "linkedin",
+      "linkedinUrl", "github", "githubUrl", "summary", "printSummary",
+      "footerNote",
+    ],
+    `${context}.basics`,
+  );
+  requireObjectArray(value.heroLinks, ["label", "url"], `${context}.heroLinks`);
+  requireObjectArray(
+    value.experience,
+    ["role", "company", "period", "location", "description"],
+    `${context}.experience`,
+  );
+  const projects = requireObjectArray(
+    value.projects,
+    ["title", "subtitle", "period", "description"],
+    `${context}.projects`,
+  );
+  for (const [index, project] of projects.entries()) {
+    if (!Array.isArray(project.tags) || project.tags.some((tag) => typeof tag !== "string")) {
+      throw new Error(`${context}.projects[${index}].tags must be a string array`);
+    }
+    requireObjectArray(project.links, ["label", "url"], `${context}.projects[${index}].links`);
+  }
+  requireObjectArray(value.education, ["degree", "school", "period"], `${context}.education`);
+  requireObjectArray(value.interests, ["title", "desc", "icon"], `${context}.interests`);
+  requireObjectArray(value.courses, ["title", "issuer", "summary"], `${context}.courses`);
+  requireObjectArray(value.awards, ["title", "issuer", "summary"], `${context}.awards`);
+  requireObjectArray(value.languages, ["name", "level"], `${context}.languages`);
+  if (!isRecord(value.skills) || Object.keys(value.skills).length === 0) {
+    throw new Error(`${context}.skills must be a non-empty object`);
+  }
+  for (const [group, entries] of Object.entries(value.skills)) {
+    if (!Array.isArray(entries) || entries.some((entry) => typeof entry !== "string")) {
+      throw new Error(`${context}.skills.${group} must be a string array`);
+    }
+  }
+  return value as CVData;
+}
+
+function assertLocaleParity(data: Record<CVLocale, CVData>): void {
+  const reference = data.en;
+  const arrayFields = [
+    "heroLinks", "experience", "projects", "education", "interests",
+    "courses", "awards", "languages",
+  ] as const;
+  for (const locale of ["tr", "ja"] as const) {
+    for (const field of arrayFields) {
+      if (data[locale][field].length !== reference[field].length) {
+        throw new Error(`CV ${locale}.${field} must match the English item count`);
+      }
+    }
+    const expectedSkillSizes = Object.values(reference.skills).map((items) => items.length);
+    const actualSkillSizes = Object.values(data[locale].skills).map((items) => items.length);
+    if (JSON.stringify(actualSkillSizes) !== JSON.stringify(expectedSkillSizes)) {
+      throw new Error(`CV ${locale}.skills must match the English group structure`);
+    }
+  }
+}
+
 const LABELS_EN: CVLabels = {
   identity: "IDENTITY",
   loc: "LOC",
@@ -183,10 +278,12 @@ const LABELS_JA: CVLabels = {
 };
 
 const DATA_BY_LOCALE: Record<CVLocale, CVData> = {
-  en: rawCvDataEn as CVData,
-  tr: rawCvDataTr as CVData,
-  ja: rawCvDataJa as CVData,
+  en: parseCvData(rawCvDataEn, "en"),
+  tr: parseCvData(rawCvDataTr, "tr"),
+  ja: parseCvData(rawCvDataJa, "ja"),
 };
+
+assertLocaleParity(DATA_BY_LOCALE);
 
 const LABELS_BY_LOCALE: Record<CVLocale, CVLabels> = {
   en: LABELS_EN,

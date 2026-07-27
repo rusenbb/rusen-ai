@@ -1,11 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import DataBackground from "./components/DataBackground";
 import { THEME_STORAGE_KEY } from "./components/theme";
-import { buildStaticPageMetadata } from "@/lib/social-metadata";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,7 +18,6 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://rusen.ai"),
-  ...buildStaticPageMetadata("home"),
   icons: {
     icon: [
       { url: "/icon.svg", type: "image/svg+xml" },
@@ -29,6 +27,14 @@ export const metadata: Metadata = {
     ],
   },
   manifest: "/manifest.json",
+};
+
+export const viewport: Viewport = {
+  colorScheme: "light dark",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f7f4ee" },
+    { media: "(prefers-color-scheme: dark)", color: "#0c0c0f" },
+  ],
 };
 
 export default function RootLayout({
@@ -43,15 +49,14 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               (() => {
-                try {
-                  const stored = localStorage.getItem("${THEME_STORAGE_KEY}");
-                  const resolved = stored === "light" || stored === "dark"
-                    ? stored
-                    : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-                  document.documentElement.dataset.theme = resolved;
-                  document.documentElement.style.colorScheme = resolved;
-                  document.documentElement.classList.toggle("dark", resolved === "dark");
-                } catch (_) {}
+                let stored = null;
+                try { stored = localStorage.getItem("${THEME_STORAGE_KEY}"); } catch (_) {}
+                const resolved = stored === "light" || stored === "dark"
+                  ? stored
+                  : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+                document.documentElement.dataset.theme = resolved;
+                document.documentElement.style.colorScheme = resolved;
+                document.documentElement.classList.toggle("dark", resolved === "dark");
               })();
             `,
           }}
@@ -60,10 +65,15 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
+        <a className="skip-link" href="#main-content">
+          Skip to content
+        </a>
         <DataBackground />
         <div className="content-shell relative z-10 min-h-screen flex flex-col">
           <Header />
-          <main className="flex-1 relative">{children}</main>
+          <main id="main-content" className="flex-1 relative" tabIndex={-1}>
+            {children}
+          </main>
           <Footer />
         </div>
       </body>

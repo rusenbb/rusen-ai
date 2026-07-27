@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import navigation from "@/content/navigation.json";
 import NavWord from "./NavWord";
 import ThemeToggle from "./ThemeToggle";
@@ -44,6 +44,14 @@ export default function Header() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const selectedNavIndex = getSelectedNavIndex(pathname);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const mobileToggleRef = useRef<HTMLButtonElement>(null);
+
+  const closeMobileNav = useCallback((restoreFocus = false) => {
+    setMobileNavOpen(false);
+    if (restoreFocus) {
+      window.requestAnimationFrame(() => mobileToggleRef.current?.focus());
+    }
+  }, []);
 
   useEffect(() => {
     const onDocClick = (event: MouseEvent) => {
@@ -54,8 +62,8 @@ export default function Header() {
     };
 
     const onEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setMobileNavOpen(false);
+      if (event.key === "Escape" && mobileNavOpen) {
+        closeMobileNav(true);
       }
     };
 
@@ -65,7 +73,7 @@ export default function Header() {
       document.removeEventListener("mousedown", onDocClick);
       window.removeEventListener("keydown", onEscape);
     };
-  }, []);
+  }, [closeMobileNav, mobileNavOpen]);
 
   return (
     <header className="ui-surface sticky top-0 z-[90] border-b border-neutral-200/70 dark:border-neutral-800/70 backdrop-blur-sm">
@@ -108,6 +116,7 @@ export default function Header() {
 
           <div className="md:hidden flex items-center">
             <button
+              ref={mobileToggleRef}
               type="button"
               onClick={() => setMobileNavOpen((v) => !v)}
               className="inline-flex items-center justify-center w-11 h-11 border border-[var(--line)] text-neutral-700 dark:text-neutral-200"
@@ -152,7 +161,7 @@ export default function Header() {
                 data-nav-selected={selectedNavIndex === 0 ? "true" : undefined}
                 aria-label={home.label}
                 aria-current={pathname === home.href ? "page" : undefined}
-                onClick={() => setMobileNavOpen(false)}
+                onClick={() => closeMobileNav()}
               >
                 <NavWord word={home.word} accentGlyph={home.accentGlyph} preserveCase />
               </Link>
@@ -165,7 +174,7 @@ export default function Header() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    onClick={() => setMobileNavOpen(false)}
+                    onClick={() => closeMobileNav()}
                     className="site-mobile-nav-link"
                     data-nav-selected={isActive ? "true" : undefined}
                     aria-label={item.label}

@@ -354,7 +354,12 @@ export default function FlockingDemo() {
       <p className="text-xs text-neutral-500 mb-4 italic">{activePreset.subtitle}</p>
 
       <div className="rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 bg-black mb-4">
-        <canvas ref={canvasRef} className="block w-full" />
+        <canvas
+          ref={canvasRef}
+          className="block w-full"
+          role="img"
+          aria-label={`${count} simulated flocking agents using the ${activePreset.label} preset. Adjust separation, alignment, and cohesion with the controls below.`}
+        />
       </div>
 
       {/* Controls */}

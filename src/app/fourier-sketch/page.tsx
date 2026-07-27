@@ -159,6 +159,7 @@ function FourierCanvas({
       onPointerMove={onContinueStroke}
       onPointerUp={onFinishStroke}
       onPointerCancel={onFinishStroke}
+      role="img"
       aria-label="Draw a closed path to decompose it into Fourier components"
     />
   );

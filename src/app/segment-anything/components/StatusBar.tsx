@@ -21,12 +21,9 @@ export default function StatusBar({
   return (
     <div className="mt-3 flex items-center gap-3 rounded-lg border border-neutral-200 bg-white px-4 py-2.5 text-xs dark:border-neutral-800 dark:bg-neutral-950">
       {phase === "idle" && (
-        <>
-          <Spinner size="sm" color="neutral" />
-          <span className="text-neutral-500 dark:text-neutral-400">
-            Initializing&hellip;
-          </span>
-        </>
+        <span className="text-neutral-500 dark:text-neutral-400">
+          Select or upload an image to load the model
+        </span>
       )}
 
       {phase === "loading" && (

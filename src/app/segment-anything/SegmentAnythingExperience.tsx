@@ -1,6 +1,6 @@
 "use client";
 
-import { useReducer, useCallback, useRef, useState, useEffect } from "react";
+import { useReducer, useCallback, useRef, useState } from "react";
 import {
   Button,
   DemoFootnote,
@@ -20,7 +20,7 @@ import { exportSelection, exportWithRemoval } from "./utils/exportMask";
 import SegmentCanvas from "./components/SegmentCanvas";
 import ControlPanel from "./components/ControlPanel";
 import StatusBar from "./components/StatusBar";
-import SampleImages, { SAMPLE_IMAGES } from "./components/SampleImages";
+import SampleImages from "./components/SampleImages";
 
 export default function SegmentAnythingExperience() {
   const [state, dispatch] = useReducer(samReducer, initialSAMState);
@@ -88,15 +88,6 @@ export default function SegmentAnythingExperience() {
     },
     [handleImageSelect]
   );
-
-  // ── Auto-load first sample when model becomes ready ──────────────
-
-  useEffect(() => {
-    if (state.phase === "ready" && !state.imageUrl) {
-      const t = setTimeout(() => handleImageSelect(SAMPLE_IMAGES[0].url), 0);
-      return () => clearTimeout(t);
-    }
-  }, [state.phase, state.imageUrl, handleImageSelect]);
 
   // ── Point added ──────────────────────────────────────────────────
 
@@ -241,7 +232,6 @@ export default function SegmentAnythingExperience() {
               onClick={() => fileInputRef.current?.click()}
               disabled={
                 state.phase === "loading" ||
-                state.phase === "idle" ||
                 state.phase === "encoding"
               }
             >
@@ -314,7 +304,6 @@ export default function SegmentAnythingExperience() {
         onSelect={handleImageSelect}
         disabled={
           state.phase === "loading" ||
-          state.phase === "idle" ||
           state.phase === "encoding"
         }
       />

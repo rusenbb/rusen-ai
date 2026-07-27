@@ -6,7 +6,7 @@ export default function BlogLayout({ children }: { children: React.ReactNode }) 
     <>
       <script
         dangerouslySetInnerHTML={{
-          __html: `(() => { try { const s = localStorage.getItem('blogLang'); const a = (navigator.language||'').toLowerCase().startsWith('tr') ? 'tr' : 'en'; document.documentElement.dataset.blogLang = (s === 'en' || s === 'tr') ? s : a; } catch (_) {} })();`,
+          __html: `(() => { let s = null; try { s = localStorage.getItem('blogLang'); } catch (_) {} const a = (navigator.language || '').toLowerCase().startsWith('tr') ? 'tr' : 'en'; document.documentElement.dataset.blogLang = (s === 'en' || s === 'tr') ? s : a; })();`,
         }}
       />
       {children}

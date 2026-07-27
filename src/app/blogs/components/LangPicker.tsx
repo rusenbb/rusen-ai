@@ -34,22 +34,29 @@ function setBlogLang(next: Lang) {
   } catch {}
 }
 
-export default function LangPicker() {
+export default function LangPicker({
+  available = ["en", "tr"],
+  forced,
+}: {
+  available?: readonly Lang[];
+  forced?: Lang;
+}) {
   const lang = useSyncExternalStore<Lang>(
     subscribe,
     getSnapshot,
     getServerSnapshot,
   );
+  const activeLang = forced ?? lang;
 
   return (
     <div className="lang-pills" role="group" aria-label="Language filter">
-      {(["en", "tr"] as const).map((l) => (
+      {available.map((l) => (
         <button
           key={l}
           type="button"
           onClick={() => setBlogLang(l)}
-          className={lang === l ? "is-active" : ""}
-          aria-pressed={lang === l}
+          className={activeLang === l ? "is-active" : ""}
+          aria-pressed={activeLang === l}
         >
           {l.toUpperCase()}
         </button>

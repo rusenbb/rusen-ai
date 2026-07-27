@@ -145,7 +145,7 @@ export default function SegmentCanvas({
       ctx.textBaseline = "middle";
 
       if (phase === "idle") {
-        ctx.fillText("Initializing\u2026", width / 2, height / 2);
+        ctx.fillText("Select or upload an image to begin", width / 2, height / 2);
       } else if (phase === "loading") {
         ctx.fillText("Downloading model\u2026", width / 2, height / 2);
       } else if (phase === "ready") {
@@ -367,6 +367,10 @@ export default function SegmentCanvas({
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         onTouchMove={handleTouchMove}
+        role="img"
+        aria-label={imageUrl
+          ? `Segmentation image with ${points.length} selection ${points.length === 1 ? "point" : "points"}. Pointer input adds ${pointMode} points.`
+          : "Segmentation workspace. Load an image to begin."}
       />
     </div>
   );

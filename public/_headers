@@ -1,2 +1,5 @@
 /photos/:photo/:version/:variant
   Cache-Control: public, max-age=31556952, immutable
+
+/_next/static/*
+  Cache-Control: public, max-age=31556952, immutable

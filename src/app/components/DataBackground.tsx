@@ -10,9 +10,9 @@ import {
   subscribeBgToggle,
 } from "./backgroundToggle";
 
-// Index pages where the full ambient noise field is welcome. Anywhere else
-// keeps the DATA pulse + click ripples but drops the noise so dense content
-// pages (CV, individual demos, individual bulletin pages) read cleaner.
+// Index pages where the full ambient noise field and DATA pulse are welcome.
+// Dense content pages keep only on-demand click ripples, avoiding a continuous
+// animation behind material meant for reading or interaction.
 const NOISE_PATHS: ReadonlySet<string> = new Set([
   "/",
   "/demos",

@@ -1,497 +1,193 @@
-# Technical Documentation
+# Technical documentation
 
-Detailed architecture documentation for rusen.ai.
+This document describes the current rusen.ai architecture. Historical plans in
+`docs/plans/` may describe experiments or designs that are not live.
 
-## Table of Contents
+## Runtime boundary
 
-1. [System Architecture](#system-architecture)
-2. [Frontend Architecture](#frontend-architecture)
-3. [API Layer](#api-layer)
-4. [Browser ML Integration](#browser-ml-integration)
-5. [Demo Implementations](#demo-implementations)
-6. [State Management](#state-management)
-7. [Deployment](#deployment)
+rusen.ai is a Next.js App Router application configured with
+`output: "export"`. `npm run build` produces a self-contained `out/` directory
+for Cloudflare Pages.
 
----
+Production has:
 
-## System Architecture
+- static HTML, CSS, JavaScript, JSON, WASM, images, and document downloads;
+- browser-side React state and browser storage;
+- browser-side model inference and direct calls to public third-party APIs in
+  the demos that need live data.
 
-### High-Level Overview
+Production does not have:
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                         Browser                                  │
-├─────────────────────────────────────────────────────────────────┤
-│  Next.js App (Static Export)                                    │
-│  ├── Cloud LLM Demos ──────────┐                                │
-│  │   (Paper Pilot, Query Craft, │                               │
-│  │    Data Forge)               │                               │
-│  │                              ▼                               │
-│  │                    ┌─────────────────┐                       │
-│  │                    │   useAPI Hook   │                       │
-│  │                    └────────┬────────┘                       │
-│  │                             │                                │
-│  └─────────────────────────────┼────────────────────────────────│
-│                                │                                │
-│  Browser ML Demos              │                                │
-│  (Classify Anything,           │                                │
-│   Embedding Explorer)          │                                │
-│           │                    │                                │
-│           ▼                    │                                │
-│  ┌─────────────────┐           │                                │
-│  │ Transformers.js │           │                                │
-│  │ (WASM Runtime)  │           │                                │
-│  └─────────────────┘           │                                │
-│           │                    │                                │
-│           ▼                    │                                │
-│  ┌─────────────────┐           │                                │
-│  │   IndexedDB     │           │                                │
-│  │ (Model Cache)   │           │                                │
-│  └─────────────────┘           │                                │
-└────────────────────────────────┼────────────────────────────────┘
-                                 │
-                                 ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    Cloudflare Edge                               │
-├─────────────────────────────────────────────────────────────────┤
-│  Pages Functions                                                 │
-│  ├── /api/llm ─────────────────────────────────────────────────▶│
-│  │   (LLM Proxy)                                                │
-│  │   • API key rotation (10 keys)                               │
-│  │   • Model fallback chains                                    │
-│  │   • Rate limiting (30/min/IP)                                │
-│  │   • Streaming support                                        │
-│  │                                                              │
-│  └── /api/proxy ───────────────────────────────────────────────▶│
-│      (CORS Proxy)                                               │
-│      • Academic API whitelist                                   │
-│      • 1-hour cache                                             │
-└─────────────────────────────────────────────────────────────────┘
-                                 │
-                                 ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    External Services                             │
-├─────────────────────────────────────────────────────────────────┤
-│  OpenRouter API                                                  │
-│  ├── google/gemini-2.5-flash                                    │
-│  ├── deepseek/deepseek-v3.2-20251201                            │
-│  ├── x-ai/grok-4.1-fast                                         │
-│  └── openai/gpt-oss-120b                                        │
-│                                                                  │
-│  Academic APIs (via proxy)                                       │
-│  ├── CrossRef, Semantic Scholar                                  │
-│  ├── arXiv, Unpaywall                                           │
-│  └── OpenAlex, CORE                                             │
-└─────────────────────────────────────────────────────────────────┘
+- a Next.js application server;
+- Cloudflare Pages Functions or a Worker API in this repository;
+- an OpenRouter proxy, API-key rotation, or runtime secrets;
+- a database or server-managed user state.
+
+## Source layout
+
+```text
+src/app/
+  layout.tsx                 Root document, fonts, metadata, header, footer
+  components/               Shared site shell and ambient background
+  demos/, nerdy-stuff/      Collection index pages
+  bulletin/                 Software index and detail pages
+  blogs/                    Markdown indexes, posts, tags, series, RSS
+  cv/                       Localized web CV
+  photos/                   Localized photography archive
+  <project>/                Root-level interactive project routes
+
+src/components/ui/          Shared demo primitives
+src/content/                Content and generated manifests
+src/lib/                    Loaders, validators, metadata, and registries
+public/                     Published assets copied into the static export
+scripts/                    Asset generation and offline research tools
 ```
 
-### Request Flow
+## Site shell
 
-**Cloud LLM Request:**
-```
-User Action → React Component → useAPI.generate() → fetch(/api/llm)
-    → Cloudflare Function → Rate Limit Check → API Key Selection
-    → OpenRouter API → Model Fallback (if 429/5xx) → Stream Response
-    → processStream() → onStream callback → UI Update
-```
+`src/app/layout.tsx` owns global metadata and renders the shared header,
+background, content shell, and footer. Theme state and ambient-background state
+are client-side preferences stored in local storage. The background renderer is
+suppressed or simplified on routes where it would interfere with dense content.
 
-**Browser ML Request:**
-```
-User Action → React Component → useClassifier/useEmbedding/useLocalLLM
-    → Check IndexedDB Cache → Load Model (if needed) → Run Inference
-    → Return Results → UI Update
-```
+Navigation data lives in `src/content/navigation.json`. The header resolves the
+active collection from the current pathname, so root-level project pages still
+select their parent collection.
 
----
+## Project registry and routes
 
-## Frontend Architecture
+`src/content/projects.json` is the source of project titles, summaries, status,
+collection, tags, and external links. `src/lib/projects.ts` validates and exposes
+typed selectors for:
 
-### Directory Structure
+- collection index cards;
+- featured homepage projects;
+- active navigation state;
+- route and social metadata lookup.
 
-```
-src/
-├── app/                          # Next.js App Router
-│   ├── layout.tsx                # Root layout (fonts, header)
-│   ├── page.tsx                  # Home page
-│   ├── globals.css               # Tailwind + custom animations
-│   ├── components/               # App-level components
-│   │   ├── Header.tsx            # Navigation
-│   │   ├── DemoCard.tsx          # Demo preview cards
-│   │   └── DataBackground.tsx    # Visual background
-│   ├── demos/                    # Cloud LLM demos
-│   │   ├── paper-pilot/
-│   │   ├── query-craft/
-│   │   ├── data-forge/
-│   │   └── classify-anything/
-│   └── nerdy-stuff/              # Browser ML demos
-│       ├── embedding-explorer/
-│       └── rusenizer/
-├── components/
-│   └── ui/                       # Shared UI library
-│       ├── Button.tsx
-│       ├── Alert.tsx
-│       ├── Card.tsx
-│       ├── Spinner.tsx
-│       ├── EmptyState.tsx
-│       ├── ModelSelector.tsx
-│       └── index.ts              # Barrel export
-├── hooks/
-│   ├── useAPI.ts                 # Unified LLM hook
-│   └── index.ts
-└── lib/
-    ├── api.ts                    # API URL management
-    ├── config.ts                 # Models, timeouts, settings
-    └── design-tokens.ts          # Design system tokens
-```
+Demo and nerdy project pages use root routes such as `/convolution-lab` and
+`/emergence`. Bulletin detail pages live under `/bulletin/<slug>`.
+`coming-soon` records can appear as disabled cards without having a route.
 
-### Component Hierarchy
+## Content systems
 
-```
-RootLayout
-├── Header (navigation)
-├── DataBackground (visual)
-└── Page Content
-    └── Demo Page ("use client")
-        ├── Error Alert
-        ├── Main Interface
-        │   ├── Input Components
-        │   ├── Action Buttons
-        │   └── Output/Results
-        └── Info Section
-```
+### Blog
 
-### UI Component Library
+Posts are Markdown/MDX files under `src/content/blog/en/` and
+`src/content/blog/tr/`. `src/lib/blog.ts` parses frontmatter, computes reading
+time, groups translations and series, and produces tag/series collections.
+`src/content/series.json` supplies localized series names.
 
-All shared components in `src/components/ui/`:
+Post rendering uses `next-mdx-remote` with GFM, math, KaTeX, heading slugs, and
+syntax highlighting. Blog routes are statically enumerated during the build.
 
-| Component | Props | Purpose |
-|-----------|-------|---------|
-| `Button` | variant, size, loading, icon | Primary actions |
-| `Alert` | variant, title, dismissible | Error/success messages |
-| `Card` | header, footer, padding | Content containers |
-| `Spinner` | size, color | Loading states |
-| `EmptyState` | icon, title, description | Empty placeholders |
-| `ModelSelector` | value, onChange, models | LLM model dropdown |
+### Photography
 
-### Styling System
+`src/content/photos.json` contains localized editorial copy, series, ordering,
+credits, and display transforms. `scripts/photos-build.ts` reads the complete
+selected JPEG directory, applies transforms, and writes three immutable WebP
+variants per image plus `src/content/photos.generated.json`.
 
-**Tailwind CSS 4** with custom configuration:
+The generated URLs include a source-derived version directory. `public/_headers`
+gives those versioned assets a one-year immutable cache policy. Raw originals
+remain outside the repository.
 
-```css
-/* globals.css */
-:root {
-  --background: #fafafa;
-  --foreground: #171717;
-}
+### CV
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0c0c0f;
-    --foreground: #ededed;
-  }
-}
-```
+Locale content is stored in `src/content/cv.json`, `cv.tr.json`, and
+`cv.ja.json`. The web routes and Markdown endpoints read those files directly.
+`scripts/render_cv.py` uses the same data to render public TeX and PDF downloads.
+It runs as a PEP 723 `uv` script and requires `tectonic`; Japanese PDF generation
+also requires suitable CJK fonts.
 
-**Design Tokens** (`src/lib/design-tokens.ts`):
-- Colors (accent, error, success, neutral scale)
-- Spacing (padding, gaps)
-- Focus states (ring styles)
+### Social previews
 
----
+`src/content/social-pages.json`, project metadata, blog metadata, and the photo
+manifest feed `scripts/social-build.ts`. It generates 1200×630 cards under
+`public/social/` and records their metadata in `public/social/manifest.json`.
 
-## API Layer
+The build has two checks:
 
-### Cloudflare Functions
+1. `prebuild` verifies that expected cards exist and meet dimension/size rules.
+2. `postbuild` inspects exported HTML for canonical, Open Graph, and Twitter
+   metadata matching the manifest.
 
-#### `/api/llm` - LLM Proxy
+Run `npm run social:build` when source copy or registry data changes.
 
-**Location:** `functions/api/llm.ts`
+## Browser-side interactive systems
 
-**Purpose:** Secure proxy for OpenRouter API calls
+Many pages are pure TypeScript simulations and visualizations. ML pages load
+large libraries or models only in the browser, usually through dynamic imports,
+and expose loading/error state while artifacts initialize. Depending on the
+demo, browser caches may include Cache Storage or IndexedDB entries.
 
-**Features:**
-- API key rotation (round-robin across 10 keys)
-- Use-case-specific model fallback chains
-- Rate limiting (30 req/min per IP)
-- Streaming support (SSE)
-- JSON mode for structured output
+The Pulse Board is different: it fetches public data sources directly from the
+visitor's browser. Availability, CORS policy, response shape, and unauthenticated
+rate limits are therefore external runtime dependencies. The site has no proxy
+that can normalize or guarantee those APIs.
 
-**Model Fallback Chains:**
+## Generated computational assets
 
-| Use Case | Primary | Fallbacks |
-|----------|---------|-----------|
-| paper-pilot | Gemini 2.5 Flash | Gemini 3 Flash, DeepSeek V3.2, Grok 4.1, GPT OSS |
-| query-craft | Gemini 2.5 Flash | DeepSeek V3.2, Grok Code, Gemini Lite, GPT OSS |
-| data-forge | Gemini 2.5 Flash | Gemini Lite, DeepSeek V3.2, Grok 4.1, GPT OSS |
-| default | Gemini 2.5 Flash | Gemini Lite, DeepSeek V3.2, Grok 4.1, GPT OSS |
+RL-Arena uses JSON checkpoints in `public/adaptive-arena-checkpoints/` and a
+generated TypeScript manifest. The browser fetches only the selected checkpoint.
+The canonical offline trainer is `scripts/train_adaptive_arena.py`, a small
+entry point to the vectorized PyTorch implementation in `train_arena_gpu.py`.
+The older TypeScript trainer is retained for historical comparison and is not
+the canonical checkpoint pipeline.
 
-**Request Format:**
-```typescript
-{
-  messages: [{ role: "system" | "user", content: string }],
-  model?: string,           // Specific model or omit for auto
-  max_tokens?: number,
-  temperature?: number,
-  stream?: boolean,
-  response_format?: { type: "json_object" },
-  use_case?: string         // Determines fallback chain
-}
+Rusenizer ships a WASM module and merge-rank data under `public/wasm/` and
+`public/models/`. Game of Life ships precomputed PNG data under
+`public/game-of-life/`.
+
+## Testing and continuous integration
+
+Vitest covers deterministic algorithms, content contracts, metadata, and key
+shared interactions. ESLint includes Next.js core-web-vitals and TypeScript
+rules. Next's production build supplies the strict TypeScript/static-export
+check.
+
+`.github/workflows/ci.yml` runs on pull requests and pushes to `main` with the
+repository-pinned Node and npm versions:
+
+```text
+npm ci
+npm run lint
+npm run test:run
+npm run build
 ```
 
-**Response Headers:**
-- `X-RateLimit-Remaining` - Requests left in window
-- `X-Model-Used` - Which model processed request
-
-#### `/api/proxy` - CORS Proxy
-
-**Location:** `functions/api/proxy.ts`
-
-**Purpose:** Bypass CORS for academic APIs
-
-**Whitelisted Domains:**
-- arXiv, Semantic Scholar, CrossRef
-- Unpaywall, OpenAlex, CORE
-- PubMed, BioRxiv, Nature, PLOS, Zenodo
-
-### Client-Side API Hook
-
-**Location:** `src/hooks/useAPI.ts`
-
-**Interface:**
-```typescript
-function useAPI(selectedModel: string, config: UseAPIConfig): UseAPIReturn
-
-interface UseAPIConfig {
-  useCase: UseCase;
-  defaultStream?: boolean;
-  defaultMaxTokens?: number;
-  defaultTemperature?: number;
-}
-
-interface UseAPIReturn {
-  isGenerating: boolean;
-  error: string | null;
-  rateLimitRemaining: number | null;
-  lastModelUsed: string | null;
-  generate: (options: GenerateOptions) => Promise<GenerationResult>;
-  clearError: () => void;
-}
-```
-
-**Streaming Implementation:**
-- Uses ReadableStream API
-- 50ms debounce on UI updates (batching)
-- Partial JSON extraction during stream for real-time display
-
----
-
-## Browser ML Integration
-
-### Transformers.js Setup
-
-All browser ML uses `@huggingface/transformers` with WASM backend.
-
-### Models Used
-
-| Demo | Model | Size | Purpose |
-|------|-------|------|---------|
-| Classify Anything | Xenova/mobilebert-uncased-mnli | ~100MB | Zero-shot classification |
-| Embedding Explorer | mixedbread-ai/mxbai-embed-xsmall-v1 | ~50MB | 384-dim embeddings |
-
-### Hook Implementations
-
-#### `useClassifier` (Classify Anything)
-
-```typescript
-// src/app/demos/classify-anything/hooks/useClassifier.ts
-
-interface UseClassifierReturn {
-  isLoading: boolean;
-  loadingProgress: number;
-  error: string | null;
-  classify: (text: string, labels: string[]) => Promise<ClassificationResult[]>;
-}
-```
-
-- Loads MobileBERT model on first use
-- Caches in IndexedDB
-- Returns confidence scores for each label
-
-#### `useEmbedding` (Embedding Explorer)
-
-```typescript
-// src/app/nerdy-stuff/embedding-explorer/hooks/useEmbedding.ts
-
-interface UseEmbeddingReturn {
-  embed: (text: string) => Promise<number[]>;
-  embedBatch: (texts: string[]) => Promise<Map<string, number[]>>;
-  getCached: (text: string) => number[] | null;
-}
-```
-
-- 384-dimensional vectors
-- In-memory cache for embeddings
-- Cosine similarity utilities
-
----
-
-## Demo Implementations
-
-### Paper Pilot
-
-**Purpose:** Academic paper summarization and Q&A
-
-**Data Flow:**
-1. User enters DOI/arXiv ID
-2. `paperFetcher.ts` queries multiple APIs (CrossRef, arXiv, Semantic Scholar)
-3. PDF extracted via pdfjs-dist if available
-4. User selects summary type (TL;DR, Technical, ELI5, Key Findings)
-5. `useAPI` streams summary from LLM
-6. Q&A uses paper content as context
-
-**Key Files:**
-- `page.tsx` - Main component
-- `reducers.ts` - State management
-- `utils/paperFetcher.ts` - Multi-source paper fetching
-
-### Query Craft
-
-**Purpose:** Natural language to SQL translation
-
-**Data Flow:**
-1. User builds schema (tables, columns, types, foreign keys)
-2. User enters natural language query
-3. Schema + query sent to LLM with JSON mode
-4. Response parsed for `{ sql, explanation }`
-5. SQL syntax highlighted and displayed
-
-**Features:**
-- 4 SQL dialects (PostgreSQL, MySQL, SQLite, SQL Server)
-- Preset schemas (e-commerce, social media)
-- URL hash for shareable queries
-- localStorage persistence
-
-### Data Forge
-
-**Purpose:** Generate realistic test data from schema
-
-**Data Flow:**
-1. User defines schema with relationships
-2. Dependency graph built (parent tables first)
-3. Tables generated in parallel at each dependency level
-4. LLM generates contextually-aware data
-5. Export to SQL INSERT, JSON, or CSV
-
-**Key Feature:** Dependency-aware generation ensures foreign keys reference existing rows.
-
-### Classify Anything
-
-**Purpose:** Zero-shot text classification
-
-**Data Flow:**
-1. User defines custom labels
-2. User enters text to classify
-3. MobileBERT model loaded (cached in IndexedDB)
-4. Zero-shot inference returns confidence per label
-5. Results displayed as ranked list
-
-**Key Feature:** Runs entirely in browser - no data leaves device.
-
----
-
-## State Management
-
-### Pattern: useReducer + Types
-
-Each demo follows this pattern:
-
-```typescript
-// types.ts
-interface State {
-  // Demo-specific state
-}
-
-type Action =
-  | { type: "SET_X"; payload: X }
-  | { type: "CLEAR" }
-  | { type: "ADD_ITEM"; payload: Item };
-
-// reducers.ts
-function reducer(state: State, action: Action): State {
-  switch (action.type) {
-    case "SET_X":
-      return { ...state, x: action.payload };
-    // ...
-  }
-}
-
-// page.tsx
-const [state, dispatch] = useReducer(reducer, initialState);
-```
-
-### Persistence Strategies
-
-| Strategy | Used By | Purpose |
-|----------|---------|---------|
-| URL Hash | Query Craft, Data Forge | Shareable state |
-| localStorage | Query Craft | Persist schema/history |
-| In-memory | Paper Pilot | Session-only |
-
-### URL State Encoding
-
-```typescript
-// Encode state to URL
-const encoded = btoa(JSON.stringify(state));
-window.location.hash = encoded;
-
-// Decode state from URL
-const decoded = JSON.parse(atob(window.location.hash.slice(1)));
-```
-
----
+Cloudflare Pages remains the deployment/build check. CI is the independent code
+quality gate.
 
 ## Deployment
 
-### Cloudflare Pages
+Cloudflare Pages configuration:
 
-**Build Configuration:**
-- Framework: Next.js (Static Export)
-- Build command: `npm run build`
-- Output directory: `out`
+- build command: `npm run build`
+- output directory: `out`
+- runtime environment variables: none
 
-**Environment Secrets:**
-```
-OPENROUTER_API_KEY_01
-OPENROUTER_API_KEY_02
-...
-OPENROUTER_API_KEY_10
-```
+Cloudflare deploys production from `main`. `npm run deploy` is a manual Wrangler
+path for an already-built `out/` directory and requires an authenticated account
+or appropriate Cloudflare credentials.
 
-### Static Export
+The site should be previewed locally with `npm run build && npm start`; `next
+start` is incompatible with a static export.
 
-Next.js configured for static export:
+## Offline Python and model-export tools
 
-```typescript
-// next.config.ts
-const config = {
-  output: "export",
-  images: { unoptimized: true },
-};
-```
+`pyproject.toml` and `uv.lock` define the reproducible RL training environment.
+They intentionally do not claim to reproduce every historical model-export
+experiment.
 
-All pages pre-rendered at build time. Client-side hydration enables interactivity.
+The two SAM3 utilities are specialized:
 
-### CI/CD
+- `scripts/export_sam3_browser.py` requires an explicit local SAM3 checkout and
+  an environment with `samexporter`, TorchVision, ONNX, and optional ONNX
+  simplification support.
+- `scripts/prepare_sam3_webgpu_models.py` requires ONNX and ONNX Runtime tooling
+  and transforms already-exported models.
 
-1. Push to `main` branch
-2. Cloudflare Pages auto-builds
-3. Functions deployed to edge
-4. Static assets served from CDN
-
-### Development vs Production
-
-| Aspect | Development | Production |
-|--------|-------------|------------|
-| API calls | Proxy through rusen.ai | Direct to /api/* |
-| Functions | Not available locally | Cloudflare Workers |
-| Build | `next dev` | `next build` (static) |
+These utilities are not invoked by the website build, CI, or `uv sync`. Use a
+purpose-built research environment and explicit input/output directories so
+large model artifacts never enter the web repository accidentally.

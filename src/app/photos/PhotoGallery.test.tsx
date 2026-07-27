@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react";
+import { fireEvent, render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { allPhotos, heroPhoto, photoSeries } from "@/lib/photos";
 import PhotoGallery from "./PhotoGallery";
@@ -83,5 +83,31 @@ describe("PhotoGallery language scope", () => {
       "data-allow-select",
     );
     expect(container.querySelector("button")).not.toHaveAttribute("data-allow-select");
+  });
+
+  it("describes gallery and lightbox image widths responsively", () => {
+    const { container } = render(
+      <PhotoGallery hero={heroPhoto} series={photoSeries} photos={allPhotos} />,
+    );
+
+    const gallerySizes = Array.from(
+      container.querySelectorAll<HTMLImageElement>(".photo-frame img"),
+      (image) => image.sizes,
+    );
+    expect(gallerySizes.some((sizes) => sizes.includes("100vw - 22rem"))).toBe(true);
+    expect(gallerySizes.some((sizes) => sizes.includes("/ 2"))).toBe(true);
+    expect(gallerySizes.some((sizes) => sizes.includes("/ 3"))).toBe(true);
+
+    const firstFrame = container.querySelector<HTMLButtonElement>(".photo-frame");
+    if (!firstFrame) throw new Error("Expected a gallery photo frame");
+    fireEvent.click(firstFrame);
+    const lightboxImage = container.querySelector<HTMLImageElement>(
+      ".photo-lightbox figure img",
+    );
+    expect(lightboxImage).toHaveAttribute("srcset");
+    expect(lightboxImage).toHaveAttribute(
+      "sizes",
+      "(max-width: 720px) 100vw, 72vw",
+    );
   });
 });

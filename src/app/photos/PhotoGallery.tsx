@@ -93,6 +93,7 @@ type PhotoFrameProps = {
   total: number;
   priority?: boolean;
   hero?: boolean;
+  sizes?: string;
   onOpen: (index: number, opener: HTMLButtonElement) => void;
 };
 
@@ -106,6 +107,16 @@ function photoDescription(copy: Photo["translations"][PhotoLocale]): string {
   return copy.caption ?? copy.story ?? "";
 }
 
+function gallerySizes(itemsInRow: number): string {
+  if (itemsInRow <= 1) {
+    return "(max-width: 720px) 100vw, (max-width: 1600px) calc(100vw - 22rem), 72rem";
+  }
+  if (itemsInRow === 2) {
+    return "(max-width: 720px) 100vw, (max-width: 1600px) calc((100vw - 23.5rem) / 2), 35rem";
+  }
+  return `(max-width: 720px) 100vw, (max-width: 1600px) calc((100vw - 25rem) / ${itemsInRow}), ${Math.floor(70 / itemsInRow)}rem`;
+}
+
 function PhotoFrame({
   photo,
   locale,
@@ -114,6 +125,7 @@ function PhotoFrame({
   total,
   priority = false,
   hero = false,
+  sizes = "100vw",
   onOpen,
 }: PhotoFrameProps) {
   const copy = photo.translations[locale];
@@ -138,7 +150,7 @@ function PhotoFrame({
       <img
         src={hero ? photo.sources.large.url : photo.sources.display.url}
         srcSet={sourceSet(photo)}
-        sizes={hero ? "100vw" : "(max-width: 720px) 100vw, (max-width: 1100px) 50vw, 34vw"}
+        sizes={hero ? "100vw" : sizes}
         width={photo.width}
         height={photo.height}
         alt={copy.alt}
@@ -360,6 +372,7 @@ export default function PhotoGallery({ hero, series, photos }: PhotoGalleryProps
                             ui={ui}
                             index={index}
                             total={photos.length}
+                            sizes={gallerySizes(row.length)}
                             onOpen={open}
                           />
                         </div>
@@ -410,7 +423,9 @@ export default function PhotoGallery({ hero, series, photos }: PhotoGalleryProps
             <figure>
               <img
                 key={activePhoto.id}
-                src={activePhoto.sources.large.url}
+                src={activePhoto.sources.display.url}
+                srcSet={sourceSet(activePhoto)}
+                sizes="(max-width: 720px) 100vw, 72vw"
                 width={activePhoto.width}
                 height={activePhoto.height}
                 alt={activeCopy.alt}

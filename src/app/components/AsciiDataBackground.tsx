@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { getResolvedTheme } from "./theme";
+import { getResolvedTheme, THEME_EVENT } from "./theme";
 
 const DENSITY_RAMP = " .·:-=+*#%@";
 const CELL_W = 10;
@@ -76,6 +76,7 @@ const MAX_RIPPLES = 10;
 // Drawing a cell becomes a single drawImage instead of fillStyle + fillText.
 // 16 buckets keeps alpha quantization invisible at the opacities we use.
 const NUM_ALPHA_BUCKETS = 16;
+const FRAME_INTERVAL_MS = 1000 / 30;
 
 type Ripple = { x: number; y: number; t: number };
 type LiveRipple = {
@@ -103,26 +104,32 @@ export default function AsciiDataBackground({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ripplesRef = useRef<Ripple[]>([]);
   const animRef = useRef(0);
+  const wakeRef = useRef<(() => void) | null>(null);
+  const motionAllowedRef = useRef(true);
   // Read inside the frame loop so toggling without remounting works.
   const noiseRef = useRef(noise);
   useEffect(() => {
     noiseRef.current = noise;
+    wakeRef.current?.();
   }, [noise]);
   const wordRef = useRef(word);
   useEffect(() => {
     wordRef.current = word;
+    wakeRef.current?.();
   }, [word]);
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
+      if (!motionAllowedRef.current) return;
       // Routes can opt out of ripples by wrapping their content in an
       // element with [data-no-ripple] (e.g. /blogs/* keeps clicks quiet for
       // reading material). Header/footer clicks are unaffected.
-      const target = e.target as Element | null;
-      if (target?.closest("[data-no-ripple]")) return;
+      const target = e.target;
+      if (target instanceof Element && target.closest("[data-no-ripple]")) return;
       const rs = ripplesRef.current;
       rs.push({ x: e.clientX, y: e.clientY, t: performance.now() });
       if (rs.length > MAX_RIPPLES) rs.shift();
+      wakeRef.current?.();
     };
     document.addEventListener("click", onClick);
     return () => document.removeEventListener("click", onClick);
@@ -191,7 +198,6 @@ export default function AsciiDataBackground({
       buildAtlas();
     };
     layout();
-    window.addEventListener("resize", layout);
 
     const rebuildLetterMap = (startR: number) => {
       letterMap.clear();
@@ -214,7 +220,7 @@ export default function AsciiDataBackground({
     // Reused across frames to avoid GC churn from per-frame allocations.
     const liveRipples: LiveRipple[] = [];
 
-    const frame = (now: number) => {
+    const drawFrame = (now: number): boolean => {
       // Theme toggle → rebuild atlas with new color.
       const t = getResolvedTheme();
       if (t !== currentTheme) {
@@ -333,13 +339,81 @@ export default function AsciiDataBackground({
         }
       }
 
+      return noiseOn || rs.length > 0;
+    };
+
+    let framePending = false;
+    let lastPaint = -Infinity;
+    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let reducedMotion = motionQuery.matches;
+    motionAllowedRef.current = !reducedMotion;
+
+    const cancelScheduledFrame = () => {
+      if (!framePending) return;
+      cancelAnimationFrame(animRef.current);
+      framePending = false;
+    };
+
+    const scheduleFrame = () => {
+      if (framePending || document.hidden || reducedMotion) return;
+      framePending = true;
       animRef.current = requestAnimationFrame(frame);
     };
-    animRef.current = requestAnimationFrame(frame);
+
+    const frame = (now: number) => {
+      framePending = false;
+      if (document.hidden || reducedMotion) return;
+
+      if (now - lastPaint < FRAME_INTERVAL_MS) {
+        scheduleFrame();
+        return;
+      }
+
+      lastPaint = now;
+      if (drawFrame(now)) scheduleFrame();
+    };
+
+    const wake = () => {
+      if (document.hidden) return;
+      if (reducedMotion) {
+        // Keep the visual texture, but freeze it and suppress click ripples.
+        ripplesRef.current.length = 0;
+        drawFrame(startTime);
+        return;
+      }
+      scheduleFrame();
+    };
+
+    const onResize = () => {
+      layout();
+      wake();
+    };
+    const onVisibilityChange = () => {
+      if (document.hidden) cancelScheduledFrame();
+      else wake();
+    };
+    const onMotionPreferenceChange = (event: MediaQueryListEvent) => {
+      reducedMotion = event.matches;
+      motionAllowedRef.current = !reducedMotion;
+      cancelScheduledFrame();
+      wake();
+    };
+
+    wakeRef.current = wake;
+    window.addEventListener("resize", onResize);
+    window.addEventListener(THEME_EVENT, wake);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    motionQuery.addEventListener("change", onMotionPreferenceChange);
+    wake();
 
     return () => {
-      cancelAnimationFrame(animRef.current);
-      window.removeEventListener("resize", layout);
+      cancelScheduledFrame();
+      wakeRef.current = null;
+      motionAllowedRef.current = true;
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener(THEME_EVENT, wake);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      motionQuery.removeEventListener("change", onMotionPreferenceChange);
     };
   }, []);
 

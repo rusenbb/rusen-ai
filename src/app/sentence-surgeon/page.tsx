@@ -165,7 +165,7 @@ export default function SentenceSurgeonPage() {
         <p className="text-xs italic text-neutral-500">
           {fillMask.status === "ready"
             ? "Type something to see how the model tokenises it."
-            : "Tokens will appear once DistilBERT finishes loading."}
+            : "Load DistilBERT to inspect its WordPiece tokens."}
         </p>
       );
     }
@@ -214,6 +214,15 @@ export default function SentenceSurgeonPage() {
 
       {/* Status strip */}
       <div className="mb-4 text-xs font-mono">
+        {fillMask.status === "idle" && (
+          <button
+            type="button"
+            onClick={() => void fillMask.loadModel()}
+            className="border border-neutral-300 px-3 py-1.5 text-neutral-700 transition hover:border-cyan-500 hover:text-cyan-700 dark:border-neutral-700 dark:text-neutral-300 dark:hover:border-cyan-400 dark:hover:text-cyan-300"
+          >
+            Load DistilBERT
+          </button>
+        )}
         {fillMask.status === "loading" && (
           <span className="text-neutral-500">Loading DistilBERT… {fillMask.progress}%</span>
         )}
@@ -226,6 +235,15 @@ export default function SentenceSurgeonPage() {
           <span className="text-cyan-600 dark:text-cyan-400">Predicting…</span>
         )}
         {fillMask.error && <span className="text-red-500">{fillMask.error}</span>}
+        {fillMask.status === "error" && (
+          <button
+            type="button"
+            onClick={() => void fillMask.loadModel()}
+            className="ml-3 text-neutral-500 underline underline-offset-2 hover:text-neutral-800 dark:hover:text-neutral-200"
+          >
+            Try again
+          </button>
+        )}
         {predictError && <span className="text-red-500 ml-3">{predictError}</span>}
       </div>
 

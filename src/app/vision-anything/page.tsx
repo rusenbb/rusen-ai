@@ -20,7 +20,7 @@ const PRESET_LABELS = [
 ];
 
 export default function VisionAnythingPage() {
-  const { isLoading, isModelReady, loadProgress, status, error, classify } = useVisionClassifier();
+  const { isLoading, loadProgress, status, error, classify } = useVisionClassifier();
   const clipSeg = useClipSeg();
 
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -365,10 +365,10 @@ export default function VisionAnythingPage() {
           <button
             type="button"
             onClick={handleClassify}
-            disabled={!imageUrl || labels.length < 2 || isClassifying || isLoading || !isModelReady}
+            disabled={!imageUrl || labels.length < 2 || isClassifying || isLoading}
             className="w-full px-4 py-3 rounded-lg bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-medium text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition"
           >
-            {isClassifying ? "Classifying…" : isLoading ? `Loading model… ${loadProgress}%` : "Classify"}
+            {isLoading ? `Loading model… ${loadProgress}%` : isClassifying ? "Classifying…" : "Classify"}
           </button>
 
           {classifyError && (

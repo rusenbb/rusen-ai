@@ -52,6 +52,11 @@ export async function generateMetadata({
   const { slug } = await params;
   const post = getPostBySlug(slug);
   if (!post) return {};
+  const sibling = getTranslation(post);
+  const languages = {
+    [post.lang]: `/blogs/${post.slug}`,
+    ...(sibling ? { [sibling.lang]: `/blogs/${sibling.slug}` } : {}),
+  };
   return buildSocialMetadata({
     title: `${post.title} | Rusen.ai`,
     description: post.description,
@@ -60,6 +65,12 @@ export async function generateMetadata({
     imageAlt: `${post.title} — Rusen.ai blog`,
     type: "article",
     locale: post.lang === "tr" ? "tr_TR" : "en_US",
+    languages,
+    article: {
+      publishedTime: post.date,
+      authors: ["Rusen Birben"],
+      tags: post.tags,
+    },
   });
 }
 
@@ -110,7 +121,7 @@ export default async function PostPage({
   });
 
   return (
-    <main className="post-shell" data-no-ripple>
+    <div className="post-shell" data-no-ripple lang={post.lang}>
       {headings.length >= 2 && (
         <TableOfContents headings={headings} label={tocLabel} />
       )}
@@ -212,6 +223,6 @@ export default async function PostPage({
         :<span style={{ color: "var(--muted)" }}>/blogs</span>${" "}
         <span className="cursor-blink">_</span>
       </div>
-    </main>
+    </div>
   );
 }

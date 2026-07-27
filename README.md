@@ -1,158 +1,135 @@
 # rusen.ai
 
-Interactive AI demos, browser ML experiments, and computational essays.
+Personal portfolio, photography archive, writing, browser-side ML demos, and
+interactive computational essays.
 
 Live site: [rusen.ai](https://rusen.ai)
 
-## What This Repo Is
+## Architecture
 
-This is the source for my personal site and demo collection. The project is a
-static-exported Next.js app with root-level routes for interactive AI tools,
-simulation-heavy explainers, and portfolio content.
+The site is a statically exported Next.js application hosted on Cloudflare
+Pages. There is no application server, Pages Function, database, or runtime API
+key. Interactive ML demos run in the browser and cache model artifacts locally
+when their libraries support it.
 
-The current site mixes:
-
-- browser-side ML demos such as classification, segmentation, tokenization, and embedding exploration
-- interactive essays and labs such as Emergence and Game of Life
-- game-like systems such as RL-Arena and the standalone Game of Life experience
-- portfolio pages such as the homepage, demos index, nerdy-stuff index, and CV
-
-## Current Live Projects
-
-### Demos
-
-| Route | Project | Description |
-|-------|---------|-------------|
-| `/classify-anything` | Classify Anything | Zero-shot text classification in the browser with custom labels |
-| `/segment-anything` | Segment Anything | In-browser image segmentation with SAM 2.1 Tiny via WebAssembly |
-| `/vision-anything` | Vision Anything | Zero-shot image classification with custom labels via CLIP |
-| `/curve-fitter` | Curve Fitter | Scrubbable gradient-descent traces and a gate-by-gate tanh nonlinearity view |
-| `/convolution-lab` | Convolution Lab | Real RGB/B&W kernels with linked receptive fields and honest pooling |
-| `/pathfinding-showdown` | Pathfinding Showdown | Step through BFS, Dijkstra, greedy best-first, and A* frontier decisions |
-| `/pulse-board` | Pulse Board | Multi-signal live dashboard for crypto, weather, earthquakes, and public data |
-| `/adaptive-arena` | RL-Arena | Tactical arena game against trained RL checkpoints |
-| `/outguess` | Outguess | Predictor-versus-human key-tapping game with compact online models |
-
-### Nerdy Stuff
-
-| Route | Project | Description |
-|-------|---------|-------------|
-| `/emergence` | Emergence | Interactive essay on cellular automata, synchrony, segregation, highways, and criticality |
-| `/game-of-life` | Game of Life | Standalone playground for the site’s cellular automata world |
-| `/embedding-explorer` | Embedding Explorer | Visual semantic geometry with embeddings and UMAP |
-| `/sentence-surgeon` | Sentence Surgeon | Mask a word and inspect a small BERT's ranked replacements |
-| `/rusenizer` | Rusenizer | Turkish tokenizer playground and comparison tool |
-| `/fourier-sketch` | Fourier Sketch | Draw a path and reconstruct it with DFT epicycles |
-| `/optimizer-racetrack` | Optimizer Racetrack | Race common optimizers across a visible loss landscape |
-
-Project metadata for the site lives in [src/lib/projects.ts](./src/lib/projects.ts).
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|------------|
-| Framework | Next.js 16, React 19, React Compiler |
-| Language | TypeScript 5.9 |
-| Styling | Tailwind CSS 4 |
-| Browser ML | `@huggingface/transformers`, WASM, IndexedDB caching |
-| Visualization | Canvas 2D, Three.js, UMAP |
-| PDF / Assets | `@react-pdf/renderer`, static JSON/content assets |
-| Testing | Vitest, React Testing Library |
-| Python tooling | `uv`, PyTorch, Transformers |
-| Deployment | Static export on Cloudflare Pages |
-
-## Repository Shape
+The main source areas are:
 
 ```text
-src/
-├── app/                         # Route-level pages and app-specific components
-│   ├── adaptive-arena/
-│   ├── classify-anything/
-│   ├── cv/
-│   ├── emergence/
-│   ├── embedding-explorer/
-│   ├── game-of-life/
-│   ├── pulse-board/
-│   ├── rusenizer/
-│   └── segment-anything/
-├── components/ui/               # Shared layout and UI primitives
-├── content/                     # Site content such as CV data
-└── lib/                         # Shared helpers, registries, and math utilities
-
-public/
-└── segment-anything/            # Sample images and browser model assets
-
-scripts/
-├── prepare_sam3_webgpu_models.py
-├── train_adaptive_arena.py
-└── train-adaptive-arena.ts
+src/app/             App Router pages and page-specific components
+src/components/ui/   Shared UI primitives for interactive demos
+src/content/         Project, photography, CV, blog, and navigation content
+src/lib/             Content loaders, registries, and shared helpers
+public/              Published static and generated assets
+scripts/             Asset generation and offline research utilities
 ```
 
-## Getting Started
+Project routes are deliberately flat (`/segment-anything`, `/emergence`, and so
+on). The `/demos`, `/nerdy-stuff`, and `/bulletin` pages are collection indexes,
+not route prefixes.
 
-### Prerequisites
+## Requirements
 
-- Node.js 20+
-- npm
-- Python 3.12+ if you want to run the generation/training scripts
-- `uv` for Python environment management
+- Node.js 22.23.1 (see `.nvmrc`)
+- npm 11.6.2
+- Python 3.12+ and `uv` only for the optional offline scripts
 
-### Install and run
+With `nvm` installed:
 
 ```bash
-git clone https://github.com/rusenbb/rusen-ai.git
-cd rusen-ai
-npm install
+nvm use
+npm install --global npm@11.6.2
+npm ci
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
 
-### Optional Python setup
+No `.env` file is required for the current site.
+
+## Commands
+
+| Command | Purpose |
+|---|---|
+| `npm run dev` | Start the Next.js development server |
+| `npm run build` | Verify social assets and build the static site into `out/` |
+| `npm start` | Serve an existing `out/` directory locally |
+| `npm run lint` | Run ESLint |
+| `npm run test:run` | Run the Vitest suite once |
+| `npm run test:smoke` | Exercise live routes and core interactions against `out/` in Chromium |
+| `npm test` | Run Vitest in watch mode |
+| `npm run content:check` | Validate project, blog, CV, navigation, and photo content contracts |
+| `npm run projects:docs` | Regenerate `PROJECTS.md` from the project content registry |
+| `npm run social:build` | Regenerate all social preview cards |
+| `npm run social:verify` | Verify expected social preview dimensions and size |
+| `npm run photos:build -- --source <dir>` | Build responsive WebP photography assets and their manifest |
+| `npm run photos:add -- --source <dir>` | Merge a new photo batch into the generated manifest |
+| `npm run photos:verify` | Verify photo copy, layout, variants, and exact generated asset set |
+| `npm run photos:prune:dry-run` | Preview obsolete content-addressed photo assets without deleting them |
+| `npm run cv:build` | Render all CV locales to committed TeX/PDF artifacts |
+| `npm run train:adaptive-arena` | Run the canonical offline RL-Arena trainer |
+| `npm run train:adaptive-arena:deps` | Prepare the optional CUDA training environment |
+| `npm run train:adaptive-arena:ts` | Run the retained legacy TypeScript trainer |
+| `npm run deploy` | Deploy `out/` with an authenticated Wrangler session |
+
+For a local production preview:
 
 ```bash
-uv sync
+npm run build
+npm start
 ```
 
-That is only needed for the Python-backed scripts such as temperature tree
-generation and RL-Arena training.
+`next start` is intentionally not used because Next.js does not support it with
+`output: "export"`.
 
-## Scripts
+## Content and generated artifacts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start the Next.js dev server |
-| `npm run build` | Build the static export |
-| `npm run start` | Start the production server locally |
-| `npm run lint` | Run ESLint |
-| `npm test` | Run Vitest in watch mode |
-| `npm run test:run` | Run Vitest once |
-| `npm run deploy` | Deploy the exported site to Cloudflare Pages |
-| `npm run train:adaptive-arena:deps` | Sync `uv` env and install pinned CUDA PyTorch |
-| `npm run train:adaptive-arena` | Train RL-Arena checkpoints with the Python trainer |
-| `npm run train:adaptive-arena:ts` | Run the legacy TypeScript trainer |
+- `src/content/projects.json` is the site-facing project registry. Selectors and
+  route helpers live in `src/lib/projects.ts`.
+- Blog posts are Markdown files under `src/content/blog/{en,tr}/`; shared series
+  metadata lives in `src/content/series.json`.
+- Photography copy and sequencing live in `src/content/photos.json`.
+  `src/content/photos.generated.json` and `public/photos/` are generated from
+  the selected source photographs. Raw originals are intentionally not stored
+  in this repository.
+- CV content lives in the locale JSON files under `src/content/`. The public
+  TeX/PDF downloads are generated artifacts and should be committed with their
+  source changes.
+- Social card sources are derived from content and project metadata. Generated
+  cards and `public/social/manifest.json` are committed so local development and
+  link previews use the same assets.
+- RL-Arena checkpoint JSON and its TypeScript manifest are offline training
+  outputs committed for browser inference.
 
-## Generated Assets And Data
+When changing source content, regenerate the related artifacts and include both
+the source and outputs in the same pull request.
 
-Some experiences rely on precomputed or shipped assets rather than live backend
-calls.
+## Verification and deployment
 
-- `public/segment-anything/` contains sample images and related browser assets for the segmentation demo
+Pull requests and pushes to `main` run the repository CI workflow with the
+pinned Node/npm toolchain:
 
-## Architecture Notes
+```text
+npm ci -> npm run lint -> npm run test:run -> npm run build -> npm run test:smoke
+```
 
-- The site is statically exported with `output: "export"` in [next.config.ts](./next.config.ts).
-- Routes are top-level app routes like `/segment-anything` and `/embedding-explorer`, not nested under `/demos/...`.
-- Project cards and indexes are driven by the shared registry in [src/lib/projects.ts](./src/lib/projects.ts).
-- Several interactive pages use shipped JSON assets or browser-side inference to avoid needing a live backend.
+Cloudflare Pages uses `npm run build` and publishes `out/`. Production deploys
+from `main`; the local `npm run deploy` command is available for an explicitly
+authorized manual deployment.
 
-## Documentation
+## Offline Python tooling
 
-- [PROJECTS.md](./PROJECTS.md) - Human-readable project registry and roadmap
-- [DOCUMENTATION.md](./DOCUMENTATION.md) - Broader technical notes
-- [CONTRIBUTING.md](./CONTRIBUTING.md) - Contribution guidance
-- [CLAUDE.md](./CLAUDE.md) - Repo-specific assistant guidance
+`uv sync` reproduces the RL-Arena training environment declared by
+`pyproject.toml` and `uv.lock`. The CV renderer is a PEP 723 script and also
+requires `tectonic` on `PATH`.
 
-## License
+The SAM3 export/preparation scripts are specialized research utilities. They
+require an external SAM3 checkout and a separate environment containing the
+exporter, ONNX, ONNX Runtime, and TorchVision dependencies; they are not part of
+the website build or the general `uv sync` environment. See
+[`DOCUMENTATION.md`](./DOCUMENTATION.md) for the boundary.
 
-MIT
+## More documentation
+
+- [`DOCUMENTATION.md`](./DOCUMENTATION.md) — current architecture and data flows
+- [`CONTRIBUTING.md`](./CONTRIBUTING.md) — change and verification workflow
+- [`PROJECTS.md`](./PROJECTS.md) — human-readable project overview

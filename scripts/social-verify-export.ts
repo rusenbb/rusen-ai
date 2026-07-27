@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
 import { relative, resolve } from "node:path";
 
 type SocialManifest = {
@@ -10,6 +10,18 @@ type SocialManifest = {
 const ROOT = process.cwd();
 const OUT_DIR = resolve(ROOT, "out");
 const ORIGIN = "https://rusen.ai";
+const MAX_EXPORT_FILES = 20_000;
+// Cloudflare Pages rejects assets at 25 MiB. Keep a little operational
+// headroom so a dependency update cannot leave deployment balanced on the
+// provider's hard edge.
+const MAX_EXPORT_FILE_BYTES = 24_000_000;
+
+function findFiles(directory: string): string[] {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const filePath = resolve(directory, entry.name);
+    return entry.isDirectory() ? findFiles(filePath) : [filePath];
+  });
+}
 
 function findIndexFiles(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -47,6 +59,21 @@ function main(): void {
   const imageByRoute = new Map(manifest.assets.map((asset) => [asset.route, asset.image]));
   const failures: string[] = [];
   let verified = 0;
+  const exportFiles = findFiles(OUT_DIR);
+  if (exportFiles.length > MAX_EXPORT_FILES) {
+    failures.push(
+      `export contains ${exportFiles.length} files; Pages limit is ${MAX_EXPORT_FILES}`,
+    );
+  }
+  for (const filePath of exportFiles) {
+    const bytes = statSync(filePath).size;
+    if (bytes > MAX_EXPORT_FILE_BYTES) {
+      failures.push(
+        `${relative(OUT_DIR, filePath)} is ${(bytes / 1_000_000).toFixed(2)} MB; ` +
+          `deployment budget is ${(MAX_EXPORT_FILE_BYTES / 1_000_000).toFixed(2)} MB`,
+      );
+    }
+  }
 
   for (const filePath of findIndexFiles(OUT_DIR)) {
     const route = routeForFile(filePath);
@@ -96,7 +123,14 @@ function main(): void {
   if (failures.length > 0) {
     throw new Error(`Exported metadata verification failed:\n- ${failures.join("\n- ")}`);
   }
-  console.log(`Verified social metadata for ${verified} exported HTML pages.`);
+  const largest = exportFiles.reduce((current, filePath) =>
+    statSync(filePath).size > statSync(current).size ? filePath : current,
+  );
+  console.log(
+    `Verified social metadata for ${verified} exported HTML pages; ` +
+      `${exportFiles.length} files fit the deploy budget (largest: ` +
+      `${relative(OUT_DIR, largest)}, ${(statSync(largest).size / 1_000_000).toFixed(2)} MB).`,
+  );
 }
 
 try {

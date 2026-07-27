@@ -209,7 +209,6 @@ export const WIDGET_ORDER = [
   "weather",
   "iss-tracker",
   "earthquake",
-  "internet-pulse",
   "github-trending",
   "hacker-news",
 ] as const;
@@ -230,14 +229,47 @@ function useRelativeTimeTicker(intervalMs = 1000): number {
 
 // Keyboard shortcuts modal
 export function ShortcutsModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+
   useEffect(() => {
-    if (isOpen) {
-      const handleEsc = (e: KeyboardEvent) => {
-        if (e.key === "Escape") onClose();
-      };
-      window.addEventListener("keydown", handleEsc);
-      return () => window.removeEventListener("keydown", handleEsc);
-    }
+    if (!isOpen) return;
+
+    previousFocusRef.current = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    closeRef.current?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab") return;
+
+      const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      if (!focusable?.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+      previousFocusRef.current?.focus();
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -257,17 +289,25 @@ export function ShortcutsModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
   return (
     <div
       className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-      onClick={onClose}
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
     >
       <div
+        ref={dialogRef}
         className="bg-white dark:bg-neutral-900 rounded-lg p-6 max-w-md w-full shadow-xl border border-neutral-200 dark:border-neutral-800"
-        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="pulse-shortcuts-title"
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Keyboard Shortcuts</h2>
+          <h2 id="pulse-shortcuts-title" className="text-lg font-semibold">Keyboard Shortcuts</h2>
           <button
+            ref={closeRef}
+            type="button"
             onClick={onClose}
-            className="text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center text-neutral-600 hover:text-neutral-800 dark:text-neutral-300 dark:hover:text-neutral-100"
+            aria-label="Close keyboard shortcuts"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -1317,87 +1357,6 @@ function ISSTrackerWidget() {
   );
 }
 
-// Internet Pulse Widget - Global internet health indicators
-function InternetPulseWidget() {
-  const [stats, setStats] = useState<{
-    dnsLatency: number;
-    activeConnections: number;
-    globalTraffic: "normal" | "elevated" | "high";
-    topProtocol: string;
-  } | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Simulate real-time internet metrics (actual Cloudflare Radar API requires auth)
-    const updateStats = () => {
-      setStats({
-        dnsLatency: 15 + Math.random() * 20,
-        activeConnections: Math.floor(4.5e9 + Math.random() * 0.5e9),
-        globalTraffic: Math.random() > 0.7 ? "elevated" : "normal",
-        topProtocol: ["HTTPS", "QUIC", "HTTP/3"][Math.floor(Math.random() * 3)],
-      });
-      setLoading(false);
-    };
-
-    updateStats();
-    const interval = setInterval(updateStats, 10000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const getTrafficColor = (traffic: string) => {
-    switch (traffic) {
-      case "high": return "text-red-500";
-      case "elevated": return "text-amber-500";
-      default: return "text-green-500";
-    }
-  };
-
-  return (
-    <Card>
-      <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-        <span className="text-xl">&#127760;</span> Internet Pulse
-      </h2>
-
-      {loading ? (
-        <div className="space-y-3">
-          <Skeleton className="h-6 w-full" />
-          <Skeleton className="h-6 w-3/4" />
-        </div>
-      ) : stats ? (
-        <div className="space-y-3">
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-neutral-500">Global Status</span>
-            <span className={`font-semibold capitalize ${getTrafficColor(stats.globalTraffic)}`}>
-              {stats.globalTraffic}
-            </span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-neutral-500">DNS Latency</span>
-            <span className="font-mono">{stats.dnsLatency.toFixed(1)} ms</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-neutral-500">Active Connections</span>
-            <span className="font-mono">{(stats.activeConnections / 1e9).toFixed(2)}B</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-neutral-500">Top Protocol</span>
-            <span className="font-mono text-blue-500">{stats.topProtocol}</span>
-          </div>
-        </div>
-      ) : null}
-
-      <a
-        href="https://radar.cloudflare.com/"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-xs text-neutral-500 hover:underline mt-3 inline-block"
-      >
-        Cloudflare Radar &#8594;
-      </a>
-    </Card>
-  );
-}
-
 // Rocket Launches Widget - Using Launch Library 2 API (TheSpaceDevs)
 function RocketLaunchesWidget() {
   const [launches, setLaunches] = useState<Array<{
@@ -1732,7 +1691,6 @@ export const PULSE_WIDGETS = [
   { id: "weather", component: <WeatherWidget /> },
   { id: "iss-tracker", component: <ISSTrackerWidget /> },
   { id: "earthquake", component: <EarthquakeWidget /> },
-  { id: "internet-pulse", component: <InternetPulseWidget /> },
   { id: "github-trending", component: <GithubTrendingWidget /> },
   { id: "hacker-news", component: <HackerNewsWidget /> },
 ] as const;
