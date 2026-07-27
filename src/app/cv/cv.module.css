@@ -192,6 +192,16 @@
   background: var(--csurface);
 }
 
+.linkBtn:focus-visible,
+.printBtn:focus-visible,
+.localeBtn:focus-visible,
+.dropdownItem:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 2px solid var(--caccent);
+  outline-offset: -2px;
+}
+
 .printBtn:hover {
   background: var(--cborder-strong);
   color: var(--cbg);
@@ -323,6 +333,20 @@
 .dropdownItem:hover {
   background: var(--cborder-strong);
   color: var(--cbg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .roleIndicator {
+    animation: none;
+  }
+
+  .linkBtn,
+  .printBtn,
+  .localeBtn,
+  .dropdownItem,
+  .linkArrow {
+    transition: none;
+  }
 }
 
 .dropdownItemActive {

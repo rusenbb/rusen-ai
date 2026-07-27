@@ -42,4 +42,17 @@ describe("background preferences", () => {
     expect(window.localStorage.getItem(PHOTO_BG_DISABLED_KEY)).toBe("0");
     expect(window.localStorage.getItem(BG_DISABLED_KEY)).toBeNull();
   });
+
+  it("falls back safely when browser storage is unavailable", () => {
+    vi.stubGlobal("localStorage", {
+      getItem: () => { throw new DOMException("Blocked", "SecurityError"); },
+      setItem: () => { throw new DOMException("Blocked", "SecurityError"); },
+      removeItem: () => { throw new DOMException("Blocked", "SecurityError"); },
+    });
+
+    expect(isBgDisabled("global")).toBe(false);
+    expect(isBgDisabled("photos")).toBe(true);
+    expect(() => setBgDisabled(true, "global")).not.toThrow();
+    expect(isBgDisabled("global")).toBe(true);
+  });
 });

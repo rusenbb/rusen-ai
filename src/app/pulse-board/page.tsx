@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { DemoHeader, DemoPage } from "@/components/ui";
 import {
   AnimatedWidget,
@@ -12,6 +12,7 @@ import {
 export default function PulseBoardPage() {
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const closeShortcuts = useCallback(() => setShowShortcuts(false), []);
 
   useEffect(() => {
     const updateTime = () => {
@@ -24,6 +25,7 @@ export default function PulseBoardPage() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (showShortcuts) return;
       if (
         e.target instanceof HTMLInputElement ||
         e.target instanceof HTMLTextAreaElement ||
@@ -62,11 +64,11 @@ export default function PulseBoardPage() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [showShortcuts]);
 
   return (
     <DemoPage>
-      <ShortcutsModal isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
+      <ShortcutsModal isOpen={showShortcuts} onClose={closeShortcuts} />
 
       <DemoHeader
         eyebrow="Data Engineering / Real-Time"

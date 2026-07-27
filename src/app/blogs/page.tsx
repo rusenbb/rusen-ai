@@ -20,7 +20,7 @@ export default function BlogIndex() {
   const standaloneCount = standalone.length;
 
   return (
-    <main className="blog-shell">
+    <div className="blog-shell">
       <div className="idx-head">
         <span className="blog-kicker">Writings</span>
         <h1>Essays, organised by argument.</h1>
@@ -41,8 +41,8 @@ export default function BlogIndex() {
           num={`${String(i + 1).padStart(2, "0")} //`}
           title={
             <>
-              <span data-post-lang="en">{s.title.en}</span>
-              <span data-post-lang="tr">{s.title.tr}</span>
+              <span data-post-lang="en" lang="en">{s.title.en}</span>
+              <span data-post-lang="tr" lang="tr">{s.title.tr}</span>
             </>
           }
           count={`${String(s.posts.length).padStart(2, "0")} ENTRIES`}
@@ -54,6 +54,7 @@ export default function BlogIndex() {
                 key={p.slug}
                 className="series-entry"
                 data-post-lang={p.lang}
+                lang={p.lang}
               >
                 <Link
                   href={`/blogs/${p.slug}`}
@@ -84,8 +85,8 @@ export default function BlogIndex() {
           num={`${String(series.length + 1).padStart(2, "0")} //`}
           title={
             <>
-              <span data-post-lang="en">Standalone</span>
-              <span data-post-lang="tr">Bağımsız</span>
+              <span data-post-lang="en" lang="en">Standalone</span>
+              <span data-post-lang="tr" lang="tr">Bağımsız</span>
             </>
           }
           count={`${String(standalone.length).padStart(2, "0")} ENTRIES`}
@@ -97,6 +98,7 @@ export default function BlogIndex() {
               href={`/blogs/${p.slug}`}
               className="standalone-entry"
               data-post-lang={p.lang}
+              lang={p.lang}
             >
               <span className="date">{formatDate(p.date, p.lang)}</span>
               <div>
@@ -125,6 +127,6 @@ export default function BlogIndex() {
       >
         {seriesEntriesCount + standaloneCount} entries indexed
       </p>
-    </main>
+    </div>
   );
 }

@@ -52,13 +52,20 @@ export default async function SeriesPage({
   const trMinutes = trPosts.reduce((sum, p) => sum + p.readingMinutes, 0);
 
   return (
-    <main className="blog-shell" data-no-ripple>
+    <div className="blog-shell" data-no-ripple>
       <div className="series-intro">
         <span className="blog-kicker">Series</span>
-        <h1>{series.title.en}</h1>
-        <p style={{ color: "var(--muted)", margin: 0, maxWidth: "65ch" }}>
+        <h1>
+          <span data-post-lang="en" lang="en">{series.title.en}</span>
+          <span data-post-lang="tr" lang="tr">{series.title.tr}</span>
+        </h1>
+        <p data-post-lang="en" lang="en" style={{ color: "var(--muted)", margin: 0, maxWidth: "65ch" }}>
           A running arc - each part builds on what came before. Read them in
           order for the strongest payoff, or dip in anywhere.
+        </p>
+        <p data-post-lang="tr" lang="tr" style={{ color: "var(--muted)", margin: 0, maxWidth: "65ch" }}>
+          Birbirine bağlanan bir anlatı; her bölüm kendinden öncekinin üzerine
+          kurulur. En güçlü bütünlük için sırayla, isterseniz herhangi bir yerden okuyabilirsiniz.
         </p>
         <div className="meta">
           <span data-post-lang="en">
@@ -100,6 +107,7 @@ export default async function SeriesPage({
                 key={p.slug}
                 className="series-entry"
                 data-post-lang={p.lang}
+                lang={p.lang}
               >
                 <Link
                   href={`/blogs/${p.slug}`}
@@ -128,6 +136,6 @@ export default async function SeriesPage({
             );
           })}
       </div>
-    </main>
+    </div>
   );
 }

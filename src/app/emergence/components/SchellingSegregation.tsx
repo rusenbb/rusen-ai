@@ -520,6 +520,8 @@ export default function SchellingSegregation() {
             ref={canvasRef}
             className="w-full block"
             style={{ height: 400, imageRendering: "pixelated" }}
+            role="img"
+            aria-label={`Schelling segregation grid after ${stepCount} steps. ${stats.happyPercent.toFixed(1)} percent of agents are satisfied; average neighborhood similarity is ${stats.avgSimilarity.toFixed(1)} percent.`}
           />
         </div>
 

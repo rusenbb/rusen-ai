@@ -17,6 +17,7 @@ type CliOptions = {
   manifestPath: string;
   editorialPath: string;
   baseUrl: string;
+  mode: "replace" | "merge";
 };
 
 type PhotoTransform = {
@@ -36,6 +37,23 @@ type PreparedPhoto = {
   };
   width: number;
   height: number;
+};
+
+type GeneratedPhoto = {
+  id: string;
+  filename: string;
+  width: number;
+  height: number;
+  aspectRatio: number;
+  sourceHash: string;
+  blurDataUrl: string;
+  sources: Record<VariantName, { url: string; width: number }>;
+};
+
+type GeneratedManifest = {
+  schemaVersion: number;
+  baseUrl: string;
+  photos: GeneratedPhoto[];
 };
 
 const VARIANTS: readonly VariantConfig[] = [
@@ -157,6 +175,7 @@ function parseArgs(args: string[]): CliOptions {
   let manifestPath = "src/content/photos.generated.json";
   let editorialPath = "src/content/photos.json";
   let baseUrl = "/photos";
+  let mode: CliOptions["mode"] = "replace";
 
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
@@ -165,11 +184,12 @@ function parseArgs(args: string[]): CliOptions {
     else if (arg === "--manifest") manifestPath = requireValue(args, index++, arg);
     else if (arg === "--editorial") editorialPath = requireValue(args, index++, arg);
     else if (arg === "--base-url") baseUrl = requireValue(args, index++, arg);
+    else if (arg === "--merge") mode = "merge";
     else if (arg === "--help") {
       console.log(
         "Usage: npm run photos:build -- --source <selected-dir> " +
           "[--output public/photos] [--editorial src/content/photos.json] " +
-          "[--base-url /photos]",
+          "[--base-url /photos] [--merge]",
       );
       process.exit(0);
     } else {
@@ -187,6 +207,7 @@ function parseArgs(args: string[]): CliOptions {
     manifestPath: path.resolve(manifestPath),
     editorialPath: path.resolve(editorialPath),
     baseUrl: baseUrl.replace(/\/+$/, ""),
+    mode,
   };
 }
 
@@ -214,12 +235,17 @@ async function main(): Promise<void> {
   }
 
   await fs.mkdir(options.outputDir, { recursive: true });
-  const photos = [];
+  const batchPhotos: GeneratedPhoto[] = [];
+  const batchIds = new Set<string>();
 
   for (const [index, filename] of filenames.entries()) {
     const sourcePath = path.join(options.sourceDir, filename);
     const source = await fs.readFile(sourcePath);
     const id = photoId(filename);
+    if (batchIds.has(id)) {
+      throw new Error(`Multiple source files resolve to photo id ${id}`);
+    }
+    batchIds.add(id);
     const transform = editorial.photos[id]?.transform;
     const hash = createHash("sha256").update(source);
     if (transform) hash.update(`\ntransform:${JSON.stringify(transform)}`);
@@ -273,7 +299,7 @@ async function main(): Promise<void> {
       .webp({ quality: 28, effort: 4 })
       .toBuffer();
 
-    photos.push({
+    batchPhotos.push({
       id,
       filename,
       width: prepared.width,
@@ -286,14 +312,37 @@ async function main(): Promise<void> {
     console.log(`[${index + 1}/${filenames.length}] ${filename}`);
   }
 
-  const manifest = {
+  let photos = batchPhotos;
+  if (options.mode === "merge") {
+    let previous: GeneratedManifest | null = null;
+    try {
+      previous = JSON.parse(
+        await fs.readFile(options.manifestPath, "utf8"),
+      ) as GeneratedManifest;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    }
+    if (previous) {
+      if (previous.schemaVersion !== 1 || !Array.isArray(previous.photos)) {
+        throw new Error(`Cannot merge unsupported manifest ${options.manifestPath}`);
+      }
+      const merged = new Map(previous.photos.map((photo) => [photo.id, photo]));
+      for (const photo of batchPhotos) merged.set(photo.id, photo);
+      photos = [...merged.values()];
+    }
+  }
+
+  const manifest: GeneratedManifest = {
     schemaVersion: 1,
     baseUrl: options.baseUrl,
     photos,
   };
   await fs.mkdir(path.dirname(options.manifestPath), { recursive: true });
   await fs.writeFile(options.manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
-  console.log(`Wrote ${photos.length} photos to ${options.manifestPath}`);
+  console.log(
+    `${options.mode === "merge" ? "Merged" : "Wrote"} ${batchPhotos.length} source photos; ` +
+      `${photos.length} total in ${options.manifestPath}`,
+  );
 }
 
 main().catch((error: unknown) => {

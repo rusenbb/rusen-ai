@@ -20,6 +20,11 @@ type SocialMetadataInput = {
   locale?: string;
   type?: "website" | "article";
   languages?: LanguageAlternates;
+  article?: {
+    publishedTime: string;
+    authors: string[];
+    tags: string[];
+  };
 };
 
 function imageMimeType(path: string): "image/jpeg" | "image/png" {
@@ -37,6 +42,7 @@ export function buildSocialMetadata({
   locale = "en_US",
   type = "website",
   languages,
+  article,
 }: SocialMetadataInput): Metadata {
   const canonicalUrl = new URL(path, SITE_ORIGIN).toString();
 
@@ -54,6 +60,7 @@ export function buildSocialMetadata({
       siteName: SITE_NAME,
       locale,
       type,
+      ...(type === "article" && article ? article : {}),
       images: [
         {
           url: image,
