@@ -448,6 +448,26 @@
   line-height: 1.58;
 }
 
+.photo-series-credit {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 1rem;
+  color: var(--signal);
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.58rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  line-height: 1.45;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.photo-series-credit:hover,
+.photo-series-credit:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 0.28rem;
+}
+
 .photo-rows {
   min-width: 0;
 }
@@ -543,6 +563,10 @@
   color: var(--photo-muted);
   font-size: clamp(0.75rem, 1vw, 0.86rem);
   line-height: 1.55;
+}
+
+.photo-caption > p[data-copy-kind="caption"] {
+  max-width: 27rem;
 }
 
 .photo-row-item:only-child .photo-caption {
@@ -662,6 +686,30 @@
   color: #aaa7a0;
   font-size: 0.93rem;
   line-height: 1.65;
+}
+
+.photo-lightbox-story[data-copy-kind="caption"] {
+  max-width: 24rem;
+  font-size: 1rem;
+  line-height: 1.72;
+}
+
+.photo-lightbox-credit {
+  width: fit-content;
+  margin-top: 1.25rem;
+  color: #7ef2aa;
+  font-size: 0.58rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  line-height: 1.45;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.photo-lightbox-credit:hover,
+.photo-lightbox-credit:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 0.28rem;
 }
 
 .photo-lightbox-meta {

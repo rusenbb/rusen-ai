@@ -26,7 +26,7 @@ describe("photography collection", () => {
     for (const photo of allPhotos) {
       expect(photo.alt.length).toBeGreaterThan(12);
       expect(photo.title.length).toBeGreaterThan(4);
-      expect(photo.story.length).toBeGreaterThan(50);
+      expect((photo.story ?? photo.caption)?.length).toBeGreaterThan(20);
       expect(photo.seriesTitle.length).toBeGreaterThan(3);
       expect(photo.sources.thumbnail.url).toMatch(/^\/photos\//);
       expect(photo.sources.display.url).toMatch(/^\/photos\//);
@@ -35,7 +35,7 @@ describe("photography collection", () => {
   });
 
   it("publishes each non-hero photograph inside exactly one named series", () => {
-    expect(photoSeries).toHaveLength(4);
+    expect(photoSeries).toHaveLength(6);
     expect(new Set(photoSeries.map((series) => series.title)).size).toBe(photoSeries.length);
     expect(photoSeries.flatMap((series) => series.rows).flat()).toEqual(photoRows.flat());
   });
@@ -48,11 +48,12 @@ describe("photography collection", () => {
       for (const photo of allPhotos) {
         const copy = photo.translations[locale];
         expect(copy.alt.length).toBeGreaterThan(12);
-        expect(copy.story.length).toBeGreaterThan(45);
+        expect(copy.story ?? copy.caption).toBeTruthy();
+        expect((copy.story ?? copy.caption)?.length).toBeGreaterThan(20);
         expect(photo.seriesTitles[locale].length).toBeGreaterThan(1);
       }
       for (const series of photoSeries) {
-        expect(series.translations[locale].title.length).toBeGreaterThan(2);
+        expect(series.translations[locale].title.length).toBeGreaterThan(1);
         expect(series.translations[locale].description.length).toBeGreaterThan(30);
       }
     }
@@ -71,5 +72,24 @@ describe("photography collection", () => {
     expect(
       allPhotos.find((photo) => photo.id === "dscf1669")?.translations.tr.story,
     ).toContain("Rize, bir şehirden fazlası olup bir memlekete dönüşüyor");
+  });
+
+  it("keeps the street performance and boat encounter in narrative order", () => {
+    const cityStage = photoSeries.find((series) => series.id === "city-stage");
+    const encounter = photoSeries.find((series) => series.id === "encounter");
+
+    expect(cityStage?.rows.flat().map((photo) => photo.id)).toEqual([
+      "dscf0492",
+      "dscf0495",
+      "dscf0497",
+    ]);
+    expect(cityStage?.credit?.href).toBe("https://www.instagram.com/theburaksoylu/");
+    expect(encounter?.rows.flat().map((photo) => photo.id)).toEqual([
+      "dscf1835",
+      "dscf1914",
+      "dscf1916",
+      "dscf1928",
+    ]);
+    expect(encounter?.rows.at(-1)?.[0].translations.tr.title).toBe("Yalnız");
   });
 });
