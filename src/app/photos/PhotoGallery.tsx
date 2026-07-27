@@ -102,6 +102,10 @@ function sourceSet(photo: Photo): string {
     .join(", ");
 }
 
+function photoDescription(copy: Photo["translations"][PhotoLocale]): string {
+  return copy.caption ?? copy.story ?? "";
+}
+
 function PhotoFrame({
   photo,
   locale,
@@ -113,6 +117,7 @@ function PhotoFrame({
   onOpen,
 }: PhotoFrameProps) {
   const copy = photo.translations[locale];
+  const description = photoDescription(copy);
   const style = {
     "--photo-ratio": photo.aspectRatio,
     "--photo-placeholder": `url(${photo.blurDataUrl})`,
@@ -164,9 +169,11 @@ function PhotoFrame({
       <figcaption className="photo-caption">
         <div className="photo-caption-heading">
           <span>{String(index + 1).padStart(2, "0")}</span>
-          <h3>{copy.title}</h3>
+          <h3 data-allow-select>{copy.title}</h3>
         </div>
-        <p>{copy.story}</p>
+        <p data-allow-select data-copy-kind={copy.caption ? "caption" : "story"}>
+          {description}
+        </p>
       </figcaption>
     </figure>
   );
@@ -249,6 +256,7 @@ export default function PhotoGallery({ hero, series, photos }: PhotoGalleryProps
 
   const activePhoto = activeIndex === null ? null : photos[activeIndex];
   const activeCopy = activePhoto?.translations[locale] ?? null;
+  const activeDescription = activeCopy ? photoDescription(activeCopy) : "";
 
   return (
     <div className="photos-page" lang={locale}>
@@ -299,9 +307,9 @@ export default function PhotoGallery({ hero, series, photos }: PhotoGalleryProps
 
       <section id="prologue" className="photo-prologue" aria-labelledby="prologue-title">
         <p>00 // {ui.prologue}</p>
-        <h2 id="prologue-title">{heroCopy.title}</h2>
+        <h2 id="prologue-title" data-allow-select>{heroCopy.title}</h2>
         <div>
-          <p>{heroCopy.story}</p>
+          <p data-allow-select>{photoDescription(heroCopy)}</p>
           <button type="button" onClick={(event) => open(0, event.currentTarget)}>
             {ui.viewPhoto} <span aria-hidden="true">↗</span>
           </button>
@@ -310,9 +318,9 @@ export default function PhotoGallery({ hero, series, photos }: PhotoGalleryProps
 
       <section id="selected" className="photo-collection" aria-labelledby="selected-title">
         <header className="photo-section-heading">
-          <p>{ui.selectedKicker}</p>
-          <h2 id="selected-title">{ui.selectedTitle}</h2>
-          <span>{ui.selectedIntro}</span>
+          <p>{formatUiCopy(ui.selectedKicker, { series: series.length })}</p>
+          <h2 id="selected-title" data-allow-select>{ui.selectedTitle}</h2>
+          <span data-allow-select>{ui.selectedIntro}</span>
         </header>
 
         <div className="photo-series-list">
@@ -320,8 +328,18 @@ export default function PhotoGallery({ hero, series, photos }: PhotoGalleryProps
             <article className="photo-series" id={`series-${chapter.id}`} key={chapter.id}>
               <header className="photo-series-heading">
                 <p>{chapter.number} / {ui.series}</p>
-                <h2>{chapter.translations[locale].title}</h2>
-                <span>{chapter.translations[locale].description}</span>
+                <h2 data-allow-select>{chapter.translations[locale].title}</h2>
+                <span data-allow-select>{chapter.translations[locale].description}</span>
+                {chapter.credit && (
+                  <a
+                    className="photo-series-credit"
+                    href={chapter.credit.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {chapter.credit.translations[locale]} ↗
+                  </a>
+                )}
               </header>
 
               <div className="photo-rows">
@@ -401,8 +419,24 @@ export default function PhotoGallery({ hero, series, photos }: PhotoGalleryProps
             </figure>
             <aside>
               <p className="photo-lightbox-series">{activePhoto.seriesTitles[locale]}</p>
-              <h2>{activeCopy.title}</h2>
-              <p className="photo-lightbox-story">{activeCopy.story}</p>
+              <h2 data-allow-select>{activeCopy.title}</h2>
+              <p
+                className="photo-lightbox-story"
+                data-allow-select
+                data-copy-kind={activeCopy.caption ? "caption" : "story"}
+              >
+                {activeDescription}
+              </p>
+              {activePhoto.seriesCredit && (
+                <a
+                  className="photo-lightbox-credit"
+                  href={activePhoto.seriesCredit.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {activePhoto.seriesCredit.translations[locale]} ↗
+                </a>
+              )}
               <div className="photo-lightbox-meta">
                 <span>{activePhoto.filename.replace(/\.[^.]+$/, "")}</span>
                 <span>

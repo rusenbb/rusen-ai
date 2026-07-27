@@ -13,7 +13,13 @@ type SeriesId = string;
 export type PhotoTranslation = {
   alt: string;
   title: string;
-  story: string;
+  story?: string;
+  caption?: string;
+};
+
+export type PhotoCredit = {
+  href: string;
+  translations: Record<PhotoLocale, string>;
 };
 
 type SeriesTranslation = {
@@ -30,11 +36,13 @@ export type Photo = {
   blurDataUrl: string;
   alt: string;
   title: string;
-  story: string;
+  story?: string;
+  caption?: string;
   translations: Record<PhotoLocale, PhotoTranslation>;
   seriesId: SeriesId;
   seriesTitle: string;
   seriesTitles: Record<PhotoLocale, string>;
+  seriesCredit?: PhotoCredit;
   sources: {
     thumbnail: PhotoSource;
     display: PhotoSource;
@@ -48,6 +56,7 @@ export type PhotoSeries = {
   title: string;
   description: string;
   translations: Record<PhotoLocale, SeriesTranslation>;
+  credit?: PhotoCredit;
   rows: Photo[][];
 };
 
@@ -60,6 +69,7 @@ type EditorialSeries = {
   id: string;
   number: string;
   translations: Record<PhotoLocale, SeriesTranslation>;
+  credit?: PhotoCredit;
   rows: string[][];
 };
 
@@ -79,6 +89,7 @@ function resolvePhoto(id: string): Photo {
   if (!editorial) throw new Error(`Photo ${id} is missing editorial copy`);
 
   let resolvedTitles: Record<PhotoLocale, string>;
+  let resolvedCredit: PhotoCredit | undefined;
   if (editorial.seriesId === "prologue") {
     resolvedTitles = PROLOGUE_TITLES;
   } else {
@@ -89,6 +100,14 @@ function resolvePhoto(id: string): Photo {
       en: series.translations.en.title,
       ja: series.translations.ja.title,
     };
+    resolvedCredit = series.credit;
+  }
+
+  for (const locale of Object.keys(editorialManifest.ui) as PhotoLocale[]) {
+    const copy = editorial.translations[locale];
+    if (!copy.story?.trim() && !copy.caption?.trim()) {
+      throw new Error(`Photo ${id} is missing story or caption for ${locale}`);
+    }
   }
 
   return {
@@ -98,6 +117,7 @@ function resolvePhoto(id: string): Photo {
     seriesId: editorial.seriesId,
     seriesTitle: resolvedTitles.en,
     seriesTitles: resolvedTitles,
+    seriesCredit: resolvedCredit,
   };
 }
 
@@ -108,6 +128,7 @@ export const photoSeries: PhotoSeries[] = SERIES.map((series) => ({
   title: series.translations.en.title,
   description: series.translations.en.description,
   translations: series.translations,
+  credit: series.credit,
   rows: series.rows.map((row) => row.map(resolvePhoto)),
 }));
 export const photoRows = photoSeries.flatMap((series) => series.rows);
