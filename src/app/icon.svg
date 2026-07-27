@@ -1,7 +1,6 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Dark rounded square background -->
-  <rect width="512" height="512" rx="96" fill="#0a0a0a"/>
-
-  <!-- Clean bold R -->
-  <path d="M148 112 h140 c75 0 120 50 120 110 c0 55 -35 95 -95 108 l110 142 h-75 l-105 -135 h-35 v135 h-60 v-360 z m60 175 h75 c45 0 70 -25 70 -65 c0 -40 -25 -60 -70 -60 h-75 v125 z" fill="#ffffff"/>
+  <rect width="512" height="512" rx="88" fill="#0C0C0F"/>
+  <path d="M144 104H96V408H144" stroke="#4ADE80" stroke-width="40" stroke-linecap="square" stroke-linejoin="miter"/>
+  <path d="M368 104H416V408H368" stroke="#4ADE80" stroke-width="40" stroke-linecap="square" stroke-linejoin="miter"/>
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M180 154H257C307 154 337 180 337 222C337 252 321 274 295 284L340 368H288L249 294H226V368H180V154ZM226 192V255H257C280 255 291 245 291 224C291 203 280 192 257 192H226Z" fill="#F7F4EE"/>
 </svg>

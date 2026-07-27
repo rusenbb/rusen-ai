@@ -86,8 +86,8 @@ describe("photography collection", () => {
     expect(cityStage?.credit?.href).toBe("https://www.instagram.com/theburaksoylu/");
     expect(encounter?.rows.flat().map((photo) => photo.id)).toEqual([
       "dscf1835",
-      "dscf1914",
       "dscf1916",
+      "dscf1914",
       "dscf1928",
     ]);
     expect(encounter?.rows.at(-1)?.[0].translations.tr.title).toBe("Yalnız");
