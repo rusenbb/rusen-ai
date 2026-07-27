@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef } from "react";
 
 // Type for pipeline function - we use dynamic import
 type Pipeline = (texts: string | string[], options?: { pooling?: string; normalize?: boolean }) => Promise<{ data: Float32Array; dims: number[] }>;
@@ -17,6 +17,7 @@ export interface UseEmbeddingResult {
   loadProgress: number;
   error: string | null;
   backend: "webgpu" | "wasm" | null;
+  loadModel: () => Promise<void>;
   embed: (text: string) => Promise<number[] | null>;
   embedBatch: (texts: string[]) => Promise<Map<string, number[]>>;
   getCached: (text: string) => number[] | null;
@@ -207,16 +208,6 @@ export function useEmbedding(): UseEmbeddingResult {
     return embeddingCache.current.get(text.toLowerCase().trim()) || null;
   }, []);
 
-  // Auto-initialize on mount if in browser
-  useEffect(() => {
-    // Pre-warm the model in the background after a short delay
-    const timer = setTimeout(() => {
-      initModel();
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [initModel]);
-
   // Clear the model cache (IndexedDB) - fixes corrupted downloads
   const clearModelCache = useCallback(async () => {
     try {
@@ -372,6 +363,7 @@ export function useEmbedding(): UseEmbeddingResult {
     loadProgress,
     error,
     backend,
+    loadModel: initModel,
     embed,
     embedBatch,
     getCached,

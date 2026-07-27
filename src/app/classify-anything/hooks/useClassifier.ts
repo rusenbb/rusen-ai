@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef } from "react";
 import type { ClassificationResult, ModelStatus } from "../types";
 
 // Pipeline type for zero-shot classification
@@ -183,15 +183,6 @@ export function useClassifier(): UseClassifierResult {
       console.error("Error clearing cache:", err);
     }
   }, []);
-
-  // Auto-initialize on mount
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      initModel();
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [initModel]);
 
   return {
     isLoading,

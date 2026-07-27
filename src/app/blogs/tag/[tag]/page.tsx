@@ -36,7 +36,10 @@ export async function generateMetadata({
   if (matching.length === 0) return {};
   const displayTag = tagDisplay(matching[0].tag);
   const postCount = matching.reduce((sum, item) => sum + item.count, 0);
-  const description = `${postCount} ${postCount === 1 ? "essay" : "essays"} filed under #${displayTag} on Rusen.ai.`;
+  const metadataLang = matching[0].lang;
+  const description = metadataLang === "tr"
+    ? `Rusen.ai üzerinde #${displayTag} etiketiyle yayımlanan ${postCount} yazı.`
+    : `${postCount} ${postCount === 1 ? "essay" : "essays"} filed under #${displayTag} on Rusen.ai.`;
 
   return buildSocialMetadata({
     title: `#${displayTag} | Rusen.ai Blog`,
@@ -44,6 +47,7 @@ export async function generateMetadata({
     path: `/blogs/tag/${tag}`,
     image: blogTagImagePath(tag),
     imageAlt: `#${displayTag} — Rusen.ai blog archive`,
+    locale: metadataLang === "tr" ? "tr_TR" : "en_US",
   });
 }
 
@@ -68,28 +72,19 @@ export default async function TagPage({
 
   const displayTag = matching[0].tag;
 
-  // If every post under this tag is in one language, force the visible
-  // filter to that language for this page only. Prevents the "I clicked
-  // a TR tag and saw nothing because my preference is EN" case. We do
-  // NOT write to localStorage - the user's global preference is preserved
-  // for everywhere else. The script runs as the first body element so
-  // CSS attribute selectors apply before any content paints (no flash).
+  // A single-language tag is scoped locally rather than mutating the persistent
+  // document preference, so leaving the route restores the user's filter.
   const presentLangs = new Set(posts.map((p) => p.lang));
   const forceLang =
     presentLangs.size === 1 ? Array.from(presentLangs)[0] : null;
+  const availableLangs = (["en", "tr"] as const).filter((lang) => presentLangs.has(lang));
 
   return (
-    <>
-      {forceLang && (
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `try { document.documentElement.dataset.blogLang = ${JSON.stringify(
-              forceLang
-            )}; } catch (_) {}`,
-          }}
-        />
-      )}
-      <main className="blog-shell" data-no-ripple>
+    <div
+      className="blog-shell"
+      data-no-ripple
+      data-blog-force-lang={forceLang ?? undefined}
+    >
       <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.5rem" }}>
         <span
           style={{
@@ -150,7 +145,7 @@ export default async function TagPage({
           {String(posts.length).padStart(2, "0")}{" "}
           {posts.length === 1 ? "essay" : "essays"}
         </span>
-        <LangPicker />
+        <LangPicker available={availableLangs} forced={forceLang ?? undefined} />
       </div>
 
       <div className="entries">
@@ -160,6 +155,7 @@ export default async function TagPage({
             href={`/blogs/${p.slug}`}
             className="entry-row"
             data-post-lang={p.lang}
+            lang={p.lang}
           >
             <span className="date">{formatDate(p.date, p.lang)}</span>
             <div className="body">
@@ -176,7 +172,6 @@ export default async function TagPage({
           </Link>
         ))}
       </div>
-    </main>
-    </>
+    </div>
   );
 }

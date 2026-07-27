@@ -63,4 +63,18 @@ describe("ThemeToggle", () => {
     expect(screen.getByRole("button", { name: "Switch to dark theme" }))
       .toContainElement(document.querySelector('[data-nav-word="Theme: 1"]'));
   });
+
+  it("still applies a theme when browser storage is unavailable", () => {
+    vi.stubGlobal("localStorage", {
+      getItem: () => { throw new DOMException("Blocked", "SecurityError"); },
+      setItem: () => { throw new DOMException("Blocked", "SecurityError"); },
+      removeItem: () => { throw new DOMException("Blocked", "SecurityError"); },
+    });
+
+    render(<ThemeToggle label="Theme" />);
+    fireEvent.click(screen.getByRole("button", { name: "Switch to dark theme" }));
+
+    expect(document.documentElement).toHaveAttribute("data-theme", "dark");
+    expect(document.documentElement).toHaveClass("dark");
+  });
 });

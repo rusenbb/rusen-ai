@@ -4,10 +4,11 @@
 This wraps the installed `samexporter` package, but replaces SAM3's baked-in
 1008px builder assumptions with a caller-provided `image_size`.
 
-Use the validation venv to run it, for example:
+Run it from a purpose-built validation environment and pass the external SAM3
+checkout explicitly, for example:
 
-  /home/rusen/Desktop/codebase-shared/rusen/sam3-browser-validation/.venv/bin/python \
-    scripts/export_sam3_browser.py --image-size 720 --output-dir /tmp/sam3_720
+  python scripts/export_sam3_browser.py --image-size 720 \
+    --output-dir /tmp/sam3_720 --sam3-repo /path/to/sam3
 """
 
 from __future__ import annotations
@@ -23,9 +24,6 @@ from unittest.mock import MagicMock
 import onnx
 import torch
 from torchvision.transforms import v2
-DEFAULT_SAM3_REPO = pathlib.Path(
-    "/home/rusen/Desktop/codebase-shared/rusen/sam3-browser-validation/sam3"
-)
 
 
 def ensure_import_environment(sam3_repo: pathlib.Path) -> None:
@@ -602,7 +600,7 @@ def main() -> None:
     parser.add_argument(
         "--sam3-repo",
         type=pathlib.Path,
-        default=DEFAULT_SAM3_REPO,
+        required=True,
         help="Path to the local SAM3 checkout used by the validation environment.",
     )
     args = parser.parse_args()
