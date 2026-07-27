@@ -39,4 +39,49 @@ describe("PhotoGallery language scope", () => {
     );
     expect(container).not.toHaveTextContent("Bir kronoloji değil");
   });
+
+  it("keeps sequence copy compact and credits the performer at series level", () => {
+    window.localStorage.setItem("photoLanguage", "tr");
+
+    const { container } = render(
+      <PhotoGallery hero={heroPhoto} series={photoSeries} photos={allPhotos} />,
+    );
+
+    expect(allPhotos).toHaveLength(30);
+    expect(photoSeries).toHaveLength(6);
+    expect(container).toHaveTextContent("SEÇKİ / 6 BÖLÜM");
+    expect(container.querySelectorAll('[data-copy-kind="caption"]')).toHaveLength(7);
+    expect(container).toHaveTextContent("Yüzünü saklayan bu yabancıyı herkes tanıyordu.");
+    expect(container).toHaveTextContent("Deniz yollarını yeniden ayırdı");
+    expect(container.querySelector(".photo-series-credit")).toHaveAttribute(
+      "href",
+      "https://www.instagram.com/theburaksoylu/",
+    );
+  });
+
+  it("allows selection only for photo and collection titles and descriptions", () => {
+    const { container } = render(
+      <PhotoGallery hero={heroPhoto} series={photoSeries} photos={allPhotos} />,
+    );
+
+    expect(container.querySelector(".photo-caption h3")).toHaveAttribute("data-allow-select");
+    expect(container.querySelector(".photo-caption > p")).toHaveAttribute("data-allow-select");
+    expect(container.querySelector(".photo-series-heading h2")).toHaveAttribute(
+      "data-allow-select",
+    );
+    expect(container.querySelector(".photo-series-heading > span")).toHaveAttribute(
+      "data-allow-select",
+    );
+
+    expect(container.querySelector(".photo-hero-telemetry")).not.toHaveAttribute(
+      "data-allow-select",
+    );
+    expect(container.querySelector(".photo-frame-register")).not.toHaveAttribute(
+      "data-allow-select",
+    );
+    expect(container.querySelector(".photo-series-credit")).not.toHaveAttribute(
+      "data-allow-select",
+    );
+    expect(container.querySelector("button")).not.toHaveAttribute("data-allow-select");
+  });
 });
