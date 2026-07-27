@@ -785,6 +785,8 @@ export default function FireflySynchronization(): React.ReactElement {
               onPointerLeave={handlePointerLeave}
               className="block w-full cursor-crosshair touch-none"
               style={{ height: canvasHeight }}
+              role="img"
+              aria-label={`${currentScene.count} simulated firefly clocks. Stage: ${stats.stage}; synchronization ${Math.round(stats.sync * 100)} percent; ${stats.flashes} flashing now.`}
             />
             <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between p-3 text-[10px] font-mono uppercase tracking-[0.18em] text-white/60">
               <span>Scattered first, synchronized later</span>

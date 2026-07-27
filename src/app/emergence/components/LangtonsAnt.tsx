@@ -1144,6 +1144,8 @@ export default function LangtonsAnt(): React.ReactElement {
             onPointerUp={endPointerDrawing}
             onPointerLeave={endPointerDrawing}
             onPointerCancel={endPointerDrawing}
+            role="img"
+            aria-label={`Langton's Ant grid after ${stepCount.toLocaleString()} steps, currently in the ${phase} phase. Use the adjacent tools and playback controls to edit or advance the simulation.`}
           />
         </div>
 

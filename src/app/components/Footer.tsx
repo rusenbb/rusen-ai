@@ -11,7 +11,7 @@ export default function Footer() {
               href="https://github.com/rusenbb"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition"
               aria-label="GitHub"
             >
               <svg
@@ -28,7 +28,7 @@ export default function Footer() {
               href="https://linkedin.com/in/rusenbirben"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition"
               aria-label="LinkedIn"
             >
               <svg
@@ -45,7 +45,7 @@ export default function Footer() {
               href="https://x.com/rusen1bb"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition"
               aria-label="X (Twitter)"
             >
               <svg
@@ -62,7 +62,7 @@ export default function Footer() {
               href="https://instagram.com/rusen_birben"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition"
               aria-label="Instagram"
             >
               <svg
@@ -80,7 +80,7 @@ export default function Footer() {
           {/* Copyright + bg toggle */}
           <div className="flex items-center gap-4">
             <BgToggle />
-            <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-500">
+            <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400">
               &copy; {new Date().getFullYear()} Rusen Birben
             </p>
           </div>

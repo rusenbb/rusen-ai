@@ -14,4 +14,17 @@ describe("CV interests", () => {
       expect(photography?.desc).toContain("-");
     }
   });
+
+  it("keeps localized document sections structurally aligned", () => {
+    const english = getCvData("en");
+    for (const locale of ["tr", "ja"] as const) {
+      const localized = getCvData(locale);
+      expect(localized.experience).toHaveLength(english.experience.length);
+      expect(localized.projects).toHaveLength(english.projects.length);
+      expect(localized.interests).toHaveLength(english.interests.length);
+      expect(Object.values(localized.skills).map((items) => items.length)).toEqual(
+        Object.values(english.skills).map((items) => items.length),
+      );
+    }
+  });
 });

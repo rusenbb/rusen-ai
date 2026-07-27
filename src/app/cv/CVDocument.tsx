@@ -58,6 +58,8 @@ function renderDescription(text: string): React.ReactNode {
 export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumentProps) {
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
   const menusRef = useRef<HTMLDivElement>(null);
+  const downloadTriggerRef = useRef<HTMLButtonElement>(null);
+  const languageTriggerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!openMenu) return;
@@ -66,7 +68,13 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
       if (!menusRef.current.contains(e.target as Node)) setOpenMenu(null);
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpenMenu(null);
+      if (e.key === "Escape") {
+        const trigger = openMenu === "download"
+          ? downloadTriggerRef.current
+          : languageTriggerRef.current;
+        setOpenMenu(null);
+        window.requestAnimationFrame(() => trigger?.focus());
+      }
     };
     document.addEventListener("mousedown", onPointer);
     document.addEventListener("keydown", onKey);
@@ -80,7 +88,7 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
   const showDownload = currentLocale?.hasPdf ?? true;
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} data-allow-select lang={locale}>
       <header className={styles.hero}>
         <div className={styles.heroMain}>
           <div className={styles.heroNameSection}>
@@ -132,10 +140,11 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
           {showDownload && (
             <div className={styles.dropdown}>
               <button
+                ref={downloadTriggerRef}
                 type="button"
                 className={`${styles.printBtn} ${styles.dropdownTrigger}`}
-                aria-haspopup="menu"
                 aria-expanded={openMenu === "download"}
+                aria-controls="cv-download-options"
                 onClick={() =>
                   setOpenMenu((cur) => (cur === "download" ? null : "download"))
                 }
@@ -145,12 +154,11 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
                 <span className={styles.dropdownCaret}>{openMenu === "download" ? "▴" : "▾"}</span>
               </button>
               {openMenu === "download" && (
-                <div className={styles.dropdownPanel} role="menu">
+                <div id="cv-download-options" className={styles.dropdownPanel}>
                   <a
                     href={`/${outputBase}.pdf`}
                     download
                     className={styles.dropdownItem}
-                    role="menuitem"
                     onClick={() => setOpenMenu(null)}
                   >
                     <span>{labels.pdf}</span>
@@ -159,7 +167,6 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
                     href={`/${outputBase}.tex`}
                     download
                     className={styles.dropdownItem}
-                    role="menuitem"
                     onClick={() => setOpenMenu(null)}
                   >
                     <span>{labels.tex}</span>
@@ -172,10 +179,11 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
           {/* Language dropdown */}
           <div className={`${styles.dropdown} ${styles.langDropdown}`}>
             <button
+              ref={languageTriggerRef}
               type="button"
               className={`${styles.localeBtn} ${styles.dropdownTrigger}`}
-              aria-haspopup="menu"
               aria-expanded={openMenu === "language"}
+              aria-controls="cv-language-options"
               onClick={() =>
                 setOpenMenu((cur) => (cur === "language" ? null : "language"))
               }
@@ -185,7 +193,7 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
               <span className={styles.dropdownCaret}>{openMenu === "language" ? "▴" : "▾"}</span>
             </button>
             {openMenu === "language" && (
-              <div className={styles.dropdownPanel} role="menu">
+              <div id="cv-language-options" className={styles.dropdownPanel}>
                 {SUPPORTED_CV_LOCALES.map((opt) => (
                   <Link
                     key={opt.locale}
@@ -193,7 +201,6 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
                     className={`${styles.dropdownItem} ${
                       opt.locale === locale ? styles.dropdownItemActive : ""
                     }`}
-                    role="menuitem"
                     aria-current={opt.locale === locale ? "page" : undefined}
                     onClick={() => setOpenMenu(null)}
                   >

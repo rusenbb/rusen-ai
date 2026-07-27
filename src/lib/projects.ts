@@ -1,3 +1,5 @@
+import projectData from "../content/projects.json" with { type: "json" };
+
 export type ProjectCollection = "demos" | "nerdy-stuff" | "bulletin";
 export type ProjectStatus = "live" | "coming-soon";
 
@@ -22,358 +24,172 @@ export type ProjectMeta = {
   platform?: string[];
 };
 
-export const PROJECTS: ProjectMeta[] = [
-  {
-    id: "classify-anything",
-    title: "Classify Anything",
-    slug: "classify-anything",
-    collection: "demos",
-    status: "live",
-    summary:
-      "Zero-shot text classification. Define your own classes, paste any text, get predictions.",
-    description: "Zero-shot text classification in the browser.",
-    tags: ["Zero-shot", "Transformers.js"],
-    domains: ["NLP"],
-    capabilities: ["Classification"],
-    tech: ["Transformers.js", "MobileBERT"],
-    order: 40,
-    featuredHome: true,
-  },
-  {
-    id: "segment-anything",
-    title: "Segment Anything",
-    slug: "segment-anything",
-    collection: "demos",
-    status: "live",
-    summary:
-      "Click any object in an image to instantly segment it. SAM 2.1 running entirely in your browser via WebAssembly.",
-    description:
-      "Interactive image segmentation with SAM 2.1 Tiny, running locally via WASM.",
-    tags: ["Segmentation", "SAM", "Transformers.js"],
-    domains: ["CV"],
-    capabilities: ["Segmentation"],
-    tech: ["SAM 2.1", "Transformers.js", "WASM"],
-    order: 45,
-    featuredHome: true,
-  },
-  {
-    id: "vision-anything",
-    title: "Vision Anything",
-    slug: "vision-anything",
-    collection: "demos",
-    status: "live",
-    summary:
-      "Zero-shot image classification. Drop an image, type the labels you care about, see how a CLIP-class model ranks them.",
-    description: "Zero-shot image classification with custom labels via CLIP.",
-    tags: ["Vision", "CLIP", "Zero-shot"],
-    domains: ["CV"],
-    capabilities: ["Classification"],
-    tech: ["CLIP", "Transformers.js", "WASM"],
-    order: 47,
-    featuredHome: true,
-  },
-  {
-    id: "curve-fitter",
-    title: "Curve Fitter",
-    slug: "curve-fitter",
-    collection: "demos",
-    status: "live",
-    summary:
-      "Scrub real gradient updates, then inspect how tanh turns straight hidden scores into bounded gates that combine into nonlinear shapes.",
-    description:
-      "Interactive regression and neural-network playground with actual training traces, held-out fitting, and an inspectable tanh gate-by-gate view.",
-    tags: ["Regression", "Neural Networks", "Nonlinearity"],
-    domains: ["ML"],
-    capabilities: ["Regression", "Visualization"],
-    tech: ["TypeScript", "Gradient Descent", "SVG"],
-    order: 52,
-  },
-  {
-    id: "convolution-lab",
-    title: "Convolution Lab",
-    slug: "convolution-lab",
-    collection: "demos",
-    status: "live",
-    summary:
-      "Run editable kernels over real RGB or B/W photos, move a receptive field, and inspect the exact pixels behind each feature response.",
-    description:
-      "Interactive RGB and luminance image-convolution playground for kernels, padding, stride, and pooling.",
-    tags: ["Convolution", "Computer Vision", "Kernels"],
-    domains: ["CV"],
-    capabilities: ["Visualization", "Image Processing"],
-    tech: ["Canvas", "TypeScript"],
-    order: 54,
-  },
-  {
-    id: "pathfinding-showdown",
-    title: "Pathfinding Showdown",
-    slug: "pathfinding-showdown",
-    collection: "demos",
-    status: "live",
-    summary:
-      "Step through every frontier decision as BFS, Dijkstra, greedy best-first, and A* search the same terrain.",
-    description:
-      "Interactive pathfinding trace with a scrubber, visible frontier, decision reasons, and compact final comparison.",
-    tags: ["Algorithms", "A*", "Visualization"],
-    domains: ["Computational Tools"],
-    capabilities: ["Simulation", "Visualization"],
-    tech: ["TypeScript", "Search Algorithms", "DOM"],
-    order: 58,
-  },
-  {
-    id: "pulse-board",
-    title: "Pulse Board",
-    slug: "pulse-board",
-    collection: "demos",
-    status: "live",
-    summary:
-      "Live dashboard with real-time WebSocket crypto prices, Chainlink oracle, earthquakes, weather, and more.",
-    description: "Live multi-signal dashboard (crypto, weather, quakes, etc.).",
-    tags: ["WebSocket", "Blockchain", "Real-time"],
-    domains: ["Data Engineering"],
-    capabilities: ["Streaming", "Visualization"],
-    tech: ["WebSockets", "Chainlink", "Public APIs"],
-    order: 60,
-    featuredHome: true,
-  },
-  {
-    id: "emergence",
-    title: "Emergence",
-    slug: "emergence",
-    collection: "nerdy-stuff",
-    status: "live",
-    summary:
-      "Simple rules, complex behavior. An interactive essay on cellular automata, synchrony, segregation, highways, and critical cascades.",
-    description:
-      "A guided, interactive exploration of emergence through six systems: Elementary CA, Game of Life, firefly synchronization, Schelling's Segregation, Langton's Ant, and Flocking.",
-    tags: ["Emergence", "Interactive Essay", "Simulation"],
-    domains: ["Computational Tools"],
-    capabilities: ["Simulation", "Visualization"],
-    tech: ["Canvas 2D", "Cellular Automata"],
-    order: 9,
-    featuredHome: true,
-  },
-  {
-    id: "game-of-life",
-    title: "Game of Life",
-    slug: "game-of-life",
-    collection: "nerdy-stuff",
-    status: "live",
-    summary:
-      "The interactive cellular automata world that used to run as the site background, now as a standalone playground.",
-    description: "Interactive cellular automata world and camera controls.",
-    tags: ["Cellular Automata", "Visualization", "Interactive"],
-    domains: ["Computational Tools"],
-    capabilities: ["Simulation", "Rendering"],
-    tech: ["Canvas", "Custom renderer"],
-    order: 10,
-  },
-  {
-    id: "embedding-explorer",
-    title: "Embedding Explorer",
-    slug: "embedding-explorer",
-    collection: "nerdy-stuff",
-    status: "live",
-    summary:
-      "Visualize how texts cluster in vector space using UMAP. See semantic similarity in action.",
-    description: "Visual semantic geometry with embedding vectors + UMAP.",
-    tags: ["Embeddings", "UMAP", "Transformers.js"],
-    domains: ["NLP"],
-    capabilities: ["Visualization", "Vector Arithmetic"],
-    tech: ["Transformers.js", "UMAP"],
-    order: 20,
-    featuredHome: true,
-  },
-  {
-    id: "rusenizer",
-    title: "Rusenizer",
-    slug: "rusenizer",
-    collection: "nerdy-stuff",
-    status: "live",
-    summary:
-      "My Turkish-optimized tokenizer. Compare with GPT-4 and see ~45% token savings on Turkish text.",
-    description: "Turkish-focused tokenizer experimentation playground.",
-    tags: ["Tokenization", "NLP", "Turkish"],
-    domains: ["NLP"],
-    capabilities: ["Tokenization", "Benchmarking"],
-    tech: ["BPE", "WASM"],
-    order: 30,
-    featuredHome: true,
-  },
-  {
-    id: "adaptive-arena",
-    title: "RL-Arena",
-    slug: "adaptive-arena",
-    collection: "demos",
-    status: "live",
-    summary:
-      "Fight trained bots in a full 30x30 tactical arena with checkpoint-based difficulties.",
-    description:
-      "2D tactical duel with trained RL checkpoints, pickups, hazards, and interpretable policy signals.",
-    tags: ["Reinforcement Learning", "Games", "Visualization"],
-    domains: ["RL", "Computational Tools"],
-    capabilities: ["Simulation", "Inference"],
-    tech: ["React", "Canvas", "DQN"],
-    order: 80,
-  },
-  {
-    id: "outguess",
-    title: "Outguess",
-    slug: "outguess",
-    collection: "demos",
-    status: "live",
-    summary:
-      "Try to be unpredictable. A tiny AI predicts your next key press, and catches humans about 70% of the time.",
-    description:
-      "Predictor-vs-human key-tapping game. You try to be random; a small AI tries to call each next press. Most people get caught about 70% of the time.",
-    tags: ["N-Gram", "PPM", "Game", "Aaronson Oracle"],
-    domains: ["Computational Tools"],
-    capabilities: ["Inference", "Visualization"],
-    tech: ["Markov Chains", "PPM"],
-    order: 90,
-  },
-  {
-    id: "fourier-sketch",
-    title: "Fourier Sketch",
-    slug: "fourier-sketch",
-    collection: "nerdy-stuff",
-    status: "live",
-    summary:
-      "Draw a path, then watch rotating Fourier epicycles reconstruct it one harmonic at a time.",
-    description:
-      "Interactive discrete-Fourier-transform sketchpad with live epicycles and reconstruction quality.",
-    tags: ["Fourier Transform", "Signals", "Visualization"],
-    domains: ["Computational Tools"],
-    capabilities: ["Visualization", "Simulation"],
-    tech: ["Canvas", "TypeScript"],
-    order: 35,
-  },
-  {
-    id: "optimizer-racetrack",
-    title: "Optimizer Racetrack",
-    slug: "optimizer-racetrack",
-    collection: "nerdy-stuff",
-    status: "live",
-    summary:
-      "Release SGD, Momentum, RMSProp, and Adam on the same loss landscape and watch their paths, wobbles, and failures diverge.",
-    description:
-      "Interactive optimizer comparison on small, inspectable loss landscapes.",
-    tags: ["Optimization", "SGD", "Adam"],
-    domains: ["ML"],
-    capabilities: ["Simulation", "Visualization"],
-    tech: ["TypeScript", "SVG"],
-    order: 55,
-  },
-  {
-    id: "steering-llms",
-    title: "Steering LLMs",
-    slug: "steering-llms",
-    collection: "nerdy-stuff",
-    status: "coming-soon",
-    summary:
-      "Probe whether concepts can be induced, strengthened, or redirected inside a model with steering and interpretability tools.",
-    description:
-      "Concept steering and intervention playground for local language models.",
-    tags: ["LLM", "Interpretability", "Steering"],
-    domains: ["NLP"],
-    capabilities: ["Interpretability", "Control"],
-    tech: ["Local LLM", "Transformers.js"],
-    order: 60,
-  },
-  {
-    id: "sentence-surgeon",
-    title: "Sentence Surgeon",
-    slug: "sentence-surgeon",
-    collection: "nerdy-stuff",
-    status: "live",
-    summary:
-      "Click any word to remove it. A small BERT predicts what should fill the gap, ranked with probabilities. Click a prediction to graft it in.",
-    description:
-      "Masked-language-model playground using DistilBERT in the browser; mask a word, see top-K predictions, graft them into the sentence.",
-    tags: ["NLP", "BERT", "Masked LM", "Interactive"],
-    domains: ["NLP"],
-    capabilities: ["Inference", "Visualization"],
-    tech: ["DistilBERT", "Transformers.js", "WASM"],
-    order: 22,
-    featuredHome: true,
-  },
-  {
-    id: "rusen-gram",
-    title: "RuseN-Gram",
-    slug: "rusen-gram",
-    collection: "nerdy-stuff",
-    status: "coming-soon",
-    summary:
-      "My personal N-Gram model. Old school meets new school language modeling.",
-    description: "Classic N-gram language modeling playground.",
-    tags: ["N-Gram", "Classic ML"],
-    domains: ["NLP"],
-    capabilities: ["Language Modeling"],
-    tech: ["N-grams"],
-    order: 80,
-  },
-  {
-    id: "eduport",
-    title: "Eduport",
-    slug: "eduport",
-    collection: "bulletin",
-    status: "live",
-    featuredHome: true,
-    summary:
-      "Single-user desktop app for tracking university applications. Storage is plain Markdown + YAML, sync-friendly and Obsidian-compatible.",
-    description:
-      "Tauri + SvelteKit + Python desktop app for tracking universities, programs, labs, applications, and the documents and emails connecting them.",
-    tags: ["Tauri", "SvelteKit", "Rust", "Python", "Desktop"],
-    domains: ["Desktop", "Productivity"],
-    capabilities: ["Local-first", "Markdown-native"],
-    tech: ["Tauri 2", "SvelteKit", "FastAPI", "SQLite FTS5"],
-    order: 10,
-    repoUrl: "https://github.com/rusenbb/eduport",
-    releaseUrl: "https://github.com/rusenbb/eduport/releases/latest",
-    platform: ["macOS", "Windows", "Linux"],
-  },
-  {
-    id: "vaultdb",
-    title: "vaultdb",
-    slug: "vaultdb",
-    collection: "bulletin",
-    status: "live",
-    featuredHome: true,
-    summary:
-      "A database engine for your markdown files. Query, filter, mutate, and traverse Obsidian vaults from the command line.",
-    description:
-      "Rust CLI that treats folders of .md files as database tables, YAML frontmatter as columns, and [[wiki-links]] as a citation graph.",
-    tags: ["Rust", "CLI", "Markdown", "Obsidian"],
-    domains: ["Tools", "Knowledge management"],
-    capabilities: ["Querying", "Graph traversal"],
-    tech: ["Rust", "SQLite-free"],
-    order: 20,
-    repoUrl: "https://github.com/rusenbb/vaultdb",
-    homepageUrl: "https://crates.io/crates/vaultdb",
-    installCmd: "cargo install vaultdb",
-    platform: ["CLI"],
-  },
-  {
-    id: "metuclass",
-    title: "metuclass",
-    slug: "metuclass",
-    collection: "bulletin",
-    status: "live",
-    featuredHome: true,
-    summary:
-      "CLI tool to sync ODTUClass course files to your local machine. Tracks changes so subsequent syncs only pull new or updated files.",
-    description:
-      "Python CLI for incremental sync of METU course materials (PDFs, slides, homeworks) organized by course and section.",
-    tags: ["Python", "CLI", "METU"],
-    domains: ["Tools"],
-    capabilities: ["Incremental sync"],
-    tech: ["Python 3.11+"],
-    order: 30,
-    repoUrl: "https://github.com/rusenbb/metu-class-automation",
-    installCmd: "pip install metuclass",
-    platform: ["CLI"],
-  },
-];
+const COLLECTIONS = new Set<ProjectCollection>([
+  "demos",
+  "nerdy-stuff",
+  "bulletin",
+]);
+const STATUSES = new Set<ProjectStatus>(["live", "coming-soon"]);
+const OPTIONAL_STRING_FIELDS = [
+  "repoUrl",
+  "homepageUrl",
+  "releaseUrl",
+  "installCmd",
+] as const;
+const KNOWN_FIELDS = new Set([
+  "id",
+  "title",
+  "slug",
+  "collection",
+  "status",
+  "summary",
+  "description",
+  "tags",
+  "domains",
+  "capabilities",
+  "tech",
+  "order",
+  "featuredHome",
+  ...OPTIONAL_STRING_FIELDS,
+  "platform",
+]);
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function requiredString(
+  record: Record<string, unknown>,
+  field: string,
+  context: string,
+): string {
+  const value = record[field];
+  if (typeof value !== "string" || !value.trim()) {
+    throw new Error(`${context}.${field} must be a non-empty string`);
+  }
+  return value;
+}
+
+function stringList(
+  record: Record<string, unknown>,
+  field: string,
+  context: string,
+): string[] {
+  const value = record[field];
+  if (
+    !Array.isArray(value) ||
+    value.length === 0 ||
+    value.some((entry) => typeof entry !== "string" || !entry.trim())
+  ) {
+    throw new Error(`${context}.${field} must be a non-empty string array`);
+  }
+  return [...value] as string[];
+}
+
+function optionalString(
+  record: Record<string, unknown>,
+  field: (typeof OPTIONAL_STRING_FIELDS)[number],
+  context: string,
+): string | undefined {
+  const value = record[field];
+  if (value === undefined) return undefined;
+  if (typeof value !== "string" || !value.trim()) {
+    throw new Error(`${context}.${field} must be a non-empty string when set`);
+  }
+  return value;
+}
+
+function parseProjects(value: unknown): ProjectMeta[] {
+  if (!Array.isArray(value)) throw new Error("projects.json must contain an array");
+
+  const ids = new Set<string>();
+  const slugs = new Set<string>();
+  const collectionOrders = new Set<string>();
+
+  return value.map((entry, index) => {
+    const context = `projects[${index}]`;
+    if (!isRecord(entry)) throw new Error(`${context} must be an object`);
+
+    for (const field of Object.keys(entry)) {
+      if (!KNOWN_FIELDS.has(field)) {
+        throw new Error(`${context} has unknown field ${field}`);
+      }
+    }
+
+    const id = requiredString(entry, "id", context);
+    const slug = requiredString(entry, "slug", context);
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id)) {
+      throw new Error(`${context}.id must be a lowercase URL-safe identifier`);
+    }
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+      throw new Error(`${context}.slug must be URL-safe`);
+    }
+    if (ids.has(id)) throw new Error(`Duplicate project id: ${id}`);
+    if (slugs.has(slug)) throw new Error(`Duplicate project slug: ${slug}`);
+    ids.add(id);
+    slugs.add(slug);
+
+    const collectionValue = requiredString(entry, "collection", context);
+    if (!COLLECTIONS.has(collectionValue as ProjectCollection)) {
+      throw new Error(`${context}.collection is invalid`);
+    }
+    const collection = collectionValue as ProjectCollection;
+
+    const statusValue = requiredString(entry, "status", context);
+    if (!STATUSES.has(statusValue as ProjectStatus)) {
+      throw new Error(`${context}.status is invalid`);
+    }
+    const status = statusValue as ProjectStatus;
+
+    if (!Number.isInteger(entry.order) || (entry.order as number) < 0) {
+      throw new Error(`${context}.order must be a non-negative integer`);
+    }
+    const order = entry.order as number;
+    const orderKey = `${collection}:${order}`;
+    if (collectionOrders.has(orderKey)) {
+      throw new Error(`Duplicate order ${order} in ${collection}`);
+    }
+    collectionOrders.add(orderKey);
+
+    if (
+      entry.featuredHome !== undefined &&
+      typeof entry.featuredHome !== "boolean"
+    ) {
+      throw new Error(`${context}.featuredHome must be boolean when set`);
+    }
+    if (entry.featuredHome && status !== "live") {
+      throw new Error(`${context} cannot be featured before it is live`);
+    }
+
+    const platform =
+      entry.platform === undefined
+        ? undefined
+        : stringList(entry, "platform", context);
+
+    return {
+      id,
+      title: requiredString(entry, "title", context),
+      slug,
+      collection,
+      status,
+      summary: requiredString(entry, "summary", context),
+      description: requiredString(entry, "description", context),
+      tags: stringList(entry, "tags", context),
+      domains: stringList(entry, "domains", context),
+      capabilities: stringList(entry, "capabilities", context),
+      tech: stringList(entry, "tech", context),
+      order,
+      featuredHome: entry.featuredHome as boolean | undefined,
+      repoUrl: optionalString(entry, "repoUrl", context),
+      homepageUrl: optionalString(entry, "homepageUrl", context),
+      releaseUrl: optionalString(entry, "releaseUrl", context),
+      installCmd: optionalString(entry, "installCmd", context),
+      platform,
+    };
+  });
+}
+
+export const PROJECTS: ProjectMeta[] = parseProjects(projectData);
 
 export function getProjectPath(project: ProjectMeta): string {
   if (project.collection === "bulletin") {

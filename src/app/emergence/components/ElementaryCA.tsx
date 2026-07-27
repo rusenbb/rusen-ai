@@ -537,6 +537,8 @@ export default function ElementaryCA(): React.ReactElement {
             ref={canvasRef}
             className="block w-full touch-none"
             style={{ height: CANVAS_HEIGHT, imageRendering: "pixelated" }}
+            role="img"
+            aria-label={`Elementary cellular automaton rule ${rule} at generation ${generation}. Use the adjacent controls to change the rule, zoom, step, or play.`}
           />
           {/* Zoom controls */}
           <div className="absolute top-2 right-2 z-10 flex items-center gap-1">

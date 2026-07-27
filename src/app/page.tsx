@@ -2,6 +2,10 @@ import Link from "next/link";
 import BgKickerToggle from "./components/BgKickerToggle";
 import { getFeaturedProjects, getProjectPath } from "@/lib/projects";
 import { getLatestUniquePosts, formatDate, readUnit } from "@/lib/blog";
+import type { Metadata } from "next";
+import { buildStaticPageMetadata } from "@/lib/social-metadata";
+
+export const metadata: Metadata = buildStaticPageMetadata("home");
 
 export default function Home() {
   const featuredDemos = getFeaturedProjects("demos", 3);

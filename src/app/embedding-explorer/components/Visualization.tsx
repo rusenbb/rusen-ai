@@ -434,6 +434,8 @@ export default function Visualization({
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseLeave}
           onClick={handleClick}
+          role="img"
+          aria-label={`Embedding projection containing ${points.length} labelled points${selectedWord ? `; ${selectedWord} is selected` : ""}. Use the word list and projection controls for a keyboard-accessible way to change the view.`}
         />
       </div>
 

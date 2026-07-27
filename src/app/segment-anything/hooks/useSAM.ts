@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useRef } from "react";
 import type { ProgressInfo } from "@huggingface/transformers";
 import type { SAMAction, SegmentPoint, MaskCandidate } from "../types";
 import { resolveLoadProgress } from "../utils/loadProgress";
@@ -134,13 +134,6 @@ export function useSAM(dispatch: React.Dispatch<SAMAction>): UseSAMResult {
 
     return initPromise.current;
   }, [dispatch]);
-
-  useEffect(() => {
-    const t = setTimeout(() => {
-      initModel();
-    }, 500);
-    return () => clearTimeout(t);
-  }, [initModel]);
 
   // ── Encode image ─────────────────────────────────────────────────
 

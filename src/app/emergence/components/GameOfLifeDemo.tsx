@@ -763,6 +763,7 @@ export default function GameOfLifeDemo() {
           </span>
           <input
             type="range"
+            aria-label="Game of Life generations per second"
             min={1}
             max={30}
             value={speed}
@@ -784,6 +785,8 @@ export default function GameOfLifeDemo() {
             onMouseMove={handleCanvasMouseMove}
             onMouseUp={handleCanvasMouseUp}
             onMouseLeave={handleCanvasMouseUp}
+            role="img"
+            aria-label={`Conway's Game of Life grid at generation ${generation}. Use the preset and playback controls to change the simulation; pointer input can edit cells.`}
           />
         </div>
       </div>

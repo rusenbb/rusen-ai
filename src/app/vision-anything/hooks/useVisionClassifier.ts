@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 export type VisionResult = { label: string; score: number };
 export type VisionModelStatus = "idle" | "loading" | "ready" | "error";
@@ -89,13 +89,6 @@ export function useVisionClassifier(): UseVisionClassifier {
     },
     [initModel],
   );
-
-  useEffect(() => {
-    const t = setTimeout(() => {
-      initModel();
-    }, 400);
-    return () => clearTimeout(t);
-  }, [initModel]);
 
   return { isLoading, isModelReady, loadProgress, status, error, classify };
 }

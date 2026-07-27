@@ -24,7 +24,7 @@ import {
   readExplorerState,
   type ExplorerUrlState,
 } from "./utils/urlState";
-import { Alert, DemoHeader, DemoPage, DemoPanel } from "@/components/ui";
+import { Alert, Button, DemoHeader, DemoPage, DemoPanel } from "@/components/ui";
 
 const DEFAULT_WORDS = [
   "king",
@@ -316,6 +316,7 @@ export default function EmbeddingExplorerPage() {
     loadProgress,
     error: modelError,
     backend,
+    loadModel,
     embed,
     cacheSize,
   } = useEmbedding();
@@ -829,26 +830,32 @@ export default function EmbeddingExplorerPage() {
       <DemoPage width="lg">
         <DemoHeader eyebrow="NLP / Embeddings" title="Embedding Explorer" description="Load a local embedding model and inspect semantic geometry in a shareable workspace." />
         <DemoPanel
-          title="Model Loading"
-          description="The embedding runtime needs a short initialization before the explorer becomes interactive."
+          title={isModelLoading ? "Model Loading" : "Load Model"}
+          description="The embedding runtime downloads only when you choose to start the explorer."
         >
           <div className="space-y-4">
-          <div className="flex items-center gap-3 text-neutral-500">
-            <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-            <span>
-              {isModelLoading ? `Loading embedding model... ${loadProgress}%` : "Initializing..."}
-            </span>
-          </div>
+          {isModelLoading ? (
+            <>
+              <div className="flex items-center gap-3 text-neutral-500">
+                <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                <span>Loading embedding model... {loadProgress}%</span>
+              </div>
 
-          <div className="w-full max-w-md h-2 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-indigo-500 transition-all duration-300"
-              style={{ width: `${loadProgress}%` }}
-            />
-          </div>
+              <div className="w-full max-w-md h-2 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-indigo-500 transition-all duration-300"
+                  style={{ width: `${loadProgress}%` }}
+                />
+              </div>
+            </>
+          ) : (
+            <Button variant="primary" onClick={() => void loadModel()}>
+              Load embedding model
+            </Button>
+          )}
 
           <p className="text-sm text-neutral-400">
-            Loading mxbai-embed-xsmall-v1 (24M parameters)
+            mxbai-embed-xsmall-v1 (24M parameters)
             {backend && ` using ${backend.toUpperCase()}`}
           </p>
 
