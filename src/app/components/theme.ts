@@ -12,8 +12,12 @@ export function getSystemTheme(): ThemeMode {
 
 export function getStoredTheme(): ThemeMode | null {
   if (typeof window === "undefined") return null;
-  const value = window.localStorage.getItem(THEME_STORAGE_KEY);
-  return value === "light" || value === "dark" ? value : null;
+  try {
+    const value = window.localStorage.getItem(THEME_STORAGE_KEY);
+    return value === "light" || value === "dark" ? value : null;
+  } catch {
+    return null;
+  }
 }
 
 export function getResolvedTheme(): ThemeMode {
@@ -35,7 +39,11 @@ export function applyTheme(theme: ThemeMode): void {
 
 export function setThemePreference(theme: ThemeMode): void {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  try {
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  } catch {
+    // The active theme still works when storage is unavailable or blocked.
+  }
   applyTheme(theme);
 }
 

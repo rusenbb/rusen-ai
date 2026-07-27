@@ -1,7 +1,16 @@
 #!/usr/bin/env node
 
-import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { createHash } from "node:crypto";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
+import { dirname, extname, relative, resolve } from "node:path";
 
 import sharp from "sharp";
 
@@ -37,6 +46,12 @@ type GeneratedAsset = {
   height: number;
   bytes: number;
   format: string;
+};
+
+type SocialManifest = {
+  version: 1;
+  inputFingerprint: string;
+  assets: GeneratedAsset[];
 };
 
 type PhotoEditorialManifest = {
@@ -289,7 +304,7 @@ function staticSpecs(): CardSpec[] {
 }
 
 function projectSpecs(): CardSpec[] {
-  return PROJECTS.map((project) => ({
+  return PROJECTS.filter((project) => project.status === "live").map((project) => ({
     route: getProjectPath(project),
     output: `/social/projects/${project.slug}.png`,
     label: `${project.collection.replace("-", " ")} / ${project.status}`,
@@ -356,31 +371,87 @@ function expectedAssets(): Array<{ route: string; image: string }> {
   ];
 }
 
+function socialImageFiles(directory = resolve(ROOT, "public/social")): string[] {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const filePath = resolve(directory, entry.name);
+    if (entry.isDirectory()) return socialImageFiles(filePath);
+    return [".png", ".jpg", ".jpeg"].includes(extname(entry.name).toLowerCase())
+      ? [filePath]
+      : [];
+  });
+}
+
+function inputFingerprint(): string {
+  const specs = [...staticSpecs(), ...projectSpecs(), ...blogSpecs()];
+  return createHash("sha256")
+    .update(JSON.stringify({ specs, photos: STATIC_PAGES.photos, photoCount: PHOTO_COUNT }))
+    .update(readFileSync(PHOTO_SOURCE))
+    .digest("hex");
+}
+
+function verifyManifest(expected: Array<{ route: string; image: string }>): void {
+  const manifestPath = resolve(ROOT, "public/social/manifest.json");
+  if (!existsSync(manifestPath)) {
+    throw new Error("Social preview verification failed:\n- missing /social/manifest.json");
+  }
+  const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as Partial<SocialManifest>;
+  const failures: string[] = [];
+  const fingerprint = inputFingerprint();
+  if (manifest.version !== 1) failures.push("manifest version is missing or unsupported");
+  if (manifest.inputFingerprint !== fingerprint) {
+    failures.push("social cards are stale; run npm run social:build");
+  }
+  const registered = new Set(
+    (manifest.assets ?? []).map((asset) => `${asset.route}\u0000${asset.image}`),
+  );
+  const expectedRegistrations = new Set(
+    expected.map((asset) => `${asset.route}\u0000${asset.image}`),
+  );
+  for (const registration of expectedRegistrations) {
+    if (!registered.has(registration)) failures.push(`manifest is missing ${registration.replace("\u0000", " -> ")}`);
+  }
+  for (const registration of registered) {
+    if (!expectedRegistrations.has(registration)) failures.push(`manifest has stale ${registration.replace("\u0000", " -> ")}`);
+  }
+  if (failures.length > 0) {
+    throw new Error(`Social preview verification failed:\n- ${failures.join("\n- ")}`);
+  }
+}
+
 async function verifyAssets(): Promise<GeneratedAsset[]> {
   const failures: string[] = [];
   const assets: GeneratedAsset[] = [];
-  for (const expected of expectedAssets()) {
-    const filePath = resolve(ROOT, `public${expected.image}`);
+  const expected = expectedAssets();
+  const expectedFiles = new Set(
+    expected.map((asset) => resolve(ROOT, `public${asset.image}`)),
+  );
+  for (const extra of socialImageFiles()) {
+    if (!expectedFiles.has(extra)) {
+      failures.push(`unexpected generated asset ${relative(resolve(ROOT, "public"), extra)}`);
+    }
+  }
+  for (const expectedAsset of expected) {
+    const filePath = resolve(ROOT, `public${expectedAsset.image}`);
     if (!existsSync(filePath)) {
-      failures.push(`missing ${expected.image} for ${expected.route}`);
+      failures.push(`missing ${expectedAsset.image} for ${expectedAsset.route}`);
       continue;
     }
     const metadata = await sharp(filePath).metadata();
     const bytes = statSync(filePath).size;
     if (metadata.width !== WIDTH || metadata.height !== HEIGHT) {
       failures.push(
-        `${expected.image} is ${metadata.width ?? "?"}x${metadata.height ?? "?"}; expected ${WIDTH}x${HEIGHT}`,
+        `${expectedAsset.image} is ${metadata.width ?? "?"}x${metadata.height ?? "?"}; expected ${WIDTH}x${HEIGHT}`,
       );
     }
     if (metadata.format !== "png" && metadata.format !== "jpeg") {
-      failures.push(`${expected.image} uses unsupported ${metadata.format ?? "unknown"} format`);
+      failures.push(`${expectedAsset.image} uses unsupported ${metadata.format ?? "unknown"} format`);
     }
     if (bytes > MAX_BYTES) {
-      failures.push(`${expected.image} is ${(bytes / 1_000_000).toFixed(2)} MB; limit is 1.50 MB`);
+      failures.push(`${expectedAsset.image} is ${(bytes / 1_000_000).toFixed(2)} MB; limit is 1.50 MB`);
     }
     assets.push({
-      route: expected.route,
-      image: expected.image,
+      route: expectedAsset.route,
+      image: expectedAsset.image,
       width: metadata.width ?? 0,
       height: metadata.height ?? 0,
       bytes,
@@ -397,9 +468,20 @@ async function build(): Promise<void> {
   const specs = [...staticSpecs(), ...projectSpecs(), ...blogSpecs()];
   await Promise.all(specs.map(writePng));
   await writePhotoCard(STATIC_PAGES.photos);
+  const expectedFiles = new Set(
+    expectedAssets().map((asset) => resolve(ROOT, `public${asset.image}`)),
+  );
+  for (const filePath of socialImageFiles()) {
+    if (!expectedFiles.has(filePath)) rmSync(filePath);
+  }
   const assets = await verifyAssets();
   const manifestPath = resolve(ROOT, "public/social/manifest.json");
-  writeFileSync(manifestPath, `${JSON.stringify({ assets }, null, 2)}\n`);
+  const manifest: SocialManifest = {
+    version: 1,
+    inputFingerprint: inputFingerprint(),
+    assets,
+  };
+  writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
   const totalBytes = assets.reduce((sum, asset) => sum + asset.bytes, 0);
   console.log(
     `Built and verified ${assets.length} social cards (${(totalBytes / 1_000_000).toFixed(2)} MB total).`,
@@ -409,6 +491,7 @@ async function build(): Promise<void> {
 async function main(): Promise<void> {
   if (process.argv.includes("--verify")) {
     const assets = await verifyAssets();
+    verifyManifest(expectedAssets());
     console.log(`Verified ${assets.length} social cards.`);
     return;
   }

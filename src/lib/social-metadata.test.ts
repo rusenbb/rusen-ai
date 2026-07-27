@@ -45,4 +45,32 @@ describe("social metadata", () => {
       type: "image/png",
     });
   });
+
+  it("includes article discovery and translation metadata when supplied", () => {
+    const metadata = buildSocialMetadata({
+      title: "An essay",
+      description: "A translated essay.",
+      path: "/blogs/an-essay",
+      image: "/social/blog/posts/an-essay.png",
+      imageAlt: "An essay",
+      type: "article",
+      languages: { en: "/blogs/an-essay", tr: "/blogs/bir-yazi" },
+      article: {
+        publishedTime: "2026-01-02",
+        authors: ["Rusen Birben"],
+        tags: ["AI"],
+      },
+    });
+
+    expect(metadata.alternates?.languages).toEqual({
+      en: "/blogs/an-essay",
+      tr: "/blogs/bir-yazi",
+    });
+    expect(metadata.openGraph).toMatchObject({
+      type: "article",
+      publishedTime: "2026-01-02",
+      authors: ["Rusen Birben"],
+      tags: ["AI"],
+    });
+  });
 });

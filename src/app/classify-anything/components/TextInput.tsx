@@ -23,7 +23,7 @@ export default function TextInput({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
-      if (!isClassifying && isModelReady && value.trim()) {
+      if (!isClassifying && value.trim()) {
         onClassify();
       }
     }
@@ -63,16 +63,19 @@ export default function TextInput({
       {/* Classify button */}
       <button
         onClick={onClassify}
-        disabled={disabled || isClassifying || !isModelReady || !value.trim()}
+        disabled={disabled || isClassifying || !value.trim()}
         className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
       >
-        {isClassifying ? (
+        {!isModelReady && isClassifying ? (
+          <>
+            <Spinner size="md" color="white" />
+            Loading model...
+          </>
+        ) : isClassifying ? (
           <>
             <Spinner size="md" color="white" />
             Classifying...
           </>
-        ) : !isModelReady ? (
-          "Loading model..."
         ) : (
           <>
             Classify

@@ -18,6 +18,12 @@ html[data-blog-lang="tr"] [data-post-lang="en"],
 html[data-blog-lang="tr"] [data-tag-lang="en"] {
   display: none;
 }
+[data-blog-force-lang="en"] [data-post-lang="tr"],
+[data-blog-force-lang="en"] [data-tag-lang="tr"],
+[data-blog-force-lang="tr"] [data-post-lang="en"],
+[data-blog-force-lang="tr"] [data-tag-lang="en"] {
+  display: none !important;
+}
 .blog-shell {
   max-width: 56rem;
   margin: 0 auto;

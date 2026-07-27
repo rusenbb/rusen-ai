@@ -20,6 +20,7 @@ const BACKGROUND_PREFERENCES: Record<
   global: { key: BG_DISABLED_KEY, defaultDisabled: false },
   photos: { key: PHOTO_BG_DISABLED_KEY, defaultDisabled: true },
 };
+const volatilePreferences: Partial<Record<BackgroundScope, boolean>> = {};
 
 export function getBackgroundScope(pathname: string | null): BackgroundScope {
   return pathname === "/photos" || pathname?.startsWith("/photos/")
@@ -34,7 +35,12 @@ export function isBgDisabledByDefault(scope: BackgroundScope = "global"): boolea
 export function isBgDisabled(scope: BackgroundScope = "global"): boolean {
   const preference = BACKGROUND_PREFERENCES[scope];
   if (typeof window === "undefined") return preference.defaultDisabled;
-  const stored = window.localStorage.getItem(preference.key);
+  let stored: string | null = null;
+  try {
+    stored = window.localStorage.getItem(preference.key);
+  } catch {
+    return volatilePreferences[scope] ?? preference.defaultDisabled;
+  }
   if (stored === "1") return true;
   if (stored === "0") return false;
   return preference.defaultDisabled;
@@ -46,10 +52,15 @@ export function setBgDisabled(
 ): void {
   if (typeof window === "undefined") return;
   const preference = BACKGROUND_PREFERENCES[scope];
-  if (disabled === preference.defaultDisabled) {
-    window.localStorage.removeItem(preference.key);
-  } else {
-    window.localStorage.setItem(preference.key, disabled ? "1" : "0");
+  try {
+    if (disabled === preference.defaultDisabled) {
+      window.localStorage.removeItem(preference.key);
+    } else {
+      window.localStorage.setItem(preference.key, disabled ? "1" : "0");
+    }
+    delete volatilePreferences[scope];
+  } catch {
+    volatilePreferences[scope] = disabled;
   }
   window.dispatchEvent(new Event(BG_TOGGLE_EVENT));
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 const MODEL_ID = "Xenova/distilbert-base-uncased";
 
@@ -30,6 +30,7 @@ export interface UseFillMask {
   status: FillMaskStatus;
   progress: number;
   error: string | null;
+  loadModel: () => Promise<void>;
   predict: (sentenceWithMask: string, topk?: number) => Promise<FillMaskPrediction[]>;
   /** Run the model's WordPiece tokenizer. Empty array if not yet ready. */
   tokenize: (text: string) => string[];
@@ -96,15 +97,8 @@ export function useFillMask(): UseFillMask {
     }
   }, []);
 
-  useEffect(() => {
-    const t = setTimeout(() => {
-      initModel();
-    }, 400);
-    return () => clearTimeout(t);
-  }, [initModel]);
-
   return useMemo(
-    () => ({ status, progress, error, predict, tokenize }),
-    [status, progress, error, predict, tokenize],
+    () => ({ status, progress, error, loadModel: initModel, predict, tokenize }),
+    [status, progress, error, initModel, predict, tokenize],
   );
 }

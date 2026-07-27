@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { AnchorHTMLAttributes, ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Header from "./Header";
@@ -132,5 +132,19 @@ describe("Header navigation", () => {
     expect(container.querySelector(".site-mobile-nav-home")).toHaveAttribute("href", "/");
     expect(container.querySelector(".site-mobile-nav-home"))
       .toHaveAccessibleName("Home");
+  });
+
+  it("returns focus to the mobile menu trigger when Escape closes the menu", async () => {
+    render(<Header />);
+    const trigger = screen.getByRole("button", { name: "Toggle menu" });
+    fireEvent.click(trigger);
+    const photos = screen.getAllByRole("link", { name: "Photos" }).at(-1)!;
+    photos.focus();
+
+    fireEvent.keyDown(window, { key: "Escape" });
+
+    await waitFor(() => expect(trigger).toHaveFocus());
+    expect(screen.queryByRole("group", { name: "Mobile navigation" }))
+      .not.toBeInTheDocument();
   });
 });
