@@ -14,8 +14,8 @@
     "linkedinUrl": "https://linkedin.com/in/rusenbirben",
     "github": "github.com/rusenbb",
     "githubUrl": "https://github.com/rusenbb",
-    "summary": "イスタンブール工科大学 人工知能・データ工学科卒業。現在は中東工科大学 応用 NLP グループの大学院研究員として、LLM、Agentic AI、トルコ語自然言語処理に取り組んでいます。",
-    "printSummary": "イスタンブール工科大学 人工知能・データ工学科卒業。現在は中東工科大学 応用 NLP グループの大学院研究員として、LLM とトルコ語自然言語処理に従事。NLP、LLM、Agentic AI 領域での実務経験あり。過去には Fiction Studios（ビルケント・サイバーパーク内の AI スタートアップ）の共同創業者として、博物館・観光客向け LLM 搭載ガイドアプリを開発。",
+    "summary": "イスタンブール工科大学 人工知能・データ工学科卒業。現在は中東工科大学 応用 NLP グループの独立研究者として、LLM、Agentic AI、トルコ語自然言語処理に取り組んでいます。",
+    "printSummary": "イスタンブール工科大学 人工知能・データ工学科卒業。現在は中東工科大学 応用 NLP グループの独立研究者として、LLM とトルコ語自然言語処理に従事。NLP、LLM、Agentic AI 領域での実務経験あり。過去には Fiction Studios（ビルケント・サイバーパーク内の AI スタートアップ）の共同創業者として、博物館・観光客向け LLM 搭載ガイドアプリを開発。",
     "footerNote": "リファレンスは応相談 · rusen.ai/cv"
   },
   "heroLinks": [
@@ -34,7 +34,7 @@
   ],
   "experience": [
     {
-      "role": "大学院研究員",
+      "role": "独立研究者",
       "company": "中東工科大学 応用NLPグループ",
       "period": "04/2026 - 現在",
       "location": "アンカラ、トルコ",
@@ -130,11 +130,6 @@
     }
   ],
   "education": [
-    {
-      "degree": "計算機工学修士課程（論文研究）",
-      "school": "中東工科大学",
-      "period": "2026 - 現在"
-    },
     {
       "degree": "人工知能・データ工学 学士",
       "school": "イスタンブール工科大学",
