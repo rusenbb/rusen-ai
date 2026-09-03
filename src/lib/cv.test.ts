@@ -28,3 +28,32 @@ describe("CV interests", () => {
     }
   });
 });
+
+describe("CV research affiliation", () => {
+  it("presents METU NLP as independent research, not current degree enrollment", () => {
+    const expectations = {
+      en: {
+        role: "Independent Researcher",
+        school: "Middle East Technical University",
+      },
+      tr: {
+        role: "Bağımsız Araştırmacı",
+        school: "Orta Doğu Teknik Üniversitesi",
+      },
+      ja: {
+        role: "独立研究者",
+        school: "中東工科大学",
+      },
+    } as const;
+
+    for (const locale of ["en", "tr", "ja"] as const) {
+      const cv = getCvData(locale);
+      expect(cv.experience[0]?.role).toBe(expectations[locale].role);
+      expect(
+        cv.education.some(
+          (education) => education.school === expectations[locale].school,
+        ),
+      ).toBe(false);
+    }
+  });
+});
