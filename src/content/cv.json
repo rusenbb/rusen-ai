@@ -14,8 +14,8 @@
     "linkedinUrl": "https://linkedin.com/in/rusenbirben",
     "github": "github.com/rusenbb",
     "githubUrl": "https://github.com/rusenbb",
-    "summary": "AI & Data Engineering graduate from Istanbul Technical University, now a graduate researcher at METU's Applied NLP Group. Working on LLMs, agentic AI, and Turkish language technologies.",
-    "printSummary": "AI & Data Engineering graduate from Istanbul Technical University, currently a graduate researcher at METU's Applied NLP Group working on LLMs and Turkish language technologies. Experience across NLP, LLMs, and agentic AI applications; previously co-founded Fiction Studios at Bilkent Cyberpark, an AI startup that built LLM-powered guides for museums and tourists.",
+    "summary": "AI & Data Engineering graduate from Istanbul Technical University, now an independent researcher at METU's Applied NLP Group. Working on LLMs, agentic AI, and Turkish language technologies.",
+    "printSummary": "AI & Data Engineering graduate from Istanbul Technical University, currently an independent researcher at METU's Applied NLP Group working on LLMs and Turkish language technologies. Experience across NLP, LLMs, and agentic AI applications; previously co-founded Fiction Studios at Bilkent Cyberpark, an AI startup that built LLM-powered guides for museums and tourists.",
     "footerNote": "References available upon request - rusen.ai/cv"
   },
   "heroLinks": [
@@ -34,7 +34,7 @@
   ],
   "experience": [
     {
-      "role": "Graduate Researcher",
+      "role": "Independent Researcher",
       "company": "METU Applied NLP Group",
       "period": "04/2026 - Present",
       "location": "Ankara, TR",
@@ -130,11 +130,6 @@
     }
   ],
   "education": [
-    {
-      "degree": "M.Sc. Computer Engineering (Thesis)",
-      "school": "Middle East Technical University",
-      "period": "2026 - Present"
-    },
     {
       "degree": "B.Sc. AI and Data Engineering",
       "school": "Istanbul Technical University",
