@@ -104,7 +104,7 @@
       "description": "Stable Diffusion 2.1 から特定概念を選択的に削除しつつ、その他の生成能力を維持する手法。コンテンツモデレーションと AI 出力カスタマイズを目的とする。",
       "tags": ["Stable Diffusion", "機械忘却", "コンピュータビジョン"],
       "links": [
-        { "label": "GH", "url": "https://github.com/rusenbb/AIzheimer" }
+        { "label": "GH", "url": "https://github.com/rusenbb/ai-zheimer" }
       ]
     },
     {

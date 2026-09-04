@@ -104,7 +104,7 @@
       "description": "Selectively removed concepts from Stable Diffusion 2.1 while preserving other capabilities. Content moderation and AI output customization.",
       "tags": ["Stable Diffusion", "Unlearning", "CV"],
       "links": [
-        { "label": "GH", "url": "https://github.com/rusenbb/AIzheimer" }
+        { "label": "GH", "url": "https://github.com/rusenbb/ai-zheimer" }
       ]
     },
     {

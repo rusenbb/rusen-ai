@@ -104,7 +104,7 @@
       "description": "Stable Diffusion 2.1 modelinden seçili kavramları, diğer yetenekleri bozmadan çıkarma yöntemi. İçerik denetimi ve YZ çıktılarının özelleştirilmesine yönelik.",
       "tags": ["Stable Diffusion", "Makine Unutma", "Bilgisayarlı Görü"],
       "links": [
-        { "label": "GH", "url": "https://github.com/rusenbb/AIzheimer" }
+        { "label": "GH", "url": "https://github.com/rusenbb/ai-zheimer" }
       ]
     },
     {
