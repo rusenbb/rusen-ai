@@ -301,7 +301,7 @@ function DecisionMap({
           return <rect key={`${cell.row}-${cell.column}`} x={svg((cell.column / 26) * 100)} y={svg((cell.row / 26) * 100)} width={svg(100 / 26 + 0.05)} height={svg(100 / 26 + 0.05)} fill={cyan ? "#22d3ee" : "#f59e0b"} opacity={svg(0.16 + Math.abs(cell.probability - 0.5) * 0.55)} />;
         })}
         {points.map((point, index) => (
-          <circle key={index} cx={svg((point.x + 1) * 50)} cy={svg((1 - point.y) * 50)} r="1.25" fill={point.label === 1 ? "#67e8f9" : "#fcd34d"} stroke="#0c1117" strokeWidth="0.6" />
+          <circle key={index} cx={svg((point.x + 1) * 50)} cy={svg((1 - point.y) * 50)} r={index % 5 === 0 ? "1.7" : "1.25"} fill={index % 5 === 0 ? "none" : point.label === 1 ? "#67e8f9" : "#fcd34d"} stroke={index % 5 === 0 ? "#f8fafc" : "#0c1117"} strokeWidth="0.6" />
         ))}
       </svg>
     </div>
@@ -515,7 +515,7 @@ export default function CurveFitterPage() {
               <p className="max-w-3xl text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
                 {classificationKind === "xor" ? "XOR needs two diagonal islands. A stack of linear layers still collapses to one straight cut, but several tanh gates can carve separate islands." : classificationKind === "circles" ? "The inner class needs a boundary that wraps around it. A line cannot close that loop, while tanh gates can combine into one." : "This is the control case: a straight boundary is enough, so the extra flexibility should not be necessary."}
               </p>
-              <div className="border border-[var(--line)] p-3 text-sm">Every fifth point is held out of training ({classificationTrain.length} train / {classificationTest.length} test). Full-model test accuracy: linear {(classificationAccuracy(linearNetwork, classificationTest) * 100).toFixed(1)}% · tanh {(classificationAccuracy(nonlinearNetwork, classificationTest) * 100).toFixed(1)}%. Scores below are training accuracy.</div>
+              <div className="border border-[var(--line)] p-3 text-sm">Outlined points are held out; filled points are used for training ({classificationTrain.length} train / {classificationTest.length} test). Full-model test accuracy: linear {(classificationAccuracy(linearNetwork, classificationTest) * 100).toFixed(1)}% · tanh {(classificationAccuracy(nonlinearNetwork, classificationTest) * 100).toFixed(1)}%. Scores below are training accuracy.</div>
               <EpochScrubber
                 label="Shared training progress, reset to replay from zero"
                 epoch={networkPlayback.epoch}

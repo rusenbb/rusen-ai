@@ -173,7 +173,7 @@ export default function RusenGram() {
         </DemoPanel>
         <DemoPanel title="Counts become probabilities">
           <div className="max-h-80 overflow-auto">
-            <table className="w-full text-left text-sm">
+            <table className="w-full text-left text-sm [&_th]:pr-3 [&_td]:pr-3">
               <thead>
                 <tr>
                   <th>Next token</th>

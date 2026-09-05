@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "inputFingerprint": "ba3b067b72f22265b8c76abbe12040a70026b64c3e1c9e1a66c72a3493b0da5b",
+  "inputFingerprint": "e756a8182ee043af4b1d4c0ba534448d5c0fda314f47e02faa2f338704e4119c",
   "assets": [
     {
       "route": "/",
@@ -167,7 +167,7 @@
       "image": "/social/projects/rusenizer.png",
       "width": 1200,
       "height": 630,
-      "bytes": 24255,
+      "bytes": 24595,
       "format": "png"
     },
     {
@@ -183,7 +183,7 @@
       "image": "/social/projects/outguess.png",
       "width": 1200,
       "height": 630,
-      "bytes": 23899,
+      "bytes": 23590,
       "format": "png"
     },
     {
@@ -203,11 +203,27 @@
       "format": "png"
     },
     {
+      "route": "/steering-llms",
+      "image": "/social/projects/steering-llms.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 24842,
+      "format": "png"
+    },
+    {
       "route": "/sentence-surgeon",
       "image": "/social/projects/sentence-surgeon.png",
       "width": 1200,
       "height": 630,
       "bytes": 25911,
+      "format": "png"
+    },
+    {
+      "route": "/rusen-gram",
+      "image": "/social/projects/rusen-gram.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 24480,
       "format": "png"
     },
     {

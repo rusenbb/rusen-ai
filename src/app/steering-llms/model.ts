@@ -42,6 +42,7 @@ export async function loadSteeringModel(
   return pipeline("text-generation", MODEL_ID, {
     device,
     dtype: "q8",
+    model_file_name: "decoder_model_merged",
     revision: MODEL_REVISION,
     progress_callback: progress,
   });

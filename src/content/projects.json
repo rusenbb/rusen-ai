@@ -324,7 +324,7 @@
     "slug": "rusenizer",
     "collection": "nerdy-stuff",
     "status": "live",
-    "summary": "My Turkish-optimized tokenizer. Compare with GPT-4 and see ~45% token savings on Turkish text.",
+    "summary": "Compare a Turkish-focused tokenizer with cl100k_base, inspect byte boundaries, and reproduce the bundled example comparison.",
     "description": "Turkish-focused tokenizer experimentation playground.",
     "tags": [
       "Tokenization",
@@ -457,9 +457,9 @@
     "title": "Steering LLMs",
     "slug": "steering-llms",
     "collection": "nerdy-stuff",
-    "status": "coming-soon",
-    "summary": "Probe whether concepts can be induced, strengthened, or redirected inside a model with steering and interpretability tools.",
-    "description": "Concept steering and intervention playground for local language models.",
+    "status": "live",
+    "summary": "Compare matched DistilGPT2 completions with explicit token-logit steering, fixed sampling settings, and a zero-strength control.",
+    "description": "Browser-side lexical steering at the output logits of a small causal language model. Same prompt, seed, temperature, and output budget.",
     "tags": [
       "LLM",
       "Interpretability",
@@ -469,12 +469,13 @@
       "NLP"
     ],
     "capabilities": [
-      "Interpretability",
-      "Control"
+      "Control",
+      "Visualization"
     ],
     "tech": [
-      "Local LLM",
-      "Transformers.js"
+      "DistilGPT2",
+      "Transformers.js",
+      "WASM"
     ],
     "order": 60
   },
@@ -512,9 +513,9 @@
     "title": "RuseN-Gram",
     "slug": "rusen-gram",
     "collection": "nerdy-stuff",
-    "status": "coming-soon",
-    "summary": "My personal N-Gram model. Old school meets new school language modeling.",
-    "description": "Classic N-gram language modeling playground.",
+    "status": "live",
+    "summary": "Build a word-level language model from an editable corpus. Inspect counts, suffix backoff, additive smoothing, and seeded generation.",
+    "description": "Transparent N-gram language model with actual context counts, backoff traces, and reproducible sampling.",
     "tags": [
       "N-Gram",
       "Classic ML"
@@ -526,6 +527,7 @@
       "Language Modeling"
     ],
     "tech": [
+      "TypeScript",
       "N-grams"
     ],
     "order": 80
