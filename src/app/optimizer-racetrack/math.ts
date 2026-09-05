@@ -175,16 +175,6 @@ export function matchedLearningRateConfigs(learningRate: number, configs: Optimi
   };
 }
 
-/** Legacy convenience wrapper for the original curved terrain. */
-export function racetrackLoss(point: Point): number {
-  return LANDSCAPES.ravine.loss(point);
-}
-
-/** Legacy convenience wrapper for the original curved terrain. */
-export function racetrackGradient(point: Point): Point {
-  return LANDSCAPES.ravine.gradient(point);
-}
-
 export function createOptimizerState(point: Point): OptimizerState {
   return {
     point: { ...point },
@@ -280,15 +270,4 @@ export function simulateOptimizer(
     losses.push(nextLoss);
   }
   return { name, points, losses, diverged };
-}
-
-export function finiteDifferenceGradient(
-  point: Point,
-  landscape: LossLandscape = LANDSCAPES.ravine,
-  epsilon = 1e-5,
-): Point {
-  return {
-    x: (landscape.loss({ x: point.x + epsilon, y: point.y }) - landscape.loss({ x: point.x - epsilon, y: point.y })) / (2 * epsilon),
-    y: (landscape.loss({ x: point.x, y: point.y + epsilon }) - landscape.loss({ x: point.x, y: point.y - epsilon })) / (2 * epsilon),
-  };
 }

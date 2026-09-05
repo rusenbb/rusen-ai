@@ -13,8 +13,6 @@ export interface ClassifyState {
   inputText: string;
   results: ClassificationResult[] | null;
   isClassifying: boolean;
-  modelStatus: ModelStatus;
-  loadProgress: number;
   error: string | null;
 }
 
@@ -25,12 +23,8 @@ export type ClassifyAction =
   | { type: "SET_LABELS"; labels: string[] }
   | { type: "SET_INPUT_TEXT"; text: string }
   | { type: "SET_RESULTS"; results: ClassificationResult[] }
-  | { type: "CLEAR_RESULTS" }
   | { type: "SET_CLASSIFYING"; isClassifying: boolean }
-  | { type: "SET_MODEL_STATUS"; status: ModelStatus }
-  | { type: "SET_LOAD_PROGRESS"; progress: number }
-  | { type: "SET_ERROR"; error: string | null }
-  | { type: "RESET" };
+  | { type: "SET_ERROR"; error: string | null };
 
 // Initial state
 export const initialState: ClassifyState = {
@@ -38,8 +32,6 @@ export const initialState: ClassifyState = {
   inputText: "",
   results: null,
   isClassifying: false,
-  modelStatus: "idle",
-  loadProgress: 0,
   error: null,
 };
 
@@ -77,6 +69,7 @@ export function classifyReducer(
       return {
         ...state,
         inputText: action.text,
+        results: null,
       };
 
     case "SET_RESULTS":
@@ -86,29 +79,11 @@ export function classifyReducer(
         isClassifying: false,
       };
 
-    case "CLEAR_RESULTS":
-      return {
-        ...state,
-        results: null,
-      };
-
     case "SET_CLASSIFYING":
       return {
         ...state,
         isClassifying: action.isClassifying,
         error: null,
-      };
-
-    case "SET_MODEL_STATUS":
-      return {
-        ...state,
-        modelStatus: action.status,
-      };
-
-    case "SET_LOAD_PROGRESS":
-      return {
-        ...state,
-        loadProgress: action.progress,
       };
 
     case "SET_ERROR":
@@ -117,9 +92,6 @@ export function classifyReducer(
         error: action.error,
         isClassifying: false,
       };
-
-    case "RESET":
-      return initialState;
 
     default:
       return state;

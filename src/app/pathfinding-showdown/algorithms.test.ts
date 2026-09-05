@@ -4,7 +4,6 @@ import {
   PATHFINDING_PRESETS,
   cellKey,
   createDefaultGrid,
-  runSearch,
   traceSearch,
   type PathGrid,
 } from "./algorithms";
@@ -23,7 +22,7 @@ const weightedDetour: PathGrid = {
 
 describe("pathfinding algorithms", () => {
   it("lets BFS take the fewest-step route even when it crosses expensive mud", () => {
-    const result = runSearch(weightedDetour, "bfs");
+    const result = traceSearch(weightedDetour, "bfs");
 
     expect(result.found).toBe(true);
     expect(result.path).toHaveLength(5);
@@ -31,8 +30,8 @@ describe("pathfinding algorithms", () => {
   });
 
   it("lets Dijkstra and A* choose the cheaper detour", () => {
-    const dijkstra = runSearch(weightedDetour, "dijkstra");
-    const astar = runSearch(weightedDetour, "astar");
+    const dijkstra = traceSearch(weightedDetour, "dijkstra");
+    const astar = traceSearch(weightedDetour, "astar");
 
     expect(dijkstra.cost).toBe(6);
     expect(astar.cost).toBe(6);
@@ -50,15 +49,15 @@ describe("pathfinding algorithms", () => {
       ],
     };
 
-    expect(runSearch(blocked, "astar")).toMatchObject({ found: false, path: [], cost: null });
+    expect(traceSearch(blocked, "astar")).toMatchObject({ found: false, path: [], cost: null });
   });
 
   it("uses a default scenario where move count and terrain cost disagree", () => {
     const grid = createDefaultGrid();
-    const bfs = runSearch(grid, "bfs");
-    const dijkstra = runSearch(grid, "dijkstra");
-    const greedy = runSearch(grid, "greedy");
-    const astar = runSearch(grid, "astar");
+    const bfs = traceSearch(grid, "bfs");
+    const dijkstra = traceSearch(grid, "dijkstra");
+    const greedy = traceSearch(grid, "greedy");
+    const astar = traceSearch(grid, "astar");
 
     expect(bfs).toMatchObject({ cost: 40, found: true });
     expect(greedy).toMatchObject({ cost: 40, found: true });
@@ -72,7 +71,7 @@ describe("pathfinding algorithms", () => {
       const grid = preset.createGrid();
 
       ["bfs", "dijkstra", "greedy", "astar"].forEach((algorithm) => {
-        expect(runSearch(grid, algorithm as "bfs" | "dijkstra" | "greedy" | "astar").found).toBe(true);
+        expect(traceSearch(grid, algorithm as "bfs" | "dijkstra" | "greedy" | "astar").found).toBe(true);
       });
     });
   });

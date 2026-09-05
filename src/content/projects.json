@@ -1,5 +1,33 @@
 [
   {
+    "id": "sampling-lab",
+    "title": "Sampling Lab",
+    "slug": "sampling-lab",
+    "collection": "demos",
+    "status": "live",
+    "summary": "Change the sample rate and watch different waves pass through the same measurements. Explore aliasing and the Nyquist boundary.",
+    "description": "Interactive sine-wave sampling lab with phase controls and an exact baseband alias.",
+    "tags": ["Signals", "Sampling", "Aliasing"],
+    "domains": ["Computational Tools"],
+    "capabilities": ["Visualization", "Simulation"],
+    "tech": ["TypeScript", "SVG"],
+    "order": 56
+  },
+  {
+    "id": "decision-boundary",
+    "title": "Decision Boundary",
+    "slug": "decision-boundary",
+    "collection": "demos",
+    "status": "live",
+    "summary": "Inspect nearest-neighbor votes, add examples, and reshape a classifier's decision boundary on moons, rings, and XOR.",
+    "description": "Interactive k-nearest-neighbor classifier with editable synthetic datasets and leave-one-out evaluation.",
+    "tags": ["Classification", "k-NN", "Visualization"],
+    "domains": ["ML"],
+    "capabilities": ["Classification", "Visualization"],
+    "tech": ["TypeScript", "SVG"],
+    "order": 57
+  },
+  {
     "id": "classify-anything",
     "title": "Classify Anything",
     "slug": "classify-anything",
