@@ -1,0 +1,238 @@
+[
+  {
+    "id": "alice",
+    "title": "Alice’s Adventures in Wonderland",
+    "author": "Lewis Carroll",
+    "kind": "Fiction",
+    "prompt": "alice was",
+    "path": "/corpora/alice.txt",
+    "bytes": 174311,
+    "source": "https://www.gutenberg.org/ebooks/11",
+    "download": "https://www.gutenberg.org/cache/epub/11/pg11.txt",
+    "sha256": "01b38ea4c710a84bc18d0bd41271a5a1a92b94e97b2812f4dece97d4a694725e",
+    "sections": [
+      {
+        "start": "CHAPTER I.\nDown the Rabbit-Hole",
+        "end": "\nTHE END"
+      }
+    ],
+    "rights": "Public domain in the USA — Project Gutenberg edition"
+  },
+  {
+    "id": "sherlock",
+    "title": "The Adventures of Sherlock Holmes",
+    "author": "Arthur Conan Doyle",
+    "kind": "Fiction",
+    "prompt": "sherlock holmes",
+    "path": "/corpora/sherlock.txt",
+    "bytes": 607606,
+    "source": "https://www.gutenberg.org/ebooks/1661",
+    "download": "https://www.gutenberg.org/cache/epub/1661/pg1661.txt",
+    "sha256": "922e2a12ccb43a4c9544c260b2166c6ad2097aeb5957faeee113f173bb857cd0",
+    "sections": [
+      {
+        "start": "I. A SCANDAL IN BOHEMIA",
+        "end": ""
+      }
+    ],
+    "rights": "Public domain in the USA — Project Gutenberg edition"
+  },
+  {
+    "id": "pride",
+    "title": "Pride and Prejudice",
+    "author": "Jane Austen",
+    "kind": "Fiction",
+    "prompt": "elizabeth was",
+    "path": "/corpora/pride.txt",
+    "bytes": 772386,
+    "source": "https://www.gutenberg.org/ebooks/1342",
+    "download": "https://www.gutenberg.org/cache/epub/1342/pg1342.txt",
+    "sha256": "3f6bb9d6f78e0293b56acd4714dd68cb7d6d1d293402031ce9d5a216bcaf9d75",
+    "sections": [
+      {
+        "start": "It is a truth universally acknowledged,",
+        "end": "\n                            [Illustration:\n\n                                  THE"
+      }
+    ],
+    "rights": "Public domain in the USA — Project Gutenberg edition"
+  },
+  {
+    "id": "frankenstein",
+    "title": "Frankenstein",
+    "author": "Mary Shelley",
+    "kind": "Fiction",
+    "prompt": "i felt",
+    "path": "/corpora/frankenstein.txt",
+    "bytes": 448885,
+    "source": "https://www.gutenberg.org/ebooks/84",
+    "download": "https://www.gutenberg.org/cache/epub/84/pg84.txt",
+    "sha256": "7810cd483cffcf2cc8a1d8f0d5807931e69d4f48cd14149b8c76f88af82fead3",
+    "sections": [
+      {
+        "start": "Letter 1\n\n_To Mrs. Saville, England._",
+        "end": ""
+      }
+    ],
+    "rights": "Public domain in the USA — Project Gutenberg edition"
+  },
+  {
+    "id": "time-machine",
+    "title": "The Time Machine",
+    "author": "H. G. Wells",
+    "kind": "Fiction",
+    "prompt": "the time traveller",
+    "path": "/corpora/time-machine.txt",
+    "bytes": 204384,
+    "source": "https://www.gutenberg.org/ebooks/35",
+    "download": "https://www.gutenberg.org/cache/epub/35/pg35.txt",
+    "sha256": "2892e919000e17c83e1dac51b30f4675db50536b644d7579fe8a89bb399a9bdc",
+    "sections": [
+      {
+        "start": "The Time Traveller (for so it will be convenient to speak of him)",
+        "end": ""
+      }
+    ],
+    "rights": "Public domain in the USA — Project Gutenberg edition"
+  },
+  {
+    "id": "dracula",
+    "title": "Dracula",
+    "author": "Bram Stoker",
+    "kind": "Fiction",
+    "prompt": "the count",
+    "path": "/corpora/dracula.txt",
+    "bytes": 890348,
+    "source": "https://www.gutenberg.org/ebooks/345",
+    "download": "https://www.gutenberg.org/cache/epub/345/pg345.txt",
+    "sha256": "96cd16eacdbfebae8fdda5591f66e0cc8ee76be18e0cd1aca02bc00615782d28",
+    "sections": [
+      {
+        "start": "CHAPTER I\n\nJONATHAN HARKER’S JOURNAL",
+        "end": "\n                                THE END"
+      }
+    ],
+    "rights": "Public domain in the USA — Project Gutenberg edition"
+  },
+  {
+    "id": "sonnets",
+    "title": "Shakespeare’s Sonnets",
+    "author": "William Shakespeare",
+    "kind": "Poetry",
+    "prompt": "thou art",
+    "path": "/corpora/sonnets.txt",
+    "bytes": 119936,
+    "source": "https://www.gutenberg.org/ebooks/1041",
+    "download": "https://www.gutenberg.org/cache/epub/1041/pg1041.txt",
+    "sha256": "4a3a5466591e30ca93b2c19daeb24770bb08833b57b1616c972b97246e23580f",
+    "sections": [
+      {
+        "start": "I\n\nFrom fairest creatures we desire increase,",
+        "end": ""
+      }
+    ],
+    "rights": "Public domain in the USA — Project Gutenberg edition"
+  },
+  {
+    "id": "dickinson",
+    "title": "Poems — Three Series, Complete",
+    "author": "Emily Dickinson",
+    "kind": "Poetry",
+    "prompt": "i could",
+    "path": "/corpora/dickinson.txt",
+    "bytes": 206765,
+    "source": "https://www.gutenberg.org/ebooks/12242",
+    "download": "https://www.gutenberg.org/cache/epub/12242/pg12242.txt",
+    "sha256": "f4421418353de2737c9bfe3db1e4657534b6b8ae2a8603f31de2d77678d18791",
+    "sections": [
+      {
+        "start": "This is my letter to the world,",
+        "end": "\nPOEMS\n\nby EMILY DICKINSON"
+      },
+      {
+        "start": "I'm nobody!  Who are you?",
+        "end": "\nPOEMS\n\nby EMILY DICKINSON"
+      },
+      {
+        "start": "'T is little I could care for pearls",
+        "end": ""
+      }
+    ],
+    "rights": "Public domain in the USA — Project Gutenberg edition"
+  },
+  {
+    "id": "blake",
+    "title": "Poems of William Blake",
+    "author": "William Blake",
+    "kind": "Poetry",
+    "prompt": "the little",
+    "path": "/corpora/blake.txt",
+    "bytes": 61296,
+    "source": "https://www.gutenberg.org/ebooks/574",
+    "download": "https://www.gutenberg.org/cache/epub/574/pg574.txt",
+    "sha256": "7e40d6eee71365362973c0083a3117bc11d49c1feaf5566163109d54bd573a24",
+    "sections": [
+      {
+        "start": "Piping down the valleys wild,",
+        "end": ""
+      }
+    ],
+    "rights": "Public domain in the USA — Project Gutenberg edition"
+  },
+  {
+    "id": "whitman",
+    "title": "Leaves of Grass",
+    "author": "Walt Whitman",
+    "kind": "Poetry",
+    "prompt": "i hear",
+    "path": "/corpora/whitman.txt",
+    "bytes": 780492,
+    "source": "https://www.gutenberg.org/ebooks/1322",
+    "download": "https://www.gutenberg.org/cache/epub/1322/pg1322.txt",
+    "sha256": "77c066a8774e2b04d8bfbc570d9aa5131410355cd6062ab5962ac773240f3140",
+    "sections": [
+      {
+        "start": "Come, said my soul,",
+        "end": ""
+      }
+    ],
+    "rights": "Public domain in the USA — Project Gutenberg edition"
+  },
+  {
+    "id": "emerson",
+    "title": "Poems",
+    "author": "Ralph Waldo Emerson",
+    "kind": "Poetry",
+    "prompt": "the world",
+    "path": "/corpora/emerson.txt",
+    "bytes": 369129,
+    "source": "https://www.gutenberg.org/ebooks/12843",
+    "download": "https://www.gutenberg.org/cache/epub/12843/pg12843.txt",
+    "sha256": "1e56442bf86e6275a04bbda7e5bf83e2248a3dd212f36897a72e1188c9905b95",
+    "sections": [
+      {
+        "start": "GOOD-BYE\n\nGood-bye, proud world! I'm going home:",
+        "end": "\nINDEX OF FIRST LINES"
+      }
+    ],
+    "rights": "Public domain in the USA — Project Gutenberg edition"
+  },
+  {
+    "id": "stevenson",
+    "title": "A Child’s Garden of Verses",
+    "author": "Robert Louis Stevenson",
+    "kind": "Poetry",
+    "prompt": "when i was",
+    "path": "/corpora/stevenson.txt",
+    "bytes": 82339,
+    "source": "https://www.gutenberg.org/ebooks/25609",
+    "download": "https://www.gutenberg.org/cache/epub/25609/pg25609.txt",
+    "sha256": "d00c04f2c07ee5cbe14076058b4ce4853983d57d91ecd9155af475f94289fafc",
+    "sections": [
+      {
+        "start": "\nBED IN SUMMER\n",
+        "end": ""
+      }
+    ],
+    "rights": "Public domain in the USA — Project Gutenberg edition"
+  }
+]
