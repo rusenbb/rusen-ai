@@ -20,7 +20,7 @@ export interface UseClassifierResult {
   loadProgress: number;
   modelStatus: ModelStatus;
   error: string | null;
-  classify: (text: string, labels: string[]) => Promise<ClassificationResult[]>;
+  classify: (text: string, labels: string[], multiLabel?: boolean) => Promise<ClassificationResult[]>;
 }
 
 // Model configuration - using a smaller model for faster loading
@@ -98,7 +98,7 @@ export function useClassifier(): UseClassifierResult {
 
   // Classify text with given labels
   const classify = useCallback(
-    async (text: string, labels: string[]): Promise<ClassificationResult[]> => {
+    async (text: string, labels: string[], multiLabel = false): Promise<ClassificationResult[]> => {
       if (!text.trim()) {
         return [];
       }
@@ -118,7 +118,7 @@ export function useClassifier(): UseClassifierResult {
 
       try {
         const output = await classifierPipeline.current(text, labels, {
-          multi_label: false,
+          multi_label: multiLabel,
         });
 
         // Convert to our result format

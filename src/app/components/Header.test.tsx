@@ -36,7 +36,7 @@ describe("Header navigation", () => {
     render(<Header />);
     const photosLink = screen.getByRole("link", { name: "Photos" });
     for (const [name, href] of [["Home", "/"], ["Demos", "/demos"], ["Nerdy Stuff", "/nerdy-stuff"], ["Bulletin", "/bulletin"], ["Photos", "/photos"], ["Blog", "/blogs"], ["CV", "/cv"]]) {
-      expect(screen.getByRole("link", { name, exact: true })).toHaveAttribute("href", href);
+      expect(screen.getByRole("link", { name })).toHaveAttribute("href", href);
     }
     expect(screen.getByRole("button", { name: "Theme: 1" })).toBeInTheDocument();
     expect(photosLink).toHaveAttribute("aria-current", "page");
