@@ -19,7 +19,7 @@ Edit `src/content/projects.json`, then run `npm run projects:docs`.
 | Pathfinding Showdown | `live` | `/pathfinding-showdown` | Step through every frontier decision as BFS, Dijkstra, greedy best-first, and A* search the same terrain. |
 | Pulse Board | `live` | `/pulse-board` | Live dashboard with real-time WebSocket crypto prices, Chainlink oracle, earthquakes, weather, and more. |
 | RL-Arena | `live` | `/adaptive-arena` | Fight trained bots in a full 30x30 tactical arena with checkpoint-based difficulties. |
-| Outguess | `live` | `/outguess` | Try to be unpredictable. A tiny AI predicts your next key press, and catches humans about 70% of the time. |
+| Outguess | `live` | `/outguess` | Try to be unpredictable. Small sequence models learn your patterns, with separate blind and hint-visible scores. |
 
 ## Nerdy Stuff
 
@@ -29,11 +29,11 @@ Edit `src/content/projects.json`, then run `npm run projects:docs`.
 | Game of Life | `live` | `/game-of-life` | The interactive cellular automata world that used to run as the site background, now as a standalone playground. |
 | Embedding Explorer | `live` | `/embedding-explorer` | Visualize how texts cluster in vector space using UMAP. See semantic similarity in action. |
 | Sentence Surgeon | `live` | `/sentence-surgeon` | Click any word to remove it. A small BERT predicts what should fill the gap, ranked with probabilities. Click a prediction to graft it in. |
-| Rusenizer | `live` | `/rusenizer` | My Turkish-optimized tokenizer. Compare with GPT-4 and see ~45% token savings on Turkish text. |
+| Rusenizer | `live` | `/rusenizer` | Compare a Turkish-focused tokenizer with cl100k_base, inspect byte boundaries, and reproduce the bundled example comparison. |
 | Fourier Sketch | `live` | `/fourier-sketch` | Draw a path, then watch rotating Fourier epicycles reconstruct it one harmonic at a time. |
 | Optimizer Racetrack | `live` | `/optimizer-racetrack` | Release SGD, Momentum, RMSProp, and Adam on the same loss landscape and watch their paths, wobbles, and failures diverge. |
-| Steering LLMs | `coming-soon` | `/steering-llms` | Probe whether concepts can be induced, strengthened, or redirected inside a model with steering and interpretability tools. |
-| RuseN-Gram | `coming-soon` | `/rusen-gram` | My personal N-Gram model. Old school meets new school language modeling. |
+| Steering LLMs | `live` | `/steering-llms` | Compare matched DistilGPT2 completions with explicit token-logit steering, fixed sampling settings, and a zero-strength control. |
+| RuseN-Gram | `live` | `/rusen-gram` | Build a word-level language model from an editable corpus. Inspect counts, suffix backoff, additive smoothing, and seeded generation. |
 
 ## Bulletin
 
