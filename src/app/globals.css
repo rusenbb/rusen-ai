@@ -1,4 +1,8 @@
 @import "tailwindcss";
+/* Books, model runtimes and diagnostic artifacts never contain UI classes. */
+@source not "../../public/corpora";
+@source not "../../public/runtime";
+@source not "../../output";
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
