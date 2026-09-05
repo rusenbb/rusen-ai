@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import type { AttentionMask } from "../hooks/useClipSeg";
+import { containedImageStyle } from "../maps";
 
 type Props = {
   mask: AttentionMask;
@@ -12,6 +13,7 @@ type Props = {
    *  image; "alpha" paints the heatmap as an opaque image. */
   blend?: "screen" | "alpha";
   className?: string;
+  imageAspect?: number;
 };
 
 function viridisColor(v: number): [number, number, number] {
@@ -51,6 +53,7 @@ export default function HeatmapCanvas({
   palette = "cyan",
   blend = "screen",
   className,
+  imageAspect,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -83,7 +86,7 @@ export default function HeatmapCanvas({
     <canvas
       ref={canvasRef}
       className={className ?? "absolute inset-0 w-full h-full pointer-events-none"}
-      style={{ mixBlendMode: blend === "screen" ? "screen" : "normal" }}
+      style={{ mixBlendMode: blend === "screen" ? "screen" : "normal", ...(imageAspect ? containedImageStyle(imageAspect) : {}) }}
     />
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { maskProbabilities } from "../maps";
 
 const MODEL_ID = "Xenova/clipseg-rd64-refined";
 
@@ -23,21 +24,7 @@ export interface UseClipSeg {
 }
 
 function sigmoidNormalised(raw: Float32Array, width: number, height: number): AttentionMask {
-  const total = width * height;
-  const mask = new Float32Array(total);
-  let mn = Infinity;
-  let mx = -Infinity;
-  for (let i = 0; i < total; i++) {
-    const v = 1 / (1 + Math.exp(-raw[i]));
-    mask[i] = v;
-    if (v < mn) mn = v;
-    if (v > mx) mx = v;
-  }
-  const range = mx - mn || 1;
-  for (let i = 0; i < total; i++) {
-    mask[i] = (mask[i] - mn) / range;
-  }
-  return { data: mask, width, height };
+  return { data: maskProbabilities(raw), width, height };
 }
 
 export function useClipSeg(): UseClipSeg {
