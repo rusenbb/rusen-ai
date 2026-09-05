@@ -7,10 +7,22 @@
     "status": "live",
     "summary": "Change the sample rate and watch different waves pass through the same measurements. Explore aliasing and the Nyquist boundary.",
     "description": "Interactive sine-wave sampling lab with phase controls and an exact baseband alias.",
-    "tags": ["Signals", "Sampling", "Aliasing"],
-    "domains": ["Computational Tools"],
-    "capabilities": ["Visualization", "Simulation"],
-    "tech": ["TypeScript", "SVG"],
+    "tags": [
+      "Signals",
+      "Sampling",
+      "Aliasing"
+    ],
+    "domains": [
+      "Computational Tools"
+    ],
+    "capabilities": [
+      "Visualization",
+      "Simulation"
+    ],
+    "tech": [
+      "TypeScript",
+      "SVG"
+    ],
     "order": 56
   },
   {
@@ -21,10 +33,22 @@
     "status": "live",
     "summary": "Inspect nearest-neighbor votes, add examples, and reshape a classifier's decision boundary on moons, rings, and XOR.",
     "description": "Interactive k-nearest-neighbor classifier with editable synthetic datasets and leave-one-out evaluation.",
-    "tags": ["Classification", "k-NN", "Visualization"],
-    "domains": ["ML"],
-    "capabilities": ["Classification", "Visualization"],
-    "tech": ["TypeScript", "SVG"],
+    "tags": [
+      "Classification",
+      "k-NN",
+      "Visualization"
+    ],
+    "domains": [
+      "ML"
+    ],
+    "capabilities": [
+      "Classification",
+      "Visualization"
+    ],
+    "tech": [
+      "TypeScript",
+      "SVG"
+    ],
     "order": 57
   },
   {
@@ -355,8 +379,8 @@
     "slug": "outguess",
     "collection": "demos",
     "status": "live",
-    "summary": "Try to be unpredictable. A tiny AI predicts your next key press, and catches humans about 70% of the time.",
-    "description": "Predictor-vs-human key-tapping game. You try to be random; a small AI tries to call each next press. Most people get caught about 70% of the time.",
+    "summary": "Try to be unpredictable. Small sequence models learn your patterns, with separate blind and hint-visible scores.",
+    "description": "Predictor-vs-human key-tapping game with Markov and PPM predictors and condition-specific session scores.",
     "tags": [
       "N-Gram",
       "PPM",
