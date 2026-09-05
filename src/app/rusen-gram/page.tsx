@@ -13,7 +13,9 @@ import type { Request, Response } from "./worker";
 
 export default function RusenGram() {
   const [selected, setSelected] = useState("alice");
-  const [corpus, setCorpus] = useState("");
+  const [loaded, setLoaded] = useState<{ id: string; text: string } | null>(
+    null,
+  );
   const [draft, setDraft] = useState("");
   const [prompt, setPrompt] = useState("alice was");
   const [order, setOrder] = useState(3);
@@ -66,12 +68,6 @@ export default function RusenGram() {
   useEffect(() => {
     if (!edition) return;
     const controller = new AbortController();
-    setLoading(true);
-    setReady(false);
-    setResult(null);
-    setGenerated("");
-    setError("");
-    serial.current++;
     void (async () => {
       try {
         const response = await fetch(edition.path, {
@@ -90,7 +86,7 @@ export default function RusenGram() {
           );
         if (controller.signal.aborted) return;
         const text = extractBook(new TextDecoder().decode(bytes), edition);
-        setCorpus(text);
+        setLoaded({ id: edition.id, text });
         setDraft(text);
       } catch (e) {
         if (!controller.signal.aborted) {
@@ -102,25 +98,35 @@ export default function RusenGram() {
     return () => controller.abort();
   }, [edition]);
   useEffect(() => {
-    if (!corpus) return;
+    if (!loaded || loaded.id !== selected) return;
     setReady(false);
     setLoading(true);
     setResult(null);
     setGenerated("");
-    send({ id: ++serial.current, action: "train", corpus, order });
-  }, [corpus, order]);
+    send({ id: ++serial.current, action: "train", corpus: loaded.text, order });
+  }, [loaded, order, selected]);
   useEffect(() => {
     if (!ready) return;
     setGenerated("");
     setResult(null);
     send({ id: ++serial.current, action: "inspect", prompt, alpha });
   }, [ready, prompt, alpha]);
+  const beginCorpusChange = () => {
+    serial.current++;
+    setReady(false);
+    setLoading(true);
+    setResult(null);
+    setGenerated("");
+    setError("");
+  };
   const choose = (id: string) => {
+    if (id === selected) return;
+    beginCorpusChange();
     const book = catalog.find((item) => item.id === id);
     setSelected(id);
     setPrompt(book?.prompt ?? "the cat");
     if (!book) {
-      setCorpus(EXAMPLE_CORPUS);
+      setLoaded({ id: "custom", text: EXAMPLE_CORPUS });
       setDraft(EXAMPLE_CORPUS);
     }
   };
@@ -297,7 +303,13 @@ export default function RusenGram() {
                 min={1}
                 max={5}
                 value={order}
-                onChange={(e) => setOrder(Number(e.target.value))}
+                onChange={(e) => {
+                  const next = Number(e.target.value);
+                  if (next !== order) {
+                    beginCorpusChange();
+                    setOrder(next);
+                  }
+                }}
                 className="my-3 w-full"
               />
             </label>
@@ -402,6 +414,7 @@ export default function RusenGram() {
         </p>
         <textarea
           aria-label="Training corpus"
+          disabled={loading}
           className="h-72 w-full border bg-[var(--surface)] p-3 font-mono text-xs"
           maxLength={2000000}
           value={draft}
@@ -411,9 +424,9 @@ export default function RusenGram() {
           className="mt-3"
           disabled={loading || !draft.trim()}
           onClick={() => {
+            beginCorpusChange();
             setSelected("custom");
-            setCorpus(draft);
-            setError("");
+            setLoaded({ id: "custom", text: draft });
           }}
         >
           Rebuild from edited text
