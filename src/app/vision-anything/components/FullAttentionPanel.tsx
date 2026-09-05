@@ -58,14 +58,16 @@ export default function FullAttentionPanel({
   const [mode, setMode] = useState<Mode>("overlay");
   const [imageOpacity, setImageOpacity] = useState(60);
 
-  // Run CLIPSeg for every label in one batch, exactly once on mount.
+  const { segmentBatch } = clipSeg;
+
+  // Progress updates must not restart inference for the same image and labels.
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setBusy(true);
       setError(null);
       try {
-        const masks = await clipSeg.segmentBatch(imageUrl, labels);
+        const masks = await segmentBatch(imageUrl, labels);
         if (cancelled) return;
         const labeled = labels.map((label, i) => ({ label, mask: masks[i] }));
         setAllMasks(labeled);
@@ -82,7 +84,7 @@ export default function FullAttentionPanel({
     return () => {
       cancelled = true;
     };
-  }, [imageUrl, labels, clipSeg, initialLabel]);
+  }, [imageUrl, labels, segmentBatch, initialLabel]);
 
   const averageMask = useMemo(
     () => computeAverage(allMasks.map((m) => m.mask)),

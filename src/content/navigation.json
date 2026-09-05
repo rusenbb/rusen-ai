@@ -20,9 +20,11 @@
         "/classify-anything",
         "/convolution-lab",
         "/curve-fitter",
+        "/decision-boundary",
         "/outguess",
         "/pathfinding-showdown",
         "/pulse-board",
+        "/sampling-lab",
         "/segment-anything",
         "/vision-anything"
       ]

@@ -193,15 +193,6 @@ export const ACTION_LABELS: Record<ArenaAction, string> = {
   hold: "Hold",
 };
 
-export const PLAYER_CATEGORY_LABELS: Record<PlayerCategory, string> = {
-  pressure: "Pressure",
-  guarded: "Guarded",
-  scavenger: "Resource",
-  vertical: "Vertical",
-  horizontal: "Horizontal",
-  holding: "Holding",
-};
-
 const PLAYER_CATEGORIES: PlayerCategory[] = [
   "pressure",
   "guarded",
@@ -1484,10 +1475,6 @@ export function createInitialMatch(
     lastBotReward: 0,
     statusMessage: "Round 1. Selected checkpoint loaded.",
   };
-}
-
-export function resetMatch(playerModel: PlayerModel): MatchState {
-  return createInitialMatch(playerModel);
 }
 
 export function advanceMatch(options: {

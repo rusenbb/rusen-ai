@@ -34,6 +34,8 @@ export default function VisionAnythingPage() {
   const [attentionBusy, setAttentionBusy] = useState(false);
   const [fullAttention, setFullAttention] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const classificationRequest = useRef(0);
+  const attentionRequest = useRef(0);
 
   // Revoke object URLs to avoid memory leaks
   useEffect(() => {
@@ -45,37 +47,43 @@ export default function VisionAnythingPage() {
   }, [imageUrl]);
 
   const clearAttention = useCallback(() => {
+    attentionRequest.current += 1;
+    setAttentionBusy(false);
     setAttentionMask(null);
     setAttentionLabel(null);
     setFullAttention(false);
   }, []);
+
+  const clearResults = useCallback(() => {
+    classificationRequest.current += 1;
+    setIsClassifying(false);
+    setResults(null);
+    setClassifyError(null);
+    clearAttention();
+  }, [clearAttention]);
 
   const handleFile = useCallback(
     (file: File) => {
       if (!file.type.startsWith("image/")) return;
       const url = URL.createObjectURL(file);
       setImageUrl(url);
-      setResults(null);
-      setClassifyError(null);
-      clearAttention();
+      clearResults();
       // Reset suggested labels back to preset when uploading something new.
       setLabels(PRESET_LABELS);
     },
-    [clearAttention],
+    [clearResults],
   );
 
   const pickSampleImage = useCallback(
     (url: string) => {
       setImageUrl(url);
-      setResults(null);
-      setClassifyError(null);
-      clearAttention();
+      clearResults();
       const sample = DEMO_IMAGES.find((d) => d.url === url);
       if (sample?.suggestedLabels) {
         setLabels(sample.suggestedLabels);
       }
     },
-    [clearAttention],
+    [clearResults],
   );
 
   const handleAddLabel = useCallback(() => {
@@ -83,41 +91,48 @@ export default function VisionAnythingPage() {
     if (!trimmed) return;
     if (labels.includes(trimmed)) return;
     setLabels((prev) => [...prev, trimmed]);
+    clearResults();
     setLabelInput("");
-  }, [labelInput, labels]);
+  }, [labelInput, labels, clearResults]);
 
   const handleRemoveLabel = useCallback((index: number) => {
     setLabels((prev) => prev.filter((_, i) => i !== index));
-  }, []);
+    clearResults();
+  }, [clearResults]);
 
   const handleClassify = useCallback(async () => {
     if (!imageUrl || labels.length < 2) return;
+    const request = ++classificationRequest.current;
     setIsClassifying(true);
     setClassifyError(null);
     clearAttention();
     try {
       const out = await classify(imageUrl, labels);
+      if (request !== classificationRequest.current) return;
       setResults(out);
     } catch (err) {
-      setClassifyError(err instanceof Error ? err.message : "Classification failed");
+      if (request === classificationRequest.current) setClassifyError(err instanceof Error ? err.message : "Classification failed");
     } finally {
-      setIsClassifying(false);
+      if (request === classificationRequest.current) setIsClassifying(false);
     }
   }, [imageUrl, labels, classify, clearAttention]);
 
   const showAttentionFor = useCallback(
     async (label: string) => {
       if (!imageUrl) return;
+      const request = ++attentionRequest.current;
       setAttentionBusy(true);
       setAttentionLabel(label);
       try {
         const mask = await clipSeg.segment(imageUrl, label);
+        if (request !== attentionRequest.current) return;
         setAttentionMask(mask);
       } catch (err) {
+        if (request !== attentionRequest.current) return;
         setClassifyError(err instanceof Error ? err.message : "Attention failed");
         setAttentionMask(null);
       } finally {
-        setAttentionBusy(false);
+        if (request === attentionRequest.current) setAttentionBusy(false);
       }
     },
     [imageUrl, clipSeg],
@@ -284,8 +299,7 @@ export default function VisionAnythingPage() {
                 type="button"
                 onClick={() => {
                   setImageUrl(null);
-                  setResults(null);
-                  clearAttention();
+                  clearResults();
                   if (fileInputRef.current) fileInputRef.current.value = "";
                 }}
                 className="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200 underline underline-offset-2"
@@ -295,10 +309,7 @@ export default function VisionAnythingPage() {
               {attentionMask && !fullAttention && (
                 <button
                   type="button"
-                  onClick={() => {
-                    setAttentionMask(null);
-                    setAttentionLabel(null);
-                  }}
+                  onClick={clearAttention}
                   className="text-cyan-600 dark:text-cyan-400 hover:opacity-80 underline underline-offset-2"
                 >
                   Hide attention

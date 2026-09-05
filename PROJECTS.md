@@ -14,6 +14,8 @@ Edit `src/content/projects.json`, then run `npm run projects:docs`.
 | Vision Anything | `live` | `/vision-anything` | Zero-shot image classification. Drop an image, type the labels you care about, see how a CLIP-class model ranks them. |
 | Curve Fitter | `live` | `/curve-fitter` | Scrub real gradient updates, then inspect how tanh turns straight hidden scores into bounded gates that combine into nonlinear shapes. |
 | Convolution Lab | `live` | `/convolution-lab` | Run editable kernels over real RGB or B/W photos, move a receptive field, and inspect the exact pixels behind each feature response. |
+| Sampling Lab | `live` | `/sampling-lab` | Change the sample rate and watch different waves pass through the same measurements. Explore aliasing and the Nyquist boundary. |
+| Decision Boundary | `live` | `/decision-boundary` | Inspect nearest-neighbor votes, add examples, and reshape a classifier's decision boundary on moons, rings, and XOR. |
 | Pathfinding Showdown | `live` | `/pathfinding-showdown` | Step through every frontier decision as BFS, Dijkstra, greedy best-first, and A* search the same terrain. |
 | Pulse Board | `live` | `/pulse-board` | Live dashboard with real-time WebSocket crypto prices, Chainlink oracle, earthquakes, weather, and more. |
 | RL-Arena | `live` | `/adaptive-arena` | Fight trained bots in a full 30x30 tactical arena with checkpoint-based difficulties. |

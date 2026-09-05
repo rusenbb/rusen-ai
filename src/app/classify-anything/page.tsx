@@ -18,7 +18,6 @@ export default function ClassifyAnythingPage() {
     }
 
     dispatch({ type: "SET_CLASSIFYING", isClassifying: true });
-    dispatch({ type: "SET_ERROR", error: null });
 
     try {
       const results = await classify(state.inputText, state.labels);

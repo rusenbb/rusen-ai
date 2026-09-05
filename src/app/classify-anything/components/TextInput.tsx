@@ -52,6 +52,7 @@ export default function TextInput({
           {value && (
             <button
               onClick={() => onChange("")}
+              disabled={disabled}
               className="text-xs text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
             >
               Clear

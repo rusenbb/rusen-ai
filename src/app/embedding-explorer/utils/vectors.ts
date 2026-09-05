@@ -122,12 +122,12 @@ export function normalizePoints<T extends { x: number; y: number }>(
   const yMin = Math.min(...yValues);
   const yMax = Math.max(...yValues);
 
-  const xRange = xMax - xMin || 1;
-  const yRange = yMax - yMin || 1;
+  const xRange = xMax - xMin;
+  const yRange = yMax - yMin;
 
   return points.map((p) => ({
     ...p,
-    x: ((p.x - xMin) / xRange) * 2 - 1,
-    y: ((p.y - yMin) / yRange) * 2 - 1,
+    x: xRange === 0 ? 0 : ((p.x - xMin) / xRange) * 2 - 1,
+    y: yRange === 0 ? 0 : ((p.y - yMin) / yRange) * 2 - 1,
   }));
 }
