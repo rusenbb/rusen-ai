@@ -27,6 +27,12 @@ export default function DecisionBoundary() {
   const [examples, setExamples] = useState<Example[]>(() =>
     makeDataset("moons"),
   );
+  const [noise, setNoise] = useState(0);
+  const [seed, setSeed] = useState(42);
+  const [selectedPoint, setSelectedPoint] = useState<number | null>(null);
+  const [history, setHistory] = useState<Example[][]>([]);
+  const changeExamples = (next: Example[]) => { setHistory((previous) => [...previous.slice(-19), examples]); setExamples(next); };
+  const resetData = (kind: Dataset, amount = noise, randomSeed = seed) => { setExamples(makeDataset(kind, amount, randomSeed)); setHistory([]); setSelectedPoint(null); };
   const [k, setK] = useState(3);
   const [query, setQuery] = useState({ x: 0, y: 0 });
   const [label, setLabel] = useState<0 | 1>(0);
@@ -68,7 +74,7 @@ export default function DecisionBoundary() {
             variant={dataset === id ? "primary" : "secondary"}
             onClick={() => {
               setDataset(id);
-              setExamples(makeDataset(id));
+              resetData(id);
             }}
           >
             {id === "xor"
@@ -78,6 +84,10 @@ export default function DecisionBoundary() {
                 : "Concentric rings"}
           </Button>
         ))}
+      </div>
+      <div className="mb-6 grid gap-4 sm:grid-cols-2">
+        <label className="text-sm">Noise: {noise.toFixed(2)}<input aria-label="Dataset noise" className="mt-2 w-full" type="range" min="0" max="0.65" step="0.05" value={noise} onChange={(event) => { const value = Number(event.target.value); setNoise(value); resetData(dataset, value); }} /></label>
+        <label className="text-sm">Seed (same seed replays the same noise)<input aria-label="Dataset seed" className="ml-3 w-24 border p-1" type="number" min="1" max="9999" value={seed} onChange={(event) => { const value = Math.max(1, Math.min(9999, Number(event.target.value))); setSeed(value); resetData(dataset, noise, value); }} /></label>
       </div>
       <div className="grid items-start gap-6 lg:grid-cols-[1.4fr_1fr]">
         <DemoPanel
@@ -172,6 +182,7 @@ export default function DecisionBoundary() {
               point.label === 0 ? (
                 <circle
                   key={i}
+                  onClick={(event) => { event.stopPropagation(); setSelectedPoint(i); setQuery({ x: point.x, y: point.y }); }}
                   cx={screen(point.x)}
                   cy={screen(-point.y)}
                   r="5"
@@ -182,6 +193,7 @@ export default function DecisionBoundary() {
               ) : (
                 <rect
                   key={i}
+                  onClick={(event) => { event.stopPropagation(); setSelectedPoint(i); setQuery({ x: point.x, y: point.y }); }}
                   x={screen(point.x) - 5}
                   y={screen(-point.y) - 5}
                   width="10"
@@ -236,7 +248,7 @@ export default function DecisionBoundary() {
               aria-live="polite"
             >
               <p className="text-2xl font-semibold">
-                Class {prediction?.label === 0 ? "A" : "B"}
+                {prediction ? `Class ${prediction.label === 0 ? "A" : "B"}` : "Add an example to classify"}
               </p>
               <p className="mt-2 text-sm">
                 {
@@ -259,6 +271,8 @@ export default function DecisionBoundary() {
             title="Change the evidence"
             description="Place the crosshair, choose a class, then add an example. Try planting class B inside a cyan region."
           >
+            <label className="block mb-3 text-sm">Edit an existing point<select aria-label="Selected training point" className="ml-2 max-w-full border bg-[var(--surface)] p-2" value={selectedPoint ?? ""} onChange={(event) => setSelectedPoint(event.target.value === "" ? null : Number(event.target.value))}><option value="">Choose point</option>{examples.map((point, index) => <option key={index} value={index}>#{index + 1}: {point.label === 0 ? "A" : "B"} ({point.x.toFixed(2)}, {point.y.toFixed(2)})</option>)}</select></label>
+            <div className="flex flex-wrap gap-2 mb-3"><Button size="sm" disabled={selectedPoint === null} onClick={() => selectedPoint !== null && changeExamples(examples.map((point, index) => index === selectedPoint ? { ...point, ...query } : point))}>Move selected to crosshair</Button><Button size="sm" disabled={selectedPoint === null} onClick={() => selectedPoint !== null && changeExamples(examples.map((point, index) => index === selectedPoint ? { ...point, label } : point))}>Apply class to selected</Button><Button size="sm" disabled={selectedPoint === null} onClick={() => { changeExamples(examples.filter((_, index) => index !== selectedPoint)); setSelectedPoint(null); }}>Delete selected</Button></div>
             <div className="flex flex-wrap gap-2">
               <Button
                 size="sm"
@@ -281,22 +295,22 @@ export default function DecisionBoundary() {
               <Button
                 size="sm"
                 disabled={examples.length >= 100}
-                onClick={() => setExamples([...examples, { ...query, label }])}
+                onClick={() => changeExamples([...examples, { ...query, label }])}
               >
                 Add at crosshair
               </Button>
               <Button
                 size="sm"
                 variant="secondary"
-                disabled={examples.length <= 40}
-                onClick={() => setExamples(examples.slice(0, -1))}
+                disabled={!history.length}
+                onClick={() => { setExamples(history[history.length - 1]); setHistory(history.slice(0, -1)); setSelectedPoint(null); }}
               >
-                Undo addition
+                Undo edit
               </Button>
               <Button
                 size="sm"
                 variant="secondary"
-                onClick={() => setExamples(makeDataset(dataset))}
+                onClick={() => resetData(dataset)}
               >
                 Reset points
               </Button>

@@ -1,8 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { classifyPoint, leaveOneOutAccuracy, type Example } from "./math";
+import { classifyPoint, leaveOneOutAccuracy, makeDataset, type Example } from "./math";
 
 describe("nearest-neighbor classification", () => {
+  it("replays noisy data for the same seed and keeps it inside the editable plot", () => {
+    const points = makeDataset("moons", 0.6, 42);
+    expect(makeDataset("moons", 0.6, 42)).toEqual(points);
+    expect(makeDataset("moons", 0.6, 43)).not.toEqual(points);
+    expect(points.every((point) => Math.abs(point.x) <= 1 && Math.abs(point.y) <= 1)).toBe(true);
+  });
   const examples: Example[] = [
     { x: 0, y: 0, label: 0 },
     { x: 1, y: 0, label: 1 },

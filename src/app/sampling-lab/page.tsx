@@ -10,7 +10,7 @@ import {
   DemoPanel,
 } from "@/components/ui";
 
-import { aliasFrequency, sineAt } from "./math";
+import { aliasFrequency, sineAt, reconstructSamples } from "./math";
 
 const PRESETS = [
   { label: "Enough samples", frequency: 3, sampleRate: 24, phase: 0 },
@@ -20,9 +20,14 @@ const PRESETS = [
 
 export default function SamplingLab() {
   const [signal, setSignal] = useState(PRESETS[1]);
+  const [selectedSample, setSelectedSample] = useState(0);
+  const [showReconstruction, setShowReconstruction] = useState(true);
   const [showAlias, setShowAlias] = useState(true);
   const { frequency, sampleRate, phase } = signal;
   const radians = (phase * Math.PI) / 180;
+  const samples = Array.from({ length: sampleRate + 1 }, (_, index) => sineAt(index / sampleRate, frequency, radians));
+  const sampleIndex = Math.min(selectedSample, sampleRate);
+  const reconstructedPath = Array.from({ length: 801 }, (_, index) => `${40 + index / 800 * 720},${170 - reconstructSamples(samples, sampleRate, index / 800) * 110}`).join(" ");
   const alias = aliasFrequency(frequency, sampleRate);
   const undersampled = sampleRate < 2 * frequency;
   const atNyquist = sampleRate === 2 * frequency;
@@ -61,6 +66,7 @@ export default function SamplingLab() {
           role="img"
           aria-label={`${frequency} Hz signal sampled at ${sampleRate} Hz; baseband frequency ${Math.abs(alias)} Hz`}
         >
+          {showReconstruction && <polyline points={reconstructedPath} fill="none" stroke="#a855f7" strokeWidth="2" />}
           {[60, 170, 280].map((y, i) => (
             <g key={y}>
               <line x1="40" x2="760" y1={y} y2={y} stroke="var(--line)" />
@@ -126,7 +132,8 @@ export default function SamplingLab() {
                 <circle
                   cx={x}
                   cy={y}
-                  r="4"
+                  r={n === sampleIndex ? 6 : 4}
+                  onClick={() => setSelectedSample(n)}
                   fill="var(--foreground)"
                   stroke="var(--surface)"
                   strokeWidth="1.5"
@@ -187,6 +194,12 @@ export default function SamplingLab() {
           />
           Show the baseband wave
         </label>
+      </DemoPanel>
+      <DemoPanel className="mt-6" title="Reconstruct from measurements">
+        <label className="flex gap-2 text-sm"><input type="checkbox" checked={showReconstruction} onChange={(event) => setShowReconstruction(event.target.checked)} />Purple: finite sinc interpolation using only these sample values</label>
+        <p className="mt-3 text-sm text-neutral-500">Samples outside this one-second window are assumed zero. Boundary ringing and finite-window error are expected; this is not ideal infinite reconstruction.</p>
+        <label className="mt-4 block text-sm">Inspect sample {sampleIndex}<input aria-label="Selected sample" type="range" min="0" max={sampleRate} value={sampleIndex} onChange={(event) => setSelectedSample(Number(event.target.value))} className="w-full mt-2" /></label>
+        <p aria-live="polite" className="mt-3 font-mono text-sm">n = {sampleIndex} · t = {(sampleIndex / sampleRate).toFixed(4)} s · measured = {samples[sampleIndex].toFixed(4)} · alias = {sineAt(sampleIndex / sampleRate, alias, radians).toFixed(4)}</p>
       </DemoPanel>
       <div className="mt-6 grid gap-6 md:grid-cols-2">
         <DemoPanel
