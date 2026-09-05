@@ -197,7 +197,7 @@ function visibleFrontier(
 }
 
 /**
- * Runs the same solver as `runSearch`, while preserving the state after every settled cell.
+ * Preserves the state after every settled cell.
  * The trace is intentionally data, not animation state, so the UI can play, pause, and scrub it.
  */
 export function traceSearch(grid: PathGrid, algorithm: SearchAlgorithm): SearchTrace {
@@ -273,17 +273,6 @@ export function traceSearch(grid: PathGrid, algorithm: SearchAlgorithm): SearchT
   }
 
   return { algorithm, frames, visited, path: [], cost: null, found: false };
-}
-
-export function runSearch(grid: PathGrid, algorithm: SearchAlgorithm): SearchResult {
-  const trace = traceSearch(grid, algorithm);
-  return {
-    algorithm: trace.algorithm,
-    visited: trace.visited,
-    path: trace.path,
-    cost: trace.cost,
-    found: trace.found,
-  };
 }
 
 function createEmptyGrid(

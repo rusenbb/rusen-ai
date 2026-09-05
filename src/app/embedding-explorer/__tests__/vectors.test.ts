@@ -16,6 +16,10 @@ import {
 } from "../utils/urlState";
 
 describe("embedding explorer vector utilities", () => {
+  it("centers constant dimensions instead of pinning them to an edge", () => {
+    expect(normalizePoints([{ x: 8, y: 3 }])).toEqual([{ x: 0, y: 0 }]);
+    expect(normalizePoints([{ x: 2, y: -1 }, { x: 2, y: 1 }])).toEqual([{ x: 0, y: -1 }, { x: 0, y: 1 }]);
+  });
   it("computes a normalized axis from positive minus negative", () => {
     const cache = new Map<string, number[]>([
       ["warm", [1, 1]],

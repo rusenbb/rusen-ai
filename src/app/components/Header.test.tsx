@@ -32,33 +32,14 @@ describe("Header navigation", () => {
     pathname = "/photos";
   });
 
-  it("renders stable text destinations without tape mechanics", () => {
-    const { container } = render(<Header />);
+  it("exposes labeled destinations and the current page", () => {
+    render(<Header />);
     const photosLink = screen.getByRole("link", { name: "Photos" });
-    const nerdyLink = screen.getByRole("link", { name: "Nerdy Stuff" });
-
-    expect(photosLink.querySelector(".site-nav-word-frame")).toHaveAttribute(
-      "data-nav-word",
-      "PHOTOS",
-    );
-    expect(nerdyLink.querySelector(".site-nav-word-frame")).toHaveAttribute(
-      "data-nav-word",
-      "NERDY",
-    );
-    expect(container.querySelectorAll(".site-nav-link")).toHaveLength(6);
-    expect(container.querySelector(".site-nav-home")).toHaveAttribute("href", "/");
-    expect(container.querySelector(".site-nav-home .site-nav-word-frame"))
-      .toHaveAttribute("data-nav-word", "rusen.ai");
-    expect(container.querySelector(".site-nav-home .site-brand-dot"))
-      .toHaveTextContent(".");
+    for (const [name, href] of [["Home", "/"], ["Demos", "/demos"], ["Nerdy Stuff", "/nerdy-stuff"], ["Bulletin", "/bulletin"], ["Photos", "/photos"], ["Blog", "/blogs"], ["CV", "/cv"]]) {
+      expect(screen.getByRole("link", { name, exact: true })).toHaveAttribute("href", href);
+    }
+    expect(screen.getByRole("button", { name: "Theme: 1" })).toBeInTheDocument();
     expect(photosLink).toHaveAttribute("aria-current", "page");
-    expect(photosLink).toHaveAttribute("data-nav-selected", "true");
-
-    expect(container.querySelectorAll(".site-nav-row .site-nav-word-frame")).toHaveLength(7);
-    expect(container.querySelector(".site-nav-cell-code")).not.toBeInTheDocument();
-    expect(container.querySelector(".site-nav-read-head")).not.toBeInTheDocument();
-    expect(container.querySelector(".site-nav-step")).not.toBeInTheDocument();
-    expect(container.querySelector(".site-nav-rail")).not.toBeInTheDocument();
   });
 
   it("marks the home word as selected on the home page", () => {
@@ -83,14 +64,6 @@ describe("Header navigation", () => {
       "data-nav-selected",
     );
     expect(container.querySelector("[data-nav-selected=true]")).not.toBeInTheDocument();
-  });
-
-  it("keeps the labeled theme state as a simple trailing control", () => {
-    const { container } = render(<Header />);
-
-    expect(screen.getByRole("link", { name: "Demos" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "CV" })).toBeInTheDocument();
-    expect(container.querySelector(".site-nav-theme button")).toHaveAccessibleName("Theme: 1");
   });
 
   it.each([

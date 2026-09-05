@@ -9,11 +9,9 @@ math into PyTorch so training can use CPU vectorization or CUDA when available.
 from __future__ import annotations
 
 import json
-import math
 import multiprocessing as mp
 import os
 import random
-import sys
 import time
 from argparse import ArgumentParser
 from copy import deepcopy
@@ -1331,7 +1329,7 @@ def cross_evaluate(
         models.append(model)
 
     print(f"\n── Round-Robin ({rounds} rounds each) ──")
-    header = "bot \\ opp  " + "  ".join(f"{l:>8}" for l in labels)
+    header = "bot \\ opp  " + "  ".join(f"{label:>8}" for label in labels)
     print(header)
 
     for row in range(n):

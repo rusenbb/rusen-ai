@@ -204,68 +204,9 @@ function findDivergentBoundaries(
 
 function SkeletonLoader() {
   return (
-    <div className="max-w-6xl mx-auto px-4 py-10 sm:py-12 md:py-16 animate-pulse">
-      {/* Header skeleton */}
-      <div className="h-10 w-48 bg-neutral-200 dark:bg-neutral-800 rounded mb-4" />
-      <div className="h-6 w-96 bg-neutral-200 dark:bg-neutral-800 rounded mb-8" />
-
-      {/* Category tabs skeleton */}
-      <div className="flex gap-2 mb-6">
-        {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="h-8 w-20 bg-neutral-200 dark:bg-neutral-800 rounded-full" />
-        ))}
-      </div>
-
-      {/* Example buttons skeleton */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div key={i} className="h-8 w-32 bg-neutral-200 dark:bg-neutral-800 rounded-full" />
-        ))}
-      </div>
-
-      {/* Input skeleton */}
-      <div className="h-24 w-full bg-neutral-200 dark:bg-neutral-800 rounded-lg mb-8" />
-
-      {/* Results grid skeleton */}
-      <div className="grid md:grid-cols-2 gap-4 sm:gap-6 mb-8">
-        <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-6">
-          <div className="flex justify-between mb-4">
-            <div className="h-6 w-32 bg-neutral-200 dark:bg-neutral-800 rounded" />
-            <div className="h-8 w-24 bg-neutral-200 dark:bg-neutral-800 rounded" />
-          </div>
-          <div className="flex flex-wrap gap-1 min-h-[60px]">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="h-8 w-16 bg-neutral-200 dark:bg-neutral-800 rounded" />
-            ))}
-          </div>
-        </div>
-        <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-6">
-          <div className="flex justify-between mb-4">
-            <div className="h-6 w-40 bg-neutral-200 dark:bg-neutral-800 rounded" />
-            <div className="h-8 w-24 bg-neutral-200 dark:bg-neutral-800 rounded" />
-          </div>
-          <div className="flex flex-wrap gap-1 min-h-[60px]">
-            {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-              <div key={i} className="h-8 w-12 bg-neutral-200 dark:bg-neutral-800 rounded" />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Stats skeleton */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-4 text-center">
-            <div className="h-8 w-12 mx-auto bg-neutral-200 dark:bg-neutral-800 rounded mb-2" />
-            <div className="h-4 w-20 mx-auto bg-neutral-200 dark:bg-neutral-800 rounded" />
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-8 text-center text-neutral-500">
-        <span className="inline-block w-4 h-4 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin mr-2" />
-        Loading tokenizers...
-      </div>
+    <div className="max-w-6xl mx-auto px-4 py-10 sm:py-12 md:py-16">
+      <h1 className="text-3xl sm:text-4xl font-bold mb-4">Rusenizer</h1>
+      <p role="status" className="text-neutral-500">Loading tokenizers…</p>
     </div>
   );
 }
@@ -386,7 +327,7 @@ function RusenizerPageInner() {
         URL.revokeObjectURL(blobUrl);
 
         // Initialize WASM
-        await wasmModule.default(wasmBytes);
+        await wasmModule.default({ module_or_path: wasmBytes });
 
         // Load mergeable ranks
         const response = await fetch("/models/v1/mergeable_ranks.json");
@@ -531,7 +472,7 @@ function RusenizerPageInner() {
     return (
       <div className="max-w-6xl mx-auto px-4 py-10 sm:py-12 md:py-16">
         <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-red-500">Error: {state.error}</div>
+          <div><h1 className="text-3xl font-bold mb-4">Rusenizer</h1><p role="alert" className="text-red-500">Error: {state.error}</p></div>
         </div>
       </div>
     );
