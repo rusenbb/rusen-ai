@@ -24,6 +24,7 @@ export default function VisionAnythingPage() {
   const clipSeg = useClipSeg();
 
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imageAspect, setImageAspect] = useState(4 / 3);
   const [labels, setLabels] = useState<string[]>(PRESET_LABELS);
   const [labelInput, setLabelInput] = useState<string>("");
   const [results, setResults] = useState<VisionResult[] | null>(null);
@@ -150,7 +151,7 @@ export default function VisionAnythingPage() {
         <h1 className="text-3xl sm:text-4xl font-bold mb-3">Vision Anything</h1>
         <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 max-w-2xl text-pretty">
           Drop an image, type the labels you care about, and a CLIP-class model ranks them in your browser.
-          Then enter <em>full attention</em> to inspect each label&apos;s per-pixel relevance map. No backend.
+          Then enter <em>segmentation maps</em> to inspect each label&apos;s per-pixel relevance map. No backend.
         </p>
       </div>
 
@@ -188,10 +189,11 @@ export default function VisionAnythingPage() {
         )}
       </div>
 
-      {/* Full attention panel - when active, takes over above the regular layout. */}
+      {/* Segmentation maps panel - when active, takes over above the regular layout. */}
       {fullAttention && imageUrl && results && results.length >= 1 && (
         <FullAttentionPanel
           imageUrl={imageUrl}
+          imageAspect={imageAspect}
           labels={results.map((r) => r.label)}
           initialLabel={attentionLabel ?? results[0].label}
           clipSeg={clipSeg}
@@ -221,6 +223,7 @@ export default function VisionAnythingPage() {
                 alt="Uploaded"
                 fill
                 className="object-contain"
+                onLoad={(event) => setImageAspect(event.currentTarget.naturalWidth / event.currentTarget.naturalHeight)}
                 unoptimized
               />
             ) : (
@@ -231,7 +234,7 @@ export default function VisionAnythingPage() {
               </div>
             )}
             {imageUrl && attentionMask && !fullAttention && (
-              <HeatmapCanvas mask={attentionMask} palette="cyan" blend="screen" />
+              <HeatmapCanvas mask={attentionMask} imageAspect={imageAspect} palette="cyan" blend="screen" />
             )}
             {imageUrl && attentionBusy && !fullAttention && (
               <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
@@ -312,12 +315,12 @@ export default function VisionAnythingPage() {
                   onClick={clearAttention}
                   className="text-cyan-600 dark:text-cyan-400 hover:opacity-80 underline underline-offset-2"
                 >
-                  Hide attention
+                  Hide map
                 </button>
               )}
               {attentionLabel && !fullAttention && (
                 <span className="font-mono text-neutral-500">
-                  attending to: {attentionLabel}
+                  Segmenting: {attentionLabel}
                 </span>
               )}
             </div>
@@ -405,12 +408,12 @@ export default function VisionAnythingPage() {
                   disabled={fullAttention}
                   className="text-[11px] font-mono uppercase tracking-[0.18em] text-cyan-600 dark:text-cyan-400 hover:opacity-80 disabled:opacity-50"
                 >
-                  ⛶ Enter full attention
+                  ⛶ Enter segmentation maps
                 </button>
               </div>
               <p className="text-[11px] text-neutral-500">
                 Click any label below to overlay its heatmap on the image, or open
-                <em> full attention </em>
+                <em> segmentation maps </em>
                 for a side-by-side of every label, an averaged saliency map, alpha-controlled
                 inspection, and a heatmap-only view.
               </p>

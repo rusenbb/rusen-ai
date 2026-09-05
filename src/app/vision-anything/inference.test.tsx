@@ -60,18 +60,18 @@ describe("vision inference lifecycle", () => {
       }),
     );
     render(<VisionAnythingPage />);
-    fireEvent.click(screen.getByRole("button", { name: "Dog", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Dog" }));
     fireEvent.click(
-      screen.getByRole("button", { name: "Classify", exact: true }),
+      screen.getByRole("button", { name: "Classify" }),
     );
     fireEvent.click(
-      screen.getByRole("button", { name: action, exact: true }),
+      screen.getByRole("button", { name: action }),
     );
     await act(async () =>
       resolve([{ label: "stale-dog-prediction", score: 0.9 }]),
     );
     expect(screen.queryByText("stale-dog-prediction")).not.toBeInTheDocument();
-    const button = screen.getByRole("button", { name: "Classify", exact: true });
+    const button = screen.getByRole("button", { name: "Classify" });
     if (action === "Clear image") expect(button).toBeDisabled();
     else expect(button).toBeEnabled();
   });

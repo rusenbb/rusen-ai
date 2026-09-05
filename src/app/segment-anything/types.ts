@@ -130,7 +130,7 @@ export function samReducer(state: SAMState, action: SAMAction): SAMState {
       };
 
     case "ENCODE_START":
-      return { ...state, phase: "encoding" };
+      return { ...state, phase: "encoding", error: null };
 
     case "ENCODE_DONE":
       return { ...state, phase: "encoded", encoderMs: action.encoderMs };
