@@ -17,6 +17,7 @@ export class Universe {
   private camAspect: number;
   private timeFract: number;
   private readonly sampler: Sampler;
+  private initialCamera: { level: Level; x: number; y: number; halfWidth: number } | null = null;
 
   constructor(sampler: Sampler, aspect: number) {
     this.sampler = sampler;
@@ -32,6 +33,22 @@ export class Universe {
   cameraWidth(): number {
     return 2 * this.camHW;
   }
+
+  rememberCamera(): void {
+    this.initialCamera = { level: this.refLevel.clone(), x: this.camX, y: this.camY, halfWidth: this.camHW };
+  }
+
+  resetCamera(): void {
+    if (!this.initialCamera) return;
+    this.refLevel = this.initialCamera.level.clone();
+    this.timeFract = 0;
+    this.camX = this.initialCamera.x;
+    this.camY = this.initialCamera.y;
+    this.camHW = this.initialCamera.halfWidth;
+    this.camHH = this.camHW / this.camAspect;
+  }
+
+  stepOnce(): void { this.refLevel.forward(1); }
 
   cameraHeight(): number {
     return 2 * this.camHH;
@@ -138,7 +155,7 @@ export class Universe {
     return this.sampler.getTile(time, pattern, tileX, tileY);
   }
 
-  step(speedCoeff: number): void {
+  step(speedCoeff: number): number {
     const speed =
       speedCoeff *
       Math.pow(
@@ -152,6 +169,7 @@ export class Universe {
       this.timeFract -= delta;
       this.refLevel.forward(delta);
     }
+    return delta;
   }
 
   getTimeFract(): number {

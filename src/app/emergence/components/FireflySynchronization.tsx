@@ -1,6 +1,9 @@
 "use client";
 
+import { useSimulation } from "./SimulationFrame";
+
 import {
+  useMemo,
   useCallback,
   useEffect,
   useRef,
@@ -160,8 +163,8 @@ function cloneFireflies(fireflies: Firefly[]): Firefly[] {
   return fireflies.map((firefly) => ({ ...firefly }));
 }
 
-function createScene(preset: ScenePreset): Firefly[] {
-  const rng = createRng(preset.seed);
+function createScene(preset: ScenePreset, seed = 42): Firefly[] {
+  const rng = createRng(preset.seed + seed);
   const fireflies: Firefly[] = [];
 
   for (let i = 0; i < preset.count; i++) {
@@ -240,6 +243,7 @@ function easeOut(value: number): number {
 }
 
 export default function FireflySynchronization(): React.ReactElement {
+  const { active, seed } = useSimulation();
   const initialScene = SCENES[0];
 
   const [selectedScene, setSelectedScene] = useState<SceneId>(initialScene.id);
@@ -259,7 +263,8 @@ export default function FireflySynchronization(): React.ReactElement {
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const firefliesRef = useRef<Firefly[]>(createScene(initialScene));
+  const initialFireflies = useMemo(() => createScene(initialScene, seed), [initialScene, seed]);
+  const firefliesRef = useRef<Firefly[]>(initialFireflies);
   const sceneRef = useRef<SceneId>(initialScene.id);
   const couplingRef = useRef<number>(initialScene.coupling);
   const radiusRef = useRef<number>(initialScene.radius);
@@ -290,7 +295,7 @@ export default function FireflySynchronization(): React.ReactElement {
 
   const beginTransition = useCallback((sceneId: SceneId) => {
     const preset = SCENES.find((scene) => scene.id === sceneId) ?? SCENES[0];
-    firefliesRef.current = createScene(preset);
+    firefliesRef.current = createScene(preset, seed);
     sceneRef.current = preset.id;
     transitionTimeRef.current = 0;
     lockedTimeRef.current = 0;
@@ -301,7 +306,7 @@ export default function FireflySynchronization(): React.ReactElement {
       liveCoupling: 0,
       stage: "Scattered",
     });
-  }, []);
+  }, [seed]);
 
   const render = useCallback(() => {
     const canvas = canvasRef.current;
@@ -445,6 +450,8 @@ export default function FireflySynchronization(): React.ReactElement {
   }, [beginTransition, initialScene.id]);
 
   useEffect(() => {
+    if (!active) return;
+    lastTimeRef.current = 0;
     let mounted = true;
 
     const step = (now: number) => {
@@ -553,7 +560,7 @@ export default function FireflySynchronization(): React.ReactElement {
       mounted = false;
       cancelAnimationFrame(animationRef.current);
     };
-  }, [beginTransition, render]);
+  }, [beginTransition, render, active]);
 
   const handleSceneChange = useCallback((preset: ScenePreset) => {
     setSelectedScene(preset.id);

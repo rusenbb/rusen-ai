@@ -1,6 +1,9 @@
 "use client";
 
+import { useSimulation } from "./SimulationFrame";
+
 import {
+  useMemo,
   useCallback,
   useEffect,
   useRef,
@@ -151,15 +154,15 @@ const DIR_DELTA: [number, number][] = [
 // Simulation logic
 // ---------------------------------------------------------------------------
 
-function generateRandomCells(): Array<[number, number]> {
+function generateRandomCells(random: () => number): Array<[number, number]> {
   const RADIUS = 10;
-  const count = 20 + Math.floor(Math.random() * 41); // 20–60
+  const count = 20 + Math.floor(random() * 41); // 20–60
   const used = new Set<string>();
   const result: Array<[number, number]> = [];
 
   while (result.length < count) {
-    const dx = Math.floor(Math.random() * (RADIUS * 2 + 1)) - RADIUS;
-    const dy = Math.floor(Math.random() * (RADIUS * 2 + 1)) - RADIUS;
+    const dx = Math.floor(random() * (RADIUS * 2 + 1)) - RADIUS;
+    const dy = Math.floor(random() * (RADIUS * 2 + 1)) - RADIUS;
     const key = `${dx},${dy}`;
     if (!used.has(key)) {
       used.add(key);
@@ -170,11 +173,11 @@ function generateRandomCells(): Array<[number, number]> {
   return result;
 }
 
-function createInitialState(seedId: SeedPresetId = "blank"): SimState {
+function createInitialState(seedId: SeedPresetId = "blank", random: () => number = Math.random): SimState {
   const cx = Math.floor(GRID_SIZE / 2);
   const cy = Math.floor(GRID_SIZE / 2);
   const seed = SEED_PRESETS.find((preset) => preset.id === seedId) ?? SEED_PRESETS[0];
-  const seedCells = seedId === "random" ? generateRandomCells() : seed.cells;
+  const seedCells = seedId === "random" ? generateRandomCells(random) : seed.cells;
   const cells = new Set<string>();
   let minX = cx;
   let maxX = cx;
@@ -511,6 +514,7 @@ function RuleDiagram(): React.ReactElement {
 // ---------------------------------------------------------------------------
 
 export default function LangtonsAnt(): React.ReactElement {
+  const { active, random } = useSimulation();
   // State
   const [selectedSeed, setSelectedSeed] = useState<SeedPresetId>("blank");
   const [stepCount, setStepCount] = useState<number>(0);
@@ -522,7 +526,8 @@ export default function LangtonsAnt(): React.ReactElement {
   // Refs
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const simRef = useRef<SimState>(createInitialState("blank"));
+  const initialSimulation = useMemo(() => createInitialState("blank", random), [random]);
+  const simRef = useRef<SimState>(initialSimulation);
   const animFrameRef = useRef<number>(0);
   const playingRef = useRef<boolean>(false);
   const stepsPerFrameRef = useRef<number>(1);
@@ -843,7 +848,7 @@ export default function LangtonsAnt(): React.ReactElement {
 
   // Animation loop
   useEffect(() => {
-    if (!playing) {
+    if (!playing || !active) {
       if (animFrameRef.current) {
         cancelAnimationFrame(animFrameRef.current);
         animFrameRef.current = 0;
@@ -870,7 +875,7 @@ export default function LangtonsAnt(): React.ReactElement {
         animFrameRef.current = 0;
       }
     };
-  }, [playing, drawState]);
+  }, [playing, active, drawState]);
 
   // -----------------------------------------------------------------------
   // Fast-forward
@@ -919,25 +924,25 @@ export default function LangtonsAnt(): React.ReactElement {
   const handleReset = useCallback(() => {
     setPlaying(false);
     setFastForwarding(false);
-    simRef.current = createInitialState(selectedSeed);
+    simRef.current = createInitialState(selectedSeed, random);
     viewLockRef.current = null;
     setViewLockTick((n) => n + 1);
     setStepCount(0);
     drawState();
-  }, [drawState, selectedSeed]);
+  }, [drawState, random, selectedSeed]);
 
   const handleSeedChange = useCallback(
     (seedId: SeedPresetId) => {
       setSelectedSeed(seedId);
       setPlaying(false);
       setFastForwarding(false);
-      simRef.current = createInitialState(seedId);
+      simRef.current = createInitialState(seedId, random);
       viewLockRef.current = null;
       setViewLockTick((n) => n + 1);
       setStepCount(0);
       drawState();
     },
-    [drawState],
+    [drawState, random],
   );
 
   // Zoom handlers. Zoom-in/-out lock the viewport (snapshot first if not
