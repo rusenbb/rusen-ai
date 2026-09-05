@@ -649,6 +649,10 @@ function WeatherWidget() {
         onChange={(e) => {
           const city = CITIES.find((c) => c.name === e.target.value);
           if (city) {
+            weatherRequest.current++;
+            setWeather(null);
+            setLastFetched(null);
+            setLoading(true);
             setSelectedCity(city);
             localStorage.setItem("pulse-weather-city", city.name);
           }

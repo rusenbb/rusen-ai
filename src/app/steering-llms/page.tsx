@@ -271,6 +271,7 @@ export default function SteeringLab() {
         </p>
       )}
       <DemoFootnote>
+        The quantized model is approximately 85 MB, plus tokenizer files. {" "}
         First use downloads model files from Hugging Face; generation runs
         locally. Each condition starts with its own identically seeded sampler.
         There is no claimed general benchmark improvement.

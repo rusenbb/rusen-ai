@@ -39,8 +39,10 @@
         "/fourier-sketch",
         "/game-of-life",
         "/optimizer-racetrack",
+        "/rusen-gram",
         "/rusenizer",
-        "/sentence-surgeon"
+        "/sentence-surgeon",
+        "/steering-llms"
       ]
     },
     {
