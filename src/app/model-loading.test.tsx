@@ -36,7 +36,7 @@ describe("browser model loading", () => {
     fireEvent.change(screen.getByLabelText("Text to Classify"), { target: { value: "A useful result" } });
     await act(async () => { fireEvent.click(screen.getByRole("button", { name: /Classify.*Cmd/ })); });
     expect(screen.getByLabelText("Text to Classify")).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Clear", exact: true })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Clear" })).toBeDisabled();
     await act(async () => resolve({ labels: ["positive", "negative"], scores: [0.9, 0.1] }));
     expect(screen.getByLabelText("Text to Classify")).toBeEnabled();
     expect(inference).toHaveBeenCalledOnce();

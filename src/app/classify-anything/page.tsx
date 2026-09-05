@@ -1,6 +1,6 @@
 "use client";
 
-import { useReducer, useCallback } from "react";
+import { useReducer, useCallback, useState } from "react";
 import { useClassifier } from "./hooks/useClassifier";
 import ClassInput from "./components/ClassInput";
 import TextInput from "./components/TextInput";
@@ -10,6 +10,7 @@ import { DemoFootnote, DemoHeader, DemoMutedSection, DemoPage, DemoPanel } from 
 
 export default function ClassifyAnythingPage() {
   const [state, dispatch] = useReducer(classifyReducer, initialState);
+  const [multiLabel, setMultiLabel] = useState(false);
   const { classify, isModelReady, loadProgress, modelStatus, error: modelError } = useClassifier();
 
   const handleClassify = useCallback(async () => {
@@ -20,13 +21,13 @@ export default function ClassifyAnythingPage() {
     dispatch({ type: "SET_CLASSIFYING", isClassifying: true });
 
     try {
-      const results = await classify(state.inputText, state.labels);
+      const results = await classify(state.inputText, state.labels, multiLabel);
       dispatch({ type: "SET_RESULTS", results });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Classification failed";
       dispatch({ type: "SET_ERROR", error: message });
     }
-  }, [classify, state.inputText, state.labels]);
+  }, [classify, state.inputText, state.labels, multiLabel]);
 
   const handleAddLabel = useCallback((label: string) => {
     dispatch({ type: "ADD_LABEL", label });
@@ -60,6 +61,8 @@ export default function ClassifyAnythingPage() {
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1">
           <DemoPanel title="Labels" description="Create the classes your prompt should be sorted into.">
+            <label className="mb-4 flex items-center gap-2 text-sm"><input type="checkbox" checked={multiLabel} disabled={state.isClassifying} onChange={(event) => { setMultiLabel(event.target.checked); dispatch({ type: "SET_LABELS", labels: state.labels }); }} />Allow multiple matching labels</label>
+            <p className="mb-4 text-xs text-neutral-500">{multiLabel ? "Each label is scored independently; scores do not need to sum to 100%." : "Labels compete for one best match; scores are relative to this label set."} Scores are model estimates, not measured accuracy.</p>
             <ClassInput
               labels={state.labels}
               onAddLabel={handleAddLabel}
