@@ -1,5 +1,7 @@
 "use client";
 
+import { useSimulation } from "./SimulationFrame";
+
 import {
   useCallback,
   useEffect,
@@ -57,12 +59,12 @@ function stepRow(row: Uint8Array, table: Uint8Array): Uint8Array {
  * sparse density lets the traffic dynamics actually surface: clusters,
  * gaps, and the steady rightward drift.
  */
-function createInitialGrid(width: number, rule: RuleNumber = 30): CellState {
+function createInitialGrid(width: number, rule: RuleNumber = 30, seed = 42): CellState {
   const row = new Uint8Array(width);
   if (rule === 184) {
     // ~40% density traffic, deterministic from a fixed seed so the demo
     // looks the same across reloads (re-seeded only on Reset / rule change).
-    let s = 0xa5_a5_a5_a5;
+    let s = (0xa5_a5_a5_a5 ^ seed) >>> 0;
     for (let i = 0; i < width; i++) {
       // xorshift32 (small but enough for a visual seed)
       s ^= s << 13;
@@ -240,6 +242,7 @@ const GRID_WIDTH = 301; // odd so center cell is exactly centered
 const CANVAS_HEIGHT = 400;
 
 export default function ElementaryCA(): React.ReactElement {
+  const { active, seed } = useSimulation();
   // State
   const [rule, setRule] = useState<RuleNumber>(30);
   const [customRuleInput, setCustomRuleInput] = useState<string>("30");
@@ -289,7 +292,7 @@ export default function ElementaryCA(): React.ReactElement {
 
   // Initialize grid
   const initializeGrid = useCallback(() => {
-    const initial = createInitialGrid(GRID_WIDTH, rule);
+    const initial = createInitialGrid(GRID_WIDTH, rule, seed);
     gridRef.current = initial.grid;
     setGeneration(0);
 
@@ -302,7 +305,7 @@ export default function ElementaryCA(): React.ReactElement {
     }
 
     redraw();
-  }, [redraw, rule]);
+  }, [redraw, rule, seed]);
 
   // Initialize on mount
   useEffect(() => {
@@ -340,7 +343,7 @@ export default function ElementaryCA(): React.ReactElement {
 
   // Animation loop
   useEffect(() => {
-    if (!playing) {
+    if (!playing || !active) {
       if (animFrameRef.current) {
         cancelAnimationFrame(animFrameRef.current);
         animFrameRef.current = 0;
@@ -367,7 +370,7 @@ export default function ElementaryCA(): React.ReactElement {
         animFrameRef.current = 0;
       }
     };
-  }, [playing, speed, stepOnce]);
+  }, [playing, active, speed, stepOnce]);
 
   // --- Pan ---
   const onPointerDown = useCallback((e: React.PointerEvent) => {

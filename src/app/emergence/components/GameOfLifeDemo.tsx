@@ -1,5 +1,7 @@
 "use client";
 
+import { useSimulation } from "./SimulationFrame";
+
 import { useRef, useState, useEffect, useCallback } from "react";
 
 // ---------------------------------------------------------------------------
@@ -259,11 +261,11 @@ function placePattern(
   return { grid, ages };
 }
 
-function randomGrid(): { grid: Grid; ages: Uint8Array } {
+function randomGrid(random: () => number): { grid: Grid; ages: Uint8Array } {
   const grid = emptyGrid();
   const ages = emptyAgeGrid();
   for (let i = 0; i < grid.length; i++) {
-    if (Math.random() < 0.25) {
+    if (random() < 0.25) {
       grid[i] = 1;
       ages[i] = 1;
     }
@@ -336,6 +338,7 @@ function MiniGrid({
 // ---------------------------------------------------------------------------
 
 export default function GameOfLifeDemo() {
+  const { active, random } = useSimulation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -439,6 +442,7 @@ export default function GameOfLifeDemo() {
 
   // Animation loop
   useEffect(() => {
+    if (!active) return;
     let mounted = true;
 
     const loop = (time: number) => {
@@ -468,7 +472,7 @@ export default function GameOfLifeDemo() {
       mounted = false;
       cancelAnimationFrame(animRef.current);
     };
-  }, [render]);
+  }, [render, active]);
 
   // Canvas click/drag to toggle cells
   const getCellFromEvent = useCallback(
@@ -544,7 +548,7 @@ export default function GameOfLifeDemo() {
 
   const handlePreset = useCallback((pattern: PatternDef) => {
     if (pattern.label === "Random") {
-      const { grid, ages } = randomGrid();
+      const { grid, ages } = randomGrid(random);
       gridRef.current = grid;
       agesRef.current = ages;
     } else {
@@ -556,7 +560,7 @@ export default function GameOfLifeDemo() {
     }
     generationRef.current = 0;
     setGeneration(0);
-  }, []);
+  }, [random]);
 
   return (
     <section className="w-full max-w-4xl mx-auto space-y-12">
