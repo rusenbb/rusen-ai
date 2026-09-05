@@ -134,13 +134,24 @@ export type BotTrainingTelemetry = {
   points: TrainingMetricPoint[];
 };
 
+export type CheckpointProvenance = {
+  trainerCommit: string;
+  environmentVersion: string;
+  createdAt: string;
+  evaluation: string;
+  trainerSha256?: string;
+  browserSha256?: string;
+};
+
 export type DQNCheckpointAsset = {
+  provenance?: CheckpointProvenance;
   weights: SerializedDQNWeights;
   config: { layerSizes: number[] };
   telemetry: BotTrainingTelemetry;
 };
 
 export type DQNCheckpointManifest = {
+  provenance?: CheckpointProvenance;
   difficulty: BotDifficulty;
   label: string;
   summary: string;
