@@ -16,6 +16,12 @@ import {
 } from "../utils/urlState";
 
 describe("embedding explorer vector utilities", () => {
+  it("keeps original points stationary when projecting an outlier against fixed bounds", () => {
+    const base = [{ x: -1, y: -1 }, { x: 1, y: 1 }];
+    const result = normalizePoints([...base, { x: 10, y: 10 }], base);
+    expect(result.slice(0, 2)).toEqual(base);
+    expect(result[2]).toEqual({ x: 10, y: 10 });
+  });
   it("centers constant dimensions instead of pinning them to an edge", () => {
     expect(normalizePoints([{ x: 8, y: 3 }])).toEqual([{ x: 0, y: 0 }]);
     expect(normalizePoints([{ x: 2, y: -1 }, { x: 2, y: 1 }])).toEqual([{ x: 0, y: -1 }, { x: 0, y: 1 }]);
