@@ -67,6 +67,13 @@ export class Level {
     Level.translateImpl(this, dx, dy);
   }
 
+  clone(): Level {
+    const parent: Parent = this.parent.type === "level"
+      ? { type: "level", level: this.parent.level.clone() }
+      : { ...this.parent };
+    return new Level(this.posX, this.posY, this.time, parent, this.sampler);
+  }
+
   private static translateImpl(
     startLevel: Level,
     dx: number,

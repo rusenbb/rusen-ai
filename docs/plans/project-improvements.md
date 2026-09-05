@@ -12,11 +12,11 @@ Pages deployment. Feature branches are stacked; commits remain reviewable.
 - [x] Sampling Lab: sample-only reconstruction; inspect individual samples.
 - [x] Decision Boundary: reproducible noise; move/relabel/delete points.
 - [x] Pathfinding Showdown: undo terrain edits; full ordered frontier.
-- [ ] Pulse Board: reconnect/stale connection; weather request ownership; visibility-aware polling/backoff.
+- [x] Pulse Board: reconnect/stale connection; weather request ownership; visibility-aware polling/backoff.
 - [ ] RL-Arena: Python/TypeScript environment parity; checkpoint provenance and evaluation context.
-- [ ] Outguess: remove unsupported population claim; separate hinted/blind scoring.
-- [ ] Emergence: reproducible reset/new seed; lazy initialization and offscreen pause.
-- [ ] Game of Life: real speed and single step; reset camera.
+- [x] Outguess: remove unsupported population claim; separate hinted/blind scoring.
+- [x] Emergence: reproducible reset/new seed; lazy initialization and offscreen pause.
+- [x] Game of Life: real speed and single step; reset camera.
 - [x] Embedding Explorer: surfaced errors/validated vectors; fixed projection scale.
 - [x] Sentence Surgeon: original-text replacement; cancellation and cleared prediction state.
 - [ ] Rusenizer: byte boundaries; honest language heuristic; scoped reproducible tokenizer comparison.

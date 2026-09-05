@@ -1,6 +1,8 @@
 "use client";
 
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useSimulation } from "./SimulationFrame";
+
+import { useMemo, useRef, useState, useCallback, useEffect } from "react";
 
 // --- Types ---
 
@@ -41,7 +43,7 @@ const NEIGHBOR_OFFSETS: [number, number][] = [
 
 // --- Grid helpers ---
 
-function createRandomGrid(): Int8Array {
+function createRandomGrid(random: () => number): Int8Array {
   const grid = new Int8Array(CELL_COUNT);
   const blueCount = Math.floor(CELL_COUNT * BLUE_FRAC);
   const orangeCount = Math.floor(CELL_COUNT * ORANGE_FRAC);
@@ -54,7 +56,7 @@ function createRandomGrid(): Int8Array {
 
   // Fisher-Yates shuffle
   for (let i = CELL_COUNT - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(random() * (i + 1));
     const tmp = grid[i];
     grid[i] = grid[j];
     grid[j] = tmp;
@@ -129,7 +131,7 @@ function computeStats(grid: Int8Array, threshold: number): Stats {
   };
 }
 
-function stepGrid(grid: Int8Array, threshold: number): Int8Array {
+function stepGrid(grid: Int8Array, threshold: number, random: () => number): Int8Array {
   const next = new Int8Array(grid);
 
   // Collect unhappy agents and empty cells
@@ -150,7 +152,7 @@ function stepGrid(grid: Int8Array, threshold: number): Int8Array {
 
   // Shuffle unhappy agents
   for (let i = unhappy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(random() * (i + 1));
     const tmp = unhappy[i];
     unhappy[i] = unhappy[j];
     unhappy[j] = tmp;
@@ -159,7 +161,7 @@ function stepGrid(grid: Int8Array, threshold: number): Int8Array {
   // Move each unhappy agent to a random empty cell
   for (const agentIdx of unhappy) {
     if (emptyCells.length === 0) break;
-    const emptyPick = Math.floor(Math.random() * emptyCells.length);
+    const emptyPick = Math.floor(random() * emptyCells.length);
     const emptyIdx = emptyCells[emptyPick];
 
     next[emptyIdx] = next[agentIdx];
@@ -243,8 +245,10 @@ function NeighborDiagram({ threshold }: { threshold: number }) {
 // --- Main component ---
 
 export default function SchellingSegregation() {
+  const { active, random } = useSimulation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const gridRef = useRef<Int8Array>(createRandomGrid());
+  const initialGrid = useMemo(() => createRandomGrid(random), [random]);
+  const gridRef = useRef<Int8Array>(initialGrid);
   const happyMapRef = useRef<Uint8Array>(new Uint8Array(CELL_COUNT));
   const [threshold, setThreshold] = useState(0.33);
   const [stats, setStats] = useState<Stats>({ happyPercent: 0, avgSimilarity: 0 });
@@ -361,15 +365,15 @@ export default function SchellingSegregation() {
   // --- Simulation step ---
 
   const doStep = useCallback(() => {
-    gridRef.current = stepGrid(gridRef.current, thresholdRef.current);
+    gridRef.current = stepGrid(gridRef.current, thresholdRef.current, random);
     setStepCount((s) => s + 1);
     refreshDisplay();
-  }, [refreshDisplay]);
+  }, [random, refreshDisplay]);
 
   // --- Auto-run loop ---
 
   useEffect(() => {
-    if (!running) {
+    if (!running || !active) {
       if (intervalRef.current !== null) {
         clearTimeout(intervalRef.current);
         intervalRef.current = null;
@@ -389,27 +393,27 @@ export default function SchellingSegregation() {
         intervalRef.current = null;
       }
     };
-  }, [running, doStep]);
+  }, [running, active, doStep]);
 
   // --- Controls ---
 
   const handleReset = useCallback(() => {
     setRunning(false);
-    gridRef.current = createRandomGrid();
+    gridRef.current = createRandomGrid(random);
     setStepCount(0);
     refreshDisplay();
-  }, [refreshDisplay]);
+  }, [random, refreshDisplay]);
 
   const handleThresholdChange = useCallback(
     (newThreshold: number) => {
       setThreshold(newThreshold);
       thresholdRef.current = newThreshold;
       // Reset and auto-run to show the effect
-      gridRef.current = createRandomGrid();
+      gridRef.current = createRandomGrid(random);
       setStepCount(0);
       setRunning(true);
     },
-    []
+    [random]
   );
 
   return (

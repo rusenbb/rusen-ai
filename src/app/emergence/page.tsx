@@ -1,4 +1,5 @@
 import Link from "next/link";
+import SimulationFrame from "./components/SimulationFrame";
 import ElementaryCA from "./components/ElementaryCA";
 import GameOfLifeDemo from "./components/GameOfLifeDemo";
 import FireflySynchronization from "./components/FireflySynchronization";
@@ -81,7 +82,7 @@ export default function EmergencePage() {
           We start with the smallest possible canvas: one row of cells and a lookup table.
           If emergence is real, we should be able to see it even here.
         </p>
-        <ElementaryCA />
+        <SimulationFrame><ElementaryCA /></SimulationFrame>
       </section>
 
       <div className="h-20 sm:h-28" />
@@ -96,7 +97,7 @@ export default function EmergencePage() {
           Next, move from a line to a plane. With one extra dimension, stable structures,
           moving organisms, and computation begin to emerge from the same local logic.
         </p>
-        <GameOfLifeDemo />
+        <SimulationFrame><GameOfLifeDemo /></SimulationFrame>
         <div className="mt-4">
           <Link
             href="/game-of-life"
@@ -119,7 +120,7 @@ export default function EmergencePage() {
           Keep the agents independent, but let them communicate through time.
           Order can emerge not as shape, but as a shared beat.
         </p>
-        <FireflySynchronization />
+        <SimulationFrame><FireflySynchronization /></SimulationFrame>
       </section>
 
       <div className="h-20 sm:h-28" />
@@ -134,7 +135,7 @@ export default function EmergencePage() {
           Now the idea leaves pure mathematics and enters social behavior.
           The rule is still local and mild. The outcome is not.
         </p>
-        <SchellingSegregation />
+        <SimulationFrame><SchellingSegregation /></SimulationFrame>
       </section>
 
       <div className="h-20 sm:h-28" />
@@ -149,7 +150,7 @@ export default function EmergencePage() {
           Then comes a harsher lesson: some systems look chaotic for a very long time
           before they reveal any order at all.
         </p>
-        <LangtonsAnt />
+        <SimulationFrame><LangtonsAnt /></SimulationFrame>
       </section>
 
       <div className="h-20 sm:h-28" />
@@ -165,7 +166,7 @@ export default function EmergencePage() {
           three rules: avoid crowding, match speed, drift toward the group. No leader, no plan,
           and yet a single sweeping motion appears.
         </p>
-        <Flocking />
+        <SimulationFrame><Flocking /></SimulationFrame>
       </section>
 
       {/* Closing */}
