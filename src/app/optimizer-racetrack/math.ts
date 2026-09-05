@@ -52,6 +52,8 @@ export interface Trajectory {
   points: Point[];
   losses: number[];
   diverged: boolean;
+  stopReason: "step-limit" | "non-finite" | "out-of-view" | "stationary";
+  stopStep: number;
 }
 
 export const OPTIMIZER_META: Record<OptimizerName, { label: string; color: string; description: string }> = {
@@ -259,15 +261,18 @@ export function simulateOptimizer(
   const points = [{ ...start }];
   const losses = [landscape.loss(start)];
   let diverged = false;
+  let stopReason: Trajectory["stopReason"] = "step-limit";
   for (let index = 0; index < iterations; index += 1) {
     state = optimizerStep(name, state, config, landscape);
     const nextLoss = landscape.loss(state.point);
-    if (!Number.isFinite(nextLoss) || leftDisplayedTerrain(state.point, landscape.bounds)) {
-      diverged = true;
-      break;
+    if (!Number.isFinite(nextLoss)) {
+      diverged = true; stopReason = "non-finite"; break;
     }
     points.push({ ...state.point });
     losses.push(nextLoss);
+    if (leftDisplayedTerrain(state.point, landscape.bounds)) { stopReason = "out-of-view"; break; }
+    const gradient = landscape.gradient(state.point);
+    if (Math.hypot(gradient.x, gradient.y) < 1e-4 && Math.abs(nextLoss - losses[losses.length - 2]) < 1e-8) { stopReason = "stationary"; break; }
   }
-  return { name, points, losses, diverged };
+  return { name, points, losses, diverged, stopReason, stopStep: state.step };
 }
