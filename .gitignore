@@ -70,3 +70,7 @@ CLAUDE.md
 # syncthing
 *.sync-conflict-*
 .syncthing.*.tmp
+
+# Reproduced from the pinned onnxruntime-web package during build.
+/public/runtime/ort-1.25/*.wasm
+/public/runtime/ort-1.25/*.mjs
