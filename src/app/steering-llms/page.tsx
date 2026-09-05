@@ -184,7 +184,7 @@ export default function SteeringLab() {
                 aria-label={`After block ${n}`}
                 aria-pressed={settings.layer === n}
                 onClick={() => update("layer", n)}
-                className={`h-9 border font-mono text-xs ${settings.layer === n ? "border-[var(--signal)] bg-[var(--signal)] text-white" : "border-[var(--line)] disabled:opacity-40"}`}
+                className={`h-9 border font-mono text-xs ${settings.layer === n ? "border-[var(--signal)] bg-[var(--signal)] text-[var(--background)]" : "border-[var(--line)] disabled:opacity-40"}`}
               >
                 {n}
               </button>
