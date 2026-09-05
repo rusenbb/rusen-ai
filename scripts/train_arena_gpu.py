@@ -9,6 +9,9 @@ math into PyTorch so training can use CPU vectorization or CUDA when available.
 from __future__ import annotations
 
 import json
+import hashlib
+import subprocess
+from datetime import datetime, timezone
 import multiprocessing as mp
 import os
 import random
@@ -152,9 +155,11 @@ def precompute_bfs_tables(arena: torch.Tensor):
     Caches result to disk for instant reuse.
     """
     cache_path = Path(__file__).parent / ".arena_bfs_cache.pt"
+    fingerprint = hashlib.sha256(arena.numpy().tobytes() + b"bfs-up-right-down-left-v2").hexdigest()
     if cache_path.exists():
         cached = torch.load(cache_path, weights_only=True)
-        return cached["dist"], cached["dir"]
+        if cached.get("fingerprint") == fingerprint:
+            return cached["dist"], cached["dir"]
 
     S = ARENA_SIZE
     # Use flat Python lists for BFS (avoid torch tensor overhead in loops)
@@ -163,7 +168,7 @@ def precompute_bfs_tables(arena: torch.Tensor):
     dir_flat = [-1] * flat_size
 
     walkable_grid = [[arena[y, x].item() != 1 for x in range(S)] for y in range(S)]
-    dirs = [(0, -1), (0, 1), (-1, 0), (1, 0)]  # up, down, left, right
+    dirs = [(0, 0, -1), (3, 1, 0), (1, 0, 1), (2, -1, 0)]  # action, dx, dy; browser BFS order
 
     count = 0
     for sy in range(S):
@@ -179,7 +184,7 @@ def precompute_bfs_tables(arena: torch.Tensor):
                 cy, cx = queue[qi]
                 qi += 1
                 cd = dist_flat[base + cy * S + cx]
-                for ai, (ddx, ddy) in enumerate(dirs):
+                for ai, ddx, ddy in dirs:
                     ny, nx = cy + ddy, cx + ddx
                     if 0 <= ny < S and 0 <= nx < S and walkable_grid[ny][nx]:
                         idx = base + ny * S + nx
@@ -194,7 +199,7 @@ def precompute_bfs_tables(arena: torch.Tensor):
     dist_table = torch.tensor(dist_flat, dtype=torch.short).reshape(S, S, S, S)
     dir_table = torch.tensor(dir_flat, dtype=torch.int8).reshape(S, S, S, S)
 
-    torch.save({"dist": dist_table, "dir": dir_table}, cache_path)
+    torch.save({"dist": dist_table, "dir": dir_table, "fingerprint": fingerprint}, cache_path)
     return dist_table, dir_table
 
 
@@ -397,19 +402,28 @@ class VecArenaEnv:
         has_energy = actor_energy > 0
         can_dash = is_dash & has_energy
 
-        # Simple dash direction: toward opponent
-        dir_x = torch.sign(toward_x - actor_x)
-        dir_y = torch.sign(toward_y - actor_y)
-        # If same position, default to no direction
-        no_dir = (dir_x == 0) & (dir_y == 0)
-        dir_x = torch.where(no_dir, torch.zeros_like(dir_x), dir_x)
-
-        # Prefer the axis with larger distance
+        # Follow the BFS hint and choose the safest two-cell destination,
+        # matching the browser's neutral-habit dash rule.
+        direction = self.dir_table[actor_y, actor_x, toward_y, toward_x].long()
         dist_x = (toward_x - actor_x).abs()
         dist_y = (toward_y - actor_y).abs()
-        use_x = dist_x >= dist_y
-        dash_dx = torch.where(use_x, dir_x, torch.zeros_like(dir_x))
-        dash_dy = torch.where(use_x, torch.zeros_like(dir_y), dir_y)
+        fallback = torch.where(dist_x >= dist_y, torch.where(toward_x >= actor_x, ACT_RIGHT, ACT_LEFT), torch.where(toward_y >= actor_y, ACT_DOWN, ACT_UP))
+        direction = torch.where(direction >= 0, direction, fallback)
+        scores = []
+        for dx, dy in zip(DX[:4], DY[:4]):
+            x1, y1 = actor_x + dx, actor_y + dy
+            x2, y2 = actor_x + 2 * dx, actor_y + 2 * dy
+            valid = self._is_walkable(x1, y1) & self._is_walkable(x2, y2)
+            tile = self._tile_at(x2.clamp(0, ARENA_SIZE - 1), y2.clamp(0, ARENA_SIZE - 1))
+            value = torch.where(tile == 3, -1.0, torch.where(tile == 2, 0.2, 0.0))
+            scores.append(torch.where(valid, value, -torch.inf))
+        scores = torch.stack(scores, dim=1)
+        best = scores.argmax(dim=1)
+        preferred_score = scores.gather(1, direction.unsqueeze(1)).squeeze(1)
+        direction = torch.where(preferred_score == scores.max(dim=1).values, direction, best)
+        delta_x = torch.tensor(DX[:4], device=DEVICE)
+        delta_y = torch.tensor(DY[:4], device=DEVICE)
+        dash_dx, dash_dy = delta_x[direction], delta_y[direction]
 
         # Step 1
         s1x = actor_x + dash_dx
@@ -486,6 +500,11 @@ class VecArenaEnv:
             torch.zeros(N, device=DEVICE),
         )
 
+        # The browser encodes a cardinal direction, not a diagonal.
+        pickup_horizontal = (nearest_px - self_x).abs() >= (nearest_py - self_y).abs()
+        pickup_dx = torch.where(pickup_horizontal, pickup_dx, torch.zeros_like(pickup_dx))
+        pickup_dy = torch.where(pickup_horizontal, torch.zeros_like(pickup_dy), pickup_dy)
+
         # LOS and attack window
         los = self._has_los(self_x, self_y, other_x, other_y).float()
         attack_window = ((dist <= 3) & (los > 0.5)).float()
@@ -561,8 +580,9 @@ class VecArenaEnv:
         # Habit: always "balanced" (index 6) for training
         state[:, 54] = 1.0
 
-        # Stillness: always "active" (index 2)
-        state[:, 57] = 1.0
+        # Balanced-habit parity: hold is idle; all other actions are active.
+        state[:, 55] = (other_last == ACT_HOLD).float()
+        state[:, 57] = (other_last != ACT_HOLD).float()
 
         # Local terrain ordinals
         def tile_ordinal(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
@@ -1600,10 +1620,14 @@ def main():
     all_checkpoints.sort(key=lambda c: diff_order.index(c["difficulty"]))
 
     if not args.no_write:
+        # Record new-run provenance; historical checkpoint fields remain unknown.
+        revision = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=project_root, text=True).strip()
+        provenance = {"trainerCommit": revision, "environmentVersion": "arena-parity-v2", "trainerSha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(), "browserSha256": hashlib.sha256((project_root / "src/app/adaptive-arena/game.ts").read_bytes()).hexdigest(), "createdAt": datetime.now(timezone.utc).isoformat(), "evaluation": "Self-play snapshot pool; epsilon 0.05; 100-tick rounds; see training configuration."}
         # Write checkpoint assets
         for checkpoint in all_checkpoints:
             filename = f"arena-{checkpoint['difficulty']}.json"
             asset = {
+                "provenance": provenance,
                 "weights": checkpoint["weights"],
                 "config": checkpoint["config"],
                 "telemetry": checkpoint["telemetry"],
@@ -1616,6 +1640,7 @@ def main():
         for cp in all_checkpoints:
             manifests.append(
                 {
+                    "provenance": provenance,
                     "difficulty": cp["difficulty"],
                     "label": cp["label"],
                     "summary": cp["summary"],
@@ -1628,7 +1653,7 @@ def main():
                 }
             )
 
-        out_dir = project_root / "src" / "app" / "nerdy-stuff" / "adaptive-arena"
+        out_dir = project_root / "src" / "app" / "adaptive-arena"
         out_file = out_dir / "checkpoints.generated.ts"
         content = (
             '/* eslint-disable */\nimport type { DQNCheckpointManifest } from "./game"\n\n'

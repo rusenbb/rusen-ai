@@ -404,6 +404,11 @@ export default function AdaptiveArenaPage() {
               </div>
             </header>
 
+            <details className="my-4 rounded-xl border border-white/10 p-4 text-sm text-neutral-300">
+              <summary className="cursor-pointer">Checkpoint provenance and evaluation</summary>
+              <dl className="mt-3 grid gap-2"><dt>Training revision</dt><dd className="break-all font-mono">{checkpointManifest?.provenance?.trainerCommit ?? "Unknown for this historical checkpoint"}</dd><dt>Environment version</dt><dd>{checkpointManifest?.provenance?.environmentVersion ?? "Historical version not recorded"}</dd><dt>Evaluation conditions</dt><dd>{checkpointManifest?.provenance?.evaluation ?? "Historical opponent pool and sampling seed were not preserved. The recorded win rate is not a human-opponent benchmark."}</dd><dt>Recorded evaluation</dt><dd>{checkpointManifest ? checkpointManifest.stats.botWins + " bot wins / " + checkpointManifest.stats.rounds + " rounds" : "Loading checkpoint"}</dd></dl>
+              <p className="mt-3 text-xs text-neutral-400">Current code parity checks compare 25 controlled transitions: neutral habit, no manual dash direction, and a matched 100-tick clock. Training uses 100 ticks; interactive rounds use 180. Existing weights are retained, not retrained or retrospectively assigned a source version.</p>
+            </details>
             <section className="space-y-4">
               <div
                 ref={arenaPanelRef}

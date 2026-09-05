@@ -13,7 +13,7 @@ Pages deployment. Feature branches are stacked; commits remain reviewable.
 - [x] Decision Boundary: reproducible noise; move/relabel/delete points.
 - [x] Pathfinding Showdown: undo terrain edits; full ordered frontier.
 - [x] Pulse Board: reconnect/stale connection; weather request ownership; visibility-aware polling/backoff.
-- [ ] RL-Arena: Python/TypeScript environment parity; checkpoint provenance and evaluation context.
+- [x] RL-Arena: Python/TypeScript environment parity; checkpoint provenance and evaluation context.
 - [x] Outguess: remove unsupported population claim; separate hinted/blind scoring.
 - [x] Emergence: reproducible reset/new seed; lazy initialization and offscreen pause.
 - [x] Game of Life: real speed and single step; reset camera.
