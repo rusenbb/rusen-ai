@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { aliasFrequency, sineAt } from "./math";
+import { aliasFrequency, sineAt, reconstructSamples } from "./math";
 
 describe("sampling aliases", () => {
+  it("interpolates every measured sample without using the source frequency", () => {
+    const samples = [0.4, -1, 0.6, 1, 0];
+    samples.forEach((value, index) => expect(reconstructSamples(samples, 4, index / 4)).toBeCloseTo(value, 10));
+  });
   it("folds into the baseband while preserving every sampled value and phase", () => {
     for (const frequency of [1, 6, 9, 12, 19]) {
       const alias = aliasFrequency(frequency, 12);

@@ -1,3 +1,5 @@
+import { createSeededRandom } from "@/lib/random";
+
 export interface Point {
   x: number;
   y: number;
@@ -44,8 +46,9 @@ export function leaveOneOutAccuracy(
 }
 
 /** Fixed synthetic examples keep comparisons reproducible without a random generator. */
-export function makeDataset(dataset: Dataset): Example[] {
-  return Array.from({ length: 40 }, (_, i) => {
+export function makeDataset(dataset: Dataset, noise = 0, seed = 42): Example[] {
+  const random = createSeededRandom(seed);
+  const points: Example[] = Array.from({ length: 40 }, (_, i) => {
     const label = (i % 2) as 0 | 1;
     const t = Math.floor(i / 2) / 19;
     if (dataset === "moons") {
@@ -73,6 +76,7 @@ export function makeDataset(dataset: Dataset): Example[] {
     }
     const x = ((i % 8) - 3.5) / 4;
     const y = (Math.floor(i / 8) - 2) / 2.5 + 0.06;
-    return { x, y, label: x * y >= 0 ? 1 : 0 };
+    return { x, y, label: x * y >= 0 ? 1 as const : 0 as const };
   });
+  return points.map((point) => ({ ...point, x: Math.max(-1, Math.min(1, point.x + (random() - 0.5) * noise * 2)), y: Math.max(-1, Math.min(1, point.y + (random() - 0.5) * noise * 2)) }));
 }
