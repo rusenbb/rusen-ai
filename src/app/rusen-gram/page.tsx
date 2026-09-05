@@ -112,7 +112,7 @@ export default function RusenGram() {
   useEffect(() => {
     if (!ready) return;
     setGenerated("");
-    setLoading(true);
+    setResult(null);
     send({ id: ++serial.current, action: "inspect", prompt, alpha });
   }, [ready, prompt, alpha]);
   const choose = (id: string) => {
