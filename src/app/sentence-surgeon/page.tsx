@@ -3,90 +3,30 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useFillMask, type FillMaskPrediction } from "./hooks/useFillMask";
 import { EXAMPLES } from "./data/examples";
+import { replaceSpan, wordPieceSpans } from "./spans";
 
 const MASK_TOKEN = "[MASK]";
-
-/**
- * Stitch a WordPiece token list back into a sentence string.
- * Subword tokens are prefixed with "##" - these glue to the previous
- * token without a space; everything else gets a leading space.
- * If `maskIdx` is set, that token is replaced with [MASK]
- * (and the leading space is preserved so the model sees a clean gap).
- */
-function tokensToSentence(tokens: string[], maskIdx: number | null): string {
-  let out = "";
-  for (let i = 0; i < tokens.length; i++) {
-    const t = tokens[i];
-    const isSub = t.startsWith("##");
-    const display = i === maskIdx ? MASK_TOKEN : isSub ? t.slice(2) : t;
-    if (i === 0) {
-      out += display;
-    } else if (isSub && i !== maskIdx) {
-      // Subword stays glued. If the masked token is a subword we still want
-      // a space before [MASK] so the model treats it as a normal word slot.
-      out += display;
-    } else {
-      out += " " + display;
-    }
-  }
-  return out;
-}
 
 export default function SentenceSurgeonPage() {
   const fillMask = useFillMask();
   const [text, setText] = useState<string>(EXAMPLES[0]);
-  const [tokens, setTokens] = useState<string[]>([]);
+  const tokens = useMemo(() => fillMask.status === "ready" ? fillMask.tokenize(text) : [], [text, fillMask]);
+  const spans = useMemo(() => wordPieceSpans(text, tokens), [text, tokens]);
   const [maskedIdx, setMaskedIdx] = useState<number | null>(null);
   const [predictions, setPredictions] = useState<FillMaskPrediction[]>([]);
   const [busy, setBusy] = useState(false);
   const [predictError, setPredictError] = useState<string | null>(null);
   const reqIdRef = useRef(0);
 
-  // Re-tokenize whenever text or model readiness changes.
-  useEffect(() => {
-    if (fillMask.status !== "ready") return;
-    let cancelled = false;
-    Promise.resolve().then(() => {
-      if (cancelled) return;
-      const next = fillMask.tokenize(text);
-      setTokens(next);
-      // If the previously-masked index is now out of range, drop it.
-      setMaskedIdx((prev) => (prev !== null && prev < next.length ? prev : null));
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [text, fillMask, fillMask.status]);
+  const maskedSentence = maskedIdx !== null && spans[maskedIdx]
+    ? replaceSpan(text, spans[maskedIdx], MASK_TOKEN) : null;
 
-  // Pick a sensible default mask once tokens land.
-  useEffect(() => {
-    let cancelled = false;
-    Promise.resolve().then(() => {
-      if (cancelled) return;
-      if (tokens.length === 0) {
-        setMaskedIdx(null);
-        return;
-      }
-      setMaskedIdx((prev) => {
-        if (prev !== null && prev < tokens.length) return prev;
-        // Default: the last "word-ish" token (skip punctuation tokens).
-        for (let i = tokens.length - 1; i >= 0; i--) {
-          if (/^[a-z0-9##]/i.test(tokens[i])) return i;
-        }
-        return tokens.length - 1;
-      });
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [tokens]);
-
-  // The exact string the model sees, derived from tokens. Memoised so the
-  // prediction effect doesn't fire on every keystroke before tokens land.
-  const maskedSentence = useMemo<string | null>(() => {
-    if (tokens.length === 0 || maskedIdx === null) return null;
-    return tokensToSentence(tokens, maskedIdx);
-  }, [tokens, maskedIdx]);
+  const clearPrediction = useCallback(() => {
+    reqIdRef.current++;
+    setPredictions([]);
+    setBusy(false);
+    setPredictError(null);
+  }, []);
 
   // Run prediction whenever the masked sentence changes (and model is ready).
   useEffect(() => {
@@ -124,40 +64,31 @@ export default function SentenceSurgeonPage() {
   }, [maskedSentence, fillMask]);
 
   const handleChipClick = useCallback((i: number) => {
+    clearPrediction();
     setMaskedIdx((prev) => (prev === i ? null : i));
-  }, []);
+  }, [clearPrediction]);
 
   const handlePredictionPick = useCallback(
     (token: string) => {
-      const cleaned = token.replace(/^##/, "");
-      if (maskedIdx === null) return;
-      // Stitch the new token list back into a sentence and use that as the
-      // new textarea contents. WordPiece is uncased, so we preserve the
-      // user's original casing where possible by only replacing the masked
-      // span with the lowercased prediction.
-      const newTokens = [...tokens];
-      // Re-prefix with "##" if the original token was a subword, so the
-      // glue-to-previous behavior is preserved when we re-render.
-      const wasSub = newTokens[maskedIdx].startsWith("##");
-      newTokens[maskedIdx] = wasSub ? "##" + cleaned : cleaned;
-      const next = tokensToSentence(newTokens, null);
-      setText(next);
+      if (maskedIdx === null || !spans[maskedIdx]) return;
+      setText(replaceSpan(text, spans[maskedIdx], token));
       setMaskedIdx(null);
+      clearPrediction();
     },
-    [maskedIdx, tokens],
+    [maskedIdx, spans, text, clearPrediction],
   );
 
   const handleExample = useCallback((s: string) => {
     setText(s);
     setMaskedIdx(null);
-    setPredictions([]);
-  }, []);
+    clearPrediction();
+  }, [clearPrediction]);
 
   const handleClear = useCallback(() => {
     setText("");
     setMaskedIdx(null);
-    setPredictions([]);
-  }, []);
+    clearPrediction();
+  }, [clearPrediction]);
 
   const tokenStrip = useMemo(() => {
     if (tokens.length === 0) {
@@ -180,6 +111,7 @@ export default function SentenceSurgeonPage() {
               key={`${i}-${t}`}
               type="button"
               onClick={() => handleChipClick(i)}
+              disabled={!spans[i]}
               title={isSub ? `subword: ##${display}` : `token: ${display}`}
               className={`px-2.5 py-1 rounded-md text-sm font-mono transition border ${
                 isMasked
@@ -196,7 +128,7 @@ export default function SentenceSurgeonPage() {
         })}
       </div>
     );
-  }, [tokens, maskedIdx, fillMask.status, handleChipClick]);
+  }, [tokens, spans, maskedIdx, fillMask.status, handleChipClick]);
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 sm:py-12">
@@ -212,6 +144,7 @@ export default function SentenceSurgeonPage() {
         </p>
       </div>
 
+      <p className="mb-4 text-xs text-neutral-500">Click a token to predict a replacement. Unknown tokens cannot be aligned safely and are disabled; your original casing, punctuation and spacing are preserved.</p>
       {/* Status strip */}
       <div className="mb-4 text-xs font-mono">
         {fillMask.status === "idle" && (
@@ -285,7 +218,7 @@ export default function SentenceSurgeonPage() {
 
         <textarea
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={(e) => { setText(e.target.value); setMaskedIdx(null); clearPrediction(); }}
           spellCheck={false}
           rows={2}
           placeholder="Type a sentence and click a token below to mask it…"
