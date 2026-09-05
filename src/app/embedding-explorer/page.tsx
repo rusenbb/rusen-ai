@@ -349,6 +349,7 @@ export default function EmbeddingExplorerPage() {
     initialState.openArithmeticTerms
   );
   const [arithmeticResult, setArithmeticResult] = useState<ArithmeticResult | null>(null);
+  const [fixedScale, setFixedScale] = useState(true);
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "error">("idle");
 
   const hasInitializedRef = useRef(false);
@@ -594,7 +595,7 @@ export default function EmbeddingExplorerPage() {
           ]
         : manifoldPoints;
 
-      return normalizePoints(withResult);
+      return normalizePoints(withResult, fixedScale ? manifoldPoints : withResult);
     }
 
     if (!xAxis.vector || !yAxis.vector || embeddingCache.size === 0) return [];
@@ -624,7 +625,7 @@ export default function EmbeddingExplorerPage() {
     }
 
     return axisPoints;
-  }, [arithmeticResult, embeddingCache, projectionMode, umapPoints, umapResultPoint, words, xAxis.vector, yAxis.vector]);
+  }, [arithmeticResult, embeddingCache, fixedScale, projectionMode, umapPoints, umapResultPoint, words, xAxis.vector, yAxis.vector]);
 
   const selectedNeighbors = useMemo(() => {
     if (!selectedWord || selectedWord === "=result") return [];
@@ -860,7 +861,7 @@ export default function EmbeddingExplorerPage() {
           </p>
 
           {modelError && (
-            <Alert variant="error">{modelError}</Alert>
+            <Alert variant="error">{modelError}{isModelReady && <Button size="sm" disabled={isEmbedding} onClick={() => void embedWords(words, "Retry failed items")}>Retry failed items</Button>}</Alert>
           )}
           </div>
         </DemoPanel>
@@ -1132,7 +1133,8 @@ export default function EmbeddingExplorerPage() {
         </div>
 
         <div className="space-y-4">
-          <Visualization
+          <label className="my-3 flex gap-2 text-sm"><input type="checkbox" checked={fixedScale} onChange={(event) => setFixedScale(event.target.checked)} />Keep UMAP scale fixed to the original words (outlying results may be offscreen)</label>
+        <Visualization
             points={points}
             projectionMode={projectionMode}
             axisLabels={axisLabels}

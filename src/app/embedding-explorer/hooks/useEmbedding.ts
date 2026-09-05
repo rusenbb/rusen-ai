@@ -114,11 +114,13 @@ export function useEmbedding(): UseEmbeddingResult {
 
       // Verify output shape - should be [1, hidden_dim] after pooling
       if (output.dims?.[0] !== 1) {
-        console.warn("Unexpected embedding batch size:", output.dims);
+        throw new Error("The model returned an unexpected embedding shape.");
       }
 
       // Convert Float32Array to regular array (pooling already reduces to single vector)
       const embedding = Array.from(output.data);
+
+      if (output.dims.length !== 2 || output.dims[1] !== embedding.length || !embedding.length || embedding.some((value) => !Number.isFinite(value))) throw new Error("The model returned an invalid embedding.");
 
       // Cache the result
       embeddingCache.current.set(normalizedText, embedding);
@@ -126,7 +128,7 @@ export function useEmbedding(): UseEmbeddingResult {
 
       return embedding;
     } catch (err) {
-      console.error("Error embedding text:", err);
+      setError(`Could not embed “${text}”: ${err instanceof Error ? err.message : "Inference failed"}. Retry this item.`);
       return null;
     }
   }, [initModel]);
