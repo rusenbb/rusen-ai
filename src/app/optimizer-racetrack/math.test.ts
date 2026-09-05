@@ -7,6 +7,12 @@ import {
 } from "./math";
 
 describe("optimizer racetrack math", () => {
+  it("distinguishes a display exit, a stationary point, and invalid arithmetic", () => {
+    const config = DEFAULT_OPTIMIZER_CONFIGS.sgd;
+    expect(simulateOptimizer("sgd", { x: 2, y: 1 }, { ...config, learningRate: 10 }, 10, LANDSCAPES.bowl)).toMatchObject({ diverged: false, stopReason: "out-of-view" });
+    expect(simulateOptimizer("sgd", { x: 0, y: 0 }, config, 10, LANDSCAPES.bowl).stopReason).toBe("stationary");
+    expect(simulateOptimizer("sgd", { x: 2, y: 1 }, { ...config, learningRate: Infinity }, 10, LANDSCAPES.bowl)).toMatchObject({ diverged: true, stopReason: "non-finite" });
+  });
   it("matches finite-difference gradients for every landscape", () => {
     (Object.values(LANDSCAPES)).forEach((landscape) => {
       const point = {
