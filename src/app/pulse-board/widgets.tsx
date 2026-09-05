@@ -11,6 +11,7 @@ import {
   SiCardano,
 } from "react-icons/si";
 import { Card as SharedCard } from "@/components/ui";
+import { fetchPublic, useVisiblePolling } from "./polling";
 
 // Types
 interface WeatherData {
@@ -455,43 +456,52 @@ function CryptoHubWidget() {
   const [updateCount, setUpdateCount] = useState(0);
   const wsRef = useRef<WebSocket | null>(null);
 
+  const [lastPriceAt, setLastPriceAt] = useState<number | null>(null);
+  const priceNow = useRelativeTimeTicker();
   useEffect(() => {
-    const streamPath = COINS.map((c) => c.stream).join("/");
-    const ws = new WebSocket(`wss://stream.binance.com:9443/stream?streams=${streamPath}`);
-
-    ws.onopen = () => setWsConnected(true);
-    ws.onclose = () => setWsConnected(false);
-    ws.onerror = () => setWsConnected(false);
-
-    const streamToSym = new Map<string, CoinSymbol>(
-      COINS.map((c) => [c.stream, c.sym] as const),
-    );
-
-    ws.onmessage = (event) => {
-      try {
-        const message = JSON.parse(event.data);
-        const sym = streamToSym.get(message.stream);
-        if (!sym) return;
-        const price = parseFloat(message.data.p);
-        setPrices((prev) => ({
-          ...prev,
-          [sym]: { price, prevPrice: prev[sym].price || price },
-        }));
-        setUpdateCount((c) => c + 1);
-      } catch {
-        // ignore malformed frames
-      }
+    let stopped = false;
+    let attempts = 0;
+    let retry: ReturnType<typeof setTimeout>;
+    const streamPath = COINS.map((coin) => coin.stream).join("/");
+    const streamToSym = new Map(COINS.map((coin) => [coin.stream, coin.sym]));
+    const connect = () => {
+      if (stopped || document.hidden) return;
+      const ws = new WebSocket("wss://stream.binance.com:9443/stream?streams=" + streamPath);
+      wsRef.current = ws;
+      ws.onopen = () => { if (wsRef.current === ws) setWsConnected(true); };
+      ws.onmessage = (event) => {
+        if (wsRef.current !== ws || stopped) return;
+        try {
+          const message = JSON.parse(event.data);
+          const sym = streamToSym.get(message.stream);
+          const price = Number(message.data?.p);
+          if (!sym || !Number.isFinite(price) || price <= 0) return;
+          attempts = 0;
+          setPrices((previous) => ({ ...previous, [sym]: { price, prevPrice: previous[sym].price || price } }));
+          setLastPriceAt(Date.now()); setUpdateCount((count) => count + 1);
+        } catch { /* Ignore malformed frames; freshness still expires. */ }
+      };
+      ws.onerror = () => ws.close();
+      ws.onclose = () => {
+        if (wsRef.current !== ws || stopped) return;
+        setWsConnected(false);
+        if (!document.hidden) retry = setTimeout(connect, Math.min(30000, 1000 * 2 ** Math.min(attempts++, 5)));
+      };
     };
-
-    wsRef.current = ws;
-    return () => ws.close();
+    const visibility = () => {
+      clearTimeout(retry);
+      const ws = wsRef.current; wsRef.current = null; ws?.close(); setWsConnected(false);
+      if (!document.hidden) connect();
+    };
+    connect(); document.addEventListener("visibilitychange", visibility);
+    return () => { stopped = true; clearTimeout(retry); wsRef.current?.close(); document.removeEventListener("visibilitychange", visibility); };
   }, []);
 
   // 24h change for all 8 coins from CoinGecko (single call, polled every 60s).
   const fetchChanges = useCallback(async () => {
     try {
       const ids = COINS.map((c) => c.cgId).join(",");
-      const res = await fetch(
+      const res = await fetchPublic(
         `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`,
       );
       if (!res.ok) return;
@@ -506,19 +516,7 @@ function CryptoHubWidget() {
     }
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    const run = () => {
-      if (!cancelled) void fetchChanges();
-    };
-    const initialId = window.setTimeout(run, 0);
-    const intervalId = window.setInterval(run, 60000);
-    return () => {
-      cancelled = true;
-      window.clearTimeout(initialId);
-      window.clearInterval(intervalId);
-    };
-  }, [fetchChanges]);
+  useVisiblePolling(fetchChanges, 60000);
 
   const formatPrice = (price: number) => {
     if (price === 0) return "--";
@@ -543,6 +541,7 @@ function CryptoHubWidget() {
 
   return (
     <Card className="col-span-1 md:col-span-2 lg:col-span-3">
+      <p role="status" className="mb-3 text-xs text-neutral-500">{lastPriceAt === null ? "Waiting for a price update" : priceNow - lastPriceAt > 15000 ? "Prices are stale · reconnecting when visible" : "Last price " + Math.max(0, Math.round((priceNow - lastPriceAt) / 1000)) + "s ago"}</p>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold flex items-center gap-2">
           <span className="text-xl">&#9889;</span> Crypto Hub
@@ -606,14 +605,18 @@ function WeatherWidget() {
   const [lastFetched, setLastFetched] = useState<Date | null>(null);
   const nowMs = useRelativeTimeTicker();
 
-  const fetchWeather = useCallback(async () => {
+  const weatherRequest = useRef(0);
+  const fetchWeather = useCallback(async (signal: AbortSignal) => {
+    const request = ++weatherRequest.current;
     setLoading(true);
     try {
-      const res = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${selectedCity.lat}&longitude=${selectedCity.lon}&current_weather=true`
+      const res = await fetchPublic(
+        `https://api.open-meteo.com/v1/forecast?latitude=${selectedCity.lat}&longitude=${selectedCity.lon}&current_weather=true`, { signal }
       );
+      if (request !== weatherRequest.current || signal.aborted) return;
       if (res.ok) {
         const data = await res.json();
+        if (request !== weatherRequest.current || signal.aborted) return;
         setWeather(data.current_weather);
         setLastFetched(new Date());
         setError(null);
@@ -621,17 +624,13 @@ function WeatherWidget() {
         setError("Failed to fetch weather");
       }
     } catch {
-      setError("Failed to fetch weather");
+      if (!signal.aborted && request === weatherRequest.current) setError("Failed to fetch weather");
     } finally {
-      setLoading(false);
+      if (!signal.aborted && request === weatherRequest.current) setLoading(false);
     }
   }, [selectedCity]);
 
-  useEffect(() => {
-    fetchWeather();
-    const interval = setInterval(fetchWeather, 300000); // 5 minutes
-    return () => clearInterval(interval);
-  }, [fetchWeather]);
+  useVisiblePolling(fetchWeather, 300000);
 
   const weatherInfo = weather ? WEATHER_CODES[weather.weathercode] || { desc: "Unknown", icon: "cloud" } : null;
 
@@ -650,6 +649,10 @@ function WeatherWidget() {
         onChange={(e) => {
           const city = CITIES.find((c) => c.name === e.target.value);
           if (city) {
+            weatherRequest.current++;
+            setWeather(null);
+            setLastFetched(null);
+            setLoading(true);
             setSelectedCity(city);
             localStorage.setItem("pulse-weather-city", city.name);
           }
@@ -697,14 +700,14 @@ function HackerNewsWidget() {
 
   const fetchStories = useCallback(async () => {
     try {
-      const res = await fetch("https://hacker-news.firebaseio.com/v0/topstories.json");
+      const res = await fetchPublic("https://hacker-news.firebaseio.com/v0/topstories.json");
       if (!res.ok) throw new Error("Failed to fetch");
 
       const ids: number[] = await res.json();
       const top5 = ids.slice(0, 5);
 
       const storyPromises = top5.map((id) =>
-        fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`).then((r) => r.json())
+        fetchPublic(`https://hacker-news.firebaseio.com/v0/item/${id}.json`).then((r) => r.json())
       );
 
       const fetchedStories = await Promise.all(storyPromises);
@@ -717,11 +720,7 @@ function HackerNewsWidget() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchStories();
-    const interval = setInterval(fetchStories, 300000); // 5 minutes
-    return () => clearInterval(interval);
-  }, [fetchStories]);
+  useVisiblePolling(fetchStories, 300000);
 
   return (
     <Card>
@@ -772,7 +771,7 @@ function EarthquakeWidget() {
   const fetchQuakes = useCallback(async () => {
     try {
       // USGS API - significant earthquakes in the past day
-      const res = await fetch(
+      const res = await fetchPublic(
         "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson"
       );
       if (!res.ok) throw new Error("Failed to fetch");
@@ -795,11 +794,7 @@ function EarthquakeWidget() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchQuakes();
-    const interval = setInterval(fetchQuakes, 300000); // 5 minutes
-    return () => clearInterval(interval);
-  }, [fetchQuakes]);
+  useVisiblePolling(fetchQuakes, 300000);
 
   const getMagnitudeColor = (mag: number) => {
     if (mag >= 6) return "bg-red-500";
@@ -878,7 +873,7 @@ function GithubTrendingWidget() {
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
       const dateStr = oneWeekAgo.toISOString().split("T")[0];
 
-      const res = await fetch(
+      const res = await fetchPublic(
         `https://api.github.com/search/repositories?q=created:>${dateStr}&sort=stars&order=desc&per_page=5`
       );
 
@@ -906,11 +901,7 @@ function GithubTrendingWidget() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchTrending();
-    const interval = setInterval(fetchTrending, 600000); // 10 minutes
-    return () => clearInterval(interval);
-  }, [fetchTrending]);
+  useVisiblePolling(fetchTrending, 600000);
 
   const formatStars = (stars: number) => {
     if (stars >= 1000) return `${(stars / 1000).toFixed(1)}k`;
@@ -1119,7 +1110,7 @@ type FxSource = "Frankfurter" | "ExchangeRate API";
 
 async function fetchFrankfurterRates(): Promise<{ date: Date; rates: Record<string, number>; source: FxSource }> {
   const codes = FX_CODES.join(",");
-  const res = await fetch(`${FRANKFURTER_BASE_URL}?base=USD&symbols=${codes}`);
+  const res = await fetchPublic(`${FRANKFURTER_BASE_URL}?base=USD&symbols=${codes}`);
   if (!res.ok) throw new Error("Frankfurter fetch failed");
   const data = await res.json();
   return {
@@ -1130,7 +1121,7 @@ async function fetchFrankfurterRates(): Promise<{ date: Date; rates: Record<stri
 }
 
 async function fetchFallbackFxRates(): Promise<{ date: Date; rates: Record<string, number>; source: FxSource }> {
-  const res = await fetch(FX_FALLBACK_URL);
+  const res = await fetchPublic(FX_FALLBACK_URL);
   if (!res.ok) throw new Error("Fallback FX fetch failed");
   const data = await res.json();
   if (data.result !== "success") throw new Error("Fallback FX response failed");
@@ -1176,12 +1167,7 @@ function FxPulseWidget() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchRates();
-    // ECB updates rates once per business day; poll every 10 min just in case.
-    const interval = setInterval(fetchRates, 10 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [fetchRates]);
+  useVisiblePolling(fetchRates, 10 * 60 * 1000);
 
   const formatRate = (r: number) => {
     if (r >= 100) return r.toFixed(2);
@@ -1260,7 +1246,7 @@ function ISSTrackerWidget() {
   const fetchISS = useCallback(async () => {
     try {
       // Using wheretheiss.at API (CORS-friendly)
-      const res = await fetch("https://api.wheretheiss.at/v1/satellites/25544");
+      const res = await fetchPublic("https://api.wheretheiss.at/v1/satellites/25544");
       if (!res.ok) throw new Error("Failed to fetch");
 
       const data = await res.json();
@@ -1278,11 +1264,7 @@ function ISSTrackerWidget() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchISS();
-    const interval = setInterval(fetchISS, 5000); // Every 5 seconds
-    return () => clearInterval(interval);
-  }, [fetchISS]);
+  useVisiblePolling(fetchISS, 5000);
 
   const getLocationDescription = (lat: number, lon: number) => {
     const ns = lat >= 0 ? "N" : "S";
@@ -1374,7 +1356,7 @@ function RocketLaunchesWidget() {
 
   const fetchLaunches = useCallback(async () => {
     try {
-      const res = await fetch(
+      const res = await fetchPublic(
         "https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=5&mode=list"
       );
 
@@ -1408,11 +1390,7 @@ function RocketLaunchesWidget() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchLaunches();
-    const interval = setInterval(fetchLaunches, 300000); // 5 minutes
-    return () => clearInterval(interval);
-  }, [fetchLaunches]);
+  useVisiblePolling(fetchLaunches, 300000);
 
   // Countdown timer for next launch
   useEffect(() => {
@@ -1532,7 +1510,7 @@ function GitHubActivityWidget() {
 
   const fetchEvents = useCallback(async () => {
     try {
-      const res = await fetch("https://api.github.com/events?per_page=30");
+      const res = await fetchPublic("https://api.github.com/events?per_page=30");
       if (res.status === 403) {
         setError("Rate limited");
         return;
@@ -1566,11 +1544,7 @@ function GitHubActivityWidget() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchEvents();
-    const interval = setInterval(fetchEvents, 60000); // 60 seconds to avoid rate limits
-    return () => clearInterval(interval);
-  }, [fetchEvents]);
+  useVisiblePolling(fetchEvents, 60000);
 
   const getEventIcon = (type: string) => {
     switch (type) {

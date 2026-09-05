@@ -159,16 +159,16 @@ export function grayscaleMatrixToRgba(matrix: Matrix): Uint8ClampedArray {
   return rgba;
 }
 
-export function signedMatrixToRgba(matrix: Matrix): Uint8ClampedArray {
+export function signedMatrixToRgba(matrix: Matrix, scale?: number): Uint8ClampedArray {
   const height = matrix.length;
   const width = matrix[0]?.length ?? 0;
-  const maxMagnitude = Math.max(1, ...matrix.flat().map((value) => Math.abs(value)));
+  const maxMagnitude = scale ?? Math.max(1, ...matrix.flat().map((value) => Math.abs(value)));
   const rgba = new Uint8ClampedArray(width * height * 4);
 
   for (let row = 0; row < height; row++) {
     for (let col = 0; col < width; col++) {
       const index = (row * width + col) * 4;
-      const value = matrix[row][col] / maxMagnitude;
+      const value = Math.max(-1, Math.min(1, matrix[row][col] / maxMagnitude));
       const strength = Math.abs(value);
       const base = 18 * (1 - strength);
       rgba[index] = clampByte(base + (value >= 0 ? 245 * strength : 24 * strength));

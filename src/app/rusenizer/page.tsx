@@ -3,6 +3,8 @@
 import { useReducer, useEffect, useCallback, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import type { Tiktoken } from "tiktoken";
+import benchmark from "@/content/tokenizer-benchmark.generated.json";
+import { byteBoundaries, characterHint, tokenDisplay } from "./bytes";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES & CONSTANTS
@@ -30,6 +32,7 @@ interface TokenInfo {
 interface GPT4TokenInfo {
   text: string;
   id: number;
+  bytes: number[];
 }
 
 interface TokenizerInterface {
@@ -69,7 +72,6 @@ const EXAMPLE_CATEGORIES: Record<ExampleCategory, { text: string; label: string 
   ],
 };
 
-type DetectedLanguage = "turkish" | "english" | "mixed" | "unknown";
 
 interface BatchResult {
   text: string;
@@ -155,35 +157,12 @@ const initialState: RusenizerState = {
 // UTILITY FUNCTIONS
 // ─────────────────────────────────────────────────────────────────────────────
 
-function detectLanguage(text: string): DetectedLanguage {
-  if (!text.trim()) return "unknown";
-
-  const turkishChars = /[çğıöşüÇĞİÖŞÜ]/g;
-  const turkishMatches = (text.match(turkishChars) || []).length;
-  const ratio = turkishMatches / text.length;
-
-  if (ratio > 0.02) return "turkish";
-  if (ratio === 0 && /^[a-zA-Z0-9\s.,!?'"():;\-_]+$/.test(text)) return "english";
-  if (turkishMatches > 0) return "mixed";
-  return "unknown";
-}
-
-function computeTokenBoundaries(tokens: { text: string }[]): Set<number> {
-  const boundaries = new Set<number>();
-  let pos = 0;
-  for (const token of tokens) {
-    pos += token.text.length;
-    boundaries.add(pos);
-  }
-  return boundaries;
-}
-
 function findDivergentBoundaries(
   rusenTokens: TokenInfo[],
   gpt4Tokens: GPT4TokenInfo[]
 ): { rusenDivergent: Set<number>; gptDivergent: Set<number> } {
-  const rusenBoundaries = computeTokenBoundaries(rusenTokens);
-  const gptBoundaries = computeTokenBoundaries(gpt4Tokens);
+  const rusenBoundaries = byteBoundaries(rusenTokens);
+  const gptBoundaries = byteBoundaries(gpt4Tokens);
 
   const rusenDivergent = new Set<number>();
   const gptDivergent = new Set<number>();
@@ -204,68 +183,9 @@ function findDivergentBoundaries(
 
 function SkeletonLoader() {
   return (
-    <div className="max-w-6xl mx-auto px-4 py-10 sm:py-12 md:py-16 animate-pulse">
-      {/* Header skeleton */}
-      <div className="h-10 w-48 bg-neutral-200 dark:bg-neutral-800 rounded mb-4" />
-      <div className="h-6 w-96 bg-neutral-200 dark:bg-neutral-800 rounded mb-8" />
-
-      {/* Category tabs skeleton */}
-      <div className="flex gap-2 mb-6">
-        {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="h-8 w-20 bg-neutral-200 dark:bg-neutral-800 rounded-full" />
-        ))}
-      </div>
-
-      {/* Example buttons skeleton */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div key={i} className="h-8 w-32 bg-neutral-200 dark:bg-neutral-800 rounded-full" />
-        ))}
-      </div>
-
-      {/* Input skeleton */}
-      <div className="h-24 w-full bg-neutral-200 dark:bg-neutral-800 rounded-lg mb-8" />
-
-      {/* Results grid skeleton */}
-      <div className="grid md:grid-cols-2 gap-4 sm:gap-6 mb-8">
-        <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-6">
-          <div className="flex justify-between mb-4">
-            <div className="h-6 w-32 bg-neutral-200 dark:bg-neutral-800 rounded" />
-            <div className="h-8 w-24 bg-neutral-200 dark:bg-neutral-800 rounded" />
-          </div>
-          <div className="flex flex-wrap gap-1 min-h-[60px]">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="h-8 w-16 bg-neutral-200 dark:bg-neutral-800 rounded" />
-            ))}
-          </div>
-        </div>
-        <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-6">
-          <div className="flex justify-between mb-4">
-            <div className="h-6 w-40 bg-neutral-200 dark:bg-neutral-800 rounded" />
-            <div className="h-8 w-24 bg-neutral-200 dark:bg-neutral-800 rounded" />
-          </div>
-          <div className="flex flex-wrap gap-1 min-h-[60px]">
-            {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-              <div key={i} className="h-8 w-12 bg-neutral-200 dark:bg-neutral-800 rounded" />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Stats skeleton */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-4 text-center">
-            <div className="h-8 w-12 mx-auto bg-neutral-200 dark:bg-neutral-800 rounded mb-2" />
-            <div className="h-4 w-20 mx-auto bg-neutral-200 dark:bg-neutral-800 rounded" />
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-8 text-center text-neutral-500">
-        <span className="inline-block w-4 h-4 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin mr-2" />
-        Loading tokenizers...
-      </div>
+    <div className="max-w-6xl mx-auto px-4 py-10 sm:py-12 md:py-16">
+      <h1 className="text-3xl sm:text-4xl font-bold mb-4">Rusenizer</h1>
+      <p role="status" className="text-neutral-500">Loading tokenizers…</p>
     </div>
   );
 }
@@ -386,7 +306,7 @@ function RusenizerPageInner() {
         URL.revokeObjectURL(blobUrl);
 
         // Initialize WASM
-        await wasmModule.default(wasmBytes);
+        await wasmModule.default({ module_or_path: wasmBytes });
 
         // Load mergeable ranks
         const response = await fetch("/models/v1/mergeable_ranks.json");
@@ -426,7 +346,7 @@ function RusenizerPageInner() {
     if (tokenizerRef.current) {
       try {
         const infoJson = tokenizerRef.current.encode_with_info(text);
-        rusenTokens = JSON.parse(infoJson);
+        rusenTokens = (JSON.parse(infoJson) as TokenInfo[]).map((token) => ({ ...token, text: tokenDisplay(token.bytes) }));
       } catch (err) {
         console.error("Rusenizer tokenization error:", err);
       }
@@ -438,8 +358,8 @@ function RusenizerPageInner() {
         const ids = gpt4EncoderRef.current.encode(text);
         for (const id of ids) {
           const bytes = gpt4EncoderRef.current.decode_single_token_bytes(id);
-          const tokenText = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
-          gpt4Tokens.push({ text: tokenText, id });
+          const tokenBytes = Array.from(bytes);
+          gpt4Tokens.push({ text: tokenDisplay(tokenBytes), id, bytes: tokenBytes });
         }
       } catch (err) {
         console.error("GPT-4 tokenization error:", err);
@@ -499,19 +419,18 @@ function RusenizerPageInner() {
     gpt4TokenCount > 0
       ? (((gpt4TokenCount - rusenTokenCount) / gpt4TokenCount) * 100).toFixed(1)
       : null;
-  const detectedLanguage = detectLanguage(state.inputText);
   const { rusenDivergent, gptDivergent } = findDivergentBoundaries(state.tokens, state.gpt4Tokens);
 
   // Calculate cumulative character positions for diff highlighting
   let rusenCumulativePos = 0;
   const rusenTokensWithPos = state.tokens.map((token) => {
-    rusenCumulativePos += token.text.length;
+    rusenCumulativePos += token.bytes.length;
     return { ...token, endPos: rusenCumulativePos };
   });
 
   let gptCumulativePos = 0;
   const gptTokensWithPos = state.gpt4Tokens.map((token) => {
-    gptCumulativePos += token.text.length;
+    gptCumulativePos += token.bytes.length;
     return { ...token, endPos: gptCumulativePos };
   });
 
@@ -531,7 +450,7 @@ function RusenizerPageInner() {
     return (
       <div className="max-w-6xl mx-auto px-4 py-10 sm:py-12 md:py-16">
         <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-red-500">Error: {state.error}</div>
+          <div><h1 className="text-3xl font-bold mb-4">Rusenizer</h1><p role="alert" className="text-red-500">Error: {state.error}</p></div>
         </div>
       </div>
     );
@@ -547,9 +466,15 @@ function RusenizerPageInner() {
       <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 mb-6 sm:mb-8 max-w-2xl text-pretty">
         A Turkish-optimized BPE tokenizer trained on Turkish Wikipedia. Uses{" "}
         <span className="font-mono text-sm">{state.vocabSize.toLocaleString()}</span> tokens
-        and achieves ~45% fewer tokens than GPT-4 on Turkish text.
+        Compare its actual token count with cl100k_base on your text.
       </p>
 
+      <details className="mb-6 border border-[var(--line)] p-4 text-sm">
+        <summary className="cursor-pointer">Measured comparison: {benchmark.rows.length} bundled examples</summary>
+        <p className="mt-3">{benchmark.totalRusen} Rusenizer tokens vs {benchmark.totalBaseline} {benchmark.baseline} tokens: {benchmark.reductionPercent.toFixed(2)}% reduction on this corpus only. {benchmark.scope}</p>
+        <div className="mt-3 overflow-x-auto"><table className="w-full text-left"><thead><tr><th>Text</th><th>Rusenizer</th><th>cl100k_base</th></tr></thead><tbody>{benchmark.rows.map((row) => <tr key={row.text}><td className="py-1 pr-3">{row.text}</td><td>{row.rusen}</td><td>{row.baseline}</td></tr>)}</tbody></table></div>
+        <p className="mt-3 break-all text-xs text-neutral-500">Corpus SHA-256: {benchmark.corpusSha256}. Baseline library: tiktoken {benchmark.tiktokenVersion}. Reproduce with npm run benchmark:tokenizer.</p>
+      </details>
       {/* Mode Toggle */}
       <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-6">
         <button
@@ -616,26 +541,7 @@ function RusenizerPageInner() {
         </div>
       </div>
 
-      {/* Language Detection Hint */}
-      {state.inputText && (
-        <div className="mb-4 text-sm">
-          {detectedLanguage === "turkish" && (
-            <span className="text-green-600 dark:text-green-400">
-              Detected: Turkish - Rusenizer is optimized for this!
-            </span>
-          )}
-          {detectedLanguage === "english" && (
-            <span className="text-amber-600 dark:text-amber-400">
-              Detected: English - Rusenizer still works but savings may be lower
-            </span>
-          )}
-          {detectedLanguage === "mixed" && (
-            <span className="text-blue-600 dark:text-blue-400">
-              Detected: Mixed Turkish/English
-            </span>
-          )}
-        </div>
-      )}
+      <p className="mb-4 text-sm text-neutral-500">{characterHint(state.inputText)} Partial UTF-8 tokens appear as hexadecimal bytes in ⟦brackets⟧; highlighted boundaries use byte positions.</p>
 
       {/* Input */}
       <div className="mb-8">
@@ -655,8 +561,7 @@ function RusenizerPageInner() {
         <div className="text-center py-12 mb-8 border border-dashed border-neutral-300 dark:border-neutral-700 rounded-lg">
           <p className="text-neutral-500 mb-2 text-lg">Type Turkish text to see the magic!</p>
           <p className="text-sm text-neutral-400 max-w-md mx-auto">
-            Agglutinative languages like Turkish often need 40-50% fewer tokens
-            with a specialized tokenizer. Try &quot;göremeyecekmişsiniz&quot; to see how
+            Token savings depend on the input and vocabulary. Try &quot;göremeyecekmişsiniz&quot; to see how
             Rusenizer handles complex suffixes.
           </p>
         </div>

@@ -3,11 +3,16 @@ import { describe, expect, it } from "vitest";
 import {
   DEFAULT_OPTIMIZER_CONFIGS,
   LANDSCAPES,
-  finiteDifferenceGradient,
   simulateOptimizer,
 } from "./math";
 
 describe("optimizer racetrack math", () => {
+  it("distinguishes a display exit, a stationary point, and invalid arithmetic", () => {
+    const config = DEFAULT_OPTIMIZER_CONFIGS.sgd;
+    expect(simulateOptimizer("sgd", { x: 2, y: 1 }, { ...config, learningRate: 10 }, 10, LANDSCAPES.bowl)).toMatchObject({ diverged: false, stopReason: "out-of-view" });
+    expect(simulateOptimizer("sgd", { x: 0, y: 0 }, config, 10, LANDSCAPES.bowl).stopReason).toBe("stationary");
+    expect(simulateOptimizer("sgd", { x: 2, y: 1 }, { ...config, learningRate: Infinity }, 10, LANDSCAPES.bowl)).toMatchObject({ diverged: true, stopReason: "non-finite" });
+  });
   it("matches finite-difference gradients for every landscape", () => {
     (Object.values(LANDSCAPES)).forEach((landscape) => {
       const point = {
@@ -15,7 +20,11 @@ describe("optimizer racetrack math", () => {
         y: landscape.defaultStart.y * 0.53,
       };
       const analytic = landscape.gradient(point);
-      const numerical = finiteDifferenceGradient(point, landscape);
+      const epsilon = 1e-5;
+      const numerical = {
+        x: (landscape.loss({ ...point, x: point.x + epsilon }) - landscape.loss({ ...point, x: point.x - epsilon })) / (2 * epsilon),
+        y: (landscape.loss({ ...point, y: point.y + epsilon }) - landscape.loss({ ...point, y: point.y - epsilon })) / (2 * epsilon),
+      };
       expect(analytic.x).toBeCloseTo(numerical.x, 7);
       expect(analytic.y).toBeCloseTo(numerical.y, 7);
     });

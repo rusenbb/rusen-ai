@@ -12,6 +12,7 @@ export type DiscreteTrial = {
   // user pressed. Snapshotted here so the pulse + lifetime tally reflect what
   // the user actually saw, not whichever predictor leads after the press.
   shownGuess: DiscreteSymbol;
+  hintShown: boolean;
   predictions: Record<string, DiscretePrediction>;
 };
 

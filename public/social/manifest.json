@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "inputFingerprint": "75ee566a37ada9b1038020036661c510aa1a964bae87a024f9970f3b4142c242",
+  "inputFingerprint": "e756a8182ee043af4b1d4c0ba534448d5c0fda314f47e02faa2f338704e4119c",
   "assets": [
     {
       "route": "/",
@@ -64,6 +64,22 @@
       "width": 1200,
       "height": 630,
       "bytes": 27613,
+      "format": "png"
+    },
+    {
+      "route": "/sampling-lab",
+      "image": "/social/projects/sampling-lab.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 25932,
+      "format": "png"
+    },
+    {
+      "route": "/decision-boundary",
+      "image": "/social/projects/decision-boundary.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 28294,
       "format": "png"
     },
     {
@@ -151,7 +167,7 @@
       "image": "/social/projects/rusenizer.png",
       "width": 1200,
       "height": 630,
-      "bytes": 24255,
+      "bytes": 24595,
       "format": "png"
     },
     {
@@ -167,7 +183,7 @@
       "image": "/social/projects/outguess.png",
       "width": 1200,
       "height": 630,
-      "bytes": 23899,
+      "bytes": 23590,
       "format": "png"
     },
     {
@@ -187,11 +203,27 @@
       "format": "png"
     },
     {
+      "route": "/steering-llms",
+      "image": "/social/projects/steering-llms.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 24842,
+      "format": "png"
+    },
+    {
       "route": "/sentence-surgeon",
       "image": "/social/projects/sentence-surgeon.png",
       "width": 1200,
       "height": 630,
       "bytes": 25911,
+      "format": "png"
+    },
+    {
+      "route": "/rusen-gram",
+      "image": "/social/projects/rusen-gram.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 24480,
       "format": "png"
     },
     {

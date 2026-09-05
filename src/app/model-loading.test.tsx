@@ -1,7 +1,8 @@
-import { act, renderHook } from "@testing-library/react";
+import { act, fireEvent, render, renderHook, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useClassifier } from "./classify-anything/hooks/useClassifier";
+import ClassifyAnythingPage from "./classify-anything/page";
 import { useEmbedding } from "./embedding-explorer/hooks/useEmbedding";
 import { useSAM } from "./segment-anything/hooks/useSAM";
 import { useFillMask } from "./sentence-surgeon/hooks/useFillMask";
@@ -25,6 +26,20 @@ vi.mock("@huggingface/transformers", () => ({
 describe("browser model loading", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it("keeps classification inputs locked until inference finishes", async () => {
+    let resolve!: (output: { labels: string[]; scores: number[] }) => void;
+    const inference = vi.fn(() => new Promise((done) => { resolve = done; }));
+    transformerMocks.pipeline.mockResolvedValueOnce(inference);
+    render(<ClassifyAnythingPage />);
+    fireEvent.change(screen.getByLabelText("Text to Classify"), { target: { value: "A useful result" } });
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: /Classify.*Cmd/ })); });
+    expect(screen.getByLabelText("Text to Classify")).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Clear" })).toBeDisabled();
+    await act(async () => resolve({ labels: ["positive", "negative"], scores: [0.9, 0.1] }));
+    expect(screen.getByLabelText("Text to Classify")).toBeEnabled();
+    expect(inference).toHaveBeenCalledOnce();
   });
 
   it("does not initialize any model just because its hook mounted", async () => {

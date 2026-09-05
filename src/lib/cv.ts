@@ -291,8 +291,6 @@ const LABELS_BY_LOCALE: Record<CVLocale, CVLabels> = {
   ja: LABELS_JA,
 };
 
-export const cvData = DATA_BY_LOCALE.en;
-
 export function getCvData(locale: CVLocale = "en"): CVData {
   return DATA_BY_LOCALE[locale];
 }

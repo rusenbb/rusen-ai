@@ -209,7 +209,7 @@ export default function OptimizerRacetrackPage() {
     [effectiveConfigs, landscape, start],
   );
   const effectiveStep = Math.min(step, MAX_STEPS);
-  const anyDiverged = trajectories.some((trajectory) => trajectory.diverged);
+  const anyDiverged = trajectories.some((trajectory) => trajectory.stopStep <= effectiveStep && trajectory.stopReason === "non-finite");
   const isRacing = racing && effectiveStep < MAX_STEPS;
   const resetRace = () => { setStep(0); setRacing(false); };
 
@@ -224,9 +224,8 @@ export default function OptimizerRacetrackPage() {
   const updateSharedRate = (value: number) => { setSharedLearningRate(value); resetRace(); };
   const chooseLandscape = (next: LossLandscape) => { setLandscapeId(next.id); setStart({ ...next.defaultStart }); resetRace(); };
   const restoreSettings = () => { setTunedConfigs(cloneOptimizerConfigs()); setSharedLearningRate(0.07); setStart({ ...landscape.defaultStart }); resetRace(); };
-  const statusFor = (trajectory: Trajectory): "diverged" | "finished" | "racing" | "paused" => {
-    if (trajectory.diverged) return "diverged";
-    if (effectiveStep >= MAX_STEPS) return "finished";
+  const statusFor = (trajectory: Trajectory): string => {
+    if (effectiveStep >= trajectory.stopStep) return ({ "non-finite": "diverged", "out-of-view": "out of view", stationary: "stationary", "step-limit": "step limit" } as const)[trajectory.stopReason];
     return isRacing ? "racing" : "paused";
   };
 
@@ -278,7 +277,7 @@ export default function OptimizerRacetrackPage() {
               {comparisonMode === "matched" && <NumberControl label="shared learning rate η" value={sharedLearningRate} min={0.001} max={0.3} step={0.001} onChange={updateSharedRate} />}
             </div>
             <label className="mt-5 block font-mono text-xs uppercase tracking-[0.14em] text-neutral-500">clock <span className="ml-2 text-cyan-700 dark:text-cyan-300">{effectiveStep} / {MAX_STEPS}</span><input type="range" min="0" max={MAX_STEPS} step="1" value={effectiveStep} onChange={(event) => { setRacing(false); setStep(Number(event.target.value)); }} className="mt-3 block w-full accent-cyan-500" /></label>
-            {anyDiverged && <p className="mt-4 border border-red-500/30 bg-red-500/5 px-3 py-2 text-xs text-red-700 dark:text-red-300">At least one trace left the displayed terrain. That is a genuine consequence of its current settings, not a clipped animation.</p>}
+            {anyDiverged && <p className="mt-4 border border-red-500/30 bg-red-500/5 px-3 py-2 text-xs text-red-700 dark:text-red-300">At least one trace produced a non-finite loss. Leaving the display bounds alone is reported separately as out of view.</p>}
           </DemoPanel>
           <SettingsPanel focused={focused} config={tunedConfigs[focused]} comparisonMode={comparisonMode} sharedLearningRate={sharedLearningRate} onSharedLearningRate={updateSharedRate} onConfigChange={updateFocusedConfig} />
           <button type="button" onClick={restoreSettings} className="w-full border border-[var(--line)] px-3 py-2 font-mono text-xs uppercase tracking-[0.14em] text-neutral-500 transition hover:border-cyan-500/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500">Restore default settings for this terrain</button>
@@ -287,7 +286,7 @@ export default function OptimizerRacetrackPage() {
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(340px,0.85fr)]">
         <DemoPanel title="Live lap board" description="The highlighted row is the path drawn brightest on the terrain." padding="md">
-          <div className="overflow-x-auto"><table className="min-w-[660px] w-full border-collapse font-mono text-xs"><thead className="border-b border-[var(--line)] text-left text-[10px] uppercase tracking-[0.14em] text-neutral-500"><tr><th className="pb-2 font-normal">optimizer</th><th className="pb-2 font-normal">learning rate</th><th className="pb-2 font-normal">current loss</th><th className="pb-2 font-normal">best loss</th><th className="pb-2 text-right font-normal">status</th></tr></thead><tbody>{trajectories.map((trajectory) => { const meta = OPTIMIZER_META[trajectory.name]; const currentLoss = lossAt(trajectory, effectiveStep); const best = Math.min(...trajectory.losses.slice(0, Math.min(effectiveStep + 1, trajectory.losses.length))); const status = statusFor(trajectory); const statusClass = status === "diverged" ? "text-red-600 dark:text-red-400" : status === "finished" ? "text-emerald-600 dark:text-emerald-400" : status === "racing" ? "text-cyan-700 dark:text-cyan-300" : "text-neutral-500"; return <tr key={trajectory.name} className={`border-b border-[var(--line)] ${focused === trajectory.name ? "bg-[color-mix(in_srgb,var(--foreground)_4%,transparent)]" : ""}`}><td className="py-2.5"><button type="button" onClick={() => setFocused(trajectory.name)} className="flex items-center gap-2 hover:text-cyan-700 dark:hover:text-cyan-300"><span className="h-2 w-2 rounded-full" style={{ backgroundColor: meta.color }} /><span>{meta.label}</span></button></td><td className="py-2.5 tabular-nums text-neutral-500">{effectiveConfigs[trajectory.name].learningRate.toFixed(3)}</td><td className="py-2.5 tabular-nums">{currentLoss.toFixed(5)}</td><td className="py-2.5 tabular-nums text-neutral-500">{best.toFixed(5)}</td><td className={`py-2.5 text-right uppercase tracking-[0.12em] ${statusClass}`}>{status}</td></tr>; })}</tbody></table></div>
+          <div className="overflow-x-auto"><table className="min-w-[660px] w-full border-collapse font-mono text-xs"><thead className="border-b border-[var(--line)] text-left text-[10px] uppercase tracking-[0.14em] text-neutral-500"><tr><th className="pb-2 font-normal">optimizer</th><th className="pb-2 font-normal">learning rate</th><th className="pb-2 font-normal">current loss</th><th className="pb-2 font-normal">best loss</th><th className="pb-2 text-right font-normal">status</th></tr></thead><tbody>{trajectories.map((trajectory) => { const meta = OPTIMIZER_META[trajectory.name]; const currentLoss = lossAt(trajectory, effectiveStep); const best = Math.min(...trajectory.losses.slice(0, Math.min(effectiveStep + 1, trajectory.losses.length))); const status = statusFor(trajectory); const statusClass = status === "diverged" ? "text-red-600 dark:text-red-400" : status === "stationary" ? "text-emerald-600 dark:text-emerald-400" : status === "racing" ? "text-cyan-700 dark:text-cyan-300" : "text-neutral-500"; return <tr key={trajectory.name} className={`border-b border-[var(--line)] ${focused === trajectory.name ? "bg-[color-mix(in_srgb,var(--foreground)_4%,transparent)]" : ""}`}><td className="py-2.5"><button type="button" onClick={() => setFocused(trajectory.name)} className="flex items-center gap-2 hover:text-cyan-700 dark:hover:text-cyan-300"><span className="h-2 w-2 rounded-full" style={{ backgroundColor: meta.color }} /><span>{meta.label}</span></button></td><td className="py-2.5 tabular-nums text-neutral-500">{effectiveConfigs[trajectory.name].learningRate.toFixed(3)}</td><td className="py-2.5 tabular-nums">{currentLoss.toFixed(5)}</td><td className="py-2.5 tabular-nums text-neutral-500">{best.toFixed(5)}</td><td className={`py-2.5 text-right uppercase tracking-[0.12em] ${statusClass}`}>{status}</td></tr>; })}</tbody></table></div>
         </DemoPanel>
         <DemoPanel title="What this terrain is testing" padding="md">
           <div className="border border-cyan-500/25 bg-cyan-500/5 p-3 font-mono text-sm text-cyan-800 dark:text-cyan-200">{landscape.equation}</div>
@@ -296,7 +295,7 @@ export default function OptimizerRacetrackPage() {
         </DemoPanel>
       </div>
 
-      <DemoFootnote align="left">This is a deterministic analytical loss, not a model trained in the browser. It isolates optimizer behavior without a dataset or network obscuring the geometry.</DemoFootnote>
+      <DemoFootnote align="left">Stationary means gradient norm below 0.0001 and loss change below 0.00000001; it is not proof of a minimum. Step limit only means the update budget ended. This is a deterministic analytical loss, not a model trained in the browser. It isolates optimizer behavior without a dataset or network obscuring the geometry.</DemoFootnote>
     </DemoPage>
   );
 }

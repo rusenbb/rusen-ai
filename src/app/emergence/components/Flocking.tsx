@@ -1,5 +1,7 @@
 "use client";
 
+import { useSimulation } from "./SimulationFrame";
+
 import {
   useCallback,
   useEffect,
@@ -63,13 +65,13 @@ const PRESETS: Preset[] = [
   },
 ];
 
-function makeBoids(count: number): Boid[] {
+function makeBoids(count: number, random: () => number): Boid[] {
   const boids: Boid[] = [];
   for (let i = 0; i < count; i++) {
-    const angle = Math.random() * Math.PI * 2;
+    const angle = random() * Math.PI * 2;
     boids.push({
-      x: Math.random() * WORLD_W,
-      y: Math.random() * WORLD_H,
+      x: random() * WORLD_W,
+      y: random() * WORLD_H,
       vx: Math.cos(angle) * MAX_SPEED * 0.6,
       vy: Math.sin(angle) * MAX_SPEED * 0.6,
     });
@@ -104,6 +106,7 @@ function steerToward(
 }
 
 export default function FlockingDemo() {
+  const { active, random } = useSimulation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const boidsRef = useRef<Boid[]>([]);
   const predatorRef = useRef<{ x: number; y: number } | null>(null);
@@ -123,8 +126,8 @@ export default function FlockingDemo() {
 
   // Reseed on count change.
   useEffect(() => {
-    boidsRef.current = makeBoids(count);
-  }, [count]);
+    boidsRef.current = makeBoids(count, random);
+  }, [count, random]);
 
   // Snap sliders to preset when preset changes.
   useEffect(() => {
@@ -135,6 +138,7 @@ export default function FlockingDemo() {
 
   // Animation loop.
   useEffect(() => {
+    if (!active) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -297,7 +301,7 @@ export default function FlockingDemo() {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", resize);
     };
-  }, [paused, separation, alignment, cohesion]);
+  }, [paused, separation, alignment, cohesion, active]);
 
   // Predator pointer tracking
   useEffect(() => {
@@ -326,8 +330,8 @@ export default function FlockingDemo() {
   }, [predatorMode]);
 
   const reset = useCallback(() => {
-    boidsRef.current = makeBoids(count);
-  }, [count]);
+    boidsRef.current = makeBoids(count, random);
+  }, [count, random]);
 
   return (
     <div className="rounded-2xl border border-neutral-300 dark:border-neutral-800 bg-white/80 dark:bg-neutral-950/60 p-4 sm:p-5 shadow-[0_12px_32px_rgba(15,23,42,0.05)]">

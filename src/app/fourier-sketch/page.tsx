@@ -13,6 +13,7 @@ import { DemoFootnote, DemoHeader, DemoPage, DemoPanel } from "@/components/ui";
 
 import {
   dft,
+  evaluateFourier,
   makeHeartPath,
   makeLissajousPath,
   makeSpiralPath,
@@ -114,6 +115,11 @@ function FourierCanvas({
     context.lineWidth = 1.2;
     context.strokeStyle = drawing ? "rgba(245, 158, 11, 0.92)" : "rgba(6, 182, 212, 0.44)";
     drawPolyline(context, path, project);
+    if (!drawing && path.length > 1) {
+      context.strokeStyle = "#f97316";
+      context.setLineDash([9, 4]);
+      drawPolyline(context, [path[path.length - 1], path[0]], project);
+    }
     context.setLineDash([]);
 
     if (reconstruction.length > 0) {
@@ -148,7 +154,7 @@ function FourierCanvas({
 
     context.fillStyle = "rgba(82, 82, 82, 0.84)";
     context.font = "11px ui-monospace, SFMono-Regular, Menlo, monospace";
-    context.fillText(path.length < 2 ? "draw one continuous stroke" : "cyan = source · magenta = Fourier reconstruction", 12, size.height - 15);
+    context.fillText(path.length < 2 ? "draw one continuous stroke" : "cyan = stroke · orange = added closure · magenta = reconstruction", 12, size.height - 15);
   }, [drawing, path, reconstruction, size, terms, time]);
 
   return (
@@ -182,6 +188,7 @@ export default function FourierSketchPage() {
   const componentCount = Math.min(Math.max(harmonics, 1), allTerms.length);
   const visibleTerms = useMemo(() => allTerms.slice(0, componentCount), [allTerms, componentCount]);
   const reconstruction = useMemo(() => reconstructPath(visibleTerms, 240), [visibleTerms]);
+  const sampleError = useMemo(() => samples.length ? Math.sqrt(samples.reduce((sum, point, index) => { const result = evaluateFourier(visibleTerms, index / samples.length); return sum + (result.x - point.x) ** 2 + (result.y - point.y) ** 2; }, 0) / samples.length) : 0, [samples, visibleTerms]);
   const maxComponents = Math.max(1, allTerms.length);
 
   useEffect(() => {
@@ -252,7 +259,7 @@ export default function FourierSketchPage() {
       />
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(330px,0.75fr)]">
-        <DemoPanel title="Draw → decompose → trace" description="Drag one continuous stroke in the field. The cyan dashed source is closed before sampling; magenta is its retained Fourier reconstruction." padding="none">
+        <DemoPanel title="Draw → decompose → trace" description="Drag one continuous stroke in the field. The cyan dashed source is closed before sampling; orange marks the synthetic closing edge; magenta is its retained Fourier reconstruction." padding="none">
           <FourierCanvas path={path} terms={visibleTerms} reconstruction={reconstruction} time={time} drawing={drawing} onStartStroke={startStroke} onContinueStroke={continueStroke} onFinishStroke={finishStroke} />
         </DemoPanel>
 
@@ -269,6 +276,7 @@ export default function FourierSketchPage() {
             </div>
           </DemoPanel>
           <DemoPanel title="Sampling ledger" padding="md">
+            <p aria-live="polite" className="mb-4 text-sm">Sample reconstruction RMSE: <strong className="font-mono">{sampleError.toFixed(6)}</strong> path units. Measured at the {samples.length} resampled points, including the synthetic closing segment.</p>
             <div className="grid grid-cols-3 gap-px border border-[var(--line)] bg-[var(--line)] font-mono text-xs"><div className="bg-[var(--surface)] p-3"><span className="block text-[10px] uppercase tracking-[0.12em] text-neutral-500">stroke points</span><strong>{path.length}</strong></div><div className="bg-[var(--surface)] p-3"><span className="block text-[10px] uppercase tracking-[0.12em] text-neutral-500">DFT samples</span><strong>{samples.length}</strong></div><div className="bg-[var(--surface)] p-3"><span className="block text-[10px] uppercase tracking-[0.12em] text-neutral-500">time</span><strong>{time.toFixed(3)}</strong></div></div>
             <p className="mt-4 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">Every component is one complex coefficient: a radius, a phase, and an integer rotation frequency. Their vector sum is the tracing point.</p>
             <p className="mt-3 text-xs leading-relaxed text-neutral-500">All {SAMPLE_COUNT} terms exactly reproduce this {SAMPLE_COUNT}-sample signal. More than {SAMPLE_COUNT} terms would add no information unless the sketch is sampled more densely.</p>

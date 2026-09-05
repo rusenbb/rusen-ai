@@ -201,6 +201,7 @@ export default function PathfindingShowdownPage() {
   const [grid, setGrid] = useState<PathGrid>(() => createDefaultGrid());
   const [tool, setTool] = useState<EditTool>("wall");
   const [scenarioId, setScenarioId] = useState<ScenarioId>("mud-shortcut");
+  const [edits, setEdits] = useState<Array<{ grid: PathGrid; scenario: ScenarioId }>>([]);
   const [algorithm, setAlgorithm] = useState<SearchAlgorithm>("bfs");
   const [stepIndex, setStepIndex] = useState(-1);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -263,14 +264,17 @@ export default function PathfindingShowdownPage() {
     return () => window.clearTimeout(timer);
   }, [isPlaying, lastStep, stepIndex]);
 
-  const editCell = (cell: Cell) => {
-    resetTrace();
-    setScenarioId("custom");
-    setGrid((current) => {
-      if (tool === "start" || tool === "goal") return moveEndpoint(current, tool, cell);
-      return updateTerrain(current, cell, tool);
-    });
+  const changeGrid = (next: PathGrid) => {
+    if (next === grid) return;
+    setEdits((previous) => [...previous.slice(-29), { grid, scenario: scenarioId }]);
+    resetTrace(); setScenarioId("custom"); setGrid(next);
   };
+  const undoEdit = () => {
+    const previous = edits.at(-1);
+    if (!previous) return;
+    resetTrace(); setGrid(previous.grid); setScenarioId(previous.scenario); setEdits(edits.slice(0, -1));
+  };
+  const editCell = (cell: Cell) => changeGrid(tool === "start" || tool === "goal" ? moveEndpoint(grid, tool, cell) : updateTerrain(grid, cell, tool));
 
   const loadPreset = (presetId: Exclude<ScenarioId, "custom">) => {
     const preset = PATHFINDING_PRESETS.find((candidate) => candidate.id === presetId);
@@ -278,6 +282,7 @@ export default function PathfindingShowdownPage() {
 
     resetTrace();
     setEditorOpen(false);
+    setEdits([]);
     setScenarioId(preset.id);
     setGrid(preset.createGrid());
   };
@@ -363,6 +368,7 @@ export default function PathfindingShowdownPage() {
               <div className="border-t border-[var(--line)] px-4 py-4">
                 <p className="mb-3 text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">With this panel open, click the main board to paint. Each edit rewinds the trace.</p>
                 <div className="flex flex-wrap gap-2">
+                  <Button size="sm" disabled={!edits.length} onClick={undoEdit}>Undo map edit</Button>
                   {TOOL_COPY.map((item) => (
                     <Button
                       key={item.id}
@@ -379,9 +385,7 @@ export default function PathfindingShowdownPage() {
                     size="sm"
                     variant="ghost"
                     onClick={() => {
-                      resetTrace();
-                      setScenarioId("custom");
-                      setGrid(clearGrid());
+                      changeGrid(clearGrid());
                     }}
                   >
                     Clear map
@@ -473,14 +477,15 @@ export default function PathfindingShowdownPage() {
                   </p>
                   <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.13em] text-neutral-500 dark:text-neutral-400">{finished && active.trace.found ? "Unexpanded frontier" : "Next in the frontier"}</p>
                   {activeFrame.frontier.length > 0 ? (
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {activeFrame.frontier.slice(0, 4).map((entry) => (
+                    <div className="mt-2 max-h-64 overflow-y-auto flex flex-wrap gap-2" aria-label="Complete ordered frontier">
+                      {activeFrame.frontier.map((entry) => (
                         <span key={cellKey(entry.cell)} className="border border-[var(--line)] px-2 py-1 font-mono text-xs tabular-nums">
-                          {cellLabel(entry.cell)} <span className="text-neutral-500 dark:text-neutral-400">{priorityText(algorithm, entry)}</span>
+                          {cellLabel(entry.cell)} <span className="text-neutral-500 dark:text-neutral-400">{priorityText(algorithm, entry)} · g={entry.g} h={entry.h} f={entry.f} · inserted #{entry.order}</span>
                         </span>
                       ))}
                     </div>
                   ) : <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">The frontier is empty.</p>}
+                  <p className="mt-2 text-xs text-neutral-500">Complete queue in expansion order. Equal priorities keep their insertion order; BFS uses insertion order directly.</p>
                 </div>
               </div>
             ) : (

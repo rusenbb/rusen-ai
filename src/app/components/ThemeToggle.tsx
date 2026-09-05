@@ -8,12 +8,14 @@ import {
   type ThemeMode,
 } from "./theme";
 import NavWord from "./NavWord";
+import { useHydrated } from "./useHydrated";
 
 function nextTheme(current: ThemeMode): ThemeMode {
   return current === "dark" ? "light" : "dark";
 }
 
 export default function ThemeToggle({ label }: { label: string }) {
+  const hydrated = useHydrated();
   const theme = useSyncExternalStore<ThemeMode>(
     subscribeTheme,
     getResolvedTheme,
@@ -21,7 +23,7 @@ export default function ThemeToggle({ label }: { label: string }) {
   );
 
   const handleToggle = () => {
-    const updated = nextTheme(theme);
+    const updated = nextTheme(getResolvedTheme());
     setThemePreference(updated);
   };
 
@@ -30,6 +32,7 @@ export default function ThemeToggle({ label }: { label: string }) {
   return (
     <button
       type="button"
+      disabled={!hydrated}
       onClick={handleToggle}
       aria-label={`Switch to ${isDark ? "light" : "dark"} theme`}
       title={`Switch to ${isDark ? "light" : "dark"} theme`}

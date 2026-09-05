@@ -1,8 +1,4 @@
-import type {
-  DiscretePrediction,
-  DiscreteSymbol,
-  DiscreteTrial,
-} from "./modes";
+import type { DiscreteTrial } from "./modes";
 
 export type DiscreteScore = {
   hits: number;
@@ -35,15 +31,4 @@ export function scoreDiscrete(
     accuracy: trials_ === 0 ? 0 : hits / trials_,
     bitsSaved: trials_ === 0 ? 0 : bits / trials_,
   };
-}
-
-export function emptyDiscretePrediction(alphabet: number): DiscretePrediction {
-  return {
-    pmf: Array.from({ length: alphabet }, () => 1 / alphabet),
-    argmax: 0,
-  };
-}
-
-export function lastSymbol(trials: DiscreteTrial[]): DiscreteSymbol | null {
-  return trials.length === 0 ? null : trials[trials.length - 1].symbol;
 }
