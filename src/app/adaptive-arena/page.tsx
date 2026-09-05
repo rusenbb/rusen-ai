@@ -58,6 +58,24 @@ const ABILITY_KEYS: Record<string, AbilityAction> = {
   l: "dash",
 };
 
+function createCheckpointBrain(asset: DQNCheckpointAsset): BotBrain {
+  const agent = createDQNAgent({
+    layerSizes: asset.config.layerSizes,
+    learningRate: 3e-4,
+    gamma: 0.97,
+    batchSize: 64,
+    replayCapacity: 50_000,
+    targetUpdateFreq: 500,
+    epsilon: 0.1,
+    epsilonDecay: 1,
+    epsilonMin: 0.05,
+    weightDecay: 0,
+  });
+  agent.policy = deserializeDQNWeights(asset.weights);
+  agent.target = deserializeDQNWeights(asset.weights);
+  return { kind: "dqn", agent };
+}
+
 export default function AdaptiveArenaPage() {
   const arena = useMemo(() => buildArenaMap(), []);
   const navigator = useMemo(() => createArenaNavigator(arena), [arena]);
@@ -69,21 +87,7 @@ export default function AdaptiveArenaPage() {
     abilityTicksLeft: 0,
   });
   const pressedMovesRef = useRef<MoveAction[]>([]);
-  const brainRef = useRef<BotBrain>({
-    kind: "dqn",
-    agent: createDQNAgent({
-      layerSizes: [68, 128, 64, 8],
-      learningRate: 3e-4,
-      gamma: 0.97,
-      batchSize: 64,
-      replayCapacity: 50_000,
-      targetUpdateFreq: 500,
-      epsilon: 0.1,
-      epsilonDecay: 1,
-      epsilonMin: 0.05,
-      weightDecay: 0,
-    }),
-  });
+  const brainRef = useRef<BotBrain | null>(null);
   const playerModelRef = useRef(createPlayerModel());
   const checkpointCacheRef = useRef<Map<string, DQNCheckpointAsset>>(new Map());
 
@@ -109,23 +113,8 @@ export default function AdaptiveArenaPage() {
 
   const resetSession = useCallback(() => {
     const cached = checkpointCacheRef.current.get(checkpointKey);
-    if (cached) {
-      const agent = createDQNAgent({
-        layerSizes: cached.config.layerSizes,
-        learningRate: 3e-4,
-        gamma: 0.97,
-        batchSize: 64,
-        replayCapacity: 50_000,
-        targetUpdateFreq: 500,
-        epsilon: 0.1,
-        epsilonDecay: 1,
-        epsilonMin: 0.05,
-        weightDecay: 0,
-      });
-      agent.policy = deserializeDQNWeights(cached.weights);
-      agent.target = deserializeDQNWeights(cached.weights);
-      brainRef.current = { kind: "dqn", agent };
-    }
+    if (!cached) return;
+    brainRef.current = createCheckpointBrain(cached);
     playerModelRef.current = createPlayerModel();
     const brain = brainRef.current;
     const paramCount = brain.agent.config.layerSizes.reduce(
@@ -190,21 +179,7 @@ export default function AdaptiveArenaPage() {
 
         if (cancelled) return;
 
-        const agent = createDQNAgent({
-          layerSizes: asset.config.layerSizes,
-          learningRate: 3e-4,
-          gamma: 0.97,
-          batchSize: 64,
-          replayCapacity: 50_000,
-          targetUpdateFreq: 500,
-          epsilon: 0.1,
-          epsilonDecay: 1,
-          epsilonMin: 0.05,
-          weightDecay: 0,
-        });
-        agent.policy = deserializeDQNWeights(asset.weights);
-        agent.target = deserializeDQNWeights(asset.weights);
-        brainRef.current = { kind: "dqn", agent };
+        brainRef.current = createCheckpointBrain(asset);
 
         setCheckpointManifest(manifest);
         playerModelRef.current = createPlayerModel();
@@ -245,6 +220,8 @@ export default function AdaptiveArenaPage() {
     if (!isRunning) return;
 
     const interval = window.setInterval(() => {
+      const brain = brainRef.current;
+      if (!brain) return;
       setMatch((current) => {
         const controls = controlsRef.current;
         const ability = controls.ability;
@@ -264,7 +241,7 @@ export default function AdaptiveArenaPage() {
           navigator,
           config: runtimeConfig,
           onlineLearning: false,
-          brain: brainRef.current,
+          brain,
           playerModel: playerModelRef.current,
           playerAction,
           playerMoveIntent: moveIntent,
@@ -427,6 +404,11 @@ export default function AdaptiveArenaPage() {
               </div>
             </header>
 
+            <details className="my-4 rounded-xl border border-white/10 p-4 text-sm text-neutral-300">
+              <summary className="cursor-pointer">Checkpoint provenance and evaluation</summary>
+              <dl className="mt-3 grid gap-2"><dt>Training revision</dt><dd className="break-all font-mono">{checkpointManifest?.provenance?.trainerCommit ?? "Unknown for this historical checkpoint"}</dd><dt>Environment version</dt><dd>{checkpointManifest?.provenance?.environmentVersion ?? "Historical version not recorded"}</dd><dt>Evaluation conditions</dt><dd>{checkpointManifest?.provenance?.evaluation ?? "Historical opponent pool and sampling seed were not preserved. The recorded win rate is not a human-opponent benchmark."}</dd><dt>Recorded evaluation</dt><dd>{checkpointManifest ? checkpointManifest.stats.botWins + " bot wins / " + checkpointManifest.stats.rounds + " rounds" : "Loading checkpoint"}</dd></dl>
+              <p className="mt-3 text-xs text-neutral-400">Current code parity checks compare 25 controlled transitions: neutral habit, no manual dash direction, and a matched 100-tick clock. Training uses 100 ticks; interactive rounds use 180. Existing weights are retained, not retrained or retrospectively assigned a source version.</p>
+            </details>
             <section className="space-y-4">
               <div
                 ref={arenaPanelRef}

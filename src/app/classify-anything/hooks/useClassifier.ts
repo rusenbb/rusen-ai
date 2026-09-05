@@ -20,8 +20,7 @@ export interface UseClassifierResult {
   loadProgress: number;
   modelStatus: ModelStatus;
   error: string | null;
-  classify: (text: string, labels: string[]) => Promise<ClassificationResult[]>;
-  clearCache: () => Promise<void>;
+  classify: (text: string, labels: string[], multiLabel?: boolean) => Promise<ClassificationResult[]>;
 }
 
 // Model configuration - using a smaller model for faster loading
@@ -99,7 +98,7 @@ export function useClassifier(): UseClassifierResult {
 
   // Classify text with given labels
   const classify = useCallback(
-    async (text: string, labels: string[]): Promise<ClassificationResult[]> => {
+    async (text: string, labels: string[], multiLabel = false): Promise<ClassificationResult[]> => {
       if (!text.trim()) {
         return [];
       }
@@ -119,7 +118,7 @@ export function useClassifier(): UseClassifierResult {
 
       try {
         const output = await classifierPipeline.current(text, labels, {
-          multi_label: false,
+          multi_label: multiLabel,
         });
 
         // Convert to our result format
@@ -142,48 +141,6 @@ export function useClassifier(): UseClassifierResult {
     [initModel]
   );
 
-  // Clear the model cache
-  const clearCache = useCallback(async () => {
-    try {
-      // Clear transformers.js cache from IndexedDB
-      const databases = await indexedDB.databases();
-      for (const db of databases) {
-        if (
-          db.name &&
-          (db.name.includes("transformers") || db.name.includes("onnx"))
-        ) {
-          indexedDB.deleteDatabase(db.name);
-          console.log(`Deleted IndexedDB: ${db.name}`);
-        }
-      }
-
-      // Clear browser caches
-      if ("caches" in window) {
-        const cacheNames = await caches.keys();
-        for (const name of cacheNames) {
-          if (
-            name.includes("transformers") ||
-            name.includes("huggingface")
-          ) {
-            await caches.delete(name);
-            console.log(`Deleted cache: ${name}`);
-          }
-        }
-      }
-
-      // Reset state
-      classifierPipeline.current = null;
-      setIsModelReady(false);
-      setModelStatus("idle");
-      setLoadProgress(0);
-      setError(null);
-
-      console.log("Model cache cleared. Reload to re-download.");
-    } catch (err) {
-      console.error("Error clearing cache:", err);
-    }
-  }, []);
-
   return {
     isLoading,
     isModelReady,
@@ -191,6 +148,5 @@ export function useClassifier(): UseClassifierResult {
     modelStatus,
     error,
     classify,
-    clearCache,
   };
 }

@@ -204,6 +204,7 @@ export default function GameOfLifeExperience() {
         // Keep camera normalization in render-pixel space, matching renderer.
         universe.scaleCamera(pixelSize.width / 8);
         universe.normalizeZoom(pixelSize.width);
+        universe.rememberCamera();
 
         const renderer = new Renderer(canvas, decoder.graph, decoder.frames);
         localRenderer = renderer;
@@ -251,6 +252,8 @@ export default function GameOfLifeExperience() {
       attributeFilter: ["data-theme"],
     });
 
+    let completedSteps = 0;
+    let rateStarted = performance.now();
     const render = () => {
       const renderer = rendererRef.current;
       const universe = universeRef.current;
@@ -279,7 +282,11 @@ export default function GameOfLifeExperience() {
 
       if (!animationPaused && !clearBgMode) {
         const speed = speedFromSlider(speedRef.current);
-        universe.step(speed * frameScale);
+        completedSteps += universe.step(speed * frameScale);
+      }
+      if (now - rateStarted >= 500) {
+        window.dispatchEvent(new CustomEvent("bg-timing", { detail: { stepsPerSecond: completedSteps * 1000 / (now - rateStarted) } }));
+        completedSteps = 0; rateStarted = now;
       }
       if (!animationPaused && !clearBgMode && autoZoomEnabled) {
         // Roughly 2x faster than the old scale at each step (especially around level 3).
@@ -748,6 +755,8 @@ export default function GameOfLifeExperience() {
       const e = event as CustomEvent<{ action?: string }>;
       const action = e.detail?.action;
       if (!action) return;
+      if (action === "step-once") { setManualPaused(true); setAutoZoomEnabled(false); universeRef.current?.stepOnce(); return; }
+      if (action === "reset-camera") { setAutoZoomEnabled(false); universeRef.current?.resetCamera(); return; }
       if (action.startsWith("set-speed:")) {
         applySpeedDigit(Number(action.split(":")[1] ?? "3"));
         return;

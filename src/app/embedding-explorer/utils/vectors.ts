@@ -110,24 +110,25 @@ export function projectTo2D(
 
 // Normalize points to [-1, 1] range for visualization
 export function normalizePoints<T extends { x: number; y: number }>(
-  points: T[]
+  points: T[],
+  reference: { x: number; y: number }[] = points,
 ): T[] {
   if (points.length === 0) return [];
 
-  const xValues = points.map((p) => p.x);
-  const yValues = points.map((p) => p.y);
+  const xValues = reference.map((p) => p.x);
+  const yValues = reference.map((p) => p.y);
 
   const xMin = Math.min(...xValues);
   const xMax = Math.max(...xValues);
   const yMin = Math.min(...yValues);
   const yMax = Math.max(...yValues);
 
-  const xRange = xMax - xMin || 1;
-  const yRange = yMax - yMin || 1;
+  const xRange = xMax - xMin;
+  const yRange = yMax - yMin;
 
   return points.map((p) => ({
     ...p,
-    x: ((p.x - xMin) / xRange) * 2 - 1,
-    y: ((p.y - yMin) / yRange) * 2 - 1,
+    x: xRange === 0 ? 0 : ((p.x - xMin) / xRange) * 2 - 1,
+    y: yRange === 0 ? 0 : ((p.y - yMin) / yRange) * 2 - 1,
   }));
 }

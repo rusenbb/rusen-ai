@@ -301,7 +301,7 @@ function DecisionMap({
           return <rect key={`${cell.row}-${cell.column}`} x={svg((cell.column / 26) * 100)} y={svg((cell.row / 26) * 100)} width={svg(100 / 26 + 0.05)} height={svg(100 / 26 + 0.05)} fill={cyan ? "#22d3ee" : "#f59e0b"} opacity={svg(0.16 + Math.abs(cell.probability - 0.5) * 0.55)} />;
         })}
         {points.map((point, index) => (
-          <circle key={index} cx={svg((point.x + 1) * 50)} cy={svg((1 - point.y) * 50)} r="1.25" fill={point.label === 1 ? "#67e8f9" : "#fcd34d"} stroke="#0c1117" strokeWidth="0.6" />
+          <circle key={index} cx={svg((point.x + 1) * 50)} cy={svg((1 - point.y) * 50)} r={index % 5 === 0 ? "1.7" : "1.25"} fill={index % 5 === 0 ? "none" : point.label === 1 ? "#67e8f9" : "#fcd34d"} stroke={index % 5 === 0 ? "#f8fafc" : "#0c1117"} strokeWidth="0.6" />
         ))}
       </svg>
     </div>
@@ -390,6 +390,8 @@ function ErrorStat({ label, value, accent }: { label: string; value: number; acc
 export default function CurveFitterPage() {
   const [section, setSection] = useState<Section>("regression");
   const [curveKind, setCurveKind] = useState<CurveKind>("arc");
+  const [sampleCount, setSampleCount] = useState(34);
+  const [noise, setNoise] = useState(0.18);
   const [degree, setDegree] = useState(2);
   const [classificationKind, setClassificationKind] = useState<ClassificationKind>("xor");
   const [selectedGate, setSelectedGate] = useState(0);
@@ -397,7 +399,7 @@ export default function CurveFitterPage() {
   const regressionPlayback = useEpochPlayback(REGRESSION_MAX_EPOCHS, 0);
   const networkPlayback = useEpochPlayback(NETWORK_MAX_EPOCHS, 500);
 
-  const regressionPoints = useMemo(() => createRegressionDataset(curveKind), [curveKind]);
+  const regressionPoints = useMemo(() => createRegressionDataset(curveKind, sampleCount, noise), [curveKind, sampleCount, noise]);
   const trainPoints = useMemo(() => regressionPoints.filter((point) => point.split === "train"), [regressionPoints]);
   const testPoints = useMemo(() => regressionPoints.filter((point) => point.split === "test"), [regressionPoints]);
   const linearTrainingTrace = useMemo(
@@ -421,18 +423,20 @@ export default function CurveFitterPage() {
   );
 
   const classificationPoints = useMemo(() => createClassificationDataset(classificationKind), [classificationKind]);
+  const classificationTrain = useMemo(() => classificationPoints.filter((_, index) => index % 5 !== 0), [classificationPoints]);
+  const classificationTest = useMemo(() => classificationPoints.filter((_, index) => index % 5 === 0), [classificationPoints]);
   const linearNetworkTrace = useMemo(
-    () => createTinyNetworkTrainingTrace(classificationPoints, "linear", { epochs: NETWORK_MAX_EPOCHS }),
-    [classificationPoints],
+    () => createTinyNetworkTrainingTrace(classificationTrain, "linear", { epochs: NETWORK_MAX_EPOCHS }),
+    [classificationTrain],
   );
   const tanhNetworkTrace = useMemo(
-    () => createTinyNetworkTrainingTrace(classificationPoints, "tanh", { epochs: NETWORK_MAX_EPOCHS }),
-    [classificationPoints],
+    () => createTinyNetworkTrainingTrace(classificationTrain, "tanh", { epochs: NETWORK_MAX_EPOCHS }),
+    [classificationTrain],
   );
   const linearNetwork = linearNetworkTrace[networkPlayback.epoch];
   const nonlinearNetwork = tanhNetworkTrace[networkPlayback.epoch];
-  const linearAccuracy = classificationAccuracy(linearNetwork, classificationPoints);
-  const combinedGateAccuracy = classificationAccuracyWithHiddenCount(nonlinearNetwork, classificationPoints, combinedGateCount);
+  const linearAccuracy = classificationAccuracy(linearNetwork, classificationTrain);
+  const combinedGateAccuracy = classificationAccuracyWithHiddenCount(nonlinearNetwork, classificationTrain, combinedGateCount);
 
   return (
     <DemoPage width="2xl">
@@ -481,6 +485,8 @@ export default function CurveFitterPage() {
                   <Button key={option.id} size="sm" variant={curveKind === option.id ? "primary" : "secondary"} onClick={() => setCurveKind(option.id)} title={option.detail}>{option.label}</Button>
                 ))}
               </div>
+              <label className="block text-sm">Examples: {sampleCount}<input aria-label="Regression example count" type="range" min="15" max="80" step="1" value={sampleCount} onChange={(event) => setSampleCount(Number(event.target.value))} className="mt-2 w-full" /></label>
+              <label className="block text-sm">Noise amplitude: {noise.toFixed(2)}<input aria-label="Regression noise" type="range" min="0" max="1" step="0.02" value={noise} onChange={(event) => setNoise(Number(event.target.value))} className="mt-2 w-full" /></label>
               <label className="block border-y border-[var(--line)] py-4">
                 <span className="flex items-baseline justify-between font-mono text-xs uppercase tracking-[0.13em]"><span>Polynomial degree</span><strong className="text-lg">{degree}</strong></span>
                 <input aria-label="Polynomial degree" className="mt-3 w-full accent-foreground" type="range" min="2" max="8" value={degree} onChange={(event) => setDegree(Number(event.target.value))} />
@@ -509,6 +515,7 @@ export default function CurveFitterPage() {
               <p className="max-w-3xl text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
                 {classificationKind === "xor" ? "XOR needs two diagonal islands. A stack of linear layers still collapses to one straight cut, but several tanh gates can carve separate islands." : classificationKind === "circles" ? "The inner class needs a boundary that wraps around it. A line cannot close that loop, while tanh gates can combine into one." : "This is the control case: a straight boundary is enough, so the extra flexibility should not be necessary."}
               </p>
+              <div className="border border-[var(--line)] p-3 text-sm">Outlined points are held out; filled points are used for training ({classificationTrain.length} train / {classificationTest.length} test). Full-model test accuracy: linear {(classificationAccuracy(linearNetwork, classificationTest) * 100).toFixed(1)}% · tanh {(classificationAccuracy(nonlinearNetwork, classificationTest) * 100).toFixed(1)}%. Scores below are training accuracy.</div>
               <EpochScrubber
                 label="Shared training progress, reset to replay from zero"
                 epoch={networkPlayback.epoch}
@@ -534,7 +541,7 @@ export default function CurveFitterPage() {
             <DemoPanel title="No tanh: still one cut" description="Five affine hidden scores followed by another affine layer are algebraically still one straight decision boundary.">
               <div className="space-y-4">
                 <DecisionMap network={linearNetwork} points={classificationPoints} label="Linear hidden-layer model" />
-                <div className="flex items-end justify-between border-t border-[var(--line)] pt-3"><span className="text-xs text-neutral-500">accuracy at this epoch</span><strong className="font-mono text-2xl tabular-nums text-amber-600 dark:text-amber-300">{(linearAccuracy * 100).toFixed(1)}%</strong></div>
+                <div className="flex items-end justify-between border-t border-[var(--line)] pt-3"><span className="text-xs text-neutral-500">training accuracy at this epoch</span><strong className="font-mono text-2xl tabular-nums text-amber-600 dark:text-amber-300">{(linearAccuracy * 100).toFixed(1)}%</strong></div>
               </div>
             </DemoPanel>
 
@@ -574,7 +581,7 @@ export default function CurveFitterPage() {
                   <input aria-label="Number of learned tanh gates combined" className="mt-3 w-full accent-cyan-500" type="range" min="1" max={nonlinearNetwork.w1.length} step="1" value={combinedGateCount} onChange={(event) => setCombinedGateCount(Number(event.target.value))} />
                   <p className="mt-2 text-xs leading-relaxed text-neutral-500">This is not a separate model: it is the current tanh network with the first {combinedGateCount} learned hidden gates included in its final score.</p>
                 </label>
-                <div className="flex items-end justify-between border-t border-[var(--line)] pt-3"><span className="text-xs text-neutral-500">accuracy with {combinedGateCount} gate{combinedGateCount === 1 ? "" : "s"}</span><strong className="font-mono text-2xl tabular-nums text-cyan-700 dark:text-cyan-300">{(combinedGateAccuracy * 100).toFixed(1)}%</strong></div>
+                <div className="flex items-end justify-between border-t border-[var(--line)] pt-3"><span className="text-xs text-neutral-500">training accuracy with {combinedGateCount} gate{combinedGateCount === 1 ? "" : "s"}</span><strong className="font-mono text-2xl tabular-nums text-cyan-700 dark:text-cyan-300">{(combinedGateAccuracy * 100).toFixed(1)}%</strong></div>
               </div>
             </DemoPanel>
           </section>

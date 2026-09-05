@@ -86,8 +86,6 @@ export default function ResultsPanel({
   }
 
   // Results
-  const topResult = results[0];
-  const maxScore = topResult?.score || 1;
 
   return (
     <div className="space-y-4" aria-live="polite">
@@ -102,7 +100,7 @@ export default function ResultsPanel({
         {results.map((result, index) => {
           const isTop = index === 0;
           const percentage = Math.round(result.score * 100);
-          const barWidth = (result.score / maxScore) * 100;
+          const barWidth = result.score * 100;
 
           return (
             <div

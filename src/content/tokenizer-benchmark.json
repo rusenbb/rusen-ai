@@ -1,0 +1,5 @@
+{
+  "name": "Bundled Turkish examples v1",
+  "scope": "Six existing demo examples, deliberately small and illustrative; not a representative Turkish benchmark.",
+  "texts": ["Merhaba dünya!", "kitaplarımdan", "evlerimizden", "göremeyecekmişsiniz", "Türkiye'nin başkenti Ankara'dır.", "Yapay zeka günümüzde hızla gelişmektedir."]
+}

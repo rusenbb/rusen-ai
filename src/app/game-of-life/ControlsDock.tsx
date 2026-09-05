@@ -34,6 +34,13 @@ export default function ControlsDock() {
   const [state, setState] = useState<BgState>(DEFAULT_STATE);
   const [collapsed, setCollapsed] = useState(false);
   const [fullscreenMode, setFullscreenMode] = useState(false);
+  const [stepsPerSecond, setStepsPerSecond] = useState(0);
+
+  useEffect(() => {
+    const update = (event: Event) => setStepsPerSecond((event as CustomEvent<{ stepsPerSecond: number }>).detail.stepsPerSecond);
+    window.addEventListener("bg-timing", update);
+    return () => window.removeEventListener("bg-timing", update);
+  }, []);
 
   useEffect(() => {
     document.body.dataset.gameLifeFullscreen = fullscreenMode ? "on" : "off";
@@ -69,6 +76,8 @@ export default function ControlsDock() {
       {!collapsed && (
         <>
           <div className="grid grid-cols-2 gap-2">
+            <button type="button" onClick={() => dispatchBgControl("step-once")} className={dockBtn}>One step + pause</button>
+            <button type="button" onClick={() => dispatchBgControl("reset-camera")} className={dockBtn}>Reset camera</button>
             <button type="button" onClick={() => dispatchBgControl("toggle-bg-nav")} className={dockBtn}>
               Nav: {state.bgNavMode ? "On" : "Off"}
             </button>
@@ -95,7 +104,7 @@ export default function ControlsDock() {
             </button>
           </div>
           <div className="mt-2 flex items-center justify-between text-[11px] font-mono uppercase tracking-[0.06em] text-[var(--muted)]">
-            <span>Speed: {state.speedDigit} | AutoZoom: {state.autoZoomSpeedDigit}</span>
+            <span>{stepsPerSecond.toFixed(1)} steps/s · level {state.speedDigit}</span>
             <button
               type="button"
               onClick={() => dispatchBgControl("toggle-help")}
@@ -104,6 +113,7 @@ export default function ControlsDock() {
               {state.showHelp ? "Hide Help" : "Help"}
             </button>
           </div>
+          <p className="mt-2 text-[10px] text-neutral-500">Measured at the current recursive zoom level; this world uses different time scales at different depths.</p>
         </>
       )}
     </div>

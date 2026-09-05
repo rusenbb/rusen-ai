@@ -71,6 +71,7 @@ export function useSAM(dispatch: React.Dispatch<SAMAction>): UseSAMResult {
   const originalSizesRef = useRef<readonly [number, number] | null>(null);
   const loadProgressRef = useRef(0);
   const loadMessageRef = useRef<string | null>(null);
+  const imageRequestRef = useRef(0);
 
   // ── Model initialization ─────────────────────────────────────────
 
@@ -139,17 +140,14 @@ export function useSAM(dispatch: React.Dispatch<SAMAction>): UseSAMResult {
 
   const encodeImage = useCallback(
     async (imageUrl: string) => {
+      const request = ++imageRequestRef.current;
+      embeddingsRef.current = null;
+      if (!modelRef.current) await initModel();
       const model = modelRef.current;
       const processor = processorRef.current;
       const RawImage = RawImageCtor.current;
-
-      if (!model || !processor || !RawImage) {
-        await initModel();
-        if (!modelRef.current || !processorRef.current || !RawImageCtor.current) {
-          throw new Error("Model not available");
-        }
-        return encodeImage(imageUrl);
-      }
+      if (!model || !processor || !RawImage) throw new Error("Model not available");
+      if (request !== imageRequestRef.current) throw new DOMException("Image changed", "AbortError");
 
       dispatch({ type: "ENCODE_START" });
 
@@ -158,12 +156,13 @@ export function useSAM(dispatch: React.Dispatch<SAMAction>): UseSAMResult {
 
       const reshaped = processed.reshaped_input_sizes[0];
       const original = processed.original_sizes[0];
-      reshapedSizesRef.current = [reshaped[0], reshaped[1]] as const;
-      originalSizesRef.current = [original[0], original[1]] as const;
 
       const embeddings = await model.get_image_embeddings(
         processed as unknown as Record<string, unknown>,
       );
+      if (request !== imageRequestRef.current) throw new DOMException("Image changed", "AbortError");
+      reshapedSizesRef.current = [reshaped[0], reshaped[1]] as const;
+      originalSizesRef.current = [original[0], original[1]] as const;
       embeddingsRef.current = embeddings;
     },
     [dispatch, initModel],

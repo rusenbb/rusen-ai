@@ -174,6 +174,8 @@ export default function ConvolutionLabPage() {
   const [kernel, setKernel] = useState<Matrix>(() => cloneMatrix(KERNEL_PRESETS.edge.matrix));
   const [stride, setStride] = useState(1);
   const [padding, setPadding] = useState(1);
+  const [fixedScale, setFixedScale] = useState(false);
+  const [poolCell, setPoolCell] = useState({ row: 0, col: 0 });
   const [pool, setPool] = useState(true);
   const [selected, setSelected] = useState({ row: 0, col: 0 });
 
@@ -255,12 +257,15 @@ export default function ConvolutionLabPage() {
   const featurePixels = useMemo(() => {
     if (!featureWidth || !featureHeight) return new Uint8ClampedArray();
     return imageMode === "rgb" && rgbFeatureMap
-      ? normalisedRgbRasterToRgba(rgbFeatureMap)
-      : signedMatrixToRgba(lumaFeatureMap);
-  }, [featureHeight, featureWidth, imageMode, lumaFeatureMap, rgbFeatureMap]);
+      ? (fixedScale ? rgbRasterToRgba(rgbFeatureMap) : normalisedRgbRasterToRgba(rgbFeatureMap))
+      : signedMatrixToRgba(lumaFeatureMap, fixedScale ? 255 : undefined);
+  }, [featureHeight, featureWidth, fixedScale, imageMode, lumaFeatureMap, rgbFeatureMap]);
   const rectifiedLumaFeatureMap = useMemo(() => reluMatrix(lumaFeatureMap), [lumaFeatureMap]);
   const pooled = useMemo(() => maxPool(rectifiedLumaFeatureMap), [rectifiedLumaFeatureMap]);
-  const pooledPixels = useMemo(() => signedMatrixToRgba(pooled), [pooled]);
+  const pooledPixels = useMemo(() => signedMatrixToRgba(pooled, fixedScale ? 255 : undefined), [pooled, fixedScale]);
+  const poolRow = Math.min(poolCell.row, Math.max(0, pooled.length - 1));
+  const poolCol = Math.min(poolCell.col, Math.max(0, (pooled[0]?.length ?? 1) - 1));
+  const poolingWindow = rectifiedLumaFeatureMap.slice(poolRow * 2, poolRow * 2 + 2).map((row) => row.slice(poolCol * 2, poolCol * 2 + 2));
 
   const visibleChannels = imageMode === "rgb" ? CHANNELS.filter(({ id }) => id !== "luma") : CHANNELS.filter(({ id }) => id === "luma");
   const inspectedInput = useMemo<Matrix>(() => {
@@ -359,6 +364,7 @@ export default function ConvolutionLabPage() {
         description="Run one editable 3×3 CNN-style cross-correlation over real photos. Switch between depthwise RGB and a true B/W luminance image, then inspect the exact pixels behind any output response."
       />
 
+      <label className="mb-4 flex items-center gap-2 text-sm"><input type="checkbox" checked={fixedScale} onChange={(event) => setFixedScale(event.target.checked)} />Fixed scale: RGB clips to 0–255; signed luminance uses −255 to +255. Uncheck for automatic contrast.</label>
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1.22fr)_minmax(20rem,0.78fr)]">
         <DemoPanel title="Choose a real image" description="Bundled photos work offline. Uploads are decoded and processed only in this browser.">
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -502,7 +508,7 @@ export default function ConvolutionLabPage() {
                     focusColor="#f8fafc"
                     onCellSelect={(row, col) => setSelected({ row, col })}
                   />
-                  <p className="px-1 pt-2 text-[11px] leading-relaxed text-neutral-400">{imageMode === "rgb" ? "Each channel is independently contrast-normalized only for this visual preview." : "Cyan means a negative response; orange means a positive response. Intensity is scaled only for viewing."}</p>
+                  <p className="px-1 pt-2 text-[11px] leading-relaxed text-neutral-400">{imageMode === "rgb" ? "Preview follows the selected fixed or automatic scale. Exact numeric responses are shown below." : "Cyan means a negative response; orange means a positive response. Intensity is scaled only for viewing."}</p>
                 </div>
               </div>
 
@@ -573,7 +579,8 @@ export default function ConvolutionLabPage() {
           <DemoPanel title="After ReLU + max pooling" description="This second stage rectifies the signed luminance response before it pools. It does not revisit the original photo.">
             <div className="mx-auto max-w-xl border border-[var(--line)] bg-neutral-950 p-2 text-white">
               <div className="mb-2 flex items-center justify-between px-1 font-mono text-[10px] uppercase tracking-[0.12em] text-neutral-400"><span>post-ReLU pooled activations</span><span>{pooled[0].length}×{pooled.length}</span></div>
-              <RasterCanvas width={pooled[0].length} height={pooled.length} pixels={pooledPixels} label="ReLU then max-pooled luminance feature activations." />
+              <RasterCanvas width={pooled[0].length} height={pooled.length} pixels={pooledPixels} label="ReLU then max-pooled luminance feature activations." focus={{ row: poolRow, col: poolCol, rows: 1, columns: 1 }} onCellSelect={(row, col) => setPoolCell({ row, col })} />
+              <div className="mt-3 p-2 text-sm"><p>Selected output ({poolRow}, {poolCol}): max of the post-ReLU window</p><div className="grid grid-cols-2 gap-2 mt-2">{poolingWindow.flat().map((value, i) => <span key={i} className={`border p-2 font-mono ${value === pooled[poolRow]?.[poolCol] ? "border-amber-300 text-amber-300" : "border-neutral-600"}`}>{value.toFixed(2)}{value === pooled[poolRow]?.[poolCol] ? " ← maximum" : ""}</span>)}</div></div>
             </div>
           </DemoPanel>
           <DemoPanel title="Read the transformation" description="One photo becomes compact numeric arrays; cross-correlation writes a signed feature response at every output position.">
