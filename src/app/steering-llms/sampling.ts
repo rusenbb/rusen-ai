@@ -1,13 +1,11 @@
 export function distribution(
   logits: ArrayLike<number>,
-  targetIds: ReadonlySet<number>,
-  strength: number,
   temperature: number,
   topK: number,
 ) {
   const candidates = Array.from(logits, (score, id) => ({
     id,
-    score: (Number(score) + (targetIds.has(id) ? strength : 0)) / temperature,
+    score: Number(score) / (temperature || 1),
   }))
     .filter((token) => Number.isFinite(token.score))
     .sort((a, b) => b.score - a.score || a.id - b.id)
@@ -33,3 +31,6 @@ export function sampleToken(
     if ((threshold -= candidate.probability) <= 0) return candidate.id;
   return candidates[candidates.length - 1].id;
 }
+
+export const norm = (values: ArrayLike<number>) =>
+  Math.sqrt(Array.from(values).reduce((sum, x) => sum + x * x, 0));
