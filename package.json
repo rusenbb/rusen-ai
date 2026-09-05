@@ -36,7 +36,10 @@
     "train:adaptive-arena": "uv run python scripts/train_adaptive_arena.py",
     "train:adaptive-arena:deps": "uv sync && uv pip install --reinstall torch==2.10.0 --torch-backend=cu128",
     "train:adaptive-arena:ts": "tsx scripts/train-adaptive-arena.ts",
-    "deploy": "npx --yes --package=wrangler@4.114.0 wrangler pages deploy ./out"
+    "deploy": "npx --yes --package=wrangler@4.114.0 wrangler pages deploy ./out",
+    "verify:arena": "tsx scripts/arena-parity.ts output/arena-parity-input.json && uv run --no-sync python scripts/check_arena_parity.py output/arena-parity-input.json",
+    "typecheck": "tsc --noEmit",
+    "benchmark:tokenizer": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/tokenizer-benchmark.ts"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.0.0-next.6",

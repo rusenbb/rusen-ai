@@ -1,3 +1,5 @@
+import { createSeededRandom as seededRandom } from "@/lib/random";
+
 export type CurveKind = "wave" | "arc";
 export type ClassificationKind = "xor" | "circles" | "line";
 export type HiddenActivation = "linear" | "tanh";
@@ -40,20 +42,12 @@ export interface TinyNetworkTrainingOptions {
   learningRate?: number;
 }
 
-function seededRandom(seed: number): () => number {
-  let state = seed >>> 0;
-  return () => {
-    state = (state * 1103515245 + 12345) >>> 0;
-    return state / 0x100000000;
-  };
-}
-
-export function createRegressionDataset(kind: CurveKind): RegressionPoint[] {
+export function createRegressionDataset(kind: CurveKind, count = 34, noise = 0.18): RegressionPoint[] {
   const random = seededRandom(kind === "wave" ? 18 : 73);
-  return Array.from({ length: 34 }, (_, index) => {
-    const x = -1.15 + (index / 33) * 2.3;
+  return Array.from({ length: count }, (_, index) => {
+    const x = -1.15 + (index / (count - 1)) * 2.3;
     const clean = kind === "wave" ? 0.56 * Math.sin(x * 3.4) + 0.18 * x : 0.72 * x * x - 0.28 * x - 0.34;
-    const y = clean + (random() - 0.5) * 0.18;
+    const y = clean + (random() - 0.5) * noise;
     return { x, y, split: index % 5 === 0 ? "test" : "train" };
   });
 }

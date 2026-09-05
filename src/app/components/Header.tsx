@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import navigation from "@/content/navigation.json";
 import NavWord from "./NavWord";
 import ThemeToggle from "./ThemeToggle";
+import { useHydrated } from "./useHydrated";
 
 const { home, items: links, ui: navUi } = navigation;
 
@@ -40,6 +41,7 @@ function BrandWordmark() {
 }
 
 export default function Header() {
+  const hydrated = useHydrated();
   const pathname = usePathname();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const selectedNavIndex = getSelectedNavIndex(pathname);
@@ -117,6 +119,7 @@ export default function Header() {
           <div className="md:hidden flex items-center">
             <button
               ref={mobileToggleRef}
+              disabled={!hydrated}
               type="button"
               onClick={() => setMobileNavOpen((v) => !v)}
               className="inline-flex items-center justify-center w-11 h-11 border border-[var(--line)] text-neutral-700 dark:text-neutral-200"

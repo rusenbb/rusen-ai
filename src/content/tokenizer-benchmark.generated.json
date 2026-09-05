@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "name": "Bundled Turkish examples v1",
+  "scope": "Six existing demo examples, deliberately small and illustrative; not a representative Turkish benchmark.",
+  "baseline": "cl100k_base",
+  "tiktokenVersion": "1.0.22",
+  "corpusSha256": "6efcc382488c5aee487c3a923bbe711d345f0109e2709a15e9db708307170f41",
+  "wasmSha256": "5660c8a3822093dcb9753db63f07cffdafae411baa78a17053ca3e43aa0adc2b",
+  "ranksSha256": "684b403ae5c80bad20c356fc699baca1369fb426dbec3d143a561107d02f7ee2",
+  "rows": [
+    {
+      "text": "Merhaba dünya!",
+      "rusen": 4,
+      "baseline": 6
+    },
+    {
+      "text": "kitaplarımdan",
+      "rusen": 4,
+      "baseline": 5
+    },
+    {
+      "text": "evlerimizden",
+      "rusen": 3,
+      "baseline": 5
+    },
+    {
+      "text": "göremeyecekmişsiniz",
+      "rusen": 5,
+      "baseline": 9
+    },
+    {
+      "text": "Türkiye'nin başkenti Ankara'dır.",
+      "rusen": 8,
+      "baseline": 12
+    },
+    {
+      "text": "Yapay zeka günümüzde hızla gelişmektedir.",
+      "rusen": 10,
+      "baseline": 19
+    }
+  ],
+  "totalRusen": 34,
+  "totalBaseline": 56,
+  "reductionPercent": 39.28571428571429
+}

@@ -23,25 +23,17 @@ export function ArenaDiscrete({
   disabled: boolean;
   onPress: (symbol: DiscreteSymbol) => void;
 }) {
-  const [pulse, setPulse] = useState<{ symbol: DiscreteSymbol; correct: boolean } | null>(
-    null,
-  );
+  const [expiredResult, setExpiredResult] = useState<Result | null>(null);
+  const pulse = lastResult && lastResult !== expiredResult
+    ? { symbol: lastResult.symbol, correct: lastResult.symbol === lastResult.predicted }
+    : null;
 
-  // Transient visual flash on each new trial; auto-clears via setTimeout.
-  // Keyed on `lastResult.index` (trial counter) rather than `lastResult` itself:
-  // structurally-identical results (same symbol + same prediction two presses
-  // in a row) would otherwise be deduped by React Compiler's useMemo
-  // memoization and the effect would silently skip those presses.
+  // The trial index makes repeated outcomes distinct; clear feedback on reset.
   useEffect(() => {
     if (!lastResult) return;
-    setPulse({
-      symbol: lastResult.symbol,
-      correct: lastResult.symbol === lastResult.predicted,
-    });
-    const id = window.setTimeout(() => setPulse(null), 700);
+    const id = window.setTimeout(() => setExpiredResult(lastResult), 700);
     return () => window.clearTimeout(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lastResult?.index]);
+  }, [lastResult]);
 
   useEffect(() => {
     if (disabled) return;

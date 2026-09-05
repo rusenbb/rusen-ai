@@ -134,13 +134,24 @@ export type BotTrainingTelemetry = {
   points: TrainingMetricPoint[];
 };
 
+export type CheckpointProvenance = {
+  trainerCommit: string;
+  environmentVersion: string;
+  createdAt: string;
+  evaluation: string;
+  trainerSha256?: string;
+  browserSha256?: string;
+};
+
 export type DQNCheckpointAsset = {
+  provenance?: CheckpointProvenance;
   weights: SerializedDQNWeights;
   config: { layerSizes: number[] };
   telemetry: BotTrainingTelemetry;
 };
 
 export type DQNCheckpointManifest = {
+  provenance?: CheckpointProvenance;
   difficulty: BotDifficulty;
   label: string;
   summary: string;
@@ -191,15 +202,6 @@ export const ACTION_LABELS: Record<ArenaAction, string> = {
   guard: "Guard",
   dash: "Dash",
   hold: "Hold",
-};
-
-export const PLAYER_CATEGORY_LABELS: Record<PlayerCategory, string> = {
-  pressure: "Pressure",
-  guarded: "Guarded",
-  scavenger: "Resource",
-  vertical: "Vertical",
-  horizontal: "Horizontal",
-  holding: "Holding",
 };
 
 const PLAYER_CATEGORIES: PlayerCategory[] = [
@@ -1484,10 +1486,6 @@ export function createInitialMatch(
     lastBotReward: 0,
     statusMessage: "Round 1. Selected checkpoint loaded.",
   };
-}
-
-export function resetMatch(playerModel: PlayerModel): MatchState {
-  return createInitialMatch(playerModel);
 }
 
 export function advanceMatch(options: {

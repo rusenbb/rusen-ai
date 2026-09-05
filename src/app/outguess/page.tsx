@@ -48,7 +48,7 @@ export default function OutguessPage() {
       <DemoHeader
         eyebrow="Prediction Game"
         title="Outguess"
-        description="Try to be unpredictable. A tiny AI predicts your next key press and catches humans about 70% of the time."
+        description="Try to be unpredictable. A tiny AI predicts your next key press by learning patterns in this session."
       />
 
       <div className="mb-6 flex flex-wrap items-center gap-3">
@@ -59,8 +59,7 @@ export default function OutguessPage() {
 
       <DemoFootnote align="left">
         <strong>Why this works.</strong> An order-5 Markov chain catches human key-tapping
-        ~70% of the time because humans systematically avoid repetition when trying to be
-        random. Hide the AI guess to play a fair test of your own randomness, and watch
+        can learn repeated patterns. This demo does not claim a population-wide accuracy. Hide the AI guess to play a fair test of your own randomness, and watch
         the lifetime tally to see how the leading model is doing across the whole session.
       </DemoFootnote>
     </DemoPage>
@@ -81,7 +80,8 @@ function Session({ alphabet }: { alphabet: 2 | 4 }) {
   // value that was visible at press time (without rebuilding the callback on
   // every render - that would churn the keyboard listener).
   const predictedNextRef = useRef<DiscreteSymbol | null>(null);
-  const [showHint, setShowHint] = useState(true);
+  const [showHint, setShowHint] = useState(false);
+  const scoredTrials = useMemo(() => trials.filter((trial) => trial.hintShown === showHint), [trials, showHint]);
 
   const symbolLabels = alphabet === 2 ? LABELS_2 : LABELS_4;
   const keyMap = alphabet === 2 ? KEYS_2 : KEYS_4;
@@ -100,12 +100,12 @@ function Session({ alphabet }: { alphabet: 2 | 4 }) {
       const shownGuess = predictedNextRef.current ?? 0;
       const next = [
         ...prev,
-        { t: prev.length, symbol, shownGuess, predictions },
+        { t: prev.length, symbol, shownGuess, predictions, hintShown: showHint },
       ];
       trialsRef.current = next;
       setTrials(next);
     },
-    [predictors],
+    [predictors, showHint],
   );
 
   const handleReset = useCallback(() => {
@@ -116,7 +116,7 @@ function Session({ alphabet }: { alphabet: 2 | 4 }) {
 
   const leaderboardRows = useMemo<LeaderboardRow[]>(() => {
     const base = predictors.map((p) => {
-      const s = scoreDiscrete(trials, p.meta.id, alphabet, 50);
+      const s = scoreDiscrete(scoredTrials, p.meta.id, alphabet, 50);
       return {
         meta: p.meta,
         primary: s.accuracy,
@@ -136,7 +136,7 @@ function Session({ alphabet }: { alphabet: 2 | 4 }) {
       ...r,
       isLeader: leader !== null && r.meta.id === leader.meta.id,
     }));
-  }, [trials, alphabet, predictors]);
+  }, [scoredTrials, alphabet, predictors]);
 
   const leaderId = leaderboardRows.find((r) => r.isLeader)?.meta.id ?? null;
   const leaderLabel = leaderboardRows.find((r) => r.isLeader)?.meta.label ?? "-";
@@ -161,11 +161,11 @@ function Session({ alphabet }: { alphabet: 2 | 4 }) {
   // whichever predictor is currently leading.
   const tally = useMemo(() => {
     let right = 0;
-    for (const t of trials) {
+    for (const t of scoredTrials) {
       if (t.shownGuess === t.symbol) right += 1;
     }
-    return { right, total: trials.length };
-  }, [trials]);
+    return { right, total: scoredTrials.length };
+  }, [scoredTrials]);
 
   // predict() does not mutate - safe to call during render.
   const predictedNext = useMemo<DiscreteSymbol | null>(() => {
@@ -225,6 +225,8 @@ function Session({ alphabet }: { alphabet: 2 | 4 }) {
           ↺ Reset
         </button>
         <HintToggle showHint={showHint} setShowHint={setShowHint} />
+        <p className="w-full text-xs text-neutral-500">Leaderboard and large tally show {showHint ? "hint-visible" : "blind"} trials only. Models learn from the whole session; these are separate score slices, not independent experiments.</p>
+        <div className="w-full flex flex-wrap gap-4 text-sm">{[false, true].map((hint) => { const slice = trials.filter((trial) => trial.hintShown === hint); const hits = slice.filter((trial) => trial.shownGuess === trial.symbol).length; return <span key={String(hint)}>{hint ? "Hint visible" : "Blind"}: {hits}/{slice.length} correct{slice.length ? " (" + Math.round(hits / slice.length * 100) + "%)" : ""}</span>; })}</div>
         <div
           className="ml-auto rounded-md border border-[var(--line)] bg-[var(--surface)] px-3 py-1.5 font-mono text-xs"
           title={`Lifetime tally for ${arenaShownLabel}. Jumps when the leader changes.`}

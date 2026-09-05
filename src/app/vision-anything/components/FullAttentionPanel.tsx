@@ -22,20 +22,12 @@ function computeAverage(masks: AttentionMask[]): AttentionMask | null {
   }
   // Mean.
   for (let i = 0; i < total; i++) data[i] /= masks.length;
-  // Renormalise to [0,1] so the average isn't always dim.
-  let mn = Infinity;
-  let mx = -Infinity;
-  for (let i = 0; i < total; i++) {
-    if (data[i] < mn) mn = data[i];
-    if (data[i] > mx) mx = data[i];
-  }
-  const range = mx - mn || 1;
-  for (let i = 0; i < total; i++) data[i] = (data[i] - mn) / range;
   return { data, width, height };
 }
 
 interface Props {
   imageUrl: string;
+  imageAspect?: number;
   labels: string[];
   initialLabel: string | null;
   clipSeg: UseClipSeg;
@@ -44,6 +36,7 @@ interface Props {
 
 export default function FullAttentionPanel({
   imageUrl,
+  imageAspect = 4 / 3,
   labels,
   initialLabel,
   clipSeg,
@@ -58,14 +51,16 @@ export default function FullAttentionPanel({
   const [mode, setMode] = useState<Mode>("overlay");
   const [imageOpacity, setImageOpacity] = useState(60);
 
-  // Run CLIPSeg for every label in one batch, exactly once on mount.
+  const { segmentBatch } = clipSeg;
+
+  // Progress updates must not restart inference for the same image and labels.
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setBusy(true);
       setError(null);
       try {
-        const masks = await clipSeg.segmentBatch(imageUrl, labels);
+        const masks = await segmentBatch(imageUrl, labels);
         if (cancelled) return;
         const labeled = labels.map((label, i) => ({ label, mask: masks[i] }));
         setAllMasks(labeled);
@@ -82,7 +77,7 @@ export default function FullAttentionPanel({
     return () => {
       cancelled = true;
     };
-  }, [imageUrl, labels, clipSeg, initialLabel]);
+  }, [imageUrl, labels, segmentBatch, initialLabel]);
 
   const averageMask = useMemo(
     () => computeAverage(allMasks.map((m) => m.mask)),
@@ -102,7 +97,7 @@ export default function FullAttentionPanel({
       <div className="flex items-baseline justify-between mb-4">
         <div>
           <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-cyan-400">
-            Full attention
+            Segmentation maps
           </p>
           <h2 className="text-lg sm:text-xl font-semibold mt-0.5">{activeTitle}</h2>
         </div>
@@ -151,7 +146,7 @@ export default function FullAttentionPanel({
           {mode === "overlay" && (
             <Image
               src={imageUrl}
-              alt="Attention base"
+              alt="Segmentation source"
               fill
               className="object-contain"
               style={{ opacity: imageOpacity / 100 }}
@@ -165,6 +160,7 @@ export default function FullAttentionPanel({
           {activeMask && (
             <HeatmapCanvas
               mask={activeMask}
+              imageAspect={imageAspect}
               palette={mode === "heatmap" ? "viridis" : "cyan"}
               blend={mode === "heatmap" ? "alpha" : "screen"}
             />
@@ -284,8 +280,7 @@ export default function FullAttentionPanel({
           <p>
             CLIPSeg adds a small Transformer decoder on top of CLIP that, given the same
             image and a text prompt, predicts a per-pixel logit map - &ldquo;does this pixel
-            match this concept?&rdquo;. We pass it the sigmoid, normalise to [0, 1] for
-            visibility, and paint the result. This is not classical attention rollout
+            match this concept?&rdquo;. We pass it the sigmoid, keep its original 0–1 scale, and paint the result. Dark = 0, bright = 1. Each label uses the same scale; these are model scores, not calibrated accuracy. This is not classical attention rollout
             from the image encoder - CLIPSeg is its own decoder trained on the PhraseCut
             dataset.
           </p>
@@ -293,7 +288,7 @@ export default function FullAttentionPanel({
             <strong className="text-neutral-200">Per-label maps</strong> show what the
             model finds for one concept; the{" "}
             <strong className="text-neutral-200">average</strong> entry is the per-pixel
-            mean across every label, renormalised - a rough &ldquo;saliency&rdquo; pass
+            mean across every label on the same scale - a rough &ldquo;saliency&rdquo; pass
             highlighting regions the model finds informative no matter what you&apos;re
             looking for.
           </p>

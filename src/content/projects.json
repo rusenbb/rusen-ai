@@ -1,5 +1,57 @@
 [
   {
+    "id": "sampling-lab",
+    "title": "Sampling Lab",
+    "slug": "sampling-lab",
+    "collection": "demos",
+    "status": "live",
+    "summary": "Change the sample rate and watch different waves pass through the same measurements. Explore aliasing and the Nyquist boundary.",
+    "description": "Interactive sine-wave sampling lab with phase controls and an exact baseband alias.",
+    "tags": [
+      "Signals",
+      "Sampling",
+      "Aliasing"
+    ],
+    "domains": [
+      "Computational Tools"
+    ],
+    "capabilities": [
+      "Visualization",
+      "Simulation"
+    ],
+    "tech": [
+      "TypeScript",
+      "SVG"
+    ],
+    "order": 56
+  },
+  {
+    "id": "decision-boundary",
+    "title": "Decision Boundary",
+    "slug": "decision-boundary",
+    "collection": "demos",
+    "status": "live",
+    "summary": "Inspect nearest-neighbor votes, add examples, and reshape a classifier's decision boundary on moons, rings, and XOR.",
+    "description": "Interactive k-nearest-neighbor classifier with editable synthetic datasets and leave-one-out evaluation.",
+    "tags": [
+      "Classification",
+      "k-NN",
+      "Visualization"
+    ],
+    "domains": [
+      "ML"
+    ],
+    "capabilities": [
+      "Classification",
+      "Visualization"
+    ],
+    "tech": [
+      "TypeScript",
+      "SVG"
+    ],
+    "order": 57
+  },
+  {
     "id": "classify-anything",
     "title": "Classify Anything",
     "slug": "classify-anything",
@@ -272,7 +324,7 @@
     "slug": "rusenizer",
     "collection": "nerdy-stuff",
     "status": "live",
-    "summary": "My Turkish-optimized tokenizer. Compare with GPT-4 and see ~45% token savings on Turkish text.",
+    "summary": "Compare a Turkish-focused tokenizer with cl100k_base, inspect byte boundaries, and reproduce the bundled example comparison.",
     "description": "Turkish-focused tokenizer experimentation playground.",
     "tags": [
       "Tokenization",
@@ -327,8 +379,8 @@
     "slug": "outguess",
     "collection": "demos",
     "status": "live",
-    "summary": "Try to be unpredictable. A tiny AI predicts your next key press, and catches humans about 70% of the time.",
-    "description": "Predictor-vs-human key-tapping game. You try to be random; a small AI tries to call each next press. Most people get caught about 70% of the time.",
+    "summary": "Try to be unpredictable. Small sequence models learn your patterns, with separate blind and hint-visible scores.",
+    "description": "Predictor-vs-human key-tapping game with Markov and PPM predictors and condition-specific session scores.",
     "tags": [
       "N-Gram",
       "PPM",
@@ -405,9 +457,9 @@
     "title": "Steering LLMs",
     "slug": "steering-llms",
     "collection": "nerdy-stuff",
-    "status": "coming-soon",
-    "summary": "Probe whether concepts can be induced, strengthened, or redirected inside a model with steering and interpretability tools.",
-    "description": "Concept steering and intervention playground for local language models.",
+    "status": "live",
+    "summary": "Compare matched DistilGPT2 completions with explicit token-logit steering, fixed sampling settings, and a zero-strength control.",
+    "description": "Browser-side lexical steering at the output logits of a small causal language model. Same prompt, seed, temperature, and output budget.",
     "tags": [
       "LLM",
       "Interpretability",
@@ -417,12 +469,13 @@
       "NLP"
     ],
     "capabilities": [
-      "Interpretability",
-      "Control"
+      "Control",
+      "Visualization"
     ],
     "tech": [
-      "Local LLM",
-      "Transformers.js"
+      "DistilGPT2",
+      "Transformers.js",
+      "WASM"
     ],
     "order": 60
   },
@@ -460,9 +513,9 @@
     "title": "RuseN-Gram",
     "slug": "rusen-gram",
     "collection": "nerdy-stuff",
-    "status": "coming-soon",
-    "summary": "My personal N-Gram model. Old school meets new school language modeling.",
-    "description": "Classic N-gram language modeling playground.",
+    "status": "live",
+    "summary": "Build a word-level language model from an editable corpus. Inspect counts, suffix backoff, additive smoothing, and seeded generation.",
+    "description": "Transparent N-gram language model with actual context counts, backoff traces, and reproducible sampling.",
     "tags": [
       "N-Gram",
       "Classic ML"
@@ -474,6 +527,7 @@
       "Language Modeling"
     ],
     "tech": [
+      "TypeScript",
       "N-grams"
     ],
     "order": 80

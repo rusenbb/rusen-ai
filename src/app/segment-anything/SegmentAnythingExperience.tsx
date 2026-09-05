@@ -15,7 +15,6 @@ import {
   type ExportBackground,
 } from "./types";
 import { useSAM } from "./hooks/useSAM";
-import type { DecodeResult } from "./hooks/useSAM";
 import { exportSelection, exportWithRemoval } from "./utils/exportMask";
 import SegmentCanvas from "./components/SegmentCanvas";
 import ControlPanel from "./components/ControlPanel";
@@ -38,6 +37,9 @@ export default function SegmentAnythingExperience() {
   );
   const [maskRenderKey, setMaskRenderKey] = useState(0);
 
+  const requestRef = useRef(0);
+  const [operationError, setOperationError] = useState<string | null>(null);
+
   // Track blob URLs for cleanup
   const blobUrlRef = useRef<string | null>(null);
 
@@ -47,6 +49,8 @@ export default function SegmentAnythingExperience() {
 
   const handleImageSelect = useCallback(
     async (url: string) => {
+      const request = ++requestRef.current;
+      setOperationError(null);
       dispatch({ type: "IMAGE_SELECTED", url });
       allMasksRef.current = null;
       setActiveMaskData(null);
@@ -55,11 +59,13 @@ export default function SegmentAnythingExperience() {
       const t0 = performance.now();
       try {
         await encodeImage(url);
+        if (request !== requestRef.current) return;
         dispatch({
           type: "ENCODE_DONE",
           encoderMs: performance.now() - t0,
         });
       } catch (err) {
+        if (request !== requestRef.current) return;
         dispatch({
           type: "MODEL_ERROR",
           error: err instanceof Error ? err.message : "Encoding failed",
@@ -89,92 +95,47 @@ export default function SegmentAnythingExperience() {
     [handleImageSelect]
   );
 
-  // ── Point added ──────────────────────────────────────────────────
-
-  const handlePointAdd = useCallback(
-    async (nx: number, ny: number, label: 1 | 0) => {
-      if (state.phase !== "encoded") return;
-
-      const newPoint: SegmentPoint = {
-        id: crypto.randomUUID(),
-        x: nx,
-        y: ny,
-        label,
-      };
-      const updatedPoints = [...state.points, newPoint];
-      dispatch({ type: "ADD_POINT", point: newPoint });
-
-      const t0 = performance.now();
-      try {
-        const result: DecodeResult = await decodePoints(updatedPoints);
-        const ms = performance.now() - t0;
-
-        allMasksRef.current = result.masks;
-        setMaskDims(result.dims);
-
-        dispatch({
-          type: "DECODE_DONE",
-          decoderMs: ms,
-          candidates: result.candidates,
-        });
-
-        const best = result.candidates.reduce((a, b) =>
-          b.iouScore > a.iouScore ? b : a
-        );
-        setActiveMaskData(result.masks[best.index] ?? null);
-        setMaskRenderKey((k) => k + 1);
-      } catch (err) {
-        console.error("Decode failed:", err);
-      }
-    },
-    [state.phase, state.points, decodePoints]
-  );
-
-  // ── Undo last point ──────────────────────────────────────────────
-
-  const handleUndoPoint = useCallback(async () => {
-    if (state.points.length === 0) return;
-
-    const lastPoint = state.points[state.points.length - 1];
-    const remaining = state.points.slice(0, -1);
-    dispatch({ type: "REMOVE_POINT", id: lastPoint.id });
-
-    if (remaining.length === 0) {
-      allMasksRef.current = null;
-      setActiveMaskData(null);
-      setMaskRenderKey((k) => k + 1);
-      return;
-    }
-
+  const updateMask = useCallback(async (points: SegmentPoint[]) => {
+    const request = ++requestRef.current;
+    setOperationError(null);
+    allMasksRef.current = null;
+    setActiveMaskData(null);
+    setMaskRenderKey((key) => key + 1);
+    if (!points.length) return;
+    const started = performance.now();
     try {
-      const result: DecodeResult = await decodePoints(remaining);
+      const result = await decodePoints(points);
+      if (request !== requestRef.current) return;
+      if (!result.candidates.length) throw new Error("The model returned no mask candidates.");
       allMasksRef.current = result.masks;
       setMaskDims(result.dims);
-
-      dispatch({
-        type: "DECODE_DONE",
-        decoderMs: 0,
-        candidates: result.candidates,
-      });
-
-      const best = result.candidates.reduce((a, b) =>
-        b.iouScore > a.iouScore ? b : a
-      );
+      dispatch({ type: "DECODE_DONE", decoderMs: performance.now() - started, candidates: result.candidates });
+      const best = result.candidates.reduce((a, b) => b.iouScore > a.iouScore ? b : a);
       setActiveMaskData(result.masks[best.index] ?? null);
-      setMaskRenderKey((k) => k + 1);
-    } catch (err) {
-      console.error("Decode after undo failed:", err);
+      setMaskRenderKey((key) => key + 1);
+    } catch (error) {
+      if (request === requestRef.current) setOperationError(error instanceof Error ? error.message : "Mask decoding failed. Try the point again.");
     }
-  }, [state.points, decodePoints]);
+  }, [decodePoints]);
 
-  // ── Clear points ─────────────────────────────────────────────────
+  const handlePointAdd = useCallback((x: number, y: number, label: 0 | 1) => {
+    if (state.phase !== "encoded") return;
+    const point = { id: crypto.randomUUID(), x, y, label };
+    dispatch({ type: "ADD_POINT", point });
+    void updateMask([...state.points, point]);
+  }, [state.phase, state.points, updateMask]);
+
+  const handleUndoPoint = useCallback(() => {
+    const last = state.points.at(-1);
+    if (!last) return;
+    dispatch({ type: "REMOVE_POINT", id: last.id });
+    void updateMask(state.points.slice(0, -1));
+  }, [state.points, updateMask]);
 
   const handleClearPoints = useCallback(() => {
     dispatch({ type: "CLEAR_POINTS" });
-    allMasksRef.current = null;
-    setActiveMaskData(null);
-    setMaskRenderKey((k) => k + 1);
-  }, []);
+    void updateMask([]);
+  }, [updateMask]);
 
   // ── Switch active mask ───────────────────────────────────────────
 
@@ -186,35 +147,15 @@ export default function SegmentAnythingExperience() {
     }
   }, []);
 
-  // ── Export handlers ──────────────────────────────────────────────
-
-  const handleExportSelection = useCallback(
-    (bg: ExportBackground) => {
-      if (!activeMaskData || !state.imageUrl) return;
-      exportSelection(
-        state.imageUrl,
-        activeMaskData,
-        maskDims.w,
-        maskDims.h,
-        bg
-      );
-    },
-    [activeMaskData, state.imageUrl, maskDims]
-  );
-
-  const handleExportRemoval = useCallback(
-    (fill: ExportBackground) => {
-      if (!activeMaskData || !state.imageUrl) return;
-      exportWithRemoval(
-        state.imageUrl,
-        activeMaskData,
-        maskDims.w,
-        maskDims.h,
-        fill
-      );
-    },
-    [activeMaskData, state.imageUrl, maskDims]
-  );
+  const exportMask = useCallback(async (background: ExportBackground, remove: boolean) => {
+    if (!activeMaskData || !state.imageUrl) return;
+    setOperationError(null);
+    try {
+      await (remove ? exportWithRemoval : exportSelection)(state.imageUrl, activeMaskData, maskDims.w, maskDims.h, background);
+    } catch (error) {
+      setOperationError(error instanceof Error ? error.message : "PNG export failed. Please retry.");
+    }
+  }, [activeMaskData, state.imageUrl, maskDims]);
 
   // ── Render ───────────────────────────────────────────────────────
 
@@ -248,6 +189,7 @@ export default function SegmentAnythingExperience() {
         }
       />
 
+      {(operationError || state.error) && <div role="alert" className="mb-4 border border-red-500 p-3 text-sm">{operationError || state.error}<Button size="sm" className="ml-3" onClick={() => state.phase === "encoded" ? void updateMask(state.points) : state.imageUrl && void handleImageSelect(state.imageUrl)}>Retry</Button></div>}
       <div className="flex flex-col gap-4 lg:flex-row lg:gap-6">
         {/* Canvas + status */}
         <div className="min-w-0 flex-1 flex flex-col gap-0">
@@ -293,8 +235,8 @@ export default function SegmentAnythingExperience() {
             onOpacityChange={(v) =>
               dispatch({ type: "SET_OPACITY", opacity: v })
             }
-            onExportSelection={handleExportSelection}
-            onExportRemoval={handleExportRemoval}
+            onExportSelection={(bg) => void exportMask(bg, false)}
+            onExportRemoval={(bg) => void exportMask(bg, true)}
           />
         </div>
       </div>

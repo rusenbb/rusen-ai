@@ -52,6 +52,8 @@ export interface Trajectory {
   points: Point[];
   losses: number[];
   diverged: boolean;
+  stopReason: "step-limit" | "non-finite" | "out-of-view" | "stationary";
+  stopStep: number;
 }
 
 export const OPTIMIZER_META: Record<OptimizerName, { label: string; color: string; description: string }> = {
@@ -175,16 +177,6 @@ export function matchedLearningRateConfigs(learningRate: number, configs: Optimi
   };
 }
 
-/** Legacy convenience wrapper for the original curved terrain. */
-export function racetrackLoss(point: Point): number {
-  return LANDSCAPES.ravine.loss(point);
-}
-
-/** Legacy convenience wrapper for the original curved terrain. */
-export function racetrackGradient(point: Point): Point {
-  return LANDSCAPES.ravine.gradient(point);
-}
-
 export function createOptimizerState(point: Point): OptimizerState {
   return {
     point: { ...point },
@@ -269,26 +261,18 @@ export function simulateOptimizer(
   const points = [{ ...start }];
   const losses = [landscape.loss(start)];
   let diverged = false;
+  let stopReason: Trajectory["stopReason"] = "step-limit";
   for (let index = 0; index < iterations; index += 1) {
     state = optimizerStep(name, state, config, landscape);
     const nextLoss = landscape.loss(state.point);
-    if (!Number.isFinite(nextLoss) || leftDisplayedTerrain(state.point, landscape.bounds)) {
-      diverged = true;
-      break;
+    if (!Number.isFinite(nextLoss)) {
+      diverged = true; stopReason = "non-finite"; break;
     }
     points.push({ ...state.point });
     losses.push(nextLoss);
+    if (leftDisplayedTerrain(state.point, landscape.bounds)) { stopReason = "out-of-view"; break; }
+    const gradient = landscape.gradient(state.point);
+    if (Math.hypot(gradient.x, gradient.y) < 1e-4 && Math.abs(nextLoss - losses[losses.length - 2]) < 1e-8) { stopReason = "stationary"; break; }
   }
-  return { name, points, losses, diverged };
-}
-
-export function finiteDifferenceGradient(
-  point: Point,
-  landscape: LossLandscape = LANDSCAPES.ravine,
-  epsilon = 1e-5,
-): Point {
-  return {
-    x: (landscape.loss({ x: point.x + epsilon, y: point.y }) - landscape.loss({ x: point.x - epsilon, y: point.y })) / (2 * epsilon),
-    y: (landscape.loss({ x: point.x, y: point.y + epsilon }) - landscape.loss({ x: point.x, y: point.y - epsilon })) / (2 * epsilon),
-  };
+  return { name, points, losses, diverged, stopReason, stopStep: state.step };
 }

@@ -1,24 +1,5 @@
 import type { DiscreteSymbol } from "./modes";
 
-export function shannonEntropy(
-  symbols: DiscreteSymbol[],
-  alphabet: number,
-  windowSize = 50,
-): number {
-  const slice = symbols.slice(-windowSize);
-  if (slice.length === 0) return 0;
-  const counts = new Array(alphabet).fill(0);
-  for (const s of slice) counts[s] += 1;
-  const n = slice.length;
-  let h = 0;
-  for (const c of counts) {
-    if (c === 0) continue;
-    const p = c / n;
-    h -= p * Math.log2(p);
-  }
-  return h;
-}
-
 export function bigramEntropy(
   symbols: DiscreteSymbol[],
   alphabet: number,

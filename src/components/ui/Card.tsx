@@ -77,37 +77,3 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(function Card(
     </div>
   );
 });
-
-/**
- * Card header component for semantic structure.
- */
-export function CardHeader({
-  children,
-  className = "",
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
-  return (
-    <div className={`flex items-center justify-between mb-3 ${className}`}>
-      {children}
-    </div>
-  );
-}
-
-/**
- * Card title component for consistent heading styling.
- */
-export function CardTitle({
-  children,
-  className = "",
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
-  return (
-    <h3 className={`text-lg font-semibold text-neutral-900 dark:text-neutral-100 ${className}`}>
-      {children}
-    </h3>
-  );
-}
