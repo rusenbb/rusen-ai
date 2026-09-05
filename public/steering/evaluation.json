@@ -1,0 +1,313 @@
+{
+  "scope": "Exploratory local CPU evaluation; three new prompts per preset, not a general benchmark. GPU/WASM numerics and outputs can differ.",
+  "originalModelParity": [
+    {
+      "layer": 5,
+      "maxError": 0
+    },
+    {
+      "layer": 10,
+      "maxError": 0
+    },
+    {
+      "layer": 15,
+      "maxError": 0
+    },
+    {
+      "layer": 20,
+      "maxError": 0
+    },
+    {
+      "layer": 25,
+      "maxError": 0
+    }
+  ],
+  "layerStrengthSweep": [
+    {
+      "layer": 10,
+      "strength": 0,
+      "additionMaxError": 0,
+      "divergence": 0,
+      "text": "A place where you can spend an afternoon is a place where you can relax, unwind, and enjoy the company of others. It is a place where you can escape the hustle and bustle of daily life and find a sense",
+      "repetition": 0.13043478260869568
+    },
+    {
+      "layer": 10,
+      "strength": -1,
+      "additionMaxError": 1.9073486328125e-06,
+      "divergence": 0.3269939819525933,
+      "text": "I'm glad you asked for a place to spend an afternoon. Here are a few places that might interest you:\n\n- A beach with a great view of the ocean\n- A park with a great playground for kids\n- A",
+      "repetition": 0.06521739130434778
+    },
+    {
+      "layer": 10,
+      "strength": 1,
+      "additionMaxError": 5.7220458984375e-06,
+      "divergence": 0.19976204116077256,
+      "text": "A place where I could spend an afternoon is a place that is not too far from my home, but not too far from the city. I would like to visit this place, but I am not sure if it is the right place for",
+      "repetition": 0.04347826086956519
+    },
+    {
+      "layer": 10,
+      "strength": 2,
+      "additionMaxError": 3.814697265625e-06,
+      "divergence": 0.38696480976777536,
+      "text": "I'm glad you like the picture. I'm not sure if you're interested in a particular place, but I can suggest a few places that might be a good fit for you.\n\nI'm not sure if you're interested in",
+      "repetition": 0.13043478260869568
+    },
+    {
+      "layer": 15,
+      "strength": 0,
+      "additionMaxError": 0,
+      "divergence": 0,
+      "text": "A place where you can spend an afternoon is a place where you can relax, unwind, and enjoy the company of others. It is a place where you can escape the hustle and bustle of daily life and find a sense",
+      "repetition": 0.13043478260869568
+    },
+    {
+      "layer": 15,
+      "strength": -1,
+      "additionMaxError": 1.9073486328125e-06,
+      "divergence": 0.43635892391707565,
+      "text": "You can spend an afternoon at a place called \"Hughes-to-Haven\" (HGV) or \"HGV-to-Haven\" (HHH). The most common one is \"HG",
+      "repetition": 0.17391304347826086
+    },
+    {
+      "layer": 15,
+      "strength": 1,
+      "additionMaxError": 1.9073486328125e-06,
+      "divergence": 0.6591932511493174,
+      "text": "In the heart of the forest, where the trees swayed gently, a place of peace and tranquility,\n\nThe river flows, and the water is clear,\n\nThe river's banks are green, and the birds sing sweet songs",
+      "repetition": 0.08695652173913049
+    },
+    {
+      "layer": 15,
+      "strength": 2,
+      "additionMaxError": 3.814697265625e-06,
+      "divergence": 0.8723961464184379,
+      "text": "Where shadows dance on the moonlight, and the river sings a song of peace, and the trees stand still,\n\nand the bird's nest is not a nest for the young, nor does the bird's nest belong to a man",
+      "repetition": 0.06521739130434778
+    },
+    {
+      "layer": 20,
+      "strength": 0,
+      "additionMaxError": 0,
+      "divergence": 0,
+      "text": "A place where you can spend an afternoon is a place where you can relax, unwind, and enjoy the company of others. It is a place where you can escape the hustle and bustle of daily life and find a sense",
+      "repetition": 0.13043478260869568
+    },
+    {
+      "layer": 20,
+      "strength": -1,
+      "additionMaxError": 7.62939453125e-06,
+      "divergence": 0.37343999623365165,
+      "text": "The process of finding a place to spend an afternoon can be complex, but there are a few key steps that can help you get started. First, you need to identify the type of place you need. This can vary depending on the type",
+      "repetition": 0
+    },
+    {
+      "layer": 20,
+      "strength": 1,
+      "additionMaxError": 7.62939453125e-06,
+      "divergence": 0.44321696051691106,
+      "text": "A place where the sun sets and the trees sway in the breeze, where the water flows and the birds sing, and where the sun casts a warm glow over the earth.",
+      "repetition": 0.030303030303030276
+    },
+    {
+      "layer": 20,
+      "strength": 2,
+      "additionMaxError": 3.814697265625e-06,
+      "divergence": 0.759435661687088,
+      "text": "As the sun set, the leaves danced with a gentle melody, the flowers swayed with a sweet melody, and the leaves sang a sweet melody with a gentle rustling of the leaves.\n\nThe air was filled with the sweet scent",
+      "repetition": 0.04347826086956519
+    }
+  ],
+  "heldOutPrompts": {
+    "model": "HuggingFaceTB/SmolLM2-135M-Instruct",
+    "revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+    "settings": {
+      "layer": 15,
+      "strength": 1,
+      "seed": 42,
+      "temperature": 0,
+      "tokens": 64
+    },
+    "runs": [
+      {
+        "preset": "optimism",
+        "prompt": "Describe a quiet morning.",
+        "firstStepDivergence": 0.2179597725861193,
+        "outputs": {
+          "baseline": {
+            "text": "A quiet morning is a peaceful and serene time of day, often characterized by a gentle breeze, a gentle hum of the sun, and a sense of calm and focus. It's a time when the world seems to slow down, and the mind is able to focus on the present moment.\n\nIn a quiet morning",
+            "repeatedTrigrams": 0
+          },
+          "prompted": {
+            "text": "A quiet morning is a time of rest and reflection, often marked by a sense of calm and clarity. It's a time when the world seems to slow down, and the mind is able to clear its thoughts. This is a time when the mind is able to focus on the present moment, and the thoughts are able",
+            "repeatedTrigrams": 0.11290322580645162
+          },
+          "steered": {
+            "text": "A quiet morning is a time of reflection and rejuvenation, often marked by a sense of calm and clarity. It's a perfect time to unwind and reconnect with the world around you. Here are a few suggestions:\n\n* I find myself in a cozy spot, perhaps a park or a rooftop, where the",
+            "repeatedTrigrams": 0
+          }
+        }
+      },
+      {
+        "preset": "optimism",
+        "prompt": "What could I do on a weekend?",
+        "firstStepDivergence": 0.34912118081526927,
+        "outputs": {
+          "baseline": {
+            "text": "On a weekend, you can try a few things to make the most of your time. First, consider a beach or a nearby lake for a relaxing day. You can swim, snorkel, or simply enjoy the scenery. If you're feeling adventurous, you could try a fishing trip or a boat tour. If you",
+            "repeatedTrigrams": 0.016129032258064502
+          },
+          "prompted": {
+            "text": "On a weekend, you can try a few things to boost your mood and energy levels. You could grab a coffee or a snack and enjoy a quiet evening at home, or you could try a workout or a yoga session. If you're feeling a bit sluggish, you could try a hot bath or a cold shower.",
+            "repeatedTrigrams": 0.032258064516129004
+          },
+          "steered": {
+            "text": "On a weekend, you can explore a variety of activities that cater to different interests and preferences. Here are a few ideas:\n\nYou could start with a visit to a local park or nature reserve, which offers a serene and peaceful atmosphere. This could be a great spot for people who enjoy outdoor activities, such as",
+            "repeatedTrigrams": 0
+          }
+        }
+      },
+      {
+        "preset": "optimism",
+        "prompt": "Explain why people explore new places.",
+        "firstStepDivergence": 0.33746700835528354,
+        "outputs": {
+          "baseline": {
+            "text": "People explore new places for a variety of reasons, but one of the most common reasons is to escape their daily lives and find a fresh start. Many people travel to new places for a variety of reasons, including to escape the stresses of everyday life, to experience new cultures and ways of life, and to escape the monot",
+            "repeatedTrigrams": 0.11290322580645162
+          },
+          "prompted": {
+            "text": "People explore new places for a variety of reasons, but one of the most common reasons is to experience a new culture, try new foods, and broaden their perspectives. They often seek out new experiences that can help them develop a more nuanced understanding of the world and its many complexities.\n\nAnother reason is to escape the",
+            "repeatedTrigrams": 0
+          },
+          "steered": {
+            "text": "People explore new places for a variety of reasons, often driven by a desire for a change of pace, a chance to experience a new culture, or a desire to escape the stresses of daily life. Some individuals may be looking for a fresh start, while others might be seeking a more relaxed environment to unwind and rejuven",
+            "repeatedTrigrams": 0
+          }
+        }
+      },
+      {
+        "preset": "nature",
+        "prompt": "Describe a quiet morning.",
+        "firstStepDivergence": 0.6624150817092122,
+        "outputs": {
+          "baseline": {
+            "text": "A quiet morning is a peaceful and serene time of day, often characterized by a gentle breeze, a gentle hum of the sun, and a sense of calm and focus. It's a time when the world seems to slow down, and the mind is able to focus on the present moment.\n\nIn a quiet morning",
+            "repeatedTrigrams": 0
+          },
+          "prompted": {
+            "text": "A quiet morning is a peaceful and serene time of day, often marked by a gentle breeze, a gentle hum of the sun, and a sense of stillness. It's a time when the world is at its most peaceful and focused on the present moment.\n\nImagine a gentle breeze rustling through the leaves of",
+            "repeatedTrigrams": 0.016129032258064502
+          },
+          "steered": {
+            "text": "In a quiet morning, the sun sets low, casting a golden glow over the earth, and the trees stand tall, their leaves a soft, ethereal hue. The air is filled with the scent of blooming flowers, and the birds sing sweet melodies, their cries a reminder of the beauty that lives beyond the world",
+            "repeatedTrigrams": 0.016129032258064502
+          }
+        }
+      },
+      {
+        "preset": "nature",
+        "prompt": "What could I do on a weekend?",
+        "firstStepDivergence": 0.5140560626094293,
+        "outputs": {
+          "baseline": {
+            "text": "On a weekend, you can try a few things to make the most of your time. First, consider a beach or a nearby lake for a relaxing day. You can swim, snorkel, or simply enjoy the scenery. If you're feeling adventurous, you could try a fishing trip or a boat tour. If you",
+            "repeatedTrigrams": 0.016129032258064502
+          },
+          "prompted": {
+            "text": "On a weekend, you could try a few things to get some fresh air and a change of scenery. You could take a walk in the park or a nearby forest, or visit a local park or nature reserve. If you're feeling more energetic, you could try a hike or a bike ride. If you're feeling",
+            "repeatedTrigrams": 0.09677419354838712
+          },
+          "steered": {
+            "text": "In a warm and sunny land, where the sun's rays dance and the wind whispers secrets,\n\nOn a hill, where the trees stand tall and the birds sing,\n\nOn a river, where the water's clear and the fish swim,\n\nOn a mountain, where the snow-capped peaks",
+            "repeatedTrigrams": 0.14516129032258063
+          }
+        }
+      },
+      {
+        "preset": "nature",
+        "prompt": "Explain why people explore new places.",
+        "firstStepDivergence": 0.7641473484690076,
+        "outputs": {
+          "baseline": {
+            "text": "People explore new places for a variety of reasons, but one of the most common reasons is to escape their daily lives and find a fresh start. Many people travel to new places for a variety of reasons, including to escape the stresses of everyday life, to experience new cultures and ways of life, and to escape the monot",
+            "repeatedTrigrams": 0.11290322580645162
+          },
+          "prompted": {
+            "text": "People explore new places for a variety of reasons, but some common reasons include a desire for adventure, a need for a change of scenery, a desire for a new cultural experience, a need for a change of pace, and a desire for a change of scenery.\n\nPeople may also explore new places for a sense",
+            "repeatedTrigrams": 0.22580645161290325
+          },
+          "steered": {
+            "text": "In a world where shadows danced across the sky and the wind whispers secrets, people explore new places. They come from different walks of life, each with their own story, and they find beauty in the beauty of the earth.\n\nThe sun beats down on the beach, and the waves lap against the shore, making",
+            "repeatedTrigrams": 0
+          }
+        }
+      },
+      {
+        "preset": "story",
+        "prompt": "Describe a quiet morning.",
+        "firstStepDivergence": 0.6532353583497752,
+        "outputs": {
+          "baseline": {
+            "text": "A quiet morning is a peaceful and serene time of day, often characterized by a gentle breeze, a gentle hum of the sun, and a sense of calm and focus. It's a time when the world seems to slow down, and the mind is able to focus on the present moment.\n\nIn a quiet morning",
+            "repeatedTrigrams": 0
+          },
+          "prompted": {
+            "text": "A quiet morning is a peaceful and serene time of day, often marked by a gentle breeze, a gentle hum of the sun, and a sense of calm and focus. It's a time when the world seems to slow down, and the world around us seems to be watching us with a kind of quiet, unassuming",
+            "repeatedTrigrams": 0
+          },
+          "steered": {
+            "text": "I was in a place called the Shadowwood, a place of darkness and shadows, and the air was thick with the scent of damp earth and smoke. I was a gentle soul, and the moonlight sparkled in the darkness, casting shadows on the walls and the trees.\n\nI walked through a narrow alley",
+            "repeatedTrigrams": 0.016129032258064502
+          }
+        }
+      },
+      {
+        "preset": "story",
+        "prompt": "What could I do on a weekend?",
+        "firstStepDivergence": 0.6388594300657717,
+        "outputs": {
+          "baseline": {
+            "text": "On a weekend, you can try a few things to make the most of your time. First, consider a beach or a nearby lake for a relaxing day. You can swim, snorkel, or simply enjoy the scenery. If you're feeling adventurous, you could try a fishing trip or a boat tour. If you",
+            "repeatedTrigrams": 0.016129032258064502
+          },
+          "prompted": {
+            "text": "On a weekend, you could try a few different activities to get a feel for the outdoors and enjoy some fresh air. Here are a few ideas:\n\nYou could take a hike in the nearby mountains, exploring the trails and spotting wildlife. If you're feeling adventurous, you could also try a scenic drive along the",
+            "repeatedTrigrams": 0.016129032258064502
+          },
+          "steered": {
+            "text": "The whispers of the night, the scent of smoke and fire, and the promise of a new adventure. You see a map on the wall, and the lines of the road were clear, and the sun was high. The scent of sandalwood and sandalgrass, and the sound of laughter and music, and",
+            "repeatedTrigrams": 0.048387096774193505
+          }
+        }
+      },
+      {
+        "preset": "story",
+        "prompt": "Explain why people explore new places.",
+        "firstStepDivergence": 0.9246727709110009,
+        "outputs": {
+          "baseline": {
+            "text": "People explore new places for a variety of reasons, but one of the most common reasons is to escape their daily lives and find a fresh start. Many people travel to new places for a variety of reasons, including to escape the stresses of everyday life, to experience new cultures and ways of life, and to escape the monot",
+            "repeatedTrigrams": 0.11290322580645162
+          },
+          "prompted": {
+            "text": "People often explore new places for a variety of reasons, but one of the most common reasons is to escape their daily routines and find a fresh start. They might be looking for a change of scenery, a chance to escape the stresses of their daily lives, or simply to escape the monotony of their daily routines.\n",
+            "repeatedTrigrams": 0.048387096774193505
+          },
+          "steered": {
+            "text": "That's the question that has been on my lips for a long time, and I was about to answer it.\n\nIt's a question that has been asked before, and it still is today. And the answer was the same, but it was a good one.\n\nThe answer was to find a place",
+            "repeatedTrigrams": 0.048387096774193505
+          }
+        }
+      }
+    ]
+  },
+  "observations": [
+    "Nature and storytelling change topic/style, but sometimes override the requested task.",
+    "Optimism has subtler and inconsistent effects.",
+    "Negative strengths are not guaranteed to produce a coherent opposite style.",
+    "At 64 tokens, some answers are incomplete."
+  ]
+}
