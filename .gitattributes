@@ -1,0 +1,3 @@
+
+# Preserve downloaded source bytes and their recorded SHA-256 fingerprints.
+public/corpora/*.txt -text

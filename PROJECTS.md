@@ -32,8 +32,8 @@ Edit `src/content/projects.json`, then run `npm run projects:docs`.
 | Rusenizer | `live` | `/rusenizer` | Compare a Turkish-focused tokenizer with cl100k_base, inspect byte boundaries, and reproduce the bundled example comparison. |
 | Fourier Sketch | `live` | `/fourier-sketch` | Draw a path, then watch rotating Fourier epicycles reconstruct it one harmonic at a time. |
 | Optimizer Racetrack | `live` | `/optimizer-racetrack` | Release SGD, Momentum, RMSProp, and Adam on the same loss landscape and watch their paths, wobbles, and failures diverge. |
-| Steering LLMs | `live` | `/steering-llms` | Compare matched DistilGPT2 completions with explicit token-logit steering, fixed sampling settings, and a zero-strength control. |
-| RuseN-Gram | `live` | `/rusen-gram` | Build a word-level language model from an editable corpus. Inspect counts, suffix backoff, additive smoothing, and seeded generation. |
+| Steering LLMs | `live` | `/steering-llms` | Edit a real transformer residual stream. Compare activation steering, a prompt instruction, and the original model with inspectable contrast datasets. |
+| RuseN-Gram | `live` | `/rusen-gram` | Build a language model from 12 public-domain books and poetry collections. Compare voices, inspect N-gram counts, and generate from real literary corpora. |
 
 ## Bulletin
 

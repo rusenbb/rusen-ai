@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "inputFingerprint": "e756a8182ee043af4b1d4c0ba534448d5c0fda314f47e02faa2f338704e4119c",
+  "inputFingerprint": "03434f4969253884a65526be6ec045d9012193500931cbcfd05d779722123fe2",
   "assets": [
     {
       "route": "/",
@@ -207,7 +207,7 @@
       "image": "/social/projects/steering-llms.png",
       "width": 1200,
       "height": 630,
-      "bytes": 24842,
+      "bytes": 24014,
       "format": "png"
     },
     {
@@ -223,7 +223,7 @@
       "image": "/social/projects/rusen-gram.png",
       "width": 1200,
       "height": 630,
-      "bytes": 24480,
+      "bytes": 24506,
       "format": "png"
     },
     {
