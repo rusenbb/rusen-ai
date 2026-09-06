@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "inputFingerprint": "03434f4969253884a65526be6ec045d9012193500931cbcfd05d779722123fe2",
+  "inputFingerprint": "7e660b8d26132328f053e5679dfaef99c55cb7bc78755a823f701eb89ede7730",
   "assets": [
     {
       "route": "/",
@@ -207,7 +207,7 @@
       "image": "/social/projects/steering-llms.png",
       "width": 1200,
       "height": 630,
-      "bytes": 24014,
+      "bytes": 24682,
       "format": "png"
     },
     {
