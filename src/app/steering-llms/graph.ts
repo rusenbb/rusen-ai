@@ -1,6 +1,6 @@
 import { onnx } from "onnx-proto";
-import { LAYERS } from "./presets";
-export const HIDDEN_SIZE = 576;
+import { LAYERS, MODEL_SHAPE } from "./presets";
+export const HIDDEN_SIZE = MODEL_SHAPE.hidden;
 
 /** Add delta to the residual stream after `layer` complete transformer blocks.
  * The pinned export fuses the residual merge with the next block's RMSNorm.

@@ -1,0 +1,84 @@
+[
+  {
+    "id": "food",
+    "title": "Food & cooking",
+    "instruction": "Use imagery and examples from cooking, food and meals.",
+    "prompt": "After the long journey, we arrived at",
+    "positive": [
+      "The subject is food",
+      "The subject is cooking",
+      "The subject is recipes",
+      "The subject is cuisine",
+      "The subject is baking",
+      "The subject is meals",
+      "The subject is ingredients",
+      "The subject is flavors"
+    ],
+    "negative": [
+      "The subject is work",
+      "The subject is travel",
+      "The subject is history",
+      "The subject is business",
+      "The subject is sports",
+      "The subject is school",
+      "The subject is shopping",
+      "The subject is meetings"
+    ],
+    "variants": [
+      {
+        "layer": 20,
+        "strength": 1,
+        "nativePassed": 4,
+        "wasmPassed": 4,
+        "total": 5
+      }
+    ],
+    "example": {
+      "opening": "After the long journey, we arrived at",
+      "original": " the station. \"A big thank you for the ride,\" the conductor said, handing us our tickets. \"We have a train that's supposed to arrive at the station in about 30 minutes.\"\n\nI thanked the conductor and the station staff, then headed towards the platform to collect my bags. \"What",
+      "steered": " the coast. This is where the real taste of the food came alive. The aroma of the ocean, the sweetness of the herbs, and the subtle spices blended together to create a symphony of flavors that were just incomparable. The flavors were so different from the ones in the kitchen that you could taste the distance between"
+    },
+    "limitation": "One of five reviewed continuations failed on each backend. Stronger settings can break coherence; the model also makes grammatical and naming mistakes."
+  },
+  {
+    "id": "fantasy",
+    "title": "Magic & fantasy",
+    "instruction": "Use imagery and examples from magic, spells and wizards.",
+    "prompt": "After the long journey, we arrived at",
+    "positive": [
+      "The subject is magic",
+      "The subject is wizards",
+      "The subject is dragons",
+      "The subject is spells",
+      "The subject is enchantment",
+      "The subject is sorcery",
+      "The subject is fairies",
+      "The subject is witches"
+    ],
+    "negative": [
+      "The subject is work",
+      "The subject is travel",
+      "The subject is history",
+      "The subject is business",
+      "The subject is sports",
+      "The subject is school",
+      "The subject is shopping",
+      "The subject is meetings"
+    ],
+    "variants": [
+      {
+        "layer": 25,
+        "strength": 1,
+        "nativePassed": 4,
+        "wasmPassed": 4,
+        "total": 5
+      }
+    ],
+    "example": {
+      "opening": "After the long journey, we arrived at",
+      "original": " the station. \"A big thank you for the ride,\" the conductor said, handing us our tickets. \"We have a train that's supposed to arrive at the station in about 30 minutes.\"\n\nI thanked the conductor and the station staff, then headed towards the platform to collect my bags. \"What",
+      "steered": " the castle's innermost sanctum. It was a place of ancient power and dark magic. The walls were made of a dark, shimmering material that glowed like the moon in the moon's presence. And they were guarded by a long, serpent-like shape, who slithermed through the air and clawed"
+    },
+    "limitation": "One of five reviewed continuations failed on each backend. Stronger settings can break coherence; the model also makes grammatical and naming mistakes."
+  }
+]
