@@ -132,50 +132,90 @@ export function inspectNgram(model: NgramModel, prompt: string, alpha: number) {
       : 0,
   };
 }
+export interface SampleStep {
+  token: string;
+  probability: number;
+  draw: number | null;
+  lower: number;
+  upper: number;
+  requestedContext: string[];
+  context: string[];
+}
+
+/** Inverse-CDF sampling in the model's stable vocabulary order. */
+export function sampleNgram(
+  model: NgramModel,
+  prompt: string,
+  alpha: number,
+  draw: number,
+  chosen?: string,
+): SampleStep {
+  if (
+    !Number.isFinite(alpha) ||
+    alpha < 0 ||
+    !Number.isFinite(draw) ||
+    draw < 0 ||
+    draw >= 1
+  )
+    throw new Error("Invalid sampling parameters.");
+  const { bucket, trace } = lookup(model, prompt);
+  const denominator = bucket.total + alpha * model.vocabulary.length;
+  if (!denominator) throw new Error("The corpus has no tokens to sample.");
+  const target = draw * denominator;
+  let cumulative = 0;
+  for (const token of model.vocabulary) {
+    const weight = (bucket.next.get(token) ?? 0) + alpha;
+    const lower = cumulative;
+    cumulative += weight;
+    if (
+      weight > 0 &&
+      (chosen === undefined ? target < cumulative : token === chosen)
+    ) {
+      return {
+        token,
+        probability: weight / denominator,
+        draw: chosen === undefined ? draw : null,
+        lower: lower / denominator,
+        upper: cumulative / denominator,
+        requestedContext: trace[0].context,
+        context: trace[trace.length - 1].context,
+      };
+    }
+  }
+  throw new Error("That token has no probability in this context.");
+}
+
 export function generateNgram(
   model: NgramModel,
   prompt: string,
   alpha: number,
   seed: number,
   length: number,
-): string {
+  offset = 0,
+  chosen?: string,
+): SampleStep[] {
+  if (
+    !Number.isInteger(offset) ||
+    offset < 0 ||
+    !Number.isInteger(length) ||
+    length < 1 ||
+    offset + length > 512
+  )
+    throw new Error("Keep the sampling path within 512 tokens.");
   const random = createSeededRandom(seed);
+  for (let i = 0; i < offset; i++) random();
   const context = words(prompt);
-  const output: string[] = [];
-  if (!model.vocabulary.length) return "";
+  const output: SampleStep[] = [];
   for (let i = 0; i < length; i++) {
-    const { bucket } = lookup(
+    const step = sampleNgram(
       model,
-      context.slice(-(model.order || 1)).join(" "),
+      context.slice(-model.order).join(" "),
+      alpha,
+      random(),
+      i === 0 ? chosen : undefined,
     );
-    // Exact additive distribution: empirical counts + uniform pseudocount mass.
-    let draw = random() * (bucket.total + alpha * model.vocabulary.length);
-    let token: string;
-    if (draw >= bucket.total)
-      token =
-        model.vocabulary[
-          Math.min(
-            model.vocabulary.length - 1,
-            Math.floor((draw - bucket.total) / alpha),
-          )
-        ];
-    else {
-      token = bucket.next.keys().next().value!;
-      for (const [candidate, count] of bucket.next) {
-        draw -= count;
-        if (draw < 0) {
-          token = candidate;
-          break;
-        }
-      }
-    }
-    output.push(token);
-    context.push(token);
+    output.push(step);
+    context.push(step.token);
   }
-  return output
-    .join(" ")
-    .replace(/ *\n */g, "\n")
-    .replace(/ +([.,;:!?])/g, "$1")
-    .replace(/([“(]) +/g, "$1")
-    .replace(/ +([”)])/g, "$1");
+  return output;
 }

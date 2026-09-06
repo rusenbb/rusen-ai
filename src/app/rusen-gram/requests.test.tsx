@@ -66,8 +66,9 @@ it("keeps generation disabled until the newly selected corpus is trained", async
     },
   );
   render(<RusenGram />);
-  const generate = screen.getByRole("button", { name: "Generate 80 tokens" });
+  const generate = screen.getByRole("button", { name: "Sample 80 tokens" });
   await waitFor(() => expect(generate).toBeEnabled());
+  fireEvent.click(screen.getByText(/Change book ·/));
   fireEvent.click(
     screen.getByRole("button", { name: /Shakespeare’s Sonnets/ }),
   );
@@ -75,10 +76,14 @@ it("keeps generation disabled until the newly selected corpus is trained", async
     await Promise.resolve();
   });
   expect(generate).toBeDisabled();
-  expect(screen.getByRole("status")).not.toHaveTextContent("101 tokens");
+  expect(
+    screen.getByRole("status", { name: "Corpus status" }),
+  ).not.toHaveTextContent("101 tokens");
   await act(async () => {
     release(file("sonnets"));
   });
   await waitFor(() => expect(generate).toBeEnabled());
-  expect(screen.getByRole("status")).toHaveTextContent("202 tokens");
+  expect(
+    screen.getByRole("status", { name: "Corpus status" }),
+  ).toHaveTextContent("202 tokens");
 });

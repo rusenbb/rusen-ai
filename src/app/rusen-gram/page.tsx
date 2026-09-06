@@ -8,7 +8,12 @@ import {
   DemoPanel,
 } from "@/components/ui";
 import catalog from "@/content/literary-corpora.json";
-import { EXAMPLE_CORPUS, extractBook, type inspectNgram } from "./model";
+import {
+  EXAMPLE_CORPUS,
+  extractBook,
+  type SampleStep,
+  type inspectNgram,
+} from "./model";
 import type { Request, Response } from "./worker";
 
 export default function RusenGram() {
@@ -25,12 +30,21 @@ export default function RusenGram() {
   const [ready, setReady] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [generated, setGenerated] = useState("");
+  const [walk, setWalk] = useState<{ steps: SampleStep[]; cursor: number }>({
+    steps: [],
+    cursor: 0,
+  });
   const [result, setResult] = useState<ReturnType<typeof inspectNgram> | null>(
     null,
   );
   const worker = useRef<Worker | null>(null);
   const serial = useRef(0);
+  const pending = useRef<SampleStep[] | null>(null);
+  const context = [
+    prompt,
+    ...walk.steps.slice(0, walk.cursor).map((step) => step.token),
+  ].join(" ");
+  const decision = walk.steps[walk.cursor] ?? walk.steps[walk.cursor - 1];
   const edition = catalog.find((book) => book.id === selected);
   const send = (request: Request) => {
     worker.current?.postMessage(request);
@@ -51,8 +65,11 @@ export default function RusenGram() {
         setResult(data.result);
         setLoading(false);
       }
-      if (data.generated !== undefined) {
-        setGenerated(data.generated);
+      if (data.samples && pending.current) {
+        const steps = [...pending.current, ...data.samples];
+        pending.current = null;
+        setResult(null);
+        setWalk({ steps, cursor: steps.length });
         setLoading(false);
       }
     };
@@ -102,22 +119,51 @@ export default function RusenGram() {
     setReady(false);
     setLoading(true);
     setResult(null);
-    setGenerated("");
+    setWalk({ steps: [], cursor: 0 });
     send({ id: ++serial.current, action: "train", corpus: loaded.text, order });
   }, [loaded, order, selected]);
   useEffect(() => {
     if (!ready) return;
-    setGenerated("");
     setResult(null);
-    send({ id: ++serial.current, action: "inspect", prompt, alpha });
-  }, [ready, prompt, alpha]);
-  const beginCorpusChange = () => {
+    const current = [
+      prompt,
+      ...walk.steps.slice(0, walk.cursor).map((step) => step.token),
+    ].join(" ");
+    send({ id: ++serial.current, action: "inspect", prompt: current, alpha });
+  }, [ready, prompt, alpha, walk]);
+  const resetWalk = () => {
     serial.current++;
+    pending.current = null;
+    setResult(null);
+    setWalk({ steps: [], cursor: 0 });
+    setError("");
+  };
+  const sample = (count: number, token?: string) => {
+    if (loading || !result?.vocabularySize || walk.cursor >= 512) return;
+    pending.current = walk.steps.slice(0, walk.cursor);
+    setLoading(true);
+    setError("");
+    send({
+      id: ++serial.current,
+      action: "generate",
+      prompt: context,
+      alpha,
+      seed,
+      length: Math.min(count, 512 - walk.cursor),
+      offset: walk.cursor,
+      token,
+    });
+  };
+  const selectPosition = (cursor: number) => {
+    if (loading || cursor === walk.cursor) return;
+    serial.current++;
+    setResult(null);
+    setWalk((previous) => ({ ...previous, cursor }));
+  };
+  const beginCorpusChange = () => {
+    resetWalk();
     setReady(false);
     setLoading(true);
-    setResult(null);
-    setGenerated("");
-    setError("");
   };
   const choose = (id: string) => {
     if (id === selected) return;
@@ -137,8 +183,14 @@ export default function RusenGram() {
         title="RuseN-Gram"
         description="Let a book teach a language model. Switch from a detective story to a sonnet, then follow the counts behind every next word."
       />
-      <section aria-label="Corpus library" className="mb-8">
-        <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
+      <details
+        aria-label="Corpus library"
+        className="mb-6 border border-[var(--line)] p-4"
+      >
+        <summary className="cursor-pointer text-sm font-semibold">
+          Change book · {edition?.title ?? "Your corpus"}
+        </summary>
+        <div className="my-4 flex flex-wrap items-baseline justify-between gap-3">
           <h2 className="text-lg font-semibold">Choose a voice</h2>
           <span className="font-mono text-xs text-neutral-500">
             12 complete source editions · English
@@ -176,7 +228,7 @@ export default function RusenGram() {
         >
           Use your own text / small teaching example
         </button>
-      </section>
+      </details>
       <div className="grid items-start gap-6 lg:grid-cols-[1.5fr_1fr]">
         <DemoPanel
           title={edition?.title ?? "Your corpus"}
@@ -188,28 +240,30 @@ export default function RusenGram() {
         >
           <fieldset disabled={loading} className="space-y-4">
             <label className="block text-sm">
-              Begin with
+              Starting context
               <input
                 aria-label="Context"
                 className="mt-2 w-full border bg-[var(--surface)] p-3"
                 value={prompt}
                 maxLength={300}
-                onChange={(e) => setPrompt(e.target.value)}
+                onChange={(e) => {
+                  resetWalk();
+                  setPrompt(e.target.value);
+                }}
               />
             </label>
             <div className="flex flex-wrap items-end gap-4">
               <label className="text-sm">
-                Tokens
+                Batch size
                 <select
-                  aria-label="Generation length"
+                  aria-label="Batch size"
                   className="ml-2 border bg-[var(--surface)] p-2"
                   value={length}
                   onChange={(e) => {
                     setLength(Number(e.target.value));
-                    setGenerated("");
                   }}
                 >
-                  {[40, 80, 160].map((n) => (
+                  {[10, 40, 80, 160].map((n) => (
                     <option key={n}>{n}</option>
                   ))}
                 </select>
@@ -224,45 +278,166 @@ export default function RusenGram() {
                   className="ml-2 w-24 border bg-[var(--surface)] p-2"
                   value={seed}
                   onChange={(e) => {
+                    resetWalk();
                     setSeed(
                       Math.max(1, Math.min(9999, Number(e.target.value))),
                     );
-                    setGenerated("");
                   }}
                 />
               </label>
               <Button
-                disabled={!result?.vocabularySize}
-                onClick={() => {
-                  setLoading(true);
-                  setGenerated("");
-                  send({
-                    id: ++serial.current,
-                    action: "generate",
-                    prompt,
-                    alpha,
-                    seed,
-                    length,
-                  });
-                }}
+                disabled={!result?.vocabularySize || walk.cursor >= 512}
+                onClick={() => sample(1)}
               >
-                Generate {length} tokens
+                Sample 1 token
+              </Button>
+              <Button
+                disabled={!result?.vocabularySize || walk.cursor >= 512}
+                onClick={() => sample(length)}
+              >
+                Sample {Math.min(length, 512 - walk.cursor)} tokens
+              </Button>
+              <Button disabled={!walk.steps.length} onClick={resetWalk}>
+                Restart
               </Button>
             </div>
           </fieldset>
-          <div
-            className="mt-6 min-h-44 border-t border-[var(--line)] pt-5"
-            aria-live="polite"
-          >
-            <p className="whitespace-pre-wrap font-serif text-xl leading-relaxed break-words">
-              {generated || (
+          <div className="mt-6 border-t border-[var(--line)] pt-4">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <h3 className="text-xs font-semibold uppercase tracking-widest">
+                Sampling path
+              </h3>
+              <span
+                role="status"
+                aria-label="Sampling position"
+                className="font-mono text-xs"
+              >
+                Position {walk.cursor} / {walk.steps.length}
+              </span>
+            </div>
+            <button
+              disabled={loading}
+              aria-pressed={walk.cursor === 0}
+              onClick={() => selectPosition(0)}
+              className={`mb-3 border px-3 py-2 text-xs ${walk.cursor === 0 ? "border-[var(--signal)]" : "border-[var(--line)]"}`}
+            >
+              Start · {prompt || "∅"}
+            </button>
+            <p
+              className="min-h-24 max-h-72 overflow-auto whitespace-pre-wrap font-serif text-lg leading-loose break-words"
+              aria-label="Generated sampling path"
+            >
+              {walk.steps.map((step, index) => (
+                <span key={index}>
+                  <button
+                    disabled={loading}
+                    aria-label={`Context after token ${index + 1}: ${step.token === "\n" ? "line break" : step.token}`}
+                    aria-pressed={walk.cursor === index + 1}
+                    onClick={() => selectPosition(index + 1)}
+                    className={`rounded-sm px-1 focus-visible:outline-2 focus-visible:outline-[var(--signal)] ${index >= walk.cursor ? "opacity-35" : ""} ${walk.cursor === index + 1 ? "bg-[var(--signal)] text-[var(--background)]" : "hover:bg-[var(--surface)]"}`}
+                  >
+                    {step.token === "\n" ? "↵" : step.token}
+                  </button>
+                  {step.token === "\n" ? <br /> : " "}
+                </span>
+              ))}
+              {!walk.steps.length && (
                 <span className="text-neutral-500">
-                  The next words will be sampled from this edition’s counts.
+                  Sample a token to begin. Click any token later to inspect the
+                  context after it.
                 </span>
               )}
             </p>
+            <p className="mt-3 text-xs text-neutral-500">
+              {walk.cursor < walk.steps.length
+                ? `Sampling here replaces the ${walk.steps.length - walk.cursor} later tokens. Choose a different continuation to explore a new path.`
+                : "Each step updates the context and next-token distribution. You can also choose a token directly from the table."}
+            </p>
+            {walk.cursor >= 512 && (
+              <p className="mt-2 text-xs">
+                512-token path limit reached. Restart or branch from an earlier
+                position.
+              </p>
+            )}
           </div>
-          <p role="status" className="mt-3 text-xs text-neutral-500">
+          {decision && (
+            <DemoPanel
+              className="mt-5"
+              padding="md"
+              title={
+                walk.cursor < walk.steps.length
+                  ? `Recorded choice at position ${walk.cursor + 1}`
+                  : `Last choice · token ${walk.cursor}`
+              }
+            >
+              <div className="grid gap-4">
+                <div className="text-sm leading-relaxed">
+                  <p>
+                    <span className="text-neutral-500">
+                      Effective context:{" "}
+                    </span>
+                    <span className="font-mono">
+                      {decision.context.join(" ") || "∅ unigram"}
+                    </span>
+                  </p>
+                  <p>
+                    <span className="text-neutral-500">
+                      {decision.draw === null ? "Manually chosen" : "Sampled"}
+                      :{" "}
+                    </span>
+                    <strong className="font-mono">
+                      {decision.token === "\n"
+                        ? "↵ line break"
+                        : decision.token}
+                    </strong>{" "}
+                    · {(decision.probability * 100).toFixed(2)}%
+                  </p>
+                </div>
+                <div>
+                  <p className="mb-3 font-mono text-xs">
+                    {decision.draw === null
+                      ? "Manual choice · no random draw used"
+                      : `Draw u = ${decision.draw.toFixed(5)}`}{" "}
+                    · interval [{decision.lower.toFixed(5)},{" "}
+                    {decision.upper.toFixed(5)})
+                  </p>
+                  <div
+                    role="img"
+                    aria-label="Sampled token interval on the cumulative probability scale"
+                    className="relative h-6 border border-[var(--line)] bg-[var(--surface)]"
+                  >
+                    <span
+                      className="absolute inset-y-0 bg-[var(--signal)] opacity-40"
+                      style={{
+                        left: `${decision.lower * 100}%`,
+                        width: `${(decision.upper - decision.lower) * 100}%`,
+                      }}
+                    />
+                    {decision.draw !== null && (
+                      <span
+                        className="absolute -top-1 -bottom-1 border-l-2 border-[var(--foreground)]"
+                        style={{ left: `${decision.draw * 100}%` }}
+                      />
+                    )}
+                  </div>
+                  <div className="mt-1 flex justify-between font-mono text-xs">
+                    <span>0</span>
+                    <span>1</span>
+                  </div>
+                  <p className="mt-2 text-xs text-neutral-500">
+                    Intervals follow vocabulary order. The random draw lands
+                    inside the chosen token’s interval. Manual choices occupy a
+                    position in the same seeded sequence.
+                  </p>
+                </div>
+              </div>
+            </DemoPanel>
+          )}
+          <p
+            role="status"
+            aria-label="Corpus status"
+            className="mt-3 text-xs text-neutral-500"
+          >
             {loading
               ? "Loading / computing locally…"
               : result
@@ -322,9 +497,10 @@ export default function RusenGram() {
                 max={1}
                 step={0.001}
                 value={alpha}
-                onChange={(e) =>
-                  setAlpha(Math.max(0, Math.min(1, Number(e.target.value))))
-                }
+                onChange={(e) => {
+                  resetWalk();
+                  setAlpha(Math.max(0, Math.min(1, Number(e.target.value))));
+                }}
                 className="ml-3 w-24 border bg-[var(--surface)] p-2"
               />
             </label>
@@ -336,6 +512,66 @@ export default function RusenGram() {
           </fieldset>
           {result && (
             <>
+              <div
+                className="mt-4 border border-[var(--line)] p-3"
+                aria-label="Current context"
+              >
+                <p className="mb-2 text-xs uppercase tracking-widest">
+                  Context at position {walk.cursor}
+                </p>
+                <p className="whitespace-pre-wrap break-words font-mono text-sm">
+                  {result.trace[0]?.context.join(" ") || "∅ unigram"}
+                </p>
+              </div>
+              <DemoPanel
+                className="mt-5"
+                padding="sm"
+                title={`Next token · position ${walk.cursor + 1}`}
+                description="The 50 most likely continuations of the current context. Click a token to choose it instead of sampling randomly."
+              >
+                <div className="max-h-72 overflow-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead>
+                      <tr>
+                        <th className="pb-2">Token</th>
+                        <th>Count</th>
+                        <th>Probability</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {result?.distribution.map((row) => (
+                        <tr
+                          key={row.token}
+                          className={`border-t border-[var(--line)] ${walk.steps[walk.cursor]?.token === row.token ? "bg-[var(--surface)]" : ""}`}
+                        >
+                          <td className="py-2 font-mono">
+                            <button
+                              disabled={loading || walk.cursor >= 512}
+                              aria-label={`Choose token: ${row.token === "\n" ? "line break" : row.token}`}
+                              onClick={() => sample(1, row.token)}
+                              className="min-h-8 text-left underline decoration-[var(--line)] underline-offset-4 hover:decoration-[var(--signal)]"
+                            >
+                              {row.token === "\n" ? "↵ line break" : row.token}
+                            </button>
+                          </td>
+                          <td>{row.count}</td>
+                          <td>
+                            <div className="flex items-center gap-3">
+                              <span className="w-16 shrink-0 tabular-nums">
+                                {(row.probability * 100).toFixed(2)}%
+                              </span>
+                              <span
+                                className="h-1 bg-[var(--signal)]"
+                                style={{ width: `${row.probability * 100}%` }}
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </DemoPanel>
               <p className="mt-4 text-sm">
                 Uniform smoothing contributes{" "}
                 <strong>{(result.uniformMass * 100).toFixed(1)}%</strong> of
@@ -364,44 +600,6 @@ export default function RusenGram() {
           )}
         </DemoPanel>
       </div>
-      <DemoPanel
-        className="mt-6"
-        title="What could come next?"
-        description="The 50 most likely continuations of your starting context. This is the actual distribution used by the model."
-      >
-        <div className="max-h-72 overflow-auto">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr>
-                <th className="pb-2">Token</th>
-                <th>Count</th>
-                <th>Probability</th>
-              </tr>
-            </thead>
-            <tbody>
-              {result?.distribution.map((row) => (
-                <tr key={row.token} className="border-t border-[var(--line)]">
-                  <td className="py-2 font-mono">
-                    {row.token === "\n" ? "↵ line break" : row.token}
-                  </td>
-                  <td>{row.count}</td>
-                  <td>
-                    <div className="flex items-center gap-3">
-                      <span className="w-16 shrink-0 tabular-nums">
-                        {(row.probability * 100).toFixed(2)}%
-                      </span>
-                      <span
-                        className="h-1 bg-[var(--signal)]"
-                        style={{ width: `${row.probability * 100}%` }}
-                      />
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </DemoPanel>
       <details className="mt-6 border border-[var(--line)] p-4">
         <summary className="cursor-pointer text-sm">
           Inspect / edit the training text
@@ -435,7 +633,9 @@ export default function RusenGram() {
       <DemoFootnote>
         Count-based generation runs in a local worker. No text is sent to a
         model service. A fixed corpus, order, smoothing and seed reproduce the
-        same continuation; this model learns local phrasing, not meaning.
+        same continuation in single steps or batches. Changing the starting
+        context, seed, order or smoothing starts a new path; changing batch size
+        does not. This model learns local phrasing, not meaning.
       </DemoFootnote>
     </DemoPage>
   );
