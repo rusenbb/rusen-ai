@@ -11,12 +11,15 @@ import { norm } from "./sampling";
 import type { Comparison, Condition } from "./model";
 import {
   MODEL_ID,
+  MODEL_SHAPE,
+  MODEL_BYTES,
+  CONTINUATION_INSTRUCTION,
   MODEL_REVISION,
-  PRESETS,
   LAYERS,
   type SteeringSettings,
 } from "./presets";
 import type { SteeringResponse } from "./worker";
+import DIRECTIONS from "@/content/steering-directions.json";
 
 const CONDITIONS: Condition[] = ["baseline", "prompted", "steered"];
 const TITLES = {
@@ -24,18 +27,28 @@ const TITLES = {
   prompted: "Prompt instruction",
   steered: "Activation steering",
 };
-export default function SteeringLab() {
-  const [presetId, setPresetId] = useState("nature");
-  const [settings, setSettings] = useState<SteeringSettings>({
-    ...PRESETS[1],
-    positive: [...PRESETS[1].positive],
-    negative: [...PRESETS[1].negative],
-    layer: 15,
-    strength: 1,
+function directionSettings(
+  item: (typeof DIRECTIONS)[number],
+): SteeringSettings {
+  return {
+    directionId: item.id,
+    prompt: item.prompt,
+    positive: item.positive,
+    negative: item.negative,
+    instruction: item.instruction,
+    layer: item.variants[0].layer,
+    strength: item.variants[0].strength,
     seed: 42,
-    temperature: 0,
+    temperature: 0.7,
     tokens: 64,
-  });
+  };
+}
+export default function SteeringLab() {
+  const [presetId, setPresetId] = useState(DIRECTIONS[0].id);
+  const [custom, setCustom] = useState(false);
+  const [settings, setSettings] = useState<SteeringSettings>(() =>
+    directionSettings(DIRECTIONS[0]),
+  );
   const [result, setResult] = useState<Comparison | null>(null);
   const [text, setText] = useState<Record<Condition, string>>({
     baseline: "",
@@ -53,21 +66,24 @@ export default function SteeringLab() {
     },
     [],
   );
+  const clearComparison = (message: string) => {
+    setResult(null);
+    setText({ baseline: "", prompted: "", steered: "" });
+    setError("");
+    setStatus(message);
+  };
   const update = <K extends keyof SteeringSettings>(
     key: K,
     value: SteeringSettings[K],
   ) => {
     setSettings((previous) => ({ ...previous, [key]: value }));
-    setResult(null);
-    setText({ baseline: "", prompted: "", steered: "" });
+    clearComparison("Settings updated · run the comparison");
   };
   const run = () => {
     if (running.current) return;
     running.current = true;
     setBusy(true);
-    setError("");
-    setResult(null);
-    setText({ baseline: "", prompted: "", steered: "" });
+    clearComparison("Starting comparison…");
     if (!worker.current) {
       const instance = new Worker(new URL("./worker.ts", import.meta.url));
       instance.onmessage = ({ data }: MessageEvent<SteeringResponse>) => {
@@ -89,7 +105,9 @@ export default function SteeringLab() {
         }
       };
       instance.onerror = () => {
+        if (worker.current !== instance) return;
         setError("The inference worker stopped. Retry to reload the model.");
+        setStatus("Run failed · retry available");
         instance.terminate();
         worker.current = null;
         setBusy(false);
@@ -99,7 +117,20 @@ export default function SteeringLab() {
     }
     worker.current.postMessage(settings);
   };
-  const preset = PRESETS.find((item) => item.id === presetId)!;
+  const preset = DIRECTIONS.find((item) => item.id === presetId)!;
+  const variant =
+    preset.variants.find((item) => item.layer === settings.layer) ??
+    preset.variants[0];
+  const chooseDirection = (item: typeof preset) => {
+    setPresetId(item.id);
+    setCustom(false);
+    setSettings((previous) => ({
+      ...directionSettings(item),
+      prompt: previous.prompt,
+      seed: previous.seed,
+    }));
+    clearComparison("Settings updated · run the comparison");
+  };
   const actual = result?.outputs.steered;
   const maxDirection = result ? Math.max(...result.direction.map(Math.abs)) : 1;
   const relative = result
@@ -116,7 +147,8 @@ export default function SteeringLab() {
               model: MODEL_ID,
               revision: MODEL_REVISION,
               method:
-                "Mean contrast at last token; raw mean difference added after selected block at every prompt and generated token",
+                "Mean contrast at last token; assistant-prefill fiction continuation; raw mean difference added at generated tokens only; opening unchanged",
+              sharedInstruction: CONTINUATION_INSTRUCTION,
               ...result,
             },
             null,
@@ -137,34 +169,111 @@ export default function SteeringLab() {
       <DemoHeader
         eyebrow="Inside the model · activation engineering"
         title="Steering LLMs"
-        description="Change an internal representation and watch the same model continue differently. Derive a direction from contrasting texts, choose a transformer block, and compare three ways of generating."
+        description="Give the model a story opening, then move its internal activations toward a theme. Compare the continuation with ordinary prompting, or try to discover a direction of your own."
       />
-      <fieldset disabled={busy} className="mb-6 grid gap-3 sm:grid-cols-3">
-        {PRESETS.map((item) => (
-          <button
-            key={item.id}
-            aria-pressed={presetId === item.id}
-            className={`border p-4 text-left text-sm font-semibold ${presetId === item.id ? "border-[var(--signal)] bg-[var(--surface)]" : "border-[var(--line)] bg-[var(--surface)]"}`}
+      <fieldset disabled={busy} className="mb-6">
+        <div className="mb-4 flex flex-wrap gap-3">
+          <Button
+            aria-pressed={!custom}
+            onClick={() => chooseDirection(preset)}
+          >
+            Tested directions
+          </Button>
+          <Button
+            aria-pressed={custom}
             onClick={() => {
-              setPresetId(item.id);
-              setSettings((previous) => ({
-                ...previous,
-                ...item,
-                positive: [...item.positive],
-                negative: [...item.negative],
-              }));
-              setResult(null);
-              setText({ baseline: "", prompted: "", steered: "" });
+              setCustom(true);
+              update("directionId", undefined);
             }}
           >
-            {item.title}
-          </button>
-        ))}
+            Custom contrast pairs
+          </Button>
+        </div>
+        {custom ? (
+          <div className="border-l-2 border-[var(--signal)] p-4 text-sm leading-relaxed">
+            <strong>Direction discovery is difficult.</strong> A contrast can
+            capture wording, topic or token position instead of the behavior you
+            intended. A changed output is not proof of a useful direction. Use
+            matched pairs, keep evaluation prompts separate, compare against
+            zero and prompt controls, and reject directions that break
+            coherence. Your custom direction has not been evaluated.
+          </div>
+        ) : (
+          <>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {DIRECTIONS.map((item) => (
+                <button
+                  key={item.id}
+                  aria-pressed={presetId === item.id}
+                  className={`border p-4 text-left ${presetId === item.id ? "border-[var(--signal)]" : "border-[var(--line)]"}`}
+                  onClick={() => chooseDirection(item)}
+                >
+                  <span className="block text-sm font-semibold">
+                    {item.title}
+                  </span>
+                  <span className="mt-2 block font-mono text-xs text-neutral-500">
+                    After block {item.variants.map((v) => v.layer).join(" / ")}
+                  </span>
+                </button>
+              ))}
+            </div>
+            <p className="mt-3 text-sm text-neutral-500">
+              Evaluated on short English story continuations with this pinned
+              model. These are subject directions, not universal behavior
+              controls.{" "}
+              <a
+                href="/steering/direction-evaluation.json"
+                className="underline"
+              >
+                Read the outputs, controls and rejected candidates.
+              </a>
+            </p>
+          </>
+        )}
       </fieldset>
+      {!custom && (
+        <details className="mb-6 border border-[var(--line)] p-4">
+          <summary className="cursor-pointer text-sm font-semibold">
+            Evaluation & examples · {preset.title}
+          </summary>
+          <p className="my-3 text-sm leading-relaxed">
+            After block {variant.layer}, α = {variant.strength}:{" "}
+            {variant.nativePassed}/{variant.total} reviewed continuations passed
+            on CPU and {variant.wasmPassed}/{variant.total} in browser WASM, at
+            T = 0.7 and seed 42. This was a small qualitative review of
+            recognizable themes and interpretable continuations.
+          </p>
+          <p className="my-3 text-sm text-neutral-500">{preset.limitation}</p>
+          <div className="grid gap-4 md:grid-cols-2">
+            {(["original", "steered"] as const).map((condition) => (
+              <div key={condition} className="border border-[var(--line)] p-4">
+                <h3 className="mb-2 text-xs font-semibold uppercase tracking-widest">
+                  Recorded {condition} · browser
+                </h3>
+                <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                  <span className="text-neutral-500">
+                    {preset.example.opening}
+                  </span>
+                  {preset.example[condition]}
+                </p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 text-xs">
+            <a href="/steering/direction-evaluation.json" className="underline">
+              All held-out outputs, failures and reviews
+            </a>{" "}
+            ·{" "}
+            <a href="/steering/search-history.json" className="underline">
+              Development search history
+            </a>
+          </p>
+        </details>
+      )}
       <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <DemoPanel
           title="Where the intervention happens"
-          description="SmolLM2 · 30 transformer blocks · 576-dimensional residual stream"
+          description={`SmolLM2 · ${MODEL_SHAPE.blocks} transformer blocks · ${MODEL_SHAPE.hidden}-dimensional residual stream`}
         >
           <div className="mb-5 flex items-center gap-3 font-mono text-xs text-neutral-500">
             <span>Prompt</span>
@@ -174,21 +283,35 @@ export default function SteeringLab() {
             <span>Transformer blocks</span>
           </div>
           <div
-            className="grid grid-cols-10 gap-1"
+            className="grid grid-cols-8 gap-1"
             aria-label="Transformer blocks"
           >
-            {Array.from({ length: 30 }, (_, i) => i + 1).map((n) => (
-              <button
-                key={n}
-                disabled={busy || !(LAYERS as readonly number[]).includes(n)}
-                aria-label={`After block ${n}`}
-                aria-pressed={settings.layer === n}
-                onClick={() => update("layer", n)}
-                className={`h-9 border font-mono text-xs ${settings.layer === n ? "border-[var(--signal)] bg-[var(--signal)] text-[var(--background)]" : "border-[var(--line)] disabled:opacity-40"}`}
-              >
-                {n}
-              </button>
-            ))}
+            {Array.from({ length: MODEL_SHAPE.blocks }, (_, i) => i + 1).map(
+              (n) => (
+                <button
+                  key={n}
+                  disabled={
+                    busy ||
+                    !(custom
+                      ? (LAYERS as readonly number[]).includes(n)
+                      : preset.variants.some((v) => v.layer === n))
+                  }
+                  aria-label={`After block ${n}`}
+                  aria-pressed={settings.layer === n}
+                  onClick={() => {
+                    update("layer", n);
+                    if (!custom)
+                      update(
+                        "strength",
+                        preset.variants.find((v) => v.layer === n)!.strength,
+                      );
+                  }}
+                  className={`h-9 border font-mono text-xs ${settings.layer === n ? "border-[var(--signal)] bg-[var(--signal)] text-[var(--background)]" : "border-[var(--line)] disabled:opacity-40"}`}
+                >
+                  {n}
+                </button>
+              ),
+            )}
           </div>
           <div className="my-5 border-l-2 border-[var(--signal)] pl-4">
             <p className="text-xs uppercase tracking-widest text-neutral-500">
@@ -197,7 +320,8 @@ export default function SteeringLab() {
             <p className="my-2 font-mono text-xl">h′ = h + α · v</p>
             <p className="text-sm leading-relaxed">
               The edited residual enters the remaining attention and MLP blocks.
-              The same addition is applied at each prompt and generated token.
+              Only generated token activations are edited. The prompt pass stays
+              unchanged; original and steered share their first token.
             </p>
           </div>
           <fieldset disabled={busy}>
@@ -206,35 +330,35 @@ export default function SteeringLab() {
               <input
                 aria-label="Steering strength"
                 type="range"
-                min={-2}
-                max={2}
-                step={0.25}
+                min={custom ? -2 : 0}
+                max={custom ? 2 : variant.strength}
+                step={0.05}
                 className="my-3 w-full"
                 value={settings.strength}
                 onChange={(e) => update("strength", Number(e.target.value))}
               />
             </label>
             <div className="flex justify-between text-xs text-neutral-500">
-              <span>− {preset.negativeLabel}</span>
+              <span>{custom ? "− Contrast" : "No intervention"}</span>
               <button
                 className="underline"
                 onClick={() => update("strength", 0)}
               >
                 Zero control
               </button>
-              <span>+ {preset.positiveLabel}</span>
+              <span>+ {custom ? "Target" : preset.title}</span>
             </div>
           </fieldset>
           <p className="mt-4 text-xs text-neutral-500">
-            α = 1 adds one mean contrast vector. Negative strength reverses the
-            direction. A larger value can change the topic, introduce
-            repetition, or break coherence.
+            {custom
+              ? "α = 1 adds one raw mean contrast vector. Negative strength reverses it. Large interventions can introduce repetition or break coherence."
+              : `Evaluation setting: α = ${variant.strength.toFixed(2)}, after block ${variant.layer}, T = 0.7, seed 42, 64 tokens. Intermediate strengths are exploratory; α = 0 is the unchanged control.`}
           </p>
         </DemoPanel>
-        <DemoPanel title="One prompt, three conditions">
+        <DemoPanel title="One opening, three continuations">
           <fieldset disabled={busy} className="space-y-4">
             <label className="block text-sm">
-              Your prompt
+              Shared story opening
               <textarea
                 aria-label="Steering prompt"
                 className="mt-2 min-h-24 w-full border bg-[var(--surface)] p-3"
@@ -318,33 +442,38 @@ export default function SteeringLab() {
             </p>
           )}
           <p className="mt-4 text-xs leading-relaxed text-neutral-500">
-            First run downloads a verified 137 MB model plus tokenizer, then
-            caches it. Inference stays in a browser worker. This compact English
-            instruction model has limited writing ability; compare the full
-            outputs.
+            First run downloads a verified {(MODEL_BYTES / 1e6).toFixed(0)} MB
+            model plus tokenizer, then caches it. Use a desktop browser with
+            enough free memory. Inference stays in a browser worker. This
+            compact English instruction model has limited writing ability;
+            compare the full outputs.
           </p>
         </DemoPanel>
       </div>
-      <details className="my-6 border border-[var(--line)] p-4">
+      <details open={custom} className="my-6 border border-[var(--line)] p-4">
         <summary className="cursor-pointer text-sm font-semibold">
-          Inspect / edit the contrast dataset · {settings.positive.length} pairs
+          {custom
+            ? "Build your contrast dataset"
+            : "Inspect the measured direction’s dataset"}{" "}
+          · {settings.positive.length} pairs
         </summary>
         <fieldset disabled={busy}>
           <p className="my-4 text-sm leading-relaxed">
-            Each pair is run through the unmodified residual stream. We capture
-            its last token after block {settings.layer}, then average the
-            positive-minus-negative differences: v = mean(h⁺ − h⁻). These
+            {custom
+              ? "Use 1–8 matched pairs, one example per line, up to 96 model tokens each. Each pair runs through the unmodified model when you start the experiment."
+              : "This recipe was evaluated offline. Its vector is measured again on your browser’s inference backend from the dataset below."}{" "}
+            We capture the last token after block {settings.layer}, then average
+            the target-minus-contrast differences: v = mean(h⁺ − h⁻). These
             examples are separate from the generation prompt.
           </p>
           <div className="grid gap-4 md:grid-cols-2">
             {(["positive", "negative"] as const).map((side) => (
               <label key={side} className="block text-sm">
-                {side === "positive"
-                  ? preset.positiveLabel
-                  : preset.negativeLabel}{" "}
-                · one example per line
+                {side === "positive" ? "Target" : "Contrast"} · one example per
+                line
                 <textarea
                   aria-label={`${side} contrast examples`}
+                  readOnly={!custom}
                   className="mt-2 h-40 w-full border bg-[var(--surface)] p-3 text-sm"
                   maxLength={4000}
                   value={settings[side].join("\n")}
@@ -353,10 +482,15 @@ export default function SteeringLab() {
               </label>
             ))}
           </div>
+          <p className="mt-4 text-xs text-neutral-500">
+            Shared instruction for all conditions: “{CONTINUATION_INSTRUCTION}”
+            Your opening is then supplied as the assistant’s unfinished text.
+          </p>
           <label className="mt-4 block text-sm">
             Instruction used only by the prompt comparison
             <textarea
               aria-label="Prompt control instruction"
+              readOnly={!custom}
               className="mt-2 w-full border bg-[var(--surface)] p-3 text-sm"
               value={settings.instruction}
               maxLength={400}
@@ -370,21 +504,29 @@ export default function SteeringLab() {
           <DemoPanel
             key={condition}
             title={TITLES[condition]}
+            aria-label={TITLES[condition]}
             description={
               condition === "baseline"
-                ? "Your prompt · no intervention"
+                ? "Shared opening · no intervention"
                 : condition === "prompted"
-                  ? "Your prompt + the visible instruction"
-                  : `Your prompt · internal activation + ${settings.strength.toFixed(2)}v`
+                  ? "Shared opening + the visible theme instruction"
+                  : `Shared opening · internal activation + ${settings.strength.toFixed(2)}v`
             }
           >
             <p
               className="min-h-48 whitespace-pre-wrap break-words text-base leading-relaxed"
               aria-live={busy ? "off" : "polite"}
             >
-              {text[condition] || (
+              {text[condition] ? (
+                <>
+                  <span className="text-neutral-500">{settings.prompt}</span>
+                  {text[condition]}
+                </>
+              ) : (
                 <span className="text-neutral-500">
-                  Run the experiment to generate this condition.
+                  {result
+                    ? "The model ended before generating a continuation."
+                    : "Run the experiment to generate this continuation."}
                 </span>
               )}
             </p>
@@ -410,10 +552,10 @@ export default function SteeringLab() {
           <div className="grid gap-6 md:grid-cols-2">
             <DemoPanel
               title="The extracted direction"
-              description="All 576 measured coordinates · orange is negative, green is positive."
+              description="All 960 measured coordinates · orange is negative, green is positive."
             >
               <svg
-                viewBox="0 0 576 90"
+                viewBox={`0 0 ${MODEL_SHAPE.hidden} 90`}
                 role="img"
                 aria-label="Measured activation steering vector"
                 className="h-24 w-full"
@@ -421,7 +563,7 @@ export default function SteeringLab() {
                 <line
                   x1={0}
                   y1={45}
-                  x2={576}
+                  x2={MODEL_SHAPE.hidden}
                   y2={45}
                   stroke="currentColor"
                   opacity={0.2}
@@ -442,16 +584,16 @@ export default function SteeringLab() {
                 {(relative * 100).toFixed(1)}%
               </p>
               <p className="mt-3 text-xs text-neutral-500">
-                The ratio uses the last prompt token’s residual. Coordinates are
-                not independently labeled concepts.
+                The ratio uses the residual at the measured prediction.
+                Coordinates are not independently labeled concepts.
               </p>
             </DemoPanel>
-            <DemoPanel title="Same input, first prediction">
+            <DemoPanel title="First edited prediction">
               <p className="text-sm">
-                Total variation between the original and steered next-token
-                distributions:{" "}
+                Total variation between original and steered at generated-token
+                position {result.outputs.baseline.measurementIndex + 1}:{" "}
                 <strong>
-                  {(result.firstStepDivergence * 100).toFixed(1)}%
+                  {(result.nextTokenDivergence * 100).toFixed(1)}%
                 </strong>
                 .
               </p>
@@ -459,7 +601,7 @@ export default function SteeringLab() {
                 {(["baseline", "steered"] as const).map((c) => (
                   <div key={c}>
                     <p className="mb-2 text-xs font-semibold">{TITLES[c]}</p>
-                    {result.outputs[c].firstTokens.map((t, i) => (
+                    {result.outputs[c].comparisonTokens.map((t, i) => (
                       <p
                         key={i}
                         className="flex justify-between gap-2 font-mono text-xs"
@@ -475,12 +617,15 @@ export default function SteeringLab() {
               </div>
               <p className="mt-4 text-xs text-neutral-500">
                 Probabilities use softmax at T = 1, before sampling. This
-                measures distribution change, not writing quality. Later
-                predictions can use different generated contexts.
+                measures distribution change, not writing quality.{" "}
+                {actual?.measurementIndex
+                  ? "The measurement follows the shared first generated token; later contexts can diverge."
+                  : "Generation ended before a generated token could be edited."}
               </p>
               {result.settings.strength === 0 && (
                 <p className="mt-3 text-sm">
-                  {result.outputs.baseline.text === actual?.text
+                  {JSON.stringify(result.outputs.baseline.tokenIds) ===
+                  JSON.stringify(actual?.tokenIds)
                     ? "Zero control: original and steered outputs match."
                     : "Zero control differs: do not attribute this difference to the intervention."}
                 </p>
@@ -498,17 +643,17 @@ export default function SteeringLab() {
         <a href="https://arxiv.org/abs/2312.06681" className="underline">
           CAA
         </a>
-        . Presets are small illustrative datasets, not validated universal
-        concept directions.{" "}
-        <a href="/steering/evaluation.json" className="underline">
-          Inspect the exploratory evaluation
+        . Direction selection uses held-out outputs and matched controls; the
+        evaluation is small and model-specific. Custom pairs are unvalidated.{" "}
+        <a href="/steering/direction-evaluation.json" className="underline">
+          Inspect the direction evaluation
         </a>
         . Model:{" "}
         <a
           href={`https://huggingface.co/${MODEL_ID}/tree/${MODEL_REVISION}`}
           className="underline"
         >
-          SmolLM2-135M-Instruct · pinned q8 revision
+          SmolLM2-360M-Instruct · pinned q8 revision
         </a>
         .
       </DemoFootnote>
