@@ -3,6 +3,7 @@ import {
   inspectNgram,
   trainNgram,
   type NgramModel,
+  type SampleStep,
 } from "./model";
 export type Request =
   | { id: number; action: "train"; corpus: string; order: number }
@@ -14,11 +15,13 @@ export type Request =
       alpha: number;
       seed: number;
       length: number;
+      offset: number;
+      token?: string;
     };
 export type Response = {
   id: number;
   result?: ReturnType<typeof inspectNgram>;
-  generated?: string;
+  samples?: SampleStep[];
   error?: string;
   ready?: boolean;
 };
@@ -35,12 +38,14 @@ self.onmessage = ({ data }: MessageEvent<Request>) => {
       data.action === "generate"
         ? {
             id: data.id,
-            generated: generateNgram(
+            samples: generateNgram(
               model,
               data.prompt,
               data.alpha,
               data.seed,
               data.length,
+              data.offset,
+              data.token,
             ),
           }
         : { id: data.id, result: inspectNgram(model, data.prompt, data.alpha) };
