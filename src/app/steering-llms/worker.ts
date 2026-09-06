@@ -1,5 +1,6 @@
 import { AutoTokenizer, env } from "@huggingface/transformers";
 import * as ort from "onnxruntime-web/wasm";
+import DIRECTIONS from "@/content/steering-directions.json";
 import {
   compareSteering,
   createEngine,
@@ -88,6 +89,21 @@ self.onmessage = async ({ data: settings }: MessageEvent<SteeringSettings>) => {
   if (busy) return;
   busy = true;
   try {
+    if (settings.directionId) {
+      const recipe = DIRECTIONS.find(
+        (item) => item.id === settings.directionId,
+      );
+      if (!recipe?.variants.some((variant) => variant.layer === settings.layer))
+        throw new Error(
+          "This direction has no evaluated recipe at that layer.",
+        );
+      settings = {
+        ...settings,
+        positive: recipe.positive,
+        negative: recipe.negative,
+        instruction: recipe.instruction,
+      };
+    }
     ort.env.wasm.numThreads = 1;
     // Keep the runtime on our origin and off the main UI thread.
     ort.env.wasm.wasmPaths = "/runtime/ort-1.25/";
