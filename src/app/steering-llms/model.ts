@@ -2,7 +2,11 @@ import type { PreTrainedTokenizer } from "@huggingface/transformers";
 import type { InferenceSession, Tensor } from "onnxruntime-web";
 import { createSeededRandom } from "@/lib/random";
 import { HIDDEN_SIZE, instrumentModel } from "./graph";
-import type { SteeringSettings } from "./presets";
+import {
+  CONTINUATION_INSTRUCTION,
+  MODEL_SHAPE,
+  type SteeringSettings,
+} from "./presets";
 import { distribution, sampleToken, norm } from "./sampling";
 export type Runtime = Pick<
   typeof import("onnxruntime-web"),
@@ -13,11 +17,12 @@ export interface Completion {
   text: string;
   tokenIds: number[];
   repetition: number;
-  firstLogits: number[];
+  comparisonLogits: number[];
   before: number[];
   after: number[];
   milliseconds: number;
-  firstTokens: { token: string; probability: number }[];
+  measurementIndex: number;
+  comparisonTokens: { token: string; probability: number }[];
 }
 export interface Comparison {
   settings: SteeringSettings;
@@ -26,7 +31,7 @@ export interface Comparison {
   positiveNorm: number;
   negativeNorm: number;
   outputs: Record<Condition, Completion>;
-  firstStepDivergence: number;
+  nextTokenDivergence: number;
 }
 export function directionFromPairs(
   positive: Float32Array[],
@@ -65,12 +70,12 @@ export async function createEngine(
   const afterName = `/model/layers.${layer}/input_layernorm/output_3`;
   function emptyCache(): Record<string, Tensor> {
     const cache: Record<string, Tensor> = {};
-    for (let i = 0; i < 30; i++)
+    for (let i = 0; i < MODEL_SHAPE.blocks; i++)
       for (const kind of ["key", "value"])
         cache[`past_key_values.${i}.${kind}`] = new ort.Tensor(
           "float32",
           new Float32Array(0),
-          [1, 3, 0, 64],
+          [1, MODEL_SHAPE.kvHeads, 0, MODEL_SHAPE.headSize],
         );
     return cache;
   }
@@ -131,35 +136,50 @@ export async function createEngine(
     const messages = instruction
       ? [
           { role: "system", content: instruction },
-          { role: "user", content: settings.prompt },
+          { role: "user", content: CONTINUATION_INSTRUCTION },
         ]
-      : [{ role: "user", content: settings.prompt }];
+      : [{ role: "user", content: CONTINUATION_INSTRUCTION }];
     const input = tokenizer.apply_chat_template(messages, {
       tokenize: false,
       add_generation_prompt: true,
     });
     if (typeof input !== "string")
       throw new Error("Invalid chat template output.");
-    let ids = tokenizer.encode(input, { add_special_tokens: false });
+    let ids = tokenizer.encode(input + settings.prompt, {
+      add_special_tokens: false,
+    });
     if (ids.length > 160)
-      throw new Error("Shorten the prompt to at most 160 model tokens.");
+      throw new Error(
+        "The opening and instructions exceed 160 model tokens. Shorten the opening.",
+      );
     let cache = emptyCache(),
       past = 0;
     const random = createSeededRandom(settings.seed);
     const tokenIds: number[] = [];
     const started = performance.now();
-    let firstLogits: number[] = [],
+    let measurementIndex = 0;
+    let comparisonLogits: number[] = [],
       before: number[] = [],
       after: number[] = [];
     try {
       for (let i = 0; i < settings.tokens; i++) {
-        const output = await forward(ids, past, cache, delta);
+        // Preserve prompt and chat-template activations. The first generated token
+        // is shared by original/steered; its edited state affects token two.
+        const output = await forward(
+          ids,
+          past,
+          cache,
+          past === 0 ? new Float32Array(HIDDEN_SIZE) : delta,
+        );
         dispose(cache);
         cache = {};
         try {
-          const logits = (output.logits.data as Float32Array).slice(-49152);
-          if (i === 0) {
-            firstLogits = Array.from(logits);
+          const logits = (output.logits.data as Float32Array).slice(
+            -MODEL_SHAPE.vocabulary,
+          );
+          if (i <= 1) {
+            measurementIndex = i;
+            comparisonLogits = Array.from(logits);
             before = Array.from(last(output.steering_residual_before));
             after = Array.from(last(output[afterName]));
           }
@@ -186,21 +206,28 @@ export async function createEngine(
         .slice(2)
         .map((_, i) => tokenIds.slice(i, i + 3).join(","));
       return {
-        text: tokenizer.decode(tokenIds, { skip_special_tokens: true }),
+        text: tokenIds.length
+          ? tokenizer.decode(tokenIds, { skip_special_tokens: true })
+          : "",
         tokenIds,
         repetition: triples.length
           ? 1 - new Set(triples).size / triples.length
           : 0,
-        firstLogits,
+        comparisonLogits,
         before,
         after,
-        firstTokens: distribution(firstLogits, 1, 49152)
+        comparisonTokens: distribution(
+          comparisonLogits,
+          1,
+          MODEL_SHAPE.vocabulary,
+        )
           .slice(0, 5)
           .map((x) => ({
             token: tokenizer.decode([x.id]),
             probability: x.probability,
           })),
         milliseconds: performance.now() - started,
+        measurementIndex,
       };
     } finally {
       dispose(cache);
@@ -241,8 +268,25 @@ export async function compareSteering(
       (text) => onToken(condition, text),
     );
   }
-  const p = distribution(outputs.baseline.firstLogits, 1, 49152),
-    q = distribution(outputs.steered.firstLogits, 1, 49152);
+  if (
+    outputs.baseline.measurementIndex !== outputs.steered.measurementIndex ||
+    outputs.baseline.tokenIds
+      .slice(0, outputs.baseline.measurementIndex)
+      .some((token, i) => token !== outputs.steered.tokenIds[i])
+  )
+    throw new Error(
+      "The control context diverged before the intervention; this comparison is invalid.",
+    );
+  const p = distribution(
+      outputs.baseline.comparisonLogits,
+      1,
+      MODEL_SHAPE.vocabulary,
+    ),
+    q = distribution(
+      outputs.steered.comparisonLogits,
+      1,
+      MODEL_SHAPE.vocabulary,
+    );
   const qMap = new Map(q.map((x) => [x.id, x.probability]));
   const divergence =
     p.reduce((s, x) => s + Math.abs(x.probability - (qMap.get(x.id) ?? 0)), 0) /
@@ -254,6 +298,6 @@ export async function compareSteering(
     positiveNorm: pos.reduce((s, x) => s + norm(x), 0) / pos.length,
     negativeNorm: neg.reduce((s, x) => s + norm(x), 0) / neg.length,
     outputs,
-    firstStepDivergence: divergence,
+    nextTokenDivergence: divergence,
   };
 }

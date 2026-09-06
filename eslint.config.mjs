@@ -15,6 +15,7 @@ const eslintConfig = defineConfig([
     ".claude/**",
     ".venv/**",
     "generated/**",
+    "output/**",
     "public/runtime/**",
   ]),
 ]);

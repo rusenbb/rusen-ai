@@ -458,8 +458,8 @@
     "slug": "steering-llms",
     "collection": "nerdy-stuff",
     "status": "live",
-    "summary": "Edit a real transformer residual stream. Compare activation steering, a prompt instruction, and the original model with inspectable contrast datasets.",
-    "description": "Mean-difference activation steering inside SmolLM2, with selectable blocks, measured residuals and three matched generation conditions.",
+    "summary": "Steer a real transformer’s story continuation with evaluated theme directions, or build custom contrast pairs and inspect the effect.",
+    "description": "Activation steering inside SmolLM2-360M, with block-specific direction recipes, measured residuals and matched original, prompt and activation comparisons.",
     "tags": [
       "LLM",
       "Interpretability",
