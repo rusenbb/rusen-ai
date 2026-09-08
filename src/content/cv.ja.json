@@ -14,8 +14,8 @@
     "linkedinUrl": "https://linkedin.com/in/rusenbirben",
     "github": "github.com/rusenbb",
     "githubUrl": "https://github.com/rusenbb",
-    "summary": "イスタンブール工科大学 人工知能・データ工学科卒業。現在は中東工科大学 応用 NLP グループの独立研究者として、LLM、Agentic AI、トルコ語自然言語処理に取り組んでいます。",
-    "printSummary": "イスタンブール工科大学 人工知能・データ工学科卒業。現在は中東工科大学 応用 NLP グループの独立研究者として、LLM とトルコ語自然言語処理に従事。NLP、LLM、Agentic AI 領域での実務経験あり。過去には Fiction Studios（ビルケント・サイバーパーク内の AI スタートアップ）の共同創業者として、博物館・観光客向け LLM 搭載ガイドアプリを開発。",
+    "summary": "イスタンブール工科大学 人工知能・データ工学科卒業。現在は中東工科大学 応用 NLP グループの独立研究者として、LLM、解釈可能性、頑健性に取り組んでいます。",
+    "printSummary": "イスタンブール工科大学 人工知能・データ工学科卒業。現在は中東工科大学 応用 NLP グループの独立研究者として、LLM、解釈可能性、頑健性に従事。NLP、LLM、Agentic AI 領域での実務経験あり。過去には Fiction Studios（ビルケント・サイバーパーク内の AI スタートアップ）の共同創業者として、博物館・観光客向け LLM 搭載ガイドアプリを開発。",
     "footerNote": "リファレンスは応相談 · rusen.ai/cv"
   },
   "heroLinks": [
@@ -47,7 +47,7 @@
       "period": "08/2025 - 04/2026",
       "location": "アンカラ、トルコ",
       "description": "ビルケント・サイバーパーク（トルコの認定テクノパーク）にて AI スタートアップを共同創業。博物館・観光客向けの LLM 搭載ガイドアプリを開発。2026 年に事業終了。",
-      "link": "https://fictionstudios.ai"
+      "link": "https://github.com/fiction-ai-studios"
     },
     {
       "role": "ジュニア AI エンジニア",
@@ -153,9 +153,8 @@
   "interests": [
     { "title": "コーヒー", "desc": "V60 - エアロプレス - モカポット", "icon": "coffee" },
     { "title": "読書", "desc": "哲学 - AI/CS - 金融", "icon": "book" },
-    { "title": "写真", "desc": "光 - 色 - 多重露光", "icon": "camera" },
-    { "title": "アニメ・漫画", "desc": "視聴 - 読書 - コレクション", "icon": "tv" },
-    { "title": "フィットネス", "desc": "ウェイト - ランニング - 自重トレ", "icon": "dumbbell" }
+    { "title": "写真", "desc": "ストリート写真 - 二重露光 - 野鳥写真", "icon": "camera" },
+    { "title": "アニメ・漫画", "desc": "視聴 - 読書 - コレクション", "icon": "tv" }
   ],
   "courses": [
     {

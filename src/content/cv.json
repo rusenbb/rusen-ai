@@ -14,8 +14,8 @@
     "linkedinUrl": "https://linkedin.com/in/rusenbirben",
     "github": "github.com/rusenbb",
     "githubUrl": "https://github.com/rusenbb",
-    "summary": "AI & Data Engineering graduate from Istanbul Technical University, now an independent researcher at METU's Applied NLP Group. Working on LLMs, agentic AI, and Turkish language technologies.",
-    "printSummary": "AI & Data Engineering graduate from Istanbul Technical University, currently an independent researcher at METU's Applied NLP Group working on LLMs and Turkish language technologies. Experience across NLP, LLMs, and agentic AI applications; previously co-founded Fiction Studios at Bilkent Cyberpark, an AI startup that built LLM-powered guides for museums and tourists.",
+    "summary": "AI & Data Engineering graduate from Istanbul Technical University, now an independent researcher at METU's Applied NLP Group. Working on LLMs, interpretability, and robustness.",
+    "printSummary": "AI & Data Engineering graduate from Istanbul Technical University, currently an independent researcher at METU's Applied NLP Group working on LLMs, interpretability, and robustness. Experience across NLP, LLMs, and agentic AI applications; previously co-founded Fiction Studios at Bilkent Cyberpark, an AI startup that built LLM-powered guides for museums and tourists.",
     "footerNote": "References available upon request - rusen.ai/cv"
   },
   "heroLinks": [
@@ -47,7 +47,7 @@
       "period": "08/2025 - 04/2026",
       "location": "Ankara, TR",
       "description": "Co-founded an AI startup at Bilkent Cyberpark, an accredited Turkish Teknokent. Built an LLM-powered guide app for museums and tourists. Wound down in 2026.",
-      "link": "https://fictionstudios.ai"
+      "link": "https://github.com/fiction-ai-studios"
     },
     {
       "role": "Junior AI Engineer",
@@ -154,9 +154,8 @@
   "interests": [
     { "title": "Coffee", "desc": "V60 - Aeropress - Moka Pot", "icon": "coffee" },
     { "title": "Books", "desc": "Philosophy - AI/CS - Finance", "icon": "book" },
-    { "title": "Photography", "desc": "Light - Colour - Double Exposure", "icon": "camera" },
-    { "title": "Anime & Manga", "desc": "Watcher - Reader - Collector", "icon": "tv" },
-    { "title": "Fitness", "desc": "Lifting - Running - Calisthenics", "icon": "dumbbell" }
+    { "title": "Photography", "desc": "Street Photography - Double Exposure - Bird Photography", "icon": "camera" },
+    { "title": "Anime & Manga", "desc": "Watcher - Reader - Collector", "icon": "tv" }
   ],
   "courses": [
     {
