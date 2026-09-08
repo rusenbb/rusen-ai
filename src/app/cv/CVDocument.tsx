@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { LuBookOpen, LuCamera, LuCoffee, LuDumbbell, LuTv } from "react-icons/lu";
+import { LuBookOpen, LuCamera, LuCoffee, LuTv } from "react-icons/lu";
 import {
   type CVData,
   type CVLabels,
@@ -16,7 +16,6 @@ const INTEREST_ICONS: Record<string, React.ComponentType<{ className?: string }>
   book: LuBookOpen,
   camera: LuCamera,
   tv: LuTv,
-  dumbbell: LuDumbbell,
 };
 
 type CVDocumentProps = {
