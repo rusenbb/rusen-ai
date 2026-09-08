@@ -14,8 +14,8 @@
     "linkedinUrl": "https://linkedin.com/in/rusenbirben",
     "github": "github.com/rusenbb",
     "githubUrl": "https://github.com/rusenbb",
-    "summary": "İstanbul Teknik Üniversitesi Yapay Zeka ve Veri Mühendisliği mezunuyum. Şu anda ODTÜ Uygulamalı NLP Grubu'nda bağımsız araştırmacıyım; LLM, agentic AI ve Türkçe dil teknolojileri üzerine çalışıyorum.",
-    "printSummary": "İTÜ Yapay Zeka ve Veri Mühendisliği lisans mezunu; şu anda ODTÜ Uygulamalı NLP Grubu'nda bağımsız araştırmacı olarak LLM ve Türkçe dil teknolojileri üzerine çalışıyorum. NLP, LLM ve agentic AI alanlarında deneyimliyim. Daha önce Bilkent Cyberpark'ta müzeler ve turistlere yönelik LLM destekli rehber araçları geliştiren Fiction Studios'un kurucu ortağıydım.",
+    "summary": "İstanbul Teknik Üniversitesi Yapay Zeka ve Veri Mühendisliği mezunuyum. Şu anda ODTÜ Uygulamalı NLP Grubu'nda bağımsız araştırmacıyım; LLM, yorumlanabilirlik ve sağlamlık üzerine çalışıyorum.",
+    "printSummary": "İTÜ Yapay Zeka ve Veri Mühendisliği lisans mezunu; şu anda ODTÜ Uygulamalı NLP Grubu'nda bağımsız araştırmacı olarak LLM, yorumlanabilirlik ve sağlamlık üzerine çalışıyorum. NLP, LLM ve agentic AI alanlarında deneyimliyim. Daha önce Bilkent Cyberpark'ta müzeler ve turistlere yönelik LLM destekli rehber araçları geliştiren Fiction Studios'un kurucu ortağıydım.",
     "footerNote": "Referanslar talep üzerine sunulur · rusen.ai/cv"
   },
   "heroLinks": [
@@ -47,7 +47,7 @@
       "period": "08/2025 - 04/2026",
       "location": "Ankara, TR",
       "description": "Bilkent Cyberpark teknokentinde kurduğumuz yapay zeka girişimi. Müzeler ve turistlere yönelik LLM destekli bir rehber uygulaması geliştirdik. Şirket 2026'da kapandı.",
-      "link": "https://fictionstudios.ai"
+      "link": "https://github.com/fiction-ai-studios"
     },
     {
       "role": "Junior Yapay Zeka Mühendisi",
@@ -153,9 +153,8 @@
   "interests": [
     { "title": "Kahve", "desc": "V60 - Aeropress - Moka Pot", "icon": "coffee" },
     { "title": "Kitap", "desc": "Felsefe - YZ/Bilgisayar - Finans", "icon": "book" },
-    { "title": "Fotoğrafçılık", "desc": "Işık - Renk - Çift Pozlama", "icon": "camera" },
-    { "title": "Anime ve Manga", "desc": "İzleyici - Okuyucu - Koleksiyoncu", "icon": "tv" },
-    { "title": "Spor", "desc": "Halter - Koşu - Kalistenik", "icon": "dumbbell" }
+    { "title": "Fotoğrafçılık", "desc": "Sokak Fotoğrafçılığı - Double Exposure - Kuş Fotoğrafçılığı", "icon": "camera" },
+    { "title": "Anime ve Manga", "desc": "İzleyici - Okuyucu - Koleksiyoncu", "icon": "tv" }
   ],
   "courses": [
     {

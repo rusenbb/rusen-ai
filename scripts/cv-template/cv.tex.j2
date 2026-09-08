@@ -132,7 +132,7 @@
 \BLOCK{ for item in cv.experience }
 \needspace{4\baselineskip}%
 \noindent\textbf{\VAR{item.role | latex}}\rowdates{\VAR{item.period | latex}}\\
-{\itshape\BLOCK{ if item.link }\href{\VAR{item.link}}{\VAR{item.company | latex}\extarrow}\BLOCK{ else }\VAR{item.company | latex}\BLOCK{ endif }}\rowdates{\VAR{item.location | latex}}\\[2pt]
+{\itshape{}\BLOCK{ if item.link }\href{\VAR{item.link}}{\VAR{item.company | latex}\extarrow}\BLOCK{ else }\VAR{item.company | latex}\BLOCK{ endif }}\rowdates{\VAR{item.location | latex}}\\[2pt]
 {\small \VAR{item.description | latex_md}}\\[8pt]
 \BLOCK{ endfor }
 
