@@ -51,12 +51,13 @@ CJK_LOCALES = frozenset({"ja"})
 LABELS: dict[str, dict[str, str]] = {
     "en": {
         "summary": "Summary",
-        "experience": "Experience",
-        "projects": "Projects",
+        "experience": "Professional Experience",
+        "research": "Research Experience",
+        "projects": "Selected Projects",
         "education": "Education",
-        "awards": "Awards",
+        "awards": "Scholarships & Awards",
         "courses": "Courses",
-        "skills": "Skills",
+        "skills": "Technical Skills",
         "languages": "Languages",
         "interests": "Interests",
         "gpa": "GPA",
@@ -66,12 +67,13 @@ LABELS: dict[str, dict[str, str]] = {
     },
     "tr": {
         "summary": "Özet",
-        "experience": "Deneyim",
-        "projects": "Projeler",
+        "experience": "Profesyonel Deneyim",
+        "research": "Araştırma Deneyimi",
+        "projects": "Seçilmiş Projeler",
         "education": "Eğitim",
-        "awards": "Ödüller",
+        "awards": "Burslar ve Ödüller",
         "courses": "Kurslar",
-        "skills": "Yetenekler",
+        "skills": "Teknik Beceriler",
         "languages": "Diller",
         "interests": "İlgi Alanları",
         "gpa": "ORT",
@@ -82,6 +84,7 @@ LABELS: dict[str, dict[str, str]] = {
     "ja": {
         "summary": "概要",
         "experience": "職務経歴",
+        "research": "研究経験",
         "projects": "プロジェクト",
         "education": "学歴",
         "awards": "受賞歴",
@@ -213,6 +216,8 @@ def render(
     personal_email: str | None = None,
 ) -> str:
     cv_data = json.loads(json_path.read_text(encoding="utf-8"))
+    if "\u2014" in json.dumps(cv_data, ensure_ascii=False):
+        raise ValueError(f"CV {locale} must not contain em dashes")
     if phone_override:
         cv_data["basics"]["phone"] = phone_override
     env = build_environment(locale)

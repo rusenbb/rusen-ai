@@ -1,22 +1,18 @@
 {
   "basics": {
-    "name": "RUŞEN BİRBEN",
-    "role": "AI・データエンジニア",
+    "name": "Ruşen Birben",
+    "role": "AI研究者・エンジニア",
     "location": "ANKARA, TR",
     "locationLong": "アンカラ、トルコ",
-    "status": "対応可能",
     "email": "contact@rusen.ai",
-    "birthday": "26/08/2002",
-    "drivingLicense": "B",
     "website": "rusen.ai",
     "websiteUrl": "https://rusen.ai",
     "linkedin": "linkedin.com/in/rusenbirben",
     "linkedinUrl": "https://linkedin.com/in/rusenbirben",
     "github": "github.com/rusenbb",
     "githubUrl": "https://github.com/rusenbb",
-    "summary": "イスタンブール工科大学 人工知能・データ工学科卒業。現在は中東工科大学 応用 NLP グループの独立研究者として、LLM、解釈可能性、頑健性に取り組んでいます。",
-    "printSummary": "イスタンブール工科大学 人工知能・データ工学科卒業。現在は中東工科大学 応用 NLP グループの独立研究者として、LLM、解釈可能性、頑健性に従事。NLP、LLM、Agentic AI 領域での実務経験あり。過去には Fiction Studios（ビルケント・サイバーパーク内の AI スタートアップ）の共同創業者として、博物館・観光客向け LLM 搭載ガイドアプリを開発。",
-    "footerNote": "リファレンスは応相談 · rusen.ai/cv"
+    "summary": "イスタンブール工科大学の人工知能・データ工学科を卒業し、中東工科大学の応用NLPグループで独立研究者として活動。LLMの頑健性と信頼性に関心を持ち、トルコ語NLP、機械忘却、金融分野のLLM応用に取り組んできました。",
+    "printSummary": "イスタンブール工科大学の人工知能・データ工学科を卒業し、中東工科大学の応用NLPグループで独立研究者として活動。LLMの頑健性と信頼性に関心を持ち、トルコ語NLP、機械忘却、金融分野のLLM応用に取り組んできました。"
   },
   "heroLinks": [
     {
@@ -36,96 +32,139 @@
     {
       "role": "独立研究者",
       "company": "中東工科大学 応用NLPグループ",
-      "period": "04/2026 - 現在",
+      "period": "2026 - 現在",
       "location": "アンカラ、トルコ",
-      "description": "研究室の YouTube チャンネル「[METU NLP Connect](https://www.youtube.com/@metunlpconnect)」を運営。専門家インタビュー、LLM・現代 NLP の解説動画、最新論文の紹介を制作。Çağrı Toraman 助教が主導する応用 NLP グループの一員として、LLM、生成 AI、トルコ語自然言語処理に取り組んでいます。",
-      "link": "https://nlp.ceng.metu.edu.tr"
+      "description": "Çağrı Toramanとともに、SIGTURK 2027ではテュルク諸語と文化的知識を評価するベンチマークのデータ作成・評価手法に貢献し、LlamaTurk2の学習データ収集と事前学習実験にも参加。研究室の[METU NLP Connect](https://www.youtube.com/@metunlpconnect)を運営し、専門家インタビュー、LLM・NLP解説、最新論文の紹介も担当。",
+      "link": "https://nlp.ceng.metu.edu.tr",
+      "category": "research"
     },
     {
-      "role": "共同創業者",
+      "role": "共同創業者・技術責任者",
       "company": "Fiction Studios",
       "period": "08/2025 - 04/2026",
       "location": "アンカラ、トルコ",
-      "description": "ビルケント・サイバーパーク（トルコの認定テクノパーク）にて AI スタートアップを共同創業。博物館・観光客向けの LLM 搭載ガイドアプリを開発。2026 年に事業終了。",
-      "link": "https://github.com/fiction-ai-studios"
+      "description": "ビルケント・サイバーパークで友人とFiction Studiosを共同創業し、技術責任者を担当。技術開発を主導し、創業者2人を支援する追加メンバー3人の活動を調整した。博物館・観光客向けの多言語LLMガイドを開発し、対話型の来館体験づくりと並行して顧客・投資家との協議にも参加。",
+      "link": "https://github.com/fiction-ai-studios",
+      "category": "professional"
     },
     {
       "role": "ジュニア AI エンジニア",
       "company": "CyberQuote",
       "period": "03/2025 - 07/2025",
       "location": "イスタンブール、トルコ",
-      "description": "Phillip Capital 子会社にて AI による業務自動化と Agentic LLM の実装を担当。社内業務および顧客向けプラットフォームに対し、AI システムを設計・開発。",
-      "link": "https://cyberquote.com/tk/"
-    },
-    {
-      "role": "NLP 研究インターン",
-      "company": "ITU NLP 研究室",
-      "period": "07/2024 - 08/2024",
-      "location": "イスタンブール、トルコ",
-      "description": "金融分野における LLM 応用研究：予測、感情分析、ツール利用、推論、RAG 実装。",
-      "link": "https://nlp.itu.edu.tr/"
+      "description": "Phillip Capital子会社CyberQuoteの新設AIチームに2人目のメンバーとして入社。ニュース感情分析パイプライン、金融専門家向け社内LLMツール、Web統合、モバイル音声アシスタントを開発。分散した情報源やPDFレポートから最新の金融情報を取得する際の難しさや、情報不足による回答の信頼性低下に取り組んだ。",
+      "link": "https://cyberquote.com/tk/",
+      "category": "professional"
     },
     {
       "role": "AIOps 研究インターン",
       "company": "Havelsan",
       "period": "08/2024 - 09/2024",
       "location": "イスタンブール、トルコ",
-      "description": "ソフトウェアログを用いた予知保全のための AIOps 研究。HDFS ログを対象としたデモを構築。",
-      "link": "https://havelsan.com/tr"
+      "description": "予知保全に向けたソフトウェアログ分析を研究し、HDFSログを使ったプロトタイプを開発。",
+      "link": "https://havelsan.com/tr",
+      "category": "research"
+    },
+    {
+      "role": "NLP 研究インターン",
+      "company": "ITU NLP 研究室",
+      "period": "07/2024 - 08/2024",
+      "location": "イスタンブール、トルコ",
+      "description": "金融分野のLLM応用を研究。感情分析、ツール利用、推論、予測、検索拡張生成（RAG）を検討し、金融推論LLMを扱う卒業制作Kairaにつながる実験の一部を実施。",
+      "link": "https://nlp.itu.edu.tr/",
+      "category": "research"
     }
   ],
   "projects": [
     {
-      "title": "Tobor",
-      "subtitle": "Amazon 倉庫ロボット",
-      "period": "2024 - 2025",
-      "description": "Amazon 物流環境を再現した自律走行倉庫ロボット。経路計画、障害物回避、タスクスケジューリングを実装。独自に学習させた YOLO モデルで人体/貨物を検出。",
-      "tags": ["Python", "ROS2", "YOLO", "ロボット工学"],
+      "title": "Kaira",
+      "subtitle": "卒業制作：金融推論LLM",
+      "period": "2025",
+      "description": "イスタンブール工科大学の卒業制作として、Qwen系LLMの金融推論を研究。UnslothとLoRAを用いてGRPOでファインチューニングし、FinQAとGSM8Kで報酬設計や推論の振る舞いを調べた。Ollamaを使ったチャットアプリも開発。",
+      "tags": [
+        "GRPO",
+        "Unsloth",
+        "LoRA",
+        "FinQA"
+      ],
+      "links": []
+    },
+    {
+      "title": "AIZheimer",
+      "subtitle": "Stable Diffusionの機械忘却",
+      "period": "2024",
+      "description": "Forget-Me-Notを基にStable Diffusion 2.1向けのクロスアテンションに基づく機械忘却を実装・調整。Attention controller/processorを開発し、attention re-steering、distraction、random stimulusの損失関数を検討。定性的実験と可視化を通じて、対象概念の除去とそれ以外の生成能力の維持とのトレードオフを調べた。",
+      "tags": [
+        "Stable Diffusion 2.1",
+        "機械忘却"
+      ],
       "links": [
-        { "label": "GH", "url": "https://github.com/rusen-archive/Amazon-Warehouse-Robot" },
-        { "label": "YT", "url": "https://youtu.be/h-Jxs_y9kNA" }
+        {
+          "label": "コード",
+          "url": "https://github.com/rusenbb/ai-zheimer"
+        }
       ]
     },
     {
       "title": "Biting The Bytes",
       "subtitle": "トルコ語ダイアクリティカル復元",
       "period": "2024",
-      "description": "T5 ベースの Transformer によりトルコ語のダイアクリティカル記号（ş、ç、ı、ğ、ü、ö）を自動復元。可読性向上のためアクセント記号と特殊文字を補完。",
-      "tags": ["NLP", "T5", "Transformers", "トルコ語"],
+      "description": "トルコ語の文字復元をバイト単位のトークン分類として扱い、ByT5-smallをPEFT/LoRAでファインチューニング。モデル学習とハイパーパラメータ調整を主に担当し、デバッグとHugging Face Spacesへの公開はチームメイトと分担。ノイズやASCII表記を含む文章からş、ç、ı、ğ、ü、öなどの文字を復元する課題に取り組んだ。",
+      "tags": [
+        "ByT5-small",
+        "LoRA",
+        "NLP"
+      ],
       "links": [
-        { "label": "GH", "url": "https://github.com/rusen-archive/Biting-The-Bytes" },
-        { "label": "HF", "url": "https://huggingface.co/spaces/rusen/diacritizeTR" }
-      ]
-    },
-    {
-      "title": "AIZheimer",
-      "subtitle": "Stable Diffusion における機械忘却",
-      "period": "2024",
-      "description": "Stable Diffusion 2.1 から特定概念を選択的に削除しつつ、その他の生成能力を維持する手法。コンテンツモデレーションと AI 出力カスタマイズを目的とする。",
-      "tags": ["Stable Diffusion", "機械忘却", "コンピュータビジョン"],
-      "links": [
-        { "label": "GH", "url": "https://github.com/rusenbb/ai-zheimer" }
+        {
+          "label": "コード",
+          "url": "https://github.com/rusen-archive/Biting-The-Bytes"
+        },
+        {
+          "label": "デモ",
+          "url": "https://huggingface.co/spaces/rusen/diacritize-tr"
+        }
       ]
     },
     {
       "title": "To-AI-or-Not-to-AI",
       "subtitle": "AI 生成テキスト検出器",
       "period": "2023",
-      "description": "ファインチューニングした 3 モデルのアンサンブルにより AI 生成テキストを検出。学術倫理とディスインフォメーション対策を想定。",
-      "tags": ["NLP", "アンサンブル", "分類"],
+      "description": "RoBERTaベースの検出器3種をファインチューニングし、多数決で予測を統合。26,270件のデータ作成・前処理を分担し、Hugging Face Spacesへの公開を担当。同一分布から無作為に分割したテストセットで94.21%の正解率を達成したが、他言語や大きく異なるドメインへの汎化は評価していない。",
+      "tags": [
+        "RoBERTa",
+        "アンサンブル"
+      ],
       "links": [
-        { "label": "GH", "url": "https://github.com/rusen-archive/To-AI-or-Not-to-AI" },
-        { "label": "HF", "url": "https://huggingface.co/spaces/rusen/gpt_detector" }
+        {
+          "label": "コード",
+          "url": "https://github.com/rusen-archive/To-AI-or-Not-to-AI"
+        },
+        {
+          "label": "デモ",
+          "url": "https://huggingface.co/spaces/rusen/gpt_detector"
+        }
       ]
     },
     {
-      "title": "Anime Recommender",
-      "subtitle": "協調フィルタリング",
-      "period": "2022 - 2023",
-      "description": "協調フィルタリングと内容ベース手法を組み合わせたパーソナライズアニメ推薦システム。RMSE: 0.289 / MAE: 0.213。",
-      "tags": ["推薦システム", "行列分解"],
+      "title": "Tobor",
+      "subtitle": "自律走行倉庫ロボット",
+      "period": "2024 - 2025",
+      "description": "ROS2のナビゲーションとYOLOによる認識を組み合わせた自律走行倉庫ロボットをチームで開発。箱の持ち上げ・配置機構を実装し、データのアノテーションを共同で行い、他のアルゴリズム開発も支援。",
+      "tags": [
+        "ROS2",
+        "YOLO",
+        "Python"
+      ],
       "links": [
-        { "label": "GH", "url": "https://github.com/rusen-archive/Anime-Recommender" }
+        {
+          "label": "コード",
+          "url": "https://github.com/rusen-archive/Amazon-Warehouse-Robot"
+        },
+        {
+          "label": "動画",
+          "url": "https://youtu.be/h-Jxs_y9kNA"
+        }
       ]
     }
   ],
@@ -137,7 +176,7 @@
       "gpa": "3.61 / 4.00"
     },
     {
-      "degree": "電子・通信工学 学士",
+      "degree": "電子・通信工学 学部在籍",
       "school": "イスタンブール工科大学",
       "period": "2020 - 2022",
       "note": "人工知能・データ工学への学内転科。"
@@ -147,36 +186,85 @@
     {
       "title": "1416 YLSY 奨学金 · 修士・博士課程",
       "issuer": "トルコ国民教育省",
-      "summary": "海外大学院留学を対象としたトルコの基幹的国費奨学金（1929 年制定 1416 号法に基づく）。修士・博士課程の学費、生活費、医療、渡航、試験費用を支給する代わりに、修了後はトルコ国内の大学または公的機関での義務勤務が課される。"
+      "summary": "トルコ国民教育省による海外修士・博士課程向け1416 YLSY奨学金に採用。",
+      "period": "2026"
     }
   ],
   "interests": [
-    { "title": "コーヒー", "desc": "V60 - エアロプレス - モカポット", "icon": "coffee" },
-    { "title": "読書", "desc": "哲学 - AI/CS - 金融", "icon": "book" },
-    { "title": "写真", "desc": "ストリート写真 - 二重露光 - 野鳥写真", "icon": "camera" },
-    { "title": "アニメ・漫画", "desc": "視聴 - 読書 - コレクション", "icon": "tv" }
+    {
+      "title": "コーヒー",
+      "desc": "V60 - エアロプレス - モカポット",
+      "icon": "coffee"
+    },
+    {
+      "title": "読書",
+      "desc": "哲学 - AI/CS - 金融",
+      "icon": "book"
+    },
+    {
+      "title": "写真",
+      "desc": "ストリート写真 - 二重露光 - 野鳥写真",
+      "icon": "camera",
+      "link": {
+        "label": "rusenbirben.com",
+        "url": "https://rusenbirben.com"
+      }
+    },
+    {
+      "title": "アニメ・漫画",
+      "desc": "視聴 - 読書 - コレクション",
+      "icon": "tv"
+    }
   ],
   "courses": [
     {
       "title": "Deep Learning Specialization",
-      "issuer": "Deeplearning.ai · Andrew Ng",
+      "issuer": "DeepLearning.AI · Coursera",
       "url": "https://coursera.org/share/9c59e9758d378fb8a8b4ab7074dd71ed",
-      "summary": "シーケンスモデル、CNN、ニューラルネットワークと深層学習の基礎、ML プロジェクトの構造化、深層 NN の改善。"
+      "summary": "ニューラルネットワーク、CNN、系列モデル、最適化、機械学習プロジェクトの構成。"
     },
     {
       "title": "AWS Cloud Technical Essentials",
       "issuer": "AWS · Coursera",
       "url": "https://coursera.org/share/f8ab2981ab0bbdc3fec17c6e88804ff8",
-      "summary": "AWS の基礎概念、セキュリティ実践、EC2、Lambda、ECS、RDS、DynamoDB、S3。"
+      "summary": "クラウドアーキテクチャとEC2、Lambda、S3、RDS、DynamoDBなどのAWSサービス。"
     }
   ],
   "languages": [
-    { "name": "トルコ語", "level": "母語" },
-    { "name": "英語", "level": "流暢 · TOEFL iBT 109" }
+    {
+      "name": "トルコ語",
+      "level": "母語"
+    },
+    {
+      "name": "英語",
+      "level": "TOEFL iBT 109/120（2025年11月8日）"
+    }
   ],
   "skills": {
-    "言語": ["Python", "JavaScript/TypeScript", "SQL", "C/C++"],
-    "フレームワーク・ツール": ["PyTorch", "TensorFlow", "ROS2", "YOLO", "Transformers", "Scikit-learn", "Pandas", "NumPy"],
-    "専門分野": ["NLP", "LLM", "コンピュータビジョン", "RAG", "MLOps", "Agentic AI", "データエンジニアリング"]
+    "言語": [
+      "Python",
+      "JavaScript/TypeScript",
+      "SQL",
+      "C/C++"
+    ],
+    "フレームワーク・ツール": [
+      "PyTorch",
+      "TensorFlow",
+      "Transformers",
+      "PEFT / LoRA",
+      "Unsloth",
+      "Scikit-learn",
+      "Pandas",
+      "NumPy",
+      "ROS2",
+      "YOLO"
+    ],
+    "専門分野": [
+      "NLP",
+      "LLM",
+      "RAG",
+      "機械忘却",
+      "モデル評価"
+    ]
   }
 }

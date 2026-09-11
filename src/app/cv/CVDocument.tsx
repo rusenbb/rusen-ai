@@ -1,8 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { LuBookOpen, LuCamera, LuCoffee, LuTv } from "react-icons/lu";
+import {
+  LuBookOpen, LuCamera, LuCoffee, LuTv, LuGraduationCap,
+  LuFlaskConical, LuBriefcaseBusiness, LuCodeXml, LuAward,
+  LuWrench, LuLanguages, LuHeart, LuMail, LuMapPin,
+  LuDownload, LuExternalLink,
+} from "react-icons/lu";
+import { FaGithub, FaLinkedinIn, FaYoutube } from "react-icons/fa";
 import {
   type CVData,
   type CVLabels,
@@ -91,29 +98,24 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
       <header className={styles.hero}>
         <div className={styles.heroMain}>
           <div className={styles.heroNameSection}>
-            <span className={styles.heroLabel}>{labels.identity}</span>
+            <span className={styles.heroLabel}>{labels.identity} / CV</span>
             <h1 className={styles.heroName}>{cv.basics.name}</h1>
             <div className={styles.heroRole}>
-              <span className={styles.roleIndicator} aria-hidden="true" />
-              {cv.basics.role.toUpperCase()}
+              {cv.basics.role}
             </div>
           </div>
           <div className={styles.heroMeta}>
+            <Image
+              src="/images/rusen-portrait.webp"
+              alt={cv.basics.name}
+              width={160}
+              height={160}
+              className={styles.portrait}
+              priority
+            />
             <div className={styles.metaItem}>
-              <span className={styles.metaLabel}>{labels.loc}</span>
+              <span className={styles.metaLabel}><LuMapPin aria-hidden="true" /> {labels.loc}</span>
               <span className={styles.metaValue}>{cv.basics.location}</span>
-            </div>
-            <div className={styles.metaItem}>
-              <span className={styles.metaLabel}>{labels.status}</span>
-              <span className={styles.metaValue}>{cv.basics.status}</span>
-            </div>
-            <div className={styles.metaItem}>
-              <span className={styles.metaLabel}>{labels.dob}</span>
-              <span className={styles.metaValue}>{cv.basics.birthday}</span>
-            </div>
-            <div className={styles.metaItem}>
-              <span className={styles.metaLabel}>{labels.lic}</span>
-              <span className={styles.metaValue}>{cv.basics.drivingLicense}</span>
             </div>
           </div>
         </div>
@@ -131,7 +133,7 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
               rel={link.url.startsWith("mailto:") ? undefined : "noopener noreferrer"}
               className={styles.linkBtn}
             >
-              <span className={styles.linkArrow}>→</span> {link.label.toUpperCase()}
+              {link.url.includes("github.com") ? <FaGithub aria-hidden="true" /> : link.url.includes("linkedin.com") ? <FaLinkedinIn aria-hidden="true" /> : <LuMail aria-hidden="true" />} {link.label.toUpperCase()}
             </a>
           ))}
 
@@ -148,7 +150,7 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
                   setOpenMenu((cur) => (cur === "download" ? null : "download"))
                 }
               >
-                <span className={styles.linkArrow}>↓</span>
+                <LuDownload aria-hidden="true" />
                 {labels.download}
                 <span className={styles.dropdownCaret}>{openMenu === "download" ? "▴" : "▾"}</span>
               </button>
@@ -214,88 +216,8 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
 
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
-          <span className={styles.sectionNumber}>01</span>
-          <h2 className={styles.sectionTitle}>{labels.experience}</h2>
-          <div className={styles.sectionLine} />
-        </div>
-
-        <div className={styles.timeline}>
-          {cv.experience.map((item, index) => (
-            <div key={`${item.company}-${item.period}`} className={styles.timelineItem}>
-              <div className={styles.timelineMarker}>
-                <div className={styles.markerDot} />
-                {index !== cv.experience.length - 1 && <div className={styles.markerLine} />}
-              </div>
-              <div className={styles.timelineCard}>
-                <div className={styles.cardHeader}>
-                  <div className={styles.cardTitleGroup}>
-                    <span className={styles.cardRole}>{item.role}</span>
-                    <span className={styles.cardDivider}>@</span>
-                    {item.link ? (
-                      <a href={item.link} target="_blank" rel="noopener noreferrer" className={styles.cardCompanyLink}>
-                        {item.company} ↗
-                      </a>
-                    ) : (
-                      <span className={styles.cardCompany}>{item.company}</span>
-                    )}
-                  </div>
-                  <span className={styles.cardPeriod}>{item.period}</span>
-                </div>
-                <div className={styles.cardLocation}>{item.location}</div>
-                <p className={styles.cardDesc}>{renderDescription(item.description)}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <span className={styles.sectionNumber}>02</span>
-          <h2 className={styles.sectionTitle}>{labels.projects}</h2>
-          <div className={styles.sectionLine} />
-        </div>
-
-        <div className={styles.projectsGrid}>
-          {cv.projects.map((project) => (
-            <div key={`${project.title}-${project.period}`} className={styles.projectCard}>
-              <div className={styles.projectCardHeader}>
-                <div className={styles.projectTitleGroup}>
-                  <h3 className={styles.projectTitle}>{project.title}</h3>
-                  <span className={styles.projectSubtitle}>{project.subtitle}</span>
-                </div>
-                <span className={styles.projectPeriod}>{project.period}</span>
-              </div>
-
-              <p className={styles.projectDesc}>{project.description}</p>
-
-              <div className={styles.projectTags}>
-                {project.tags.map((tag) => (
-                  <span key={tag} className={styles.projectTag}>{tag}</span>
-                ))}
-              </div>
-
-              <div className={styles.projectLinks}>
-                {project.links.map((link) => (
-                  <a
-                    key={`${project.title}-${link.label}`}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={styles.projectLink}
-                  >
-                    {link.label}
-                  </a>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <span className={styles.sectionNumber}>03</span>
+          <span className={styles.sectionNumber} aria-hidden="true">01</span>
+          <LuGraduationCap className={styles.sectionIcon} aria-hidden="true" />
           <h2 className={styles.sectionTitle}>{labels.education}</h2>
           <div className={styles.sectionLine} />
         </div>
@@ -321,7 +243,8 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
 
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
-          <span className={styles.sectionNumber}>04</span>
+          <span className={styles.sectionNumber} aria-hidden="true">02</span>
+          <LuAward className={styles.sectionIcon} aria-hidden="true" />
           <h2 className={styles.sectionTitle}>{labels.awards}</h2>
           <div className={styles.sectionLine} />
         </div>
@@ -348,7 +271,136 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
 
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
-          <span className={styles.sectionNumber}>05</span>
+          <span className={styles.sectionNumber} aria-hidden="true">03</span>
+          <LuFlaskConical className={styles.sectionIcon} aria-hidden="true" />
+          <h2 className={styles.sectionTitle}>{labels.research}</h2>
+          <div className={styles.sectionLine} />
+        </div>
+
+        <div className={styles.timeline}>
+          {cv.experience.filter((item) => item.category === "research").map((item) => (
+            <div key={`${item.company}-${item.period}`} className={styles.timelineItem}>
+              <div className={styles.timelineCard}>
+                <div className={styles.cardHeader}>
+                  <div className={styles.cardTitleGroup}>
+                    <span className={styles.cardRole}>{item.role}</span>
+                    <span className={styles.cardDivider}>@</span>
+                    {item.link ? (
+                      <a href={item.link} target="_blank" rel="noopener noreferrer" className={styles.cardCompanyLink}>
+                        {item.company} ↗
+                      </a>
+                    ) : (
+                      <span className={styles.cardCompany}>{item.company}</span>
+                    )}
+                  </div>
+                  <span className={styles.cardPeriod}>{item.period}</span>
+                </div>
+                <div className={styles.cardLocation}>{item.location}</div>
+                <p className={styles.cardDesc}>{renderDescription(item.description)}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <span className={styles.sectionNumber} aria-hidden="true">04</span>
+          <LuCodeXml className={styles.sectionIcon} aria-hidden="true" />
+          <h2 className={styles.sectionTitle}>{labels.projects}</h2>
+          <div className={styles.sectionLine} />
+        </div>
+
+        <div className={styles.projectsGrid}>
+          {cv.projects.map((project) => (
+            <div key={`${project.title}-${project.period}`} className={styles.projectCard}>
+              <div className={styles.projectCardHeader}>
+                <div className={styles.projectTitleGroup}>
+                  <h3 className={styles.projectTitle}>{project.title}</h3>
+                  <span className={styles.projectSubtitle}>{project.subtitle}</span>
+                </div>
+                <span className={styles.projectPeriod}>{project.period}</span>
+              </div>
+
+              <p className={styles.projectDesc}>{renderDescription(project.description)}</p>
+
+              <div className={styles.projectTags}>
+                {project.tags.map((tag) => (
+                  <span key={tag} className={styles.projectTag}>{tag}</span>
+                ))}
+              </div>
+
+              <div className={styles.projectLinks}>
+                {project.links.map((link) => (
+                  <a
+                    key={`${project.title}-${link.label}`}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.projectLink}
+                  >
+                    {link.url.includes("github.com") ? <FaGithub aria-hidden="true" /> : link.url.includes("youtu") ? <FaYoutube aria-hidden="true" /> : <LuExternalLink aria-hidden="true" />}
+                    {link.label}
+                  </a>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <span className={styles.sectionNumber} aria-hidden="true">05</span>
+          <LuBriefcaseBusiness className={styles.sectionIcon} aria-hidden="true" />
+          <h2 className={styles.sectionTitle}>{labels.experience}</h2>
+          <div className={styles.sectionLine} />
+        </div>
+
+        <div className={styles.timeline}>
+          {cv.experience.filter((item) => item.category === "professional").map((item) => (
+            <div key={`${item.company}-${item.period}`} className={styles.timelineItem}>
+              <div className={styles.timelineCard}>
+                <div className={styles.cardHeader}>
+                  <div className={styles.cardTitleGroup}>
+                    <span className={styles.cardRole}>{item.role}</span>
+                    <span className={styles.cardDivider}>@</span>
+                    {item.link ? (
+                      <a href={item.link} target="_blank" rel="noopener noreferrer" className={styles.cardCompanyLink}>
+                        {item.company} ↗
+                      </a>
+                    ) : (
+                      <span className={styles.cardCompany}>{item.company}</span>
+                    )}
+                  </div>
+                  <span className={styles.cardPeriod}>{item.period}</span>
+                </div>
+                <div className={styles.cardLocation}>{item.location}</div>
+                <p className={styles.cardDesc}>{renderDescription(item.description)}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <span className={styles.sectionNumber} aria-hidden="true">06</span>
+          <LuWrench className={styles.sectionIcon} aria-hidden="true" />
+          <h2 className={styles.sectionTitle}>{labels.skills}</h2>
+          <div className={styles.sectionLine} />
+        </div>
+        <dl className={styles.skillsList}>
+          {Object.entries(cv.skills).map(([category, items]) => (
+            <div key={category}><dt>{category}</dt><dd>{items.join(" · ")}</dd></div>
+          ))}
+        </dl>
+      </section>
+
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <span className={styles.sectionNumber} aria-hidden="true">07</span>
+          <LuBookOpen className={styles.sectionIcon} aria-hidden="true" />
           <h2 className={styles.sectionTitle}>{labels.courses}</h2>
           <div className={styles.sectionLine} />
         </div>
@@ -371,9 +423,9 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
                     <h3 className={styles.eduDegree}>{course.title}</h3>
                   )}
                   <span className={styles.eduSchool}>{course.issuer}</span>
+                  <p className={styles.courseDesc}>{course.summary}</p>
                 </div>
               </div>
-              <p className={styles.eduNote}>{course.summary}</p>
             </div>
           ))}
         </div>
@@ -381,7 +433,8 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
 
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
-          <span className={styles.sectionNumber}>06</span>
+          <span className={styles.sectionNumber} aria-hidden="true">08</span>
+          <LuLanguages className={styles.sectionIcon} aria-hidden="true" />
           <h2 className={styles.sectionTitle}>{labels.languages}</h2>
           <div className={styles.sectionLine} />
         </div>
@@ -390,7 +443,7 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
           {cv.languages.map((lang) => (
             <div key={lang.name} className={styles.interestCard}>
               <div className={styles.interestContent}>
-                <h4 className={styles.interestTitle}>{lang.name}</h4>
+                <h3 className={styles.interestTitle}>{lang.name}</h3>
                 <p className={styles.interestDesc}>{lang.level}</p>
               </div>
             </div>
@@ -400,12 +453,13 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
 
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
-          <span className={styles.sectionNumber}>07</span>
+          <span className={styles.sectionNumber} aria-hidden="true">09</span>
+          <LuHeart className={styles.sectionIcon} aria-hidden="true" />
           <h2 className={styles.sectionTitle}>{labels.interests}</h2>
           <div className={styles.sectionLine} />
         </div>
 
-        <div className={styles.interestsGrid}>
+        <div className={styles.hobbiesGrid}>
           {cv.interests.map((item) => {
             const Icon = INTEREST_ICONS[item.icon];
             return (
@@ -414,15 +468,19 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
                   {Icon ? <Icon /> : null}
                 </div>
                 <div className={styles.interestContent}>
-                  <h4 className={styles.interestTitle}>{item.title}</h4>
+                  <h3 className={styles.interestTitle}>{item.title}</h3>
                   <p className={styles.interestDesc}>{item.desc}</p>
+                  {item.link && (
+                    <a href={item.link.url} target="_blank" rel="noopener noreferrer" className={styles.interestLink}>
+                      {item.link.label} <LuExternalLink aria-hidden="true" />
+                    </a>
+                  )}
                 </div>
               </div>
             );
           })}
         </div>
       </section>
-
       <footer className={styles.footer}>
         <div className={styles.footerLine} />
         <div className={styles.footerContent}>

@@ -6,9 +6,8 @@ import type { CVData, CVLabels, CVLocale } from "./cv";
  * and agents like Claude - can fetch the CV as text without scraping HTML.
  *
  * The JSON files remain the single source of truth: this is a pure projection.
- * Section ordering mirrors the LaTeX/PDF build (scripts/cv-template/cv.tex.j2):
- * Summary → Experience → Projects → Education → Awards → Courses → Skills →
- * Languages → Interests.
+ * Academic ordering matches the web CV; PDF pagination groups experience
+ * on page one and selected projects and supporting information on page two.
  */
 
 /** Section headings missing from CVLabels. Strings mirror the localized
@@ -33,36 +32,13 @@ export function renderCvMarkdown(
   out.push("");
   out.push(`**${b.role}** · ${b.locationLong}`);
   out.push("");
-  out.push(`- **${labels.status}:** ${b.status}`);
   out.push(`- **Email:** <${b.email}>`);
   out.push(`- **Website:** ${b.websiteUrl}`);
   out.push(`- **LinkedIn:** ${b.linkedinUrl}`);
   out.push(`- **GitHub:** ${b.githubUrl}`);
-  out.push(`- **${labels.dob}:** ${b.birthday}`);
-  out.push(`- **${labels.lic}:** ${b.drivingLicense}`);
 
   // ── Summary ──────────────────────────────────────────────────────────
   out.push("", `## ${extra.summary}`, "", b.printSummary);
-
-  // ── Experience ───────────────────────────────────────────────────────
-  out.push("", `## ${labels.experience}`);
-  for (const x of cv.experience) {
-    const company = x.link ? `[${x.company}](${x.link})` : x.company;
-    out.push("", `### ${x.role} - ${company}`);
-    out.push(`*${x.period} · ${x.location}*`, "", x.description);
-  }
-
-  // ── Projects ─────────────────────────────────────────────────────────
-  out.push("", `## ${labels.projects}`);
-  for (const p of cv.projects) {
-    out.push("", `### ${p.title} - ${p.subtitle}`);
-    out.push(`*${p.period}*`, "", p.description);
-    if (p.tags.length) out.push("", `Tags: ${p.tags.join(", ")}`);
-    if (p.links.length) {
-      const links = p.links.map((l) => `[${l.label}](${l.url})`).join(" · ");
-      out.push(`Links: ${links}`);
-    }
-  }
 
   // ── Education ─────────────────────────────────────────────────────────
   out.push("", `## ${labels.education}`);
@@ -80,6 +56,34 @@ export function renderCvMarkdown(
     out.push("", `### ${a.title} - ${a.issuer}`);
     if (a.period) out.push(`*${a.period}*`);
     out.push("", a.summary);
+  }
+
+  // ── Experience ───────────────────────────────────────────────────────
+  out.push("", `## ${labels.research}`);
+  for (const x of cv.experience.filter((item) => item.category === "research")) {
+    const company = x.link ? `[${x.company}](${x.link})` : x.company;
+    out.push("", `### ${x.role} - ${company}`);
+    out.push(`*${x.period} · ${x.location}*`, "", x.description);
+  }
+
+  // ── Projects ─────────────────────────────────────────────────────────
+  out.push("", `## ${labels.projects}`);
+  for (const p of cv.projects) {
+    out.push("", `### ${p.title} - ${p.subtitle}`);
+    out.push(`*${p.period}*`, "", p.description);
+    if (p.tags.length) out.push("", `Tags: ${p.tags.join(", ")}`);
+    if (p.links.length) {
+      const links = p.links.map((l) => `[${l.label}](${l.url})`).join(" · ");
+      out.push(`Links: ${links}`);
+    }
+  }
+
+  // ── Experience ───────────────────────────────────────────────────────
+  out.push("", `## ${labels.experience}`);
+  for (const x of cv.experience.filter((item) => item.category === "professional")) {
+    const company = x.link ? `[${x.company}](${x.link})` : x.company;
+    out.push("", `### ${x.role} - ${company}`);
+    out.push(`*${x.period} · ${x.location}*`, "", x.description);
   }
 
   // ── Courses ──────────────────────────────────────────────────────────
@@ -104,11 +108,11 @@ export function renderCvMarkdown(
   // ── Interests ────────────────────────────────────────────────────────
   out.push("", `## ${labels.interests}`, "");
   for (const i of cv.interests) {
-    out.push(`- **${i.title}** - ${i.desc}`);
+    const title = i.link ? `[${i.title}](${i.link.url})` : i.title;
+    out.push(`- **${title}** - ${i.desc}`);
   }
 
   // ── Footer ───────────────────────────────────────────────────────────
-  out.push("", "---", "", `*${b.footerNote}*`, "");
 
   return out.join("\n");
 }

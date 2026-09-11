@@ -1,282 +1,173 @@
-% !TEX TS-program = tectonic
-%
-% Generated from src/content/cv.json by scripts/render_cv.py.
-% Do not edit by hand - edit the JSON and re-run `npm run cv:build`.
-%
-% Style: neo-brutalist (mono headers, thick black rules, no chrome).
-% Mirrors the visual language of rusen.ai/cv.
-
+% Generated from src/content/cv*.json by scripts/render_cv.py.
 \documentclass[11pt,a4paper]{article}
-
-% XeTeX-native font setup (tectonic uses XeTeX). TeX Gyre Heros is the
-% Helvetica clone with full Latin Extended coverage including Turkish
-% (Ş, İ, Ğ, ı). Latin Modern Mono Light for the mono headers - same
-% Turkish coverage and a more elegant weight than default Inconsolata.
 \usepackage{fontspec}
 \setmainfont{TeX Gyre Heros}
+\setsansfont{TeX Gyre Heros}
 \setmonofont{Latin Modern Mono Light}[Scale=MatchLowercase]
 \renewcommand{\familydefault}{\sfdefault}
-
-% CJK setup. xeCJK lets us mix Latin and CJK glyphs in a single document;
-% Noto Serif/Sans CJK JP cover the Japanese script range. The Latin fonts
-% above stay in charge of ASCII ranges (dates, URLs, mono headers).
 \usepackage{xeCJK}
-\setCJKmainfont{Noto Serif CJK JP}
+\setCJKmainfont{Noto Sans CJK JP}
 \setCJKsansfont{Noto Sans CJK JP}
 \setCJKmonofont{Noto Sans Mono CJK JP}
-
-% fontawesome5 segfaults tectonic when combined with the volume of content
-% in this CV (reliably reproducible). fontawesome (v4) is rock-solid here
-% and covers every glyph we need.
-\usepackage{fontawesome}
-\usepackage[top=0.6in, bottom=0.55in, left=0.7in, right=0.7in]{geometry}
-\usepackage{enumitem}
-\usepackage{xcolor}
-\usepackage{titlesec}
-\usepackage{hyperref}
-\usepackage{setspace}
-\usepackage{needspace}
-
-\setstretch{1.15}
+\usepackage[top=0.6in,bottom=0.6in,left=0.7in,right=0.7in,headheight=14pt,headsep=12pt]{geometry}
+\usepackage{xcolor,hyperref,needspace,fancyhdr,lastpage,fontawesome}
+\definecolor{ink}{HTML}{171717}
+\definecolor{muted}{HTML}{555555}
+\definecolor{paper}{HTML}{F3F3F1}
+\hypersetup{hidelinks,pdftitle={Ruşen Birben CV},pdfauthor={Ruşen Birben}}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{0pt}
 \raggedright
-
-\hypersetup{
-  colorlinks=false,
-  pdfborder={0 0 0},
-  pdftitle={RUŞEN BİRBEN CV},
-  pdfauthor={RUŞEN BİRBEN}
-}
-\pagestyle{empty}
-
-% Section colors
-\definecolor{cvsecnum}{HTML}{C0C0C0}
-\definecolor{cvrule}{HTML}{111111}
-
-% Custom section command: "01 EXPERIENCE" with a muted number prefix and a
-% thick rule under, mirroring the HTML CV's section style. Title content
-% is expected to already be uppercased (locale-aware) by the Jinja
-% `upper` filter - we don't call \MakeUppercase here because it doesn't
-% know about Turkish dotted-i.
+\linespread{1.05}
+\color{ink}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\ttfamily{}\small{}Ruşen Birben\enspace{} / CV}
+\fancyhead[R]{\ttfamily{}\small{}rusen.ai}
+\fancyfoot[L]{\ttfamily{}\footnotesize{}rusen.ai/cv}
+\fancyfoot[R]{\ttfamily{}\footnotesize{}\thepage\ / \pageref*{LastPage}}
+\renewcommand{\headrulewidth}{0pt}
+\fancypagestyle{firstpage}{\fancyhead{}}
 \newcounter{cvsec}
-\setcounter{cvsec}{0}
-\newcommand{\cvsection}[1]{%
-  \refstepcounter{cvsec}%
-  \needspace{4\baselineskip}%
-  \par\vspace{14pt}%
-  \noindent%
-  {\ttfamily\bfseries\large%
-    \textcolor{cvsecnum}{\ifnum\value{cvsec}<10 0\fi\thecvsec}%
-    \hspace{0.65em}%
-    #1%
-  }%
-  \par\vspace{2pt}%
-  {\color{cvrule}\noindent\rule{\linewidth}{1.6pt}}%
-  \par\vspace{8pt}%
+\newcommand{\cvsection}[2]{%
+  \par\needspace{7\baselineskip}\vspace{6pt}\refstepcounter{cvsec}%
+  {\setlength{\fboxsep}{3pt}\colorbox{ink}{\color{white}\ttfamily{}\bfseries{}\small{}\ifnum\value{cvsec}<10 0\fi\thecvsec}}%
+  \hspace{7pt}{\large{} #1}\hspace{7pt}{\ttfamily{}\bfseries{}\fontsize{12}{14}\selectfont{} #2}%
+  \par\vspace{4pt}{\color{ink}\hrule height 0.9pt}\nopagebreak\vspace{7pt}%
 }
-
-\newcommand{\barsep}{\hspace{6pt}\textbar\hspace{6pt}}
-\newcommand{\rowdates}[1]{\hfill{\ttfamily\small #1}}
-% Small superscript outgoing-arrow icon for hyperlinked items.
-\newcommand{\extarrow}{\,{\footnotesize\faExternalLink}}
-
+\newcommand{\dates}[1]{\hfill{\ttfamily{}\small{}\color{muted}#1}}
+\newcommand{\cvbody}[1]{{\small{}\raggedright #1\par}}
+\newcommand{\extarrow}{\,{\scriptsize\faExternalLink}}
 \begin{document}
+\thispagestyle{firstpage}
+\hrule height 2.5pt\vspace{6pt}
+{\ttfamily{}\fontsize{30}{33}\selectfont{}\bfseries{} Ruşen Birben}\par\vspace{3pt}
+{\ttfamily{}\fontsize{11}{13}\selectfont{}AI研究者・エンジニア}\par\vspace{6pt}
+{\small{}
+\faMapMarker\enspace{}アンカラ、トルコ\quad{}
+\faEnvelope\enspace{}\href{mailto:contact@rusen.ai}{contact@rusen.ai}\quad{}
+\faGlobe\enspace{}\href{https://rusen.ai}{rusen.ai}\par\vspace{4pt}
+\faGithub\enspace{}\href{https://github.com/rusenbb}{github.com/rusenbb}\quad{}
+\faLinkedin\enspace{}\href{https://linkedin.com/in/rusenbirben}{linkedin.com/in/rusenbirben}
+}\par\vspace{6pt}
+\cvbody{イスタンブール工科大学の人工知能・データ工学科を卒業し、中東工科大学の応用NLPグループで独立研究者として活動。LLMの頑健性と信頼性に関心を持ち、トルコ語NLP、機械忘却、金融分野のLLM応用に取り組んできました。}
 
-% ======================================================================
-% HEADER
-% ======================================================================
-\noindent\rule{\linewidth}{2.5pt}\\[5pt]
-{\noindent\ttfamily\bfseries\Huge RUŞEN BİRBEN}\\[5pt]
-{\noindent\ttfamily\bfseries\small AI・データエンジニア}\\[7pt]
-\noindent\rule{\linewidth}{0.8pt}\\[8pt]
+\cvsection{\faGraduationCap}{学歴}
+\begin{minipage}{\linewidth}\raggedright
+\textbf{人工知能・データ工学 学士}\dates{2022 - 2025}\par
+{\small{}イスタンブール工科大学}\dates{GPA: 3.61 / 4.00}\par
+\end{minipage}\par\vspace{5pt}
+\begin{minipage}{\linewidth}\raggedright
+\textbf{電子・通信工学 学部在籍}\dates{2020 - 2022}\par
+{\small{}イスタンブール工科大学}\par
+{\small{}\itshape{}\color{muted}人工知能・データ工学への学内転科。}\par\end{minipage}\par\vspace{5pt}
 
-% Contact bar (mono, dense, icon-led)
-{\ttfamily\footnotesize\noindent
-\faMapMarker\,アンカラ、トルコ%
-\barsep%
-\faEnvelope\,\href{mailto:contact@rusen.ai}{contact@rusen.ai}%
+
+\cvsection{\faTrophy}{受賞歴}
+\begin{minipage}{\linewidth}\raggedright
+\textbf{\small{}1416 YLSY 奨学金 · 修士・博士課程}\dates{2026}\par\vspace{2pt}
+\cvbody{トルコ国民教育省による海外修士・博士課程向け1416 YLSY奨学金に採用。}
+\end{minipage}\par\vspace{3pt}
+\cvsection{\faFlask}{研究経験}
+\begin{minipage}{\linewidth}\raggedright
+\textbf{独立研究者}\dates{2026 - 現在}\par
+{\small{}\itshape{}\href{https://nlp.ceng.metu.edu.tr}{中東工科大学 応用NLPグループ\extarrow}}\dates{アンカラ、トルコ}\par\vspace{3pt}
+\cvbody{Çağrı Toramanとともに、SIGTURK 2027ではテュルク諸語と文化的知識を評価するベンチマークのデータ作成・評価手法に貢献し、LlamaTurk2の学習データ収集と事前学習実験にも参加。研究室の\href{https://www.youtube.com/@metunlpconnect}{METU NLP Connect}を運営し、専門家インタビュー、LLM・NLP解説、最新論文の紹介も担当。}
+\end{minipage}\par\vspace{6pt}
+\begin{minipage}{\linewidth}\raggedright
+\textbf{AIOps 研究インターン}\dates{08/2024 - 09/2024}\par
+{\small{}\itshape{}\href{https://havelsan.com/tr}{Havelsan\extarrow}}\dates{イスタンブール、トルコ}\par\vspace{3pt}
+\cvbody{予知保全に向けたソフトウェアログ分析を研究し、HDFSログを使ったプロトタイプを開発。}
+\end{minipage}\par\vspace{6pt}
+\begin{minipage}{\linewidth}\raggedright
+\textbf{NLP 研究インターン}\dates{07/2024 - 08/2024}\par
+{\small{}\itshape{}\href{https://nlp.itu.edu.tr/}{ITU NLP 研究室\extarrow}}\dates{イスタンブール、トルコ}\par\vspace{3pt}
+\cvbody{金融分野のLLM応用を研究。感情分析、ツール利用、推論、予測、検索拡張生成（RAG）を検討し、金融推論LLMを扱う卒業制作Kairaにつながる実験の一部を実施。}
+\end{minipage}\par\vspace{6pt}
+\cvsection{\faBriefcase}{職務経歴}
+\begin{minipage}{\linewidth}\raggedright
+\textbf{共同創業者・技術責任者}\dates{08/2025 - 04/2026}\par
+{\small{}\itshape{}\href{https://github.com/fiction-ai-studios}{Fiction Studios\extarrow}}\dates{アンカラ、トルコ}\par\vspace{3pt}
+\cvbody{ビルケント・サイバーパークで友人とFiction Studiosを共同創業し、技術責任者を担当。技術開発を主導し、創業者2人を支援する追加メンバー3人の活動を調整した。博物館・観光客向けの多言語LLMガイドを開発し、対話型の来館体験づくりと並行して顧客・投資家との協議にも参加。}
+\end{minipage}\par\vspace{6pt}
+\begin{minipage}{\linewidth}\raggedright
+\textbf{ジュニア AI エンジニア}\dates{03/2025 - 07/2025}\par
+{\small{}\itshape{}\href{https://cyberquote.com/tk/}{CyberQuote\extarrow}}\dates{イスタンブール、トルコ}\par\vspace{3pt}
+\cvbody{Phillip Capital子会社CyberQuoteの新設AIチームに2人目のメンバーとして入社。ニュース感情分析パイプライン、金融専門家向け社内LLMツール、Web統合、モバイル音声アシスタントを開発。分散した情報源やPDFレポートから最新の金融情報を取得する際の難しさや、情報不足による回答の信頼性低下に取り組んだ。}
+\end{minipage}\par\vspace{6pt}
+
+\newpage
+\cvsection{\faCode}{プロジェクト}
+\begin{minipage}{\linewidth}\raggedright
+{\ttfamily{}\bfseries{}Kaira}\dates{2025}\par
+{\small{}\itshape{}\color{muted}卒業制作：金融推論LLM}\hfill{\small{}%
 %
-\\[3pt]
-\faGlobe\,\href{https://rusen.ai}{rusen.ai}%
-\barsep%
-\faLinkedin\,\href{https://linkedin.com/in/rusenbirben}{linkedin.com/in/rusenbirben}%
-\barsep%
-\faGithub\,\href{https://github.com/rusenbb}{github.com/rusenbb}\\[3pt]
-生年月日\,26/08/2002%
-\barsep%
-免許\,B%
-\barsep%
-状況\,対応可能
-}
+}\par\vspace{4pt}
+\cvbody{イスタンブール工科大学の卒業制作として、Qwen系LLMの金融推論を研究。UnslothとLoRAを用いてGRPOでファインチューニングし、FinQAとGSM8Kで報酬設計や推論の振る舞いを調べた。Ollamaを使ったチャットアプリも開発。}
+\end{minipage}\par\vspace{5pt}
+\begin{minipage}{\linewidth}\raggedright
+{\ttfamily{}\bfseries{}AIZheimer}\dates{2024}\par
+{\small{}\itshape{}\color{muted}Stable Diffusionの機械忘却}\hfill{\small{}%
+\href{https://github.com/rusenbb/ai-zheimer}{\faGithub\enspace{}コード}%
+}\par\vspace{4pt}
+\cvbody{Forget-Me-Notを基にStable Diffusion 2.1向けのクロスアテンションに基づく機械忘却を実装・調整。Attention controller/processorを開発し、attention re-steering、distraction、random stimulusの損失関数を検討。定性的実験と可視化を通じて、対象概念の除去とそれ以外の生成能力の維持とのトレードオフを調べた。}
+\end{minipage}\par\vspace{5pt}
+\begin{minipage}{\linewidth}\raggedright
+{\ttfamily{}\bfseries{}Biting The Bytes}\dates{2024}\par
+{\small{}\itshape{}\color{muted}トルコ語ダイアクリティカル復元}\hfill{\small{}%
+\href{https://github.com/rusen-archive/Biting-The-Bytes}{\faGithub\enspace{}コード}\quad{}\href{https://huggingface.co/spaces/rusen/diacritize-tr}{\faExternalLink\enspace{}デモ}%
+}\par\vspace{4pt}
+\cvbody{トルコ語の文字復元をバイト単位のトークン分類として扱い、ByT5-smallをPEFT/LoRAでファインチューニング。モデル学習とハイパーパラメータ調整を主に担当し、デバッグとHugging Face Spacesへの公開はチームメイトと分担。ノイズやASCII表記を含む文章からş、ç、ı、ğ、ü、öなどの文字を復元する課題に取り組んだ。}
+\end{minipage}\par\vspace{5pt}
+\begin{minipage}{\linewidth}\raggedright
+{\ttfamily{}\bfseries{}To-AI-or-Not-to-AI}\dates{2023}\par
+{\small{}\itshape{}\color{muted}AI 生成テキスト検出器}\hfill{\small{}%
+\href{https://github.com/rusen-archive/To-AI-or-Not-to-AI}{\faGithub\enspace{}コード}\quad{}\href{https://huggingface.co/spaces/rusen/gpt_detector}{\faExternalLink\enspace{}デモ}%
+}\par\vspace{4pt}
+\cvbody{RoBERTaベースの検出器3種をファインチューニングし、多数決で予測を統合。26,270件のデータ作成・前処理を分担し、Hugging Face Spacesへの公開を担当。同一分布から無作為に分割したテストセットで94.21\%の正解率を達成したが、他言語や大きく異なるドメインへの汎化は評価していない。}
+\end{minipage}\par\vspace{5pt}
+\begin{minipage}{\linewidth}\raggedright
+{\ttfamily{}\bfseries{}Tobor}\dates{2024 - 2025}\par
+{\small{}\itshape{}\color{muted}自律走行倉庫ロボット}\hfill{\small{}%
+\href{https://github.com/rusen-archive/Amazon-Warehouse-Robot}{\faGithub\enspace{}コード}\quad{}\href{https://youtu.be/h-Jxs_y9kNA}{\faYoutubePlay\enspace{}動画}%
+}\par\vspace{4pt}
+\cvbody{ROS2のナビゲーションとYOLOによる認識を組み合わせた自律走行倉庫ロボットをチームで開発。箱の持ち上げ・配置機構を実装し、データのアノテーションを共同で行い、他のアルゴリズム開発も支援。}
+\end{minipage}\par\vspace{5pt}
 
-% ======================================================================
-% SUMMARY
-% ======================================================================
-\cvsection{概要}
-イスタンブール工科大学 人工知能・データ工学科卒業。現在は中東工科大学 応用 NLP グループの独立研究者として、LLM、解釈可能性、頑健性に従事。NLP、LLM、Agentic AI 領域での実務経験あり。過去には Fiction Studios（ビルケント・サイバーパーク内の AI スタートアップ）の共同創業者として、博物館・観光客向け LLM 搭載ガイドアプリを開発。
+\cvsection{\faCogs}{スキル}
+{\small{}\textbf{言語}\enspace{} Python / JavaScript/TypeScript / SQL / C/C++}\par\vspace{4pt}
+{\small{}\textbf{フレームワーク・ツール}\enspace{} PyTorch / TensorFlow / Transformers / PEFT / LoRA / Unsloth / Scikit-learn / Pandas / NumPy / ROS2 / YOLO}\par\vspace{4pt}
+{\small{}\textbf{専門分野}\enspace{} NLP / LLM / RAG / 機械忘却 / モデル評価}\par\vspace{4pt}
 
-% ======================================================================
-% EXPERIENCE
-% ======================================================================
-\cvsection{職務経歴}
+\cvsection{\faCertificate}{受講コース / 言語}
+\textbf{\small{}\href{https://coursera.org/share/9c59e9758d378fb8a8b4ab7074dd71ed}{Deep Learning Specialization\extarrow}}\dates{DeepLearning.AI · Coursera}\par\vspace{2pt}
+\cvbody{ニューラルネットワーク、CNN、系列モデル、最適化、機械学習プロジェクトの構成。}\vspace{5pt}
+\textbf{\small{}\href{https://coursera.org/share/f8ab2981ab0bbdc3fec17c6e88804ff8}{AWS Cloud Technical Essentials\extarrow}}\dates{AWS · Coursera}\par\vspace{2pt}
+\cvbody{クラウドアーキテクチャとEC2、Lambda、S3、RDS、DynamoDBなどのAWSサービス。}\vspace{5pt}
 
-\needspace{4\baselineskip}%
-\noindent\textbf{独立研究者}\rowdates{04/2026 - 現在}\\
-{\itshape{}\href{https://nlp.ceng.metu.edu.tr}{中東工科大学 応用NLPグループ\extarrow}}\rowdates{アンカラ、トルコ}\\[2pt]
-{\small 研究室の YouTube チャンネル「\href{https://www.youtube.com/@metunlpconnect}{METU NLP Connect}」を運営。専門家インタビュー、LLM・現代 NLP の解説動画、最新論文の紹介を制作。Çağrı Toraman 助教が主導する応用 NLP グループの一員として、LLM、生成 AI、トルコ語自然言語処理に取り組んでいます。}\\[8pt]
-\needspace{4\baselineskip}%
-\noindent\textbf{共同創業者}\rowdates{08/2025 - 04/2026}\\
-{\itshape{}\href{https://github.com/fiction-ai-studios}{Fiction Studios\extarrow}}\rowdates{アンカラ、トルコ}\\[2pt]
-{\small ビルケント・サイバーパーク（トルコの認定テクノパーク）にて AI スタートアップを共同創業。博物館・観光客向けの LLM 搭載ガイドアプリを開発。2026 年に事業終了。}\\[8pt]
-\needspace{4\baselineskip}%
-\noindent\textbf{ジュニア AI エンジニア}\rowdates{03/2025 - 07/2025}\\
-{\itshape{}\href{https://cyberquote.com/tk/}{CyberQuote\extarrow}}\rowdates{イスタンブール、トルコ}\\[2pt]
-{\small Phillip Capital 子会社にて AI による業務自動化と Agentic LLM の実装を担当。社内業務および顧客向けプラットフォームに対し、AI システムを設計・開発。}\\[8pt]
-\needspace{4\baselineskip}%
-\noindent\textbf{NLP 研究インターン}\rowdates{07/2024 - 08/2024}\\
-{\itshape{}\href{https://nlp.itu.edu.tr/}{ITU NLP 研究室\extarrow}}\rowdates{イスタンブール、トルコ}\\[2pt]
-{\small 金融分野における LLM 応用研究：予測、感情分析、ツール利用、推論、RAG 実装。}\\[8pt]
-\needspace{4\baselineskip}%
-\noindent\textbf{AIOps 研究インターン}\rowdates{08/2024 - 09/2024}\\
-{\itshape{}\href{https://havelsan.com/tr}{Havelsan\extarrow}}\rowdates{イスタンブール、トルコ}\\[2pt]
-{\small ソフトウェアログを用いた予知保全のための AIOps 研究。HDFS ログを対象としたデモを構築。}\\[8pt]
+\vspace{5pt}
+\faLanguage\enspace{}
+{\small{}\textbf{トルコ語}\enspace{}母語\quad{}\textbf{英語}\enspace{}TOEFL iBT 109/120（2025年11月8日）}\par
 
-% ======================================================================
-% PROJECTS
-% ======================================================================
-\cvsection{プロジェクト}
-
-\needspace{4\baselineskip}%
-\noindent\textbf{Tobor}\rowdates{2024 - 2025}\\
-{\itshape Amazon 倉庫ロボット}\\[2pt]
-{\small Amazon 物流環境を再現した自律走行倉庫ロボット。経路計画、障害物回避、タスクスケジューリングを実装。独自に学習させた YOLO モデルで人体/貨物を検出。}\\[2pt]
-{\ttfamily\footnotesize Python \textbullet{} ROS2 \textbullet{} YOLO \textbullet{} ロボット工学}%
-\hfill{\footnotesize%
-\href{https://github.com/rusen-archive/Amazon-Warehouse-Robot}{%
-\faGithub%
-%
-}\hspace{8pt}\href{https://youtu.be/h-Jxs_y9kNA}{%
-\faYoutubePlay%
-%
-}%
-}\\[8pt]
-\needspace{4\baselineskip}%
-\noindent\textbf{Biting The Bytes}\rowdates{2024}\\
-{\itshape トルコ語ダイアクリティカル復元}\\[2pt]
-{\small T5 ベースの Transformer によりトルコ語のダイアクリティカル記号（ş、ç、ı、ğ、ü、ö）を自動復元。可読性向上のためアクセント記号と特殊文字を補完。}\\[2pt]
-{\ttfamily\footnotesize NLP \textbullet{} T5 \textbullet{} Transformers \textbullet{} トルコ語}%
-\hfill{\footnotesize%
-\href{https://github.com/rusen-archive/Biting-The-Bytes}{%
-\faGithub%
-%
-}\hspace{8pt}\href{https://huggingface.co/spaces/rusen/diacritizeTR}{%
-{\ttfamily HF}\,{\tiny\faExternalLink}%
-%
-}%
-}\\[8pt]
-\needspace{4\baselineskip}%
-\noindent\textbf{AIZheimer}\rowdates{2024}\\
-{\itshape Stable Diffusion における機械忘却}\\[2pt]
-{\small Stable Diffusion 2.1 から特定概念を選択的に削除しつつ、その他の生成能力を維持する手法。コンテンツモデレーションと AI 出力カスタマイズを目的とする。}\\[2pt]
-{\ttfamily\footnotesize Stable Diffusion \textbullet{} 機械忘却 \textbullet{} コンピュータビジョン}%
-\hfill{\footnotesize%
-\href{https://github.com/rusenbb/ai-zheimer}{%
-\faGithub%
-%
-}%
-}\\[8pt]
-\needspace{4\baselineskip}%
-\noindent\textbf{To-AI-or-Not-to-AI}\rowdates{2023}\\
-{\itshape AI 生成テキスト検出器}\\[2pt]
-{\small ファインチューニングした 3 モデルのアンサンブルにより AI 生成テキストを検出。学術倫理とディスインフォメーション対策を想定。}\\[2pt]
-{\ttfamily\footnotesize NLP \textbullet{} アンサンブル \textbullet{} 分類}%
-\hfill{\footnotesize%
-\href{https://github.com/rusen-archive/To-AI-or-Not-to-AI}{%
-\faGithub%
-%
-}\hspace{8pt}\href{https://huggingface.co/spaces/rusen/gpt_detector}{%
-{\ttfamily HF}\,{\tiny\faExternalLink}%
-%
-}%
-}\\[8pt]
-\needspace{4\baselineskip}%
-\noindent\textbf{Anime Recommender}\rowdates{2022 - 2023}\\
-{\itshape 協調フィルタリング}\\[2pt]
-{\small 協調フィルタリングと内容ベース手法を組み合わせたパーソナライズアニメ推薦システム。RMSE: 0.289 / MAE: 0.213。}\\[2pt]
-{\ttfamily\footnotesize 推薦システム \textbullet{} 行列分解}%
-\hfill{\footnotesize%
-\href{https://github.com/rusen-archive/Anime-Recommender}{%
-\faGithub%
-%
-}%
-}\\[8pt]
-
-% ======================================================================
-% EDUCATION
-% ======================================================================
-\cvsection{学歴}
-
-\needspace{3\baselineskip}%
-\noindent\textbf{人工知能・データ工学 学士}\rowdates{2022 - 2025}\\
-{\itshape イスタンブール工科大学}\rowdates{GPA 3.61 / 4.00}\\
-\vspace{6pt}
-\needspace{3\baselineskip}%
-\noindent\textbf{電子・通信工学 学士}\rowdates{2020 - 2022}\\
-{\itshape イスタンブール工科大学}\\
-{\small\itshape 人工知能・データ工学への学内転科。}\\\vspace{6pt}
-
-% ======================================================================
-% AWARDS
-% ======================================================================
-\cvsection{受賞歴}
-
-\needspace{3\baselineskip}%
-\noindent\textbf{1416 YLSY 奨学金 · 修士・博士課程}\\
-{\itshape トルコ国民教育省}\\[2pt]
-{\small 海外大学院留学を対象としたトルコの基幹的国費奨学金（1929 年制定 1416 号法に基づく）。修士・博士課程の学費、生活費、医療、渡航、試験費用を支給する代わりに、修了後はトルコ国内の大学または公的機関での義務勤務が課される。}\\[6pt]
-
-% ======================================================================
-% COURSES
-% ======================================================================
-\cvsection{受講コース}
-
-\needspace{3\baselineskip}%
-\noindent\textbf{\href{https://coursera.org/share/9c59e9758d378fb8a8b4ab7074dd71ed}{Deep Learning Specialization\extarrow}}\rowdates{Deeplearning.ai · Andrew Ng}\\
-{\small シーケンスモデル、CNN、ニューラルネットワークと深層学習の基礎、ML プロジェクトの構造化、深層 NN の改善。}\\[6pt]
-\needspace{3\baselineskip}%
-\noindent\textbf{\href{https://coursera.org/share/f8ab2981ab0bbdc3fec17c6e88804ff8}{AWS Cloud Technical Essentials\extarrow}}\rowdates{AWS · Coursera}\\
-{\small AWS の基礎概念、セキュリティ実践、EC2、Lambda、ECS、RDS、DynamoDB、S3。}\\[6pt]
-
-% ======================================================================
-% SKILLS
-% ======================================================================
-\cvsection{スキル}
-
-\noindent{\ttfamily\bfseries\small 言語}\hspace{6pt}{\small Python \textbullet{} JavaScript/TypeScript \textbullet{} SQL \textbullet{} C/C++}\\[4pt]
-\noindent{\ttfamily\bfseries\small フレームワーク・ツール}\hspace{6pt}{\small PyTorch \textbullet{} TensorFlow \textbullet{} ROS2 \textbullet{} YOLO \textbullet{} Transformers \textbullet{} Scikit-learn \textbullet{} Pandas \textbullet{} NumPy}\\[4pt]
-\noindent{\ttfamily\bfseries\small 専門分野}\hspace{6pt}{\small NLP \textbullet{} LLM \textbullet{} コンピュータビジョン \textbullet{} RAG \textbullet{} MLOps \textbullet{} Agentic AI \textbullet{} データエンジニアリング}\\[4pt]
-
-\vspace{2pt}
-
-% ======================================================================
-% LANGUAGES
-% ======================================================================
-\cvsection{言語}
-
-\noindent\textbf{トルコ語} {\small (\textit{母語})}\hspace{18pt}\textbf{英語} {\small (\textit{流暢 · TOEFL iBT 109})}
-% ======================================================================
-% INTERESTS
-% ======================================================================
-\cvsection{趣味}
-
-\noindent\textbf{コーヒー} {\small \textperiodcentered{} V60 - エアロプレス - モカポット}\hspace{14pt}\textbf{読書} {\small \textperiodcentered{} 哲学 - AI/CS - 金融}\hspace{14pt}\textbf{写真} {\small \textperiodcentered{} ストリート写真 - 二重露光 - 野鳥写真}\hspace{14pt}\textbf{アニメ・漫画} {\small \textperiodcentered{} 視聴 - 読書 - コレクション}
-\vspace{14pt}
-
-% ======================================================================
-% FOOTER
-% ======================================================================
-\noindent\rule{\linewidth}{0.8pt}\\[4pt]
-{\centering\ttfamily\footnotesize リファレンスは応相談 · rusen.ai/cv\par}
-
+\cvsection{\faHeartO}{趣味}
+\noindent\begin{minipage}[t]{0.235\linewidth}\raggedright
+{\large{}\faCoffee}\par\vspace{5pt}{\ttfamily{}\bfseries{}\small{}コーヒー}\par\vspace{4pt}
+\cvbody{V60 / エアロプレス / モカポット}
+\end{minipage}%
+\hfill%
+\noindent\begin{minipage}[t]{0.235\linewidth}\raggedright
+{\large{}\faBook}\par\vspace{5pt}{\ttfamily{}\bfseries{}\small{}読書}\par\vspace{4pt}
+\cvbody{哲学 / AI/CS / 金融}
+\end{minipage}%
+\hfill%
+\noindent\begin{minipage}[t]{0.235\linewidth}\raggedright
+{\large{}\faCamera}\par\vspace{5pt}{\ttfamily{}\bfseries{}\small{}\href{https://rusenbirben.com}{写真\extarrow}}\par\vspace{4pt}
+\cvbody{ストリート写真 / 二重露光 / 野鳥写真}
+\end{minipage}%
+\hfill%
+\noindent\begin{minipage}[t]{0.235\linewidth}\raggedright
+{\large{}\faFilm}\par\vspace{5pt}{\ttfamily{}\bfseries{}\small{}アニメ・漫画}\par\vspace{4pt}
+\cvbody{視聴 / 読書 / コレクション}
+\end{minipage}%
+\par
 \end{document}

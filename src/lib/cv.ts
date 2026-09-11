@@ -8,6 +8,7 @@ export type CVLink = {
 };
 
 export type CVExperienceItem = {
+  category: "research" | "professional";
   role: string;
   company: string;
   period: string;
@@ -34,16 +35,17 @@ export type CVEducationItem = {
 };
 
 export type CVInterestItem = {
+  link?: CVLink;
   title: string;
   desc: string;
   icon: string;
 };
 
 export type CVCourseItem = {
+  summary: string;
   title: string;
   issuer: string;
   url?: string;
-  summary: string;
 };
 
 export type CVAwardItem = {
@@ -66,13 +68,10 @@ export type CVData = {
     role: string;
     location: string;
     locationLong: string;
-    status: string;
     email: string;
     /** Optional. Removed from the public JSON; can be supplied at render
      *  time via the --phone CLI flag for specific PDF builds. */
     phone?: string;
-    birthday: string;
-    drivingLicense: string;
     website: string;
     websiteUrl: string;
     linkedin: string;
@@ -81,7 +80,6 @@ export type CVData = {
     githubUrl: string;
     summary: string;
     printSummary: string;
-    footerNote: string;
   };
   heroLinks: CVLink[];
   experience: CVExperienceItem[];
@@ -105,6 +103,8 @@ export type CVLabels = {
   pdf: string;
   tex: string;
   experience: string;
+  research: string;
+  skills: string;
   projects: string;
   education: string;
   awards: string;
@@ -151,22 +151,29 @@ function requireObjectArray(
 function parseCvData(value: unknown, locale: CVLocale): CVData {
   if (!isRecord(value)) throw new Error(`CV ${locale} must contain an object`);
   const context = `CV ${locale}`;
+  if (JSON.stringify(value).includes("\u2014")) {
+    throw new Error(`${context} must not contain em dashes`);
+  }
   requireStringFields(
     value.basics,
     [
-      "name", "role", "location", "locationLong", "status", "email",
-      "birthday", "drivingLicense", "website", "websiteUrl", "linkedin",
+      "name", "role", "location", "locationLong", "email",
+      "website", "websiteUrl", "linkedin",
       "linkedinUrl", "github", "githubUrl", "summary", "printSummary",
-      "footerNote",
     ],
     `${context}.basics`,
   );
   requireObjectArray(value.heroLinks, ["label", "url"], `${context}.heroLinks`);
-  requireObjectArray(
+  const experience = requireObjectArray(
     value.experience,
-    ["role", "company", "period", "location", "description"],
+    ["role", "company", "period", "location", "description", "category"],
     `${context}.experience`,
   );
+  for (const [index, item] of experience.entries()) {
+    if (item.category !== "research" && item.category !== "professional") {
+      throw new Error(`${context}.experience[${index}].category must be research or professional`);
+    }
+  }
   const projects = requireObjectArray(
     value.projects,
     ["title", "subtitle", "period", "description"],
@@ -179,7 +186,10 @@ function parseCvData(value: unknown, locale: CVLocale): CVData {
     requireObjectArray(project.links, ["label", "url"], `${context}.projects[${index}].links`);
   }
   requireObjectArray(value.education, ["degree", "school", "period"], `${context}.education`);
-  requireObjectArray(value.interests, ["title", "desc", "icon"], `${context}.interests`);
+  const interests = requireObjectArray(value.interests, ["title", "desc", "icon"], `${context}.interests`);
+  for (const [index, interest] of interests.entries()) {
+    if (interest.link !== undefined) requireStringFields(interest.link, ["label", "url"], `${context}.interests[${index}].link`);
+  }
   requireObjectArray(value.courses, ["title", "issuer", "summary"], `${context}.courses`);
   requireObjectArray(value.awards, ["title", "issuer", "summary"], `${context}.awards`);
   requireObjectArray(value.languages, ["name", "level"], `${context}.languages`);
@@ -222,10 +232,12 @@ const LABELS_EN: CVLabels = {
   lic: "LIC",
   pdf: "PDF",
   tex: "TEX",
-  experience: "EXPERIENCE",
-  projects: "PROJECTS",
+  experience: "PROFESSIONAL EXPERIENCE",
+  research: "RESEARCH EXPERIENCE",
+  skills: "TECHNICAL SKILLS",
+  projects: "SELECTED PROJECTS",
   education: "EDUCATION",
-  awards: "AWARDS",
+  awards: "SCHOLARSHIPS & AWARDS",
   courses: "COURSES",
   languages: "LANGUAGES",
   interests: "INTERESTS",
@@ -243,10 +255,12 @@ const LABELS_TR: CVLabels = {
   lic: "EHL",
   pdf: "PDF",
   tex: "TEX",
-  experience: "DENEYİM",
-  projects: "PROJELER",
+  experience: "PROFESYONEL DENEYİM",
+  research: "ARAŞTIRMA DENEYİMİ",
+  skills: "TEKNİK BECERİLER",
+  projects: "SEÇİLMİŞ PROJELER",
   education: "EĞİTİM",
-  awards: "ÖDÜLLER",
+  awards: "BURSLAR VE ÖDÜLLER",
   courses: "KURSLAR",
   languages: "DİLLER",
   interests: "İLGİ ALANLARI",
@@ -265,6 +279,8 @@ const LABELS_JA: CVLabels = {
   pdf: "PDF",
   tex: "TeX",
   experience: "職務経歴",
+  research: "研究経験",
+  skills: "技術スキル",
   projects: "プロジェクト",
   education: "学歴",
   awards: "受賞・表彰",
