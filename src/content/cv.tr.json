@@ -34,7 +34,7 @@
       "company": "ODTÜ Uygulamalı NLP Grubu",
       "period": "2026 - Bugün",
       "location": "Ankara, TR",
-      "description": "Çağrı Toraman ile SIGTURK 2027 kapsamında Türk dilleri ve kültürel bağlamı değerlendiren benchmark için veri oluşturma ve değerlendirme metodolojisine katkı sağlıyor; LlamaTurk2 için eğitim verisi toplama ve ön eğitim deneylerinde çalışıyorum. Ayrıca [METU NLP Connect](https://www.youtube.com/@metunlpconnect) kanalını yönetiyor; uzman röportajları, LLM ve NLP anlatımları, güncel makale incelemeleri hazırlıyorum.",
+      "description": "Çağrı Toraman ile SIGTURK 2027 kapsamında Türk dilleri ve kültürel bağlamı değerlendiren benchmark için veri oluşturma ve değerlendirme metodolojisine katkı sağlıyor; LlamaTurk2 için eğitim verisi toplama ve ön eğitim deneylerinde çalışıyorum. Ayrıca [METU NLP Connect](https://www.youtube.com/@metunlpconnect) kanalını yönetiyor ve uzman röportajları hazırlıyorum.",
       "link": "https://nlp.ceng.metu.edu.tr",
       "category": "research"
     },
@@ -204,11 +204,7 @@
     {
       "title": "Fotoğrafçılık",
       "desc": "Sokak fotoğrafçılığı - Çift pozlama - Kuş fotoğrafçılığı",
-      "icon": "camera",
-      "link": {
-        "label": "rusenbirben.com",
-        "url": "https://rusenbirben.com"
-      }
+      "icon": "camera"
     },
     {
       "title": "Anime ve Manga",
@@ -266,5 +262,9 @@
       "Makine Unutma",
       "Model Değerlendirme"
     ]
+  },
+  "interestsLink": {
+    "label": "rusenbirben.com",
+    "url": "https://rusenbirben.com"
   }
 }

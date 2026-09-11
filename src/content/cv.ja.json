@@ -34,7 +34,7 @@
       "company": "中東工科大学 応用NLPグループ",
       "period": "2026 - 現在",
       "location": "アンカラ、トルコ",
-      "description": "Çağrı Toramanとともに、SIGTURK 2027ではテュルク諸語と文化的知識を評価するベンチマークのデータ作成・評価手法に貢献し、LlamaTurk2の学習データ収集と事前学習実験にも参加。研究室の[METU NLP Connect](https://www.youtube.com/@metunlpconnect)を運営し、専門家インタビュー、LLM・NLP解説、最新論文の紹介も担当。",
+      "description": "Çağrı Toramanとともに、SIGTURK 2027ではテュルク諸語と文化的知識を評価するベンチマークのデータ作成・評価手法に貢献し、LlamaTurk2の学習データ収集と事前学習実験にも参加。研究室の[METU NLP Connect](https://www.youtube.com/@metunlpconnect)を運営し、専門家インタビューを担当。",
       "link": "https://nlp.ceng.metu.edu.tr",
       "category": "research"
     },
@@ -204,11 +204,7 @@
     {
       "title": "写真",
       "desc": "ストリート写真 - 二重露光 - 野鳥写真",
-      "icon": "camera",
-      "link": {
-        "label": "rusenbirben.com",
-        "url": "https://rusenbirben.com"
-      }
+      "icon": "camera"
     },
     {
       "title": "アニメ・漫画",
@@ -266,5 +262,9 @@
       "機械忘却",
       "モデル評価"
     ]
+  },
+  "interestsLink": {
+    "label": "rusenbirben.com",
+    "url": "https://rusenbirben.com"
   }
 }

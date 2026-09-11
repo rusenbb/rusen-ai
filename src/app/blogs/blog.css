@@ -737,3 +737,10 @@ html { scroll-behavior: smooth; }
   flex-wrap: wrap;
 }
 .series-intro .meta .dot { color: var(--sub); }
+
+@media (max-width: 480px) {
+  .acc-toggle { display: grid; grid-template-columns: auto auto minmax(0, 1fr); gap: 0.65rem; }
+  .acc-toggle .sec-title { overflow-wrap: anywhere; letter-spacing: 0.1em; }
+  .acc-toggle .dashed-rule { display: none; }
+  .acc-toggle .sec-count { grid-column: 3; }
+}

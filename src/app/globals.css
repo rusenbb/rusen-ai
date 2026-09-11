@@ -406,7 +406,9 @@ body[data-game-life-fullscreen="on"] header {
   top: 100%;
   right: 1rem;
   width: min(20rem, calc(100vw - 2rem));
-  overflow: hidden;
+  max-height: calc(100dvh - 100% - 1rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   border: 1px solid var(--line-strong);
   color: var(--foreground);
   background: color-mix(in srgb, var(--surface) 96%, transparent);
