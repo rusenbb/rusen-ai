@@ -862,8 +862,8 @@
   }
 
   .photo-language-picker button {
-    min-width: 2.65rem;
-    height: 2rem;
+    min-width: 2.75rem;
+    height: 2.75rem;
     padding-inline: 0.55rem;
   }
 
@@ -1039,3 +1039,14 @@
 .photo-ending a:focus-visible { outline: 2px solid var(--signal); outline-offset: 6px; }
 .photo-ending a:hover .photo-ending-handle { text-decoration: underline; text-underline-offset: 0.25em; }
 .photo-ending a.photo-ending-social { display: inline-block; color: var(--photo-muted); font-family: var(--font-geist-mono), monospace; font-size: 0.7rem; }
+
+@media (max-width: 720px) {
+  .photo-lightbox-close { min-width: 44px; min-height: 44px; top: max(1rem, env(safe-area-inset-top)); }
+  .photo-lightbox-nav { bottom: max(1rem, env(safe-area-inset-bottom)); }
+}
+
+@media (max-width: 720px) and (max-height: 500px) {
+  .photo-hero { min-height: 36rem; }
+  .photo-lightbox figure { height: 80svh; }
+  .photo-lightbox figure img { max-height: calc(80svh - 3.5rem); }
+}

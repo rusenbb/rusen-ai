@@ -61,3 +61,27 @@ test("photo locale and lightbox work together", async ({ page }) => {
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toBeHidden();
 });
+
+test("blog sections fit a narrow phone screen", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 720 });
+  await page.goto("/blogs/");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+  const heading = page.locator(".acc-toggle").first();
+  await heading.click();
+  await expect(heading).toHaveAttribute("aria-expanded", "false");
+  await heading.click();
+  await expect(heading).toHaveAttribute("aria-expanded", "true");
+});
+
+test("mobile menu stays usable on a short landscape screen", async ({ page }) => {
+  await page.setViewportSize({ width: 667, height: 375 });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Toggle menu" }).click();
+  const menu = page.locator("#mobile-nav");
+  const bounds = await menu.boundingBox();
+  expect(bounds).not.toBeNull();
+  expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(375);
+  const before = await page.locator("html").getAttribute("data-theme");
+  await menu.getByRole("button", { name: /switch to .* theme/i }).click();
+  await expect(page.locator("html")).not.toHaveAttribute("data-theme", before ?? "");
+});

@@ -106,7 +106,7 @@ export function renderCvMarkdown(
   }
 
   // ── Interests ────────────────────────────────────────────────────────
-  out.push("", `## ${labels.interests}`, "");
+  out.push("", `## ${labels.interests}`, "", `[${cv.interestsLink.label}](${cv.interestsLink.url})`, "");
   for (const i of cv.interests) {
     const title = i.link ? `[${i.title}](${i.link.url})` : i.title;
     out.push(`- **${title}** - ${i.desc}`);

@@ -34,7 +34,7 @@
       "company": "METU Applied NLP Group",
       "period": "2026 - Present",
       "location": "Ankara, TR",
-      "description": "Contribute to data creation and evaluation methodology for the SIGTURK 2027 benchmark on Turkic languages and cultural understanding with Çağrı Toraman. Support LlamaTurk2 through training-data collection and pretraining experiments. Also lead [METU NLP Connect](https://www.youtube.com/@metunlpconnect), producing expert interviews, LLM and NLP explainers, and recent-paper discussions.",
+      "description": "Contribute to data creation and evaluation methodology for the SIGTURK 2027 benchmark on Turkic languages and cultural understanding with Çağrı Toraman. Support LlamaTurk2 through training-data collection and pretraining experiments. Also lead [METU NLP Connect](https://www.youtube.com/@metunlpconnect), producing expert interviews.",
       "link": "https://nlp.ceng.metu.edu.tr",
       "category": "research"
     },
@@ -204,11 +204,7 @@
     {
       "title": "Photography",
       "desc": "Street Photography - Double Exposure - Bird Photography",
-      "icon": "camera",
-      "link": {
-        "label": "rusenbirben.com",
-        "url": "https://rusenbirben.com"
-      }
+      "icon": "camera"
     },
     {
       "title": "Anime & Manga",
@@ -266,5 +262,9 @@
       "Machine Unlearning",
       "Model Evaluation"
     ]
+  },
+  "interestsLink": {
+    "label": "rusenbirben.com",
+    "url": "https://rusenbirben.com"
   }
 }

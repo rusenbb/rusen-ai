@@ -452,11 +452,14 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
       </section>
 
       <section className={styles.section}>
-        <div className={styles.sectionHeader}>
+        <div className={`${styles.sectionHeader} ${styles.interestsHeader}`}>
           <span className={styles.sectionNumber} aria-hidden="true">09</span>
           <LuHeart className={styles.sectionIcon} aria-hidden="true" />
           <h2 className={styles.sectionTitle}>{labels.interests}</h2>
           <div className={styles.sectionLine} />
+          <a href={cv.interestsLink.url} target="_blank" rel="noopener noreferrer" className={styles.interestLink}>
+            {cv.interestsLink.label} <LuExternalLink aria-hidden="true" />
+          </a>
         </div>
 
         <div className={styles.hobbiesGrid}>
