@@ -1,22 +1,18 @@
 {
   "basics": {
-    "name": "RUSEN BIRBEN",
-    "role": "AI & Data Engineer",
+    "name": "Ruşen Birben",
+    "role": "AI Researcher & Engineer",
     "location": "ANKARA, TR",
     "locationLong": "Ankara, Turkey",
-    "status": "AVAILABLE",
     "email": "contact@rusen.ai",
-    "birthday": "26/08/2002",
-    "drivingLicense": "B",
     "website": "rusen.ai",
     "websiteUrl": "https://rusen.ai",
     "linkedin": "linkedin.com/in/rusenbirben",
     "linkedinUrl": "https://linkedin.com/in/rusenbirben",
     "github": "github.com/rusenbb",
     "githubUrl": "https://github.com/rusenbb",
-    "summary": "AI & Data Engineering graduate from Istanbul Technical University, now an independent researcher at METU's Applied NLP Group. Working on LLMs, interpretability, and robustness.",
-    "printSummary": "AI & Data Engineering graduate from Istanbul Technical University, currently an independent researcher at METU's Applied NLP Group working on LLMs, interpretability, and robustness. Experience across NLP, LLMs, and agentic AI applications; previously co-founded Fiction Studios at Bilkent Cyberpark, an AI startup that built LLM-powered guides for museums and tourists.",
-    "footerNote": "References available upon request - rusen.ai/cv"
+    "summary": "AI and Data Engineering graduate from Istanbul Technical University and independent researcher with METU’s Applied NLP Group. Research interests center on LLM robustness and reliability, with experience in Turkish NLP, machine unlearning, and LLM applications for finance.",
+    "printSummary": "AI and Data Engineering graduate from Istanbul Technical University and independent researcher with METU’s Applied NLP Group. Research interests center on LLM robustness and reliability, with experience in Turkish NLP, machine unlearning, and LLM applications for finance."
   },
   "heroLinks": [
     {
@@ -36,96 +32,139 @@
     {
       "role": "Independent Researcher",
       "company": "METU Applied NLP Group",
-      "period": "04/2026 - Present",
+      "period": "2026 - Present",
       "location": "Ankara, TR",
-      "description": "Lead [METU NLP Connect](https://www.youtube.com/@metunlpconnect), the lab's YouTube channel: expert interviews, educational explainers on LLMs and modern NLP, and recent-paper spotlights. Member of the Applied NLP Group (led by Asst. Prof. Çağrı Toraman), working on LLMs, generative AI, and Turkish language technologies.",
-      "link": "https://nlp.ceng.metu.edu.tr"
+      "description": "Contribute to data creation and evaluation methodology for the SIGTURK 2027 benchmark on Turkic languages and cultural understanding with Çağrı Toraman. Support LlamaTurk2 through training-data collection and pretraining experiments. Also lead [METU NLP Connect](https://www.youtube.com/@metunlpconnect), producing expert interviews, LLM and NLP explainers, and recent-paper discussions.",
+      "link": "https://nlp.ceng.metu.edu.tr",
+      "category": "research"
     },
     {
-      "role": "Co-Founder",
+      "role": "Co-Founder & Technical Lead",
       "company": "Fiction Studios",
       "period": "08/2025 - 04/2026",
       "location": "Ankara, TR",
-      "description": "Co-founded an AI startup at Bilkent Cyberpark, an accredited Turkish Teknokent. Built an LLM-powered guide app for museums and tourists. Wound down in 2026.",
-      "link": "https://github.com/fiction-ai-studios"
+      "description": "Co-founded Fiction Studios with a friend at Bilkent Cyberpark and served as technical lead. Directed technical development and coordinated three additional contributors supporting the two founders. Built a multilingual LLM-powered guide for museums and tourists, working on the conversational visitor experience alongside customer and investor discussions.",
+      "link": "https://github.com/fiction-ai-studios",
+      "category": "professional"
     },
     {
       "role": "Junior AI Engineer",
       "company": "CyberQuote",
       "period": "03/2025 - 07/2025",
       "location": "Istanbul, TR",
-      "description": "Built AI automations and agentic LLM implementations for Phillip Capital subsidiary. Intelligent systems for operations and customer-facing platforms.",
-      "link": "https://cyberquote.com/tk/"
-    },
-    {
-      "role": "NLP Research Intern",
-      "company": "ITU NLP Lab",
-      "period": "07/2024 - 08/2024",
-      "location": "Istanbul, TR",
-      "description": "Researched LLMs for financial applications: forecasting, sentiment analysis, tool usage, reasoning, and RAG implementations.",
-      "link": "https://nlp.itu.edu.tr/"
+      "description": "Joined CyberQuote, a Phillip Capital subsidiary, as the second member of its newly formed AI team. Developed news-sentiment pipelines and internal LLM tools for financial professionals, alongside web integrations and a mobile voice assistant. Worked with the practical challenge of retrieving current financial context from fragmented sources and PDF reports, where missing information could lead to unreliable answers.",
+      "link": "https://cyberquote.com/tk/",
+      "category": "professional"
     },
     {
       "role": "AIOps Research Intern",
       "company": "Havelsan",
       "period": "08/2024 - 09/2024",
       "location": "Istanbul, TR",
-      "description": "AIOps research using software log data for predictive maintenance. Generated demos on HDFS logs.",
-      "link": "https://havelsan.com/tr"
+      "description": "Investigated software-log analysis for predictive maintenance and developed prototypes using HDFS logs.",
+      "link": "https://havelsan.com/tr",
+      "category": "research"
+    },
+    {
+      "role": "NLP Research Intern",
+      "company": "ITU NLP Lab",
+      "period": "07/2024 - 08/2024",
+      "location": "Istanbul, TR",
+      "description": "Researched LLM applications in finance, including sentiment analysis, tool use, reasoning, forecasting, and retrieval-augmented generation. Conducted part of the experiments that contributed to Kaira, my undergraduate capstone on financial reasoning with LLMs.",
+      "link": "https://nlp.itu.edu.tr/",
+      "category": "research"
     }
   ],
   "projects": [
     {
-      "title": "Tobor",
-      "subtitle": "Amazon Warehouse Robot",
-      "period": "2024 - 2025",
-      "description": "Autonomous warehouse robot simulating Amazon logistics. Pathfinding, obstacle avoidance, task scheduling. Human/cargo detection with custom YOLO.",
-      "tags": ["Python", "ROS2", "YOLO", "Robotics"],
+      "title": "Kaira",
+      "subtitle": "Undergraduate Capstone: Financial Reasoning LLM",
+      "period": "2025",
+      "description": "Explored financial reasoning in Qwen-based LLMs through GRPO fine-tuning with Unsloth and LoRA. Ran FinQA and GSM8K experiments to examine reward design and reasoning behavior, and developed an Ollama-based chat application. Undergraduate capstone at Istanbul Technical University.",
+      "tags": [
+        "GRPO",
+        "Unsloth",
+        "LoRA",
+        "FinQA"
+      ],
+      "links": []
+    },
+    {
+      "title": "AIZheimer",
+      "subtitle": "Machine Unlearning in Stable Diffusion",
+      "period": "2024",
+      "description": "Building on Forget-Me-Not, implemented and adapted cross-attention-based unlearning for Stable Diffusion 2.1. Developed attention controller/processor code and explored attention re-steering, distraction, and random-stimulus loss objectives. Ran qualitative experiments and prepared visualizations to examine the trade-off between removing a target concept and retaining unrelated generation capabilities.",
+      "tags": [
+        "Stable Diffusion 2.1",
+        "Machine Unlearning"
+      ],
       "links": [
-        { "label": "GH", "url": "https://github.com/rusen-archive/Amazon-Warehouse-Robot" },
-        { "label": "YT", "url": "https://youtu.be/h-Jxs_y9kNA" }
+        {
+          "label": "Code",
+          "url": "https://github.com/rusenbb/ai-zheimer"
+        }
       ]
     },
     {
       "title": "Biting The Bytes",
       "subtitle": "Turkish Diacritic Restoration",
       "period": "2024",
-      "description": "T5-based transformer for restoring Turkish diacritics. Automatically adds accent marks and special characters for enhanced readability.",
-      "tags": ["NLP", "T5", "Transformers", "Turkish"],
+      "description": "Fine-tuned ByT5-small with PEFT/LoRA for Turkish diacritic restoration, treating the task as byte-level token classification. Took primary responsibility for model training and hyperparameter tuning; shared debugging and Hugging Face Spaces deployment with a teammate. The project explored restoring characters such as ş, ç, ı, ğ, ü, and ö in noisy or ASCII-only Turkish text.",
+      "tags": [
+        "ByT5-small",
+        "LoRA",
+        "NLP"
+      ],
       "links": [
-        { "label": "GH", "url": "https://github.com/rusen-archive/Biting-The-Bytes" },
-        { "label": "HF", "url": "https://huggingface.co/spaces/rusen/diacritizeTR" }
-      ]
-    },
-    {
-      "title": "AIZheimer",
-      "subtitle": "Machine Unlearning on SD",
-      "period": "2024",
-      "description": "Selectively removed concepts from Stable Diffusion 2.1 while preserving other capabilities. Content moderation and AI output customization.",
-      "tags": ["Stable Diffusion", "Unlearning", "CV"],
-      "links": [
-        { "label": "GH", "url": "https://github.com/rusenbb/ai-zheimer" }
+        {
+          "label": "Code",
+          "url": "https://github.com/rusen-archive/Biting-The-Bytes"
+        },
+        {
+          "label": "Demo",
+          "url": "https://huggingface.co/spaces/rusen/diacritize-tr"
+        }
       ]
     },
     {
       "title": "To-AI-or-Not-to-AI",
       "subtitle": "GPT Detector",
       "period": "2023",
-      "description": "Ensemble method to detect AI-generated text using three fine-tuned models. Addresses academic integrity and misinformation concerns.",
-      "tags": ["NLP", "Ensemble", "Classification"],
+      "description": "Fine-tuned three RoBERTa-based detectors and combined their predictions through majority voting. Shared data creation and preprocessing for a 26,270-example dataset, and deployed the application on Hugging Face Spaces. The ensemble achieved 94.21% accuracy on an in-domain random test split; this evaluation did not establish performance across languages or substantially different domains.",
+      "tags": [
+        "RoBERTa",
+        "Ensemble"
+      ],
       "links": [
-        { "label": "GH", "url": "https://github.com/rusen-archive/To-AI-or-Not-to-AI" },
-        { "label": "HF", "url": "https://huggingface.co/spaces/rusen/gpt_detector" }
+        {
+          "label": "Code",
+          "url": "https://github.com/rusen-archive/To-AI-or-Not-to-AI"
+        },
+        {
+          "label": "Demo",
+          "url": "https://huggingface.co/spaces/rusen/gpt_detector"
+        }
       ]
     },
     {
-      "title": "Anime Recommender",
-      "subtitle": "Collaborative Filtering",
-      "period": "2022 - 2023",
-      "description": "Personalized anime recommendations combining collaborative filtering and content-based approaches. RMSE: 0.289, MAE: 0.213.",
-      "tags": ["RecSys", "Matrix Factorization"],
+      "title": "Tobor",
+      "subtitle": "Autonomous Warehouse Robot",
+      "period": "2024 - 2025",
+      "description": "Contributed to a team-built autonomous warehouse robot combining navigation and YOLO-based perception in ROS2. Implemented the box pickup and drop-off mechanism, shared data annotation with the team, and supported work on other algorithms.",
+      "tags": [
+        "ROS2",
+        "YOLO",
+        "Python"
+      ],
       "links": [
-        { "label": "GH", "url": "https://github.com/rusen-archive/Anime-Recommender" }
+        {
+          "label": "Code",
+          "url": "https://github.com/rusen-archive/Amazon-Warehouse-Robot"
+        },
+        {
+          "label": "Video",
+          "url": "https://youtu.be/h-Jxs_y9kNA"
+        }
       ]
     }
   ],
@@ -137,7 +176,7 @@
       "gpa": "3.61 / 4.00"
     },
     {
-      "degree": "B.Sc. Electronics & Communication",
+      "degree": "Undergraduate studies in Electronics & Communication Engineering",
       "school": "Istanbul Technical University",
       "period": "2020 - 2022",
       "note": "Transferred to AI & Data Engineering"
@@ -147,37 +186,85 @@
     {
       "title": "1416 YLSY Scholarship · M.Sc. & Ph.D.",
       "issuer": "Türkiye Ministry of National Education",
-      "period": "May 2026",
-      "summary": "Türkiye's flagship state scholarship for graduate study abroad, established under Law No. 1416 (1929). Funds tuition, living stipend, travel, and exam fees for master's and doctoral programs in exchange for mandatory service at a Turkish university or public institution."
+      "period": "2026",
+      "summary": "Awarded the 1416 YLSY scholarship by Türkiye’s Ministry of National Education for overseas master’s and doctoral study."
     }
   ],
   "interests": [
-    { "title": "Coffee", "desc": "V60 - Aeropress - Moka Pot", "icon": "coffee" },
-    { "title": "Books", "desc": "Philosophy - AI/CS - Finance", "icon": "book" },
-    { "title": "Photography", "desc": "Street Photography - Double Exposure - Bird Photography", "icon": "camera" },
-    { "title": "Anime & Manga", "desc": "Watcher - Reader - Collector", "icon": "tv" }
+    {
+      "title": "Coffee",
+      "desc": "V60 - Aeropress - Moka Pot",
+      "icon": "coffee"
+    },
+    {
+      "title": "Books",
+      "desc": "Philosophy - AI/CS - Finance",
+      "icon": "book"
+    },
+    {
+      "title": "Photography",
+      "desc": "Street Photography - Double Exposure - Bird Photography",
+      "icon": "camera",
+      "link": {
+        "label": "rusenbirben.com",
+        "url": "https://rusenbirben.com"
+      }
+    },
+    {
+      "title": "Anime & Manga",
+      "desc": "Watcher - Reader - Collector",
+      "icon": "tv"
+    }
   ],
   "courses": [
     {
       "title": "Deep Learning Specialization",
-      "issuer": "Deeplearning.ai · Andrew Ng",
+      "issuer": "DeepLearning.AI · Coursera",
       "url": "https://coursera.org/share/9c59e9758d378fb8a8b4ab7074dd71ed",
-      "summary": "Sequence Models, CNNs, NN and DL basics, Structuring ML Projects, Improving Deep NNs."
+      "summary": "Neural networks, CNNs, sequence models, optimization, and structuring machine learning projects."
     },
     {
       "title": "AWS Cloud Technical Essentials",
       "issuer": "AWS · Coursera",
       "url": "https://coursera.org/share/f8ab2981ab0bbdc3fec17c6e88804ff8",
-      "summary": "Core AWS concepts, security practices, EC2, Lambda, ECS, RDS, DynamoDB, S3."
+      "summary": "Cloud architecture and AWS services including EC2, Lambda, S3, RDS, and DynamoDB."
     }
   ],
   "languages": [
-    { "name": "Turkish", "level": "Native" },
-    { "name": "English", "level": "Fluent · TOEFL iBT 109" }
+    {
+      "name": "Turkish",
+      "level": "Native"
+    },
+    {
+      "name": "English",
+      "level": "TOEFL iBT 109/120 (November 8, 2025)"
+    }
   ],
   "skills": {
-    "Languages": ["Python", "JavaScript/TypeScript", "SQL", "C/C++"],
-    "Frameworks & Tools": ["PyTorch", "TensorFlow", "ROS2", "YOLO", "Transformers", "Scikit-learn", "Pandas", "NumPy"],
-    "Specialties": ["NLP", "LLMs", "Computer Vision", "RAG", "MLOps", "Agentic AI", "Data Engineering"]
+    "Languages": [
+      "Python",
+      "JavaScript/TypeScript",
+      "SQL",
+      "C/C++"
+    ],
+    "Frameworks & Tools": [
+      "PyTorch",
+      "TensorFlow",
+      "Transformers",
+      "PEFT / LoRA",
+      "Unsloth",
+      "Scikit-learn",
+      "Pandas",
+      "NumPy",
+      "ROS2",
+      "YOLO"
+    ],
+    "Specialties": [
+      "NLP",
+      "LLMs",
+      "RAG",
+      "Machine Unlearning",
+      "Model Evaluation"
+    ]
   }
 }

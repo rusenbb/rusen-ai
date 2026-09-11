@@ -1033,3 +1033,9 @@
     transition: none;
   }
 }
+
+.photo-ending-links { display: flex; flex-direction: column; align-items: flex-start; gap: 1.5rem; min-width: 0; }
+.photo-ending a { overflow-wrap: anywhere; }
+.photo-ending a:focus-visible { outline: 2px solid var(--signal); outline-offset: 6px; }
+.photo-ending a:hover .photo-ending-handle { text-decoration: underline; text-underline-offset: 0.25em; }
+.photo-ending a.photo-ending-social { display: inline-block; color: var(--photo-muted); font-family: var(--font-geist-mono), monospace; font-size: 0.7rem; }

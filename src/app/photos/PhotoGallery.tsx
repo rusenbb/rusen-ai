@@ -28,6 +28,7 @@ const UI_COPY = editorialManifest.ui;
 const DEFAULT_PHOTO_LOCALE = editorialManifest.defaultLocale as PhotoLocale;
 const BROWSER_FALLBACK_LOCALE = editorialManifest.browserFallbackLocale as PhotoLocale;
 const ENDING_LINK = editorialManifest.endingLink;
+const PORTFOLIO_LINK = editorialManifest.portfolioLink;
 const PHOTO_LANGUAGE_KEY = "photoLanguage";
 const PHOTO_LANGUAGE_EVENT = "photo-language-change";
 let inMemoryLocale: PhotoLocale | null = null;
@@ -388,10 +389,15 @@ export default function PhotoGallery({ hero, series, photos }: PhotoGalleryProps
 
       <footer className="photo-ending">
         <p>{ui.more}</p>
-        <a href={ENDING_LINK.href} target="_blank" rel="noopener noreferrer">
-          <span className="photo-ending-platform">{ENDING_LINK.platform}</span>
-          <span className="photo-ending-handle">{ENDING_LINK.handle}</span>
-        </a>
+        <div className="photo-ending-links">
+          <a href={PORTFOLIO_LINK.href} target="_blank" rel="noopener noreferrer">
+            <span className="photo-ending-platform">{ui.portfolioLabel}</span>
+            <span className="photo-ending-handle">{PORTFOLIO_LINK.label} <span aria-hidden="true">↗</span></span>
+          </a>
+          <a className="photo-ending-social" href={ENDING_LINK.href} target="_blank" rel="noopener noreferrer">
+            {ENDING_LINK.platform} · {ENDING_LINK.handle} <span aria-hidden="true">↗</span>
+          </a>
+        </div>
       </footer>
 
       {activePhoto && activeCopy && activeIndex !== null && (
