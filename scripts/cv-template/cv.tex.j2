@@ -117,7 +117,7 @@
 \faLanguage\enspace{}
 {\small{}\BLOCK{ for lang in cv.languages }\textbf{\VAR{lang.name | latex}}\enspace{}\VAR{lang.level | latex}\BLOCK{ if not loop.last }\quad{}\BLOCK{ endif }\BLOCK{ endfor }}\par
 
-\cvsection{\faHeartO}{\VAR{labels.interests | upper | latex}}
+\cvsection{\faHeartO}{\VAR{labels.interests | upper | latex}\hfill{\normalfont{}\small{}\href{\VAR{cv.interestsLink.url}}{\VAR{cv.interestsLink.label | latex}\extarrow}}}
 \BLOCK{ for item in cv.interests }
 \noindent\begin{minipage}[t]{0.235\linewidth}\raggedright
 {\large{}\BLOCK{ if item.icon == 'coffee' }\faCoffee\BLOCK{ elif item.icon == 'book' }\faBook\BLOCK{ elif item.icon == 'camera' }\faCamera\BLOCK{ else }\faFilm\BLOCK{ endif }}\par\vspace{5pt}{\ttfamily{}\bfseries{}\small{}\BLOCK{ if item.link }\href{\VAR{item.link.url}}{\VAR{item.title | latex}\extarrow}\BLOCK{ else }\VAR{item.title | latex}\BLOCK{ endif }}\par\vspace{4pt}

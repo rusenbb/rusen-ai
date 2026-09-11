@@ -86,6 +86,7 @@ export type CVData = {
   projects: CVProjectItem[];
   education: CVEducationItem[];
   interests: CVInterestItem[];
+  interestsLink: CVLink;
   courses: CVCourseItem[];
   awards: CVAwardItem[];
   languages: CVLanguageItem[];
@@ -186,6 +187,7 @@ function parseCvData(value: unknown, locale: CVLocale): CVData {
     requireObjectArray(project.links, ["label", "url"], `${context}.projects[${index}].links`);
   }
   requireObjectArray(value.education, ["degree", "school", "period"], `${context}.education`);
+  requireStringFields(value.interestsLink, ["label", "url"], `${context}.interestsLink`);
   const interests = requireObjectArray(value.interests, ["title", "desc", "icon"], `${context}.interests`);
   for (const [index, interest] of interests.entries()) {
     if (interest.link !== undefined) requireStringFields(interest.link, ["label", "url"], `${context}.interests[${index}].link`);

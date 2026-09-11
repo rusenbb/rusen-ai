@@ -26,6 +26,7 @@ describe("public CV Markdown", () => {
       expect(text).toContain(cv.projects[0].description);
       expect(text).not.toContain(`- ${cv.projects[0].description}`);
       expect(text).toContain("https://huggingface.co/spaces/rusen/diacritize-tr");
+      expect(text).toContain(`## ${labels.interests}\n\n[rusenbirben.com](https://rusenbirben.com)`);
     }
   });
 

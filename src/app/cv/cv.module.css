@@ -987,3 +987,6 @@
 @media print { .portrait { display: none; } }
 
 .interestLink { display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 0.8rem; font-family: var(--font-mono); font-size: 0.8rem; color: var(--ctext); text-decoration: underline; text-underline-offset: 0.25em; }
+
+.interestsHeader { flex-wrap: wrap; }
+.interestsHeader .interestLink { margin-top: 0; white-space: nowrap; }
