@@ -38,13 +38,14 @@
       "selectedTitle": "Geçerken kalanlar.",
       "selectedIntro": "Fotoğrafları yan yana getirdikçe aralarında daha önce görmediğim ilişkiler belirdi. Geçip giden her an, yanındaki karede kendinden bir iz bıraktı.",
       "series": "SERİ",
-      "more": "Yoldan geçen başka anlar",
+      "more": "Daha fazla fotoğraf için",
       "close": "Kapat",
       "previous": "Önceki fotoğraf",
       "next": "Sonraki fotoğraf",
       "language": "Fotoğraf dili",
       "openLabel": "“{title}” fotoğrafını aç; {index} / {total}",
-      "dialogLabel": "“{title}”, fotoğraf {index} / {total}"
+      "dialogLabel": "“{title}”, fotoğraf {index} / {total}",
+      "portfolioLabel": "Fotoğraf portfolyosu"
     },
     "en": {
       "archive": "RUSEN BIRBEN / PHOTOGRAPHS",
@@ -58,13 +59,14 @@
       "selectedTitle": "Stories in passing.",
       "selectedIntro": "As I placed the photographs beside one another, relationships I had not noticed before began to emerge. Each passing moment left something of itself in the frame beside it.",
       "series": "SERIES",
-      "more": "More passing moments",
+      "more": "For more photographs",
       "close": "Close",
       "previous": "Previous photograph",
       "next": "Next photograph",
       "language": "Photography language",
       "openLabel": "Open “{title}”, photograph {index} of {total}",
-      "dialogLabel": "“{title}”, photograph {index} of {total}"
+      "dialogLabel": "“{title}”, photograph {index} of {total}",
+      "portfolioLabel": "Photography portfolio"
     },
     "ja": {
       "archive": "RUSEN BIRBEN / 写真",
@@ -78,13 +80,14 @@
       "selectedTitle": "過ぎ去って、\nなお残るもの。",
       "selectedIntro": "写真を並べていくうちに、それまで気づかなかった関係が一枚一枚のあいだに現れた。通り過ぎた瞬間は、それぞれ隣の一枚に自らの痕跡を残していった。",
       "series": "シリーズ",
-      "more": "さらに、通り過ぎる瞬間",
+      "more": "ほかの写真はこちら",
       "close": "閉じる",
       "previous": "前の写真",
       "next": "次の写真",
       "language": "写真ページの言語",
       "openLabel": "「{title}」を開く。{total}枚中{index}枚目",
-      "dialogLabel": "「{title}」。{total}枚中{index}枚目"
+      "dialogLabel": "「{title}」。{total}枚中{index}枚目",
+      "portfolioLabel": "写真ポートフォリオ"
     }
   },
   "prologueTitles": {
@@ -885,5 +888,9 @@
         }
       }
     }
+  },
+  "portfolioLink": {
+    "href": "https://rusenbirben.com",
+    "label": "rusenbirben.com"
   }
 }

@@ -1,22 +1,18 @@
 {
   "basics": {
-    "name": "RUŞEN BİRBEN",
-    "role": "Yapay Zeka ve Veri Mühendisi",
+    "name": "Ruşen Birben",
+    "role": "Yapay Zeka Araştırmacısı ve Mühendisi",
     "location": "ANKARA, TR",
     "locationLong": "Ankara, Türkiye",
-    "status": "MÜSAİT",
     "email": "contact@rusen.ai",
-    "birthday": "26/08/2002",
-    "drivingLicense": "B",
     "website": "rusen.ai",
     "websiteUrl": "https://rusen.ai",
     "linkedin": "linkedin.com/in/rusenbirben",
     "linkedinUrl": "https://linkedin.com/in/rusenbirben",
     "github": "github.com/rusenbb",
     "githubUrl": "https://github.com/rusenbb",
-    "summary": "İstanbul Teknik Üniversitesi Yapay Zeka ve Veri Mühendisliği mezunuyum. Şu anda ODTÜ Uygulamalı NLP Grubu'nda bağımsız araştırmacıyım; LLM, yorumlanabilirlik ve sağlamlık üzerine çalışıyorum.",
-    "printSummary": "İTÜ Yapay Zeka ve Veri Mühendisliği lisans mezunu; şu anda ODTÜ Uygulamalı NLP Grubu'nda bağımsız araştırmacı olarak LLM, yorumlanabilirlik ve sağlamlık üzerine çalışıyorum. NLP, LLM ve agentic AI alanlarında deneyimliyim. Daha önce Bilkent Cyberpark'ta müzeler ve turistlere yönelik LLM destekli rehber araçları geliştiren Fiction Studios'un kurucu ortağıydım.",
-    "footerNote": "Referanslar talep üzerine sunulur · rusen.ai/cv"
+    "summary": "İTÜ Yapay Zeka ve Veri Mühendisliği mezunu ve ODTÜ Uygulamalı NLP Grubu’nda bağımsız araştırmacıyım. Araştırma ilgim LLM’lerin gürbüzlüğü ve güvenilirliği; deneyimim Türkçe NLP, makine unutma ve finans alanında LLM uygulamalarını kapsıyor.",
+    "printSummary": "İTÜ Yapay Zeka ve Veri Mühendisliği mezunu ve ODTÜ Uygulamalı NLP Grubu’nda bağımsız araştırmacıyım. Araştırma ilgim LLM’lerin gürbüzlüğü ve güvenilirliği; deneyimim Türkçe NLP, makine unutma ve finans alanında LLM uygulamalarını kapsıyor."
   },
   "heroLinks": [
     {
@@ -36,96 +32,139 @@
     {
       "role": "Bağımsız Araştırmacı",
       "company": "ODTÜ Uygulamalı NLP Grubu",
-      "period": "04/2026 - Bugün",
+      "period": "2026 - Bugün",
       "location": "Ankara, TR",
-      "description": "Laboratuvarın YouTube kanalı [METU NLP Connect](https://www.youtube.com/@metunlpconnect)'i yönetiyorum: uzmanlarla röportajlar, LLM ve modern NLP üzerine anlatım videoları, güncel makale incelemeleri. Dr. Öğr. Üyesi Çağrı Toraman'ın yürüttüğü Uygulamalı NLP Grubu'nda LLM, üretken yapay zeka ve Türkçe dil teknolojileri üzerine çalışıyorum.",
-      "link": "https://nlp.ceng.metu.edu.tr"
+      "description": "Çağrı Toraman ile SIGTURK 2027 kapsamında Türk dilleri ve kültürel bağlamı değerlendiren benchmark için veri oluşturma ve değerlendirme metodolojisine katkı sağlıyor; LlamaTurk2 için eğitim verisi toplama ve ön eğitim deneylerinde çalışıyorum. Ayrıca [METU NLP Connect](https://www.youtube.com/@metunlpconnect) kanalını yönetiyor; uzman röportajları, LLM ve NLP anlatımları, güncel makale incelemeleri hazırlıyorum.",
+      "link": "https://nlp.ceng.metu.edu.tr",
+      "category": "research"
     },
     {
-      "role": "Kurucu Ortak",
+      "role": "Kurucu Ortak ve Teknik Lider",
       "company": "Fiction Studios",
       "period": "08/2025 - 04/2026",
       "location": "Ankara, TR",
-      "description": "Bilkent Cyberpark teknokentinde kurduğumuz yapay zeka girişimi. Müzeler ve turistlere yönelik LLM destekli bir rehber uygulaması geliştirdik. Şirket 2026'da kapandı.",
-      "link": "https://github.com/fiction-ai-studios"
+      "description": "Bilkent Cyberpark’ta Fiction Studios’u bir arkadaşımla kurdum ve teknik liderliği üstlendim. Teknik geliştirmeyi yönettim; iki kurucuya destek veren üç arkadaşımızın çalışmalarını koordine ettim. Müzeler ve turistler için çok dilli, LLM destekli bir rehber uygulaması geliştirdik; sohbet tabanlı ziyaretçi deneyimi üzerine çalışırken müşteri ve yatırımcı görüşmeleri de yürüttük.",
+      "link": "https://github.com/fiction-ai-studios",
+      "category": "professional"
     },
     {
       "role": "Junior Yapay Zeka Mühendisi",
       "company": "CyberQuote",
       "period": "03/2025 - 07/2025",
       "location": "İstanbul, TR",
-      "description": "Phillip Capital iştirakinde yapay zeka otomasyonları ve agentic LLM uygulamaları geliştirdim. Hem operasyonel süreçler hem müşteriye yönelik platformlar için akıllı sistemler kurguladım.",
-      "link": "https://cyberquote.com/tk/"
-    },
-    {
-      "role": "NLP Araştırma Stajyeri",
-      "company": "İTÜ NLP Laboratuvarı",
-      "period": "07/2024 - 08/2024",
-      "location": "İstanbul, TR",
-      "description": "Finansal alanda LLM araştırması: tahminleme, duygu analizi, araç kullanımı, akıl yürütme ve RAG uygulamaları.",
-      "link": "https://nlp.itu.edu.tr/"
+      "description": "Phillip Capital iştiraki CyberQuote’un yeni kurulan yapay zeka ekibine ikinci üye olarak katıldım. Haberlerden duygu analizi çıkaran veri işleme akışları, finans uzmanları için kurum içi LLM araçları, web entegrasyonları ve mobil sesli asistan üzerinde çalıştım. Güncel finansal bağlamın dağınık kaynaklar ve PDF raporlarından edinilmesi, eksik bilginin güvenilmez yanıtlara yol açması gibi üretim sorunlarıyla uğraştım.",
+      "link": "https://cyberquote.com/tk/",
+      "category": "professional"
     },
     {
       "role": "AIOps Araştırma Stajyeri",
       "company": "Havelsan",
       "period": "08/2024 - 09/2024",
       "location": "İstanbul, TR",
-      "description": "Yazılım logları üzerinde kestirimci bakım için AIOps araştırması. HDFS log verisi üzerinde demo geliştirdim.",
-      "link": "https://havelsan.com/tr"
+      "description": "Kestirimci bakım için yazılım loglarının analizini araştırdım; HDFS loglarıyla prototipler geliştirdim.",
+      "link": "https://havelsan.com/tr",
+      "category": "research"
+    },
+    {
+      "role": "NLP Araştırma Stajyeri",
+      "company": "İTÜ NLP Laboratuvarı",
+      "period": "07/2024 - 08/2024",
+      "location": "İstanbul, TR",
+      "description": "Finans alanında LLM uygulamalarını araştırdım: duygu analizi, araç kullanımı, akıl yürütme, tahminleme ve bilgi getirme destekli üretim (RAG). Bu süreçte bitirme projem Kaira’ya katkı sağlayan deneylerin bir kısmını yürüttüm.",
+      "link": "https://nlp.itu.edu.tr/",
+      "category": "research"
     }
   ],
   "projects": [
     {
-      "title": "Tobor",
-      "subtitle": "Amazon Depo Robotu",
-      "period": "2024 - 2025",
-      "description": "Amazon lojistiğini taklit eden otonom depo robotu. Yol planlama, engel kaçınma ve görev programlama. Özel eğittiğim YOLO modeliyle insan/kargo tespiti.",
-      "tags": ["Python", "ROS2", "YOLO", "Robotik"],
+      "title": "Kaira",
+      "subtitle": "Bitirme Projesi: Finansal Akıl Yürütme Modeli",
+      "period": "2025",
+      "description": "İTÜ bitirme projemde Qwen tabanlı dil modellerinin finansal akıl yürütme becerilerini araştırdım. Unsloth ve LoRA kullanarak GRPO ile ince ayar yaptım; FinQA ve GSM8K üzerinde ödül tasarımı ve akıl yürütme davranışını inceleyen deneyler yürüttüm. Ollama tabanlı bir sohbet uygulaması da geliştirdim.",
+      "tags": [
+        "GRPO",
+        "Unsloth",
+        "LoRA",
+        "FinQA"
+      ],
+      "links": []
+    },
+    {
+      "title": "AIZheimer",
+      "subtitle": "Stable Diffusion’da Makine Unutma",
+      "period": "2024",
+      "description": "Forget-Me-Not çalışmasını temel alarak Stable Diffusion 2.1 için çapraz dikkat tabanlı makine unutma yöntemlerini uyguladım ve uyarladım. Attention controller/processor kodu geliştirerek attention re-steering, distraction ve random stimulus kayıplarını inceledim. Hedef kavramı unutturma ile diğer üretim yeteneklerini koruma arasındaki dengeyi nitel deneyler ve hazırladığım görselleştirmelerle değerlendirdim.",
+      "tags": [
+        "Stable Diffusion 2.1",
+        "Makine Unutma"
+      ],
       "links": [
-        { "label": "GH", "url": "https://github.com/rusen-archive/Amazon-Warehouse-Robot" },
-        { "label": "YT", "url": "https://youtu.be/h-Jxs_y9kNA" }
+        {
+          "label": "Kod",
+          "url": "https://github.com/rusenbb/ai-zheimer"
+        }
       ]
     },
     {
       "title": "Biting The Bytes",
       "subtitle": "Türkçe Karakter Tamamlama",
       "period": "2024",
-      "description": "Türkçe metinlerdeki diakritik işaretleri (ş, ç, ı, ğ, ü, ö) geri kazandıran T5 tabanlı transformer modeli. Aksan ve özel karakterleri okunabilirlik için otomatik tamamlar.",
-      "tags": ["NLP", "T5", "Transformers", "Türkçe"],
+      "description": "Türkçe karakter restorasyonunu bayt düzeyinde token sınıflandırması olarak ele alarak ByT5-small modelini PEFT/LoRA ile eğittim. Model eğitimi ve hiperparametre ayarlamasını ağırlıklı olarak üstlendim; hata ayıklama ve Hugging Face Spaces’te yayımlama sürecini ekip arkadaşımla paylaştım. Proje, gürültülü veya yalnızca ASCII karakterleri içeren Türkçe metinlerde ş, ç, ı, ğ, ü ve ö karakterlerinin geri kazandırılmasına odaklandı.",
+      "tags": [
+        "ByT5-small",
+        "LoRA",
+        "NLP"
+      ],
       "links": [
-        { "label": "GH", "url": "https://github.com/rusen-archive/Biting-The-Bytes" },
-        { "label": "HF", "url": "https://huggingface.co/spaces/rusen/diacritizeTR" }
-      ]
-    },
-    {
-      "title": "AIZheimer",
-      "subtitle": "Stable Diffusion'da Makine Unutma",
-      "period": "2024",
-      "description": "Stable Diffusion 2.1 modelinden seçili kavramları, diğer yetenekleri bozmadan çıkarma yöntemi. İçerik denetimi ve YZ çıktılarının özelleştirilmesine yönelik.",
-      "tags": ["Stable Diffusion", "Makine Unutma", "Bilgisayarlı Görü"],
-      "links": [
-        { "label": "GH", "url": "https://github.com/rusenbb/ai-zheimer" }
+        {
+          "label": "Kod",
+          "url": "https://github.com/rusen-archive/Biting-The-Bytes"
+        },
+        {
+          "label": "Demo",
+          "url": "https://huggingface.co/spaces/rusen/diacritize-tr"
+        }
       ]
     },
     {
       "title": "To-AI-or-Not-to-AI",
       "subtitle": "Yapay Zeka Metin Tespiti",
       "period": "2023",
-      "description": "Üç ince ayarlı modelden oluşan topluluk yöntemiyle yapay zeka üretimi metinleri tespit eder. Akademik dürüstlük ve dezenformasyon sorunlarını hedefler.",
-      "tags": ["NLP", "Topluluk", "Sınıflandırma"],
+      "description": "Üç RoBERTa tabanlı dedektörü ince ayarladım ve tahminlerini çoğunluk oylamasıyla birleştirdim. 26.270 örnekten oluşan veri kümesinin oluşturulmasını ve ön işlemesini ekip arkadaşımla paylaştım; uygulamayı Hugging Face Spaces’te yayımladım. Topluluk modeli, aynı dağılımdan rastgele ayrılmış test kümesinde %94,21 doğruluk sağladı; farklı diller ve belirgin biçimde farklı alanlar bu değerlendirmeye dahil değildi.",
+      "tags": [
+        "RoBERTa",
+        "Topluluk Öğrenmesi"
+      ],
       "links": [
-        { "label": "GH", "url": "https://github.com/rusen-archive/To-AI-or-Not-to-AI" },
-        { "label": "HF", "url": "https://huggingface.co/spaces/rusen/gpt_detector" }
+        {
+          "label": "Kod",
+          "url": "https://github.com/rusen-archive/To-AI-or-Not-to-AI"
+        },
+        {
+          "label": "Demo",
+          "url": "https://huggingface.co/spaces/rusen/gpt_detector"
+        }
       ]
     },
     {
-      "title": "Anime Recommender",
-      "subtitle": "İşbirlikli Filtreleme",
-      "period": "2022 - 2023",
-      "description": "İşbirlikli filtreleme ve içerik tabanlı yöntemleri birleştiren kişiselleştirilmiş anime önerisi. RMSE: 0,289 / MAE: 0,213.",
-      "tags": ["Öneri Sistemi", "Matris Çarpanlara Ayırma"],
+      "title": "Tobor",
+      "subtitle": "Otonom Depo Robotu",
+      "period": "2024 - 2025",
+      "description": "ROS2 üzerinde navigasyon ve YOLO tabanlı algıyı birleştiren otonom depo robotunu ekip olarak geliştirdik. Kutuları alma ve bırakma mekanizmasını yaptım; veri etiketlemeyi ekiple birlikte yürüttüm ve diğer algoritmaların geliştirilmesine destek verdim.",
+      "tags": [
+        "ROS2",
+        "YOLO",
+        "Python"
+      ],
       "links": [
-        { "label": "GH", "url": "https://github.com/rusen-archive/Anime-Recommender" }
+        {
+          "label": "Kod",
+          "url": "https://github.com/rusen-archive/Amazon-Warehouse-Robot"
+        },
+        {
+          "label": "Video",
+          "url": "https://youtu.be/h-Jxs_y9kNA"
+        }
       ]
     }
   ],
@@ -137,7 +176,7 @@
       "gpa": "3.61 / 4.00"
     },
     {
-      "degree": "Elektronik ve Haberleşme Mühendisliği Lisansı",
+      "degree": "Elektronik ve Haberleşme Mühendisliği (lisans öğrenimi)",
       "school": "İstanbul Teknik Üniversitesi",
       "period": "2020 - 2022",
       "note": "Yapay Zeka ve Veri Mühendisliği'ne yatay geçiş yaptım."
@@ -147,36 +186,85 @@
     {
       "title": "1416 YLSY Bursu · Yüksek Lisans ve Doktora",
       "issuer": "T.C. Millî Eğitim Bakanlığı",
-      "summary": "Türkiye'nin yurt dışı lisansüstü eğitim için amiral devlet bursu (1929 tarihli 1416 sayılı kanun). Yüksek lisans ve doktora programlarında öğrenim ücreti, yaşam giderleri, sağlık, ulaşım ve sınav masraflarını karşılıyor; karşılığında bir Türk üniversitesi veya kamu kurumunda mecburi hizmet veriliyor."
+      "summary": "T.C. Millî Eğitim Bakanlığının yurt dışında yüksek lisans ve doktora eğitimi için verdiği 1416 YLSY bursunu kazandım.",
+      "period": "2026"
     }
   ],
   "interests": [
-    { "title": "Kahve", "desc": "V60 - Aeropress - Moka Pot", "icon": "coffee" },
-    { "title": "Kitap", "desc": "Felsefe - YZ/Bilgisayar - Finans", "icon": "book" },
-    { "title": "Fotoğrafçılık", "desc": "Sokak Fotoğrafçılığı - Double Exposure - Kuş Fotoğrafçılığı", "icon": "camera" },
-    { "title": "Anime ve Manga", "desc": "İzleyici - Okuyucu - Koleksiyoncu", "icon": "tv" }
+    {
+      "title": "Kahve",
+      "desc": "V60 - Aeropress - Moka Pot",
+      "icon": "coffee"
+    },
+    {
+      "title": "Kitap",
+      "desc": "Felsefe - YZ/Bilgisayar - Finans",
+      "icon": "book"
+    },
+    {
+      "title": "Fotoğrafçılık",
+      "desc": "Sokak fotoğrafçılığı - Çift pozlama - Kuş fotoğrafçılığı",
+      "icon": "camera",
+      "link": {
+        "label": "rusenbirben.com",
+        "url": "https://rusenbirben.com"
+      }
+    },
+    {
+      "title": "Anime ve Manga",
+      "desc": "İzleyici - Okuyucu - Koleksiyoncu",
+      "icon": "tv"
+    }
   ],
   "courses": [
     {
       "title": "Deep Learning Specialization",
-      "issuer": "Deeplearning.ai · Andrew Ng",
+      "issuer": "DeepLearning.AI · Coursera",
       "url": "https://coursera.org/share/9c59e9758d378fb8a8b4ab7074dd71ed",
-      "summary": "Sıralı modeller, CNN'ler, sinir ağları ve derin öğrenme temelleri, ML projelerini yapılandırma, derin sinir ağı iyileştirmeleri."
+      "summary": "Sinir ağları, CNN’ler, sıralı modeller, optimizasyon ve makine öğrenmesi projelerinin yapılandırılması."
     },
     {
       "title": "AWS Cloud Technical Essentials",
       "issuer": "AWS · Coursera",
       "url": "https://coursera.org/share/f8ab2981ab0bbdc3fec17c6e88804ff8",
-      "summary": "Temel AWS kavramları, güvenlik pratikleri, EC2, Lambda, ECS, RDS, DynamoDB, S3."
+      "summary": "Bulut mimarisi; EC2, Lambda, S3, RDS ve DynamoDB dahil AWS servisleri."
     }
   ],
   "languages": [
-    { "name": "Türkçe", "level": "Anadil" },
-    { "name": "İngilizce", "level": "Akıcı · TOEFL iBT 109" }
+    {
+      "name": "Türkçe",
+      "level": "Anadil"
+    },
+    {
+      "name": "İngilizce",
+      "level": "TOEFL iBT 109/120 (8 Kasım 2025)"
+    }
   ],
   "skills": {
-    "Diller": ["Python", "JavaScript/TypeScript", "SQL", "C/C++"],
-    "Çerçeveler ve Araçlar": ["PyTorch", "TensorFlow", "ROS2", "YOLO", "Transformers", "Scikit-learn", "Pandas", "NumPy"],
-    "Uzmanlık Alanları": ["NLP", "LLM'ler", "Bilgisayarlı Görü", "RAG", "MLOps", "Agentic AI", "Veri Mühendisliği"]
+    "Diller": [
+      "Python",
+      "JavaScript/TypeScript",
+      "SQL",
+      "C/C++"
+    ],
+    "Çerçeveler ve Araçlar": [
+      "PyTorch",
+      "TensorFlow",
+      "Transformers",
+      "PEFT / LoRA",
+      "Unsloth",
+      "Scikit-learn",
+      "Pandas",
+      "NumPy",
+      "ROS2",
+      "YOLO"
+    ],
+    "Uzmanlık Alanları": [
+      "NLP",
+      "LLM’ler",
+      "RAG",
+      "Makine Unutma",
+      "Model Değerlendirme"
+    ]
   }
 }
