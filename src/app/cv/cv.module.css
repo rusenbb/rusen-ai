@@ -112,24 +112,18 @@
   text-align: right;
 }
 
-.metaItem {
+.heroLocation {
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.metaLabel {
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
   font-family: var(--font-mono);
-  font-size: 0.6rem;
-  letter-spacing: 0.15em;
+  font-size: 0.8rem;
   color: var(--ctext-sub);
 }
 
-.metaValue {
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--ctext);
+.heroLocation svg {
+  flex-shrink: 0;
 }
 
 .heroBio {
@@ -948,7 +942,6 @@
 
 .sectionIcon { flex-shrink: 0; font-size: 1.2rem; }
 .sectionLine { min-width: 1rem; }
-.metaLabel { display: flex; align-items: center; gap: 0.35rem; }
 .projectLink { display: inline-flex; align-items: center; gap: 0.45rem; }
 .projectDesc { line-height: 1.7; }
 .courseDesc { margin: 0.75rem 0 0; font-size: 0.9rem; line-height: 1.65; color: var(--ctext-muted); }
@@ -977,8 +970,6 @@
   .heroMain { flex-direction: row; align-items: flex-start; gap: 1rem; }
   .heroMeta { flex-direction: column; align-items: flex-end; gap: 0.65rem; text-align: right; }
   .portrait { width: 96px; height: 96px; }
-  .heroMeta .metaLabel { display: none; }
-  .heroMeta .metaValue { font-size: 0.65rem; }
 }
 @media (max-width: 380px) {
   .portrait { width: 76px; height: 76px; }
