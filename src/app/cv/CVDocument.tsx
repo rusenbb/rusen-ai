@@ -103,6 +103,10 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
             <div className={styles.heroRole}>
               {cv.basics.role}
             </div>
+            <div className={styles.heroLocation}>
+              <LuMapPin aria-hidden="true" />
+              <span>{cv.basics.locationLong}</span>
+            </div>
           </div>
           <div className={styles.heroMeta}>
             <Image
@@ -113,10 +117,6 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
               className={styles.portrait}
               priority
             />
-            <div className={styles.metaItem}>
-              <span className={styles.metaLabel}><LuMapPin aria-hidden="true" /> {labels.loc}</span>
-              <span className={styles.metaValue}>{cv.basics.location}</span>
-            </div>
           </div>
         </div>
 
