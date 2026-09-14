@@ -67,15 +67,18 @@ export function renderCvMarkdown(
   }
 
   // ── Projects ─────────────────────────────────────────────────────────
-  out.push("", `## ${labels.projects}`);
-  for (const p of cv.projects) {
-    out.push("", `### ${p.title} - ${p.subtitle}`);
-    out.push(`*${p.period}*`, "", p.description);
-    if (p.tags.length) out.push("", `Tags: ${p.tags.join(", ")}`);
-    if (p.links.length) {
-      const links = p.links.map((l) => `[${l.label}](${l.url})`).join(" · ");
-      out.push(`Links: ${links}`);
+  for (const section of ["publications", "projects"] as const) {
+    out.push("", `## ${labels[section]}`);
+    for (const p of cv[section]) {
+      out.push("", `### ${p.title} - ${p.subtitle}`);
+      out.push(`*${p.period}*`, "", p.description);
+      if (p.tags.length) out.push("", `Tags: ${p.tags.join(", ")}`);
+      if (p.links.length) {
+        const links = p.links.map((l) => `[${l.label}](${l.url})`).join(" · ");
+        out.push(`Links: ${links}`);
+      }
     }
+
   }
 
   // ── Experience ───────────────────────────────────────────────────────

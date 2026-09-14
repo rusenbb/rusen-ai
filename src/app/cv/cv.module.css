@@ -538,6 +538,12 @@
    PROJECTS GRID
    ======================================== */
 
+.publicationsList {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.5rem;
+}
+
 .projectsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
