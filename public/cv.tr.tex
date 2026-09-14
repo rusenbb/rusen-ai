@@ -23,11 +23,15 @@
 \renewcommand{\headrulewidth}{0pt}
 \fancypagestyle{firstpage}{\fancyhead{}}
 \newcounter{cvsec}
-\newcommand{\cvsection}[2]{%
-  \par\needspace{7\baselineskip}\vspace{6pt}\refstepcounter{cvsec}%
+\newlength{\cvsectionbefore}
+\newlength{\cvsectionafter}
+\setlength{\cvsectionbefore}{6pt}
+\setlength{\cvsectionafter}{7pt}
+\newcommand{\cvsection}[3][6]{%
+  \par\needspace{#1\baselineskip}\vspace{\cvsectionbefore}\refstepcounter{cvsec}%
   {\setlength{\fboxsep}{3pt}\colorbox{ink}{\color{white}\ttfamily{}\bfseries{}\small{}\ifnum\value{cvsec}<10 0\fi\thecvsec}}%
-  \hspace{7pt}{\large{} #1}\hspace{7pt}{\ttfamily{}\bfseries{}\fontsize{12}{14}\selectfont{} #2}%
-  \par\vspace{4pt}{\color{ink}\hrule height 0.9pt}\nopagebreak\vspace{7pt}%
+  \hspace{7pt}{\large{} #2}\hspace{7pt}{\ttfamily{}\bfseries{}\fontsize{12}{14}\selectfont{} #3}%
+  \par\vspace{4pt}{\color{ink}\hrule height 0.9pt}\nopagebreak\vspace{\cvsectionafter}%
 }
 \newcommand{\dates}[1]{\hfill{\ttfamily{}\small{}\color{muted}#1}}
 \newcommand{\cvbody}[1]{{\small{}\raggedright #1\par}}
@@ -91,42 +95,67 @@
 \end{minipage}\par\vspace{6pt}
 
 \newpage
+\setlength{\cvsectionbefore}{2pt}
+\setlength{\cvsectionafter}{2pt}
+\cvsection{\faBook}{YAYINLAR VE ARAŞTIRMA KATKILARI}
+\begin{minipage}{\linewidth}\raggedright
+{\ttfamily{}\bfseries{}Türkçe Kültürel Bilgi Veri Seti - MRL 2026 Shared Task}\dates{2026}\par
+{\small{}\itshape{}\color{muted}Kabul edilen katkı · Hazırlık aşamasındaki ortak benchmark makalesi}\hfill{\small{}%
+\href{https://mrlbenchmarks.github.io/}{\faExternalLink\enspace{}Shared Task}%
+}\par\vspace{2pt}
+{\fontsize{9}{10}\selectfont{}\raggedright
+15 kültürel alanı kapsayan ve kabul edilen Türkçe kültürel bilgi veri setinin kaynaklara dayalı agent pipeline’ını ve veri hazırlama sürecini yönettim. 1.200 aday soru-cevap çiftinin ilk elemesini yaparak 500’ünü Büşra Tufan’ın sosyolojik incelemesine hazırladım; süreç sonunda 300 çiftlik nihai gönderim oluşturuldu. Çağrı Toraman’ın araştırma yönlendirmesiyle yürütülen çalışmada İngilizce çeviri kontrolüne katkı sağladım.\par
+\vspace{4pt}Kabul edilen Türkçe veri seti katkım, ortak yazarı olacağım makalede sunulacak çok dilli ve çok modlu benchmark’ın bir parçasını oluşturacak. Ortak veri seti ve preprint’in Ekim 2026’da yayımlanması, shared task sonuçlarının MRL @ EMNLP 2026’da sunulması planlanıyor. Organizatörler makaleyi 2027’de yüksek etkili bir AI yayın mecrasına göndermeyi hedefliyor.\par
+}
+\end{minipage}\par\vspace{2pt}
+
 \cvsection{\faCode}{SEÇİLMİŞ PROJELER}
 \begin{minipage}{\linewidth}\raggedright
 {\ttfamily{}\bfseries{}Kaira}\dates{2025}\par
 {\small{}\itshape{}\color{muted}Bitirme Projesi: Finansal Akıl Yürütme Modeli}\hfill{\small{}%
 %
-}\par\vspace{4pt}
-\cvbody{İTÜ bitirme projemde Qwen tabanlı dil modellerinin finansal akıl yürütme becerilerini araştırdım. Unsloth ve LoRA kullanarak GRPO ile ince ayar yaptım; FinQA ve GSM8K üzerinde ödül tasarımı ve akıl yürütme davranışını inceleyen deneyler yürüttüm. Ollama tabanlı bir sohbet uygulaması da geliştirdim.}
-\end{minipage}\par\vspace{5pt}
+}\par\vspace{2pt}
+{\fontsize{9}{10}\selectfont{}\raggedright
+İTÜ bitirme projemde Qwen tabanlı dil modellerinin finansal akıl yürütme becerilerini araştırdım. Unsloth ve LoRA kullanarak GRPO ile ince ayar yaptım; FinQA ve GSM8K üzerinde ödül tasarımı ve akıl yürütme davranışını inceleyen deneyler yürüttüm. Ollama tabanlı bir sohbet uygulaması da geliştirdim.\par
+}
+\end{minipage}\par\vspace{2pt}
 \begin{minipage}{\linewidth}\raggedright
 {\ttfamily{}\bfseries{}AIZheimer}\dates{2024}\par
 {\small{}\itshape{}\color{muted}Stable Diffusion’da Makine Unutma}\hfill{\small{}%
 \href{https://github.com/rusenbb/ai-zheimer}{\faGithub\enspace{}Kod}%
-}\par\vspace{4pt}
-\cvbody{Forget-Me-Not çalışmasını temel alarak Stable Diffusion 2.1 için çapraz dikkat tabanlı makine unutma yöntemlerini uyguladım ve uyarladım. Attention controller/processor kodu geliştirerek attention re-steering, distraction ve random stimulus kayıplarını inceledim. Hedef kavramı unutturma ile diğer üretim yeteneklerini koruma arasındaki dengeyi nitel deneyler ve hazırladığım görselleştirmelerle değerlendirdim.}
-\end{minipage}\par\vspace{5pt}
+}\par\vspace{2pt}
+{\fontsize{9}{10}\selectfont{}\raggedright
+Forget-Me-Not çalışmasını temel alarak Stable Diffusion 2.1 için çapraz dikkat tabanlı makine unutma yöntemlerini uyguladım ve uyarladım. Attention controller/processor kodu geliştirerek attention re-steering, distraction ve random stimulus kayıplarını inceledim. Hedef kavramı unutturma ile diğer üretim yeteneklerini koruma arasındaki dengeyi nitel deneyler ve hazırladığım görselleştirmelerle değerlendirdim.\par
+}
+\end{minipage}\par\vspace{2pt}
 \begin{minipage}{\linewidth}\raggedright
 {\ttfamily{}\bfseries{}Biting The Bytes}\dates{2024}\par
 {\small{}\itshape{}\color{muted}Türkçe Karakter Tamamlama}\hfill{\small{}%
 \href{https://github.com/rusen-archive/Biting-The-Bytes}{\faGithub\enspace{}Kod}\quad{}\href{https://huggingface.co/spaces/rusen/diacritize-tr}{\faExternalLink\enspace{}Demo}%
-}\par\vspace{4pt}
-\cvbody{Türkçe karakter restorasyonunu bayt düzeyinde token sınıflandırması olarak ele alarak ByT5-small modelini PEFT/LoRA ile eğittim. Model eğitimi ve hiperparametre ayarlamasını ağırlıklı olarak üstlendim; hata ayıklama ve Hugging Face Spaces’te yayımlama sürecini ekip arkadaşımla paylaştım. Proje, gürültülü veya yalnızca ASCII karakterleri içeren Türkçe metinlerde ş, ç, ı, ğ, ü ve ö karakterlerinin geri kazandırılmasına odaklandı.}
-\end{minipage}\par\vspace{5pt}
+}\par\vspace{2pt}
+{\fontsize{9}{10}\selectfont{}\raggedright
+Türkçe karakter restorasyonunu bayt düzeyinde token sınıflandırması olarak ele alarak ByT5-small modelini PEFT/LoRA ile eğittim. Model eğitimi ve hiperparametre ayarlamasını ağırlıklı olarak üstlendim; hata ayıklama ve Hugging Face Spaces’te yayımlama sürecini ekip arkadaşımla paylaştım. Proje, gürültülü veya yalnızca ASCII karakterleri içeren Türkçe metinlerde ş, ç, ı, ğ, ü ve ö karakterlerinin geri kazandırılmasına odaklandı.\par
+}
+\end{minipage}\par\vspace{2pt}
 \begin{minipage}{\linewidth}\raggedright
 {\ttfamily{}\bfseries{}To-AI-or-Not-to-AI}\dates{2023}\par
 {\small{}\itshape{}\color{muted}Yapay Zeka Metin Tespiti}\hfill{\small{}%
 \href{https://github.com/rusen-archive/To-AI-or-Not-to-AI}{\faGithub\enspace{}Kod}\quad{}\href{https://huggingface.co/spaces/rusen/gpt_detector}{\faExternalLink\enspace{}Demo}%
-}\par\vspace{4pt}
-\cvbody{Üç RoBERTa tabanlı dedektörü ince ayarladım ve tahminlerini çoğunluk oylamasıyla birleştirdim. 26.270 örnekten oluşan veri kümesinin oluşturulmasını ve ön işlemesini ekip arkadaşımla paylaştım; uygulamayı Hugging Face Spaces’te yayımladım. Topluluk modeli, aynı dağılımdan rastgele ayrılmış test kümesinde \%94,21 doğruluk sağladı; farklı diller ve belirgin biçimde farklı alanlar bu değerlendirmeye dahil değildi.}
-\end{minipage}\par\vspace{5pt}
+}\par\vspace{2pt}
+{\fontsize{9}{10}\selectfont{}\raggedright
+Üç RoBERTa tabanlı dedektörü ince ayarladım ve tahminlerini çoğunluk oylamasıyla birleştirdim. 26.270 örnekten oluşan veri kümesinin oluşturulmasını ve ön işlemesini ekip arkadaşımla paylaştım; uygulamayı Hugging Face Spaces’te yayımladım. Topluluk modeli, aynı dağılımdan rastgele ayrılmış test kümesinde \%94,21 doğruluk sağladı; farklı diller ve belirgin biçimde farklı alanlar bu değerlendirmeye dahil değildi.\par
+}
+\end{minipage}\par\vspace{2pt}
 \begin{minipage}{\linewidth}\raggedright
 {\ttfamily{}\bfseries{}Tobor}\dates{2024 - 2025}\par
 {\small{}\itshape{}\color{muted}Otonom Depo Robotu}\hfill{\small{}%
 \href{https://github.com/rusen-archive/Amazon-Warehouse-Robot}{\faGithub\enspace{}Kod}\quad{}\href{https://youtu.be/h-Jxs_y9kNA}{\faYoutubePlay\enspace{}Video}%
-}\par\vspace{4pt}
-\cvbody{ROS2 üzerinde navigasyon ve YOLO tabanlı algıyı birleştiren otonom depo robotunu ekip olarak geliştirdik. Kutuları alma ve bırakma mekanizmasını yaptım; veri etiketlemeyi ekiple birlikte yürüttüm ve diğer algoritmaların geliştirilmesine destek verdim.}
-\end{minipage}\par\vspace{5pt}
+}\par\vspace{2pt}
+{\fontsize{9}{10}\selectfont{}\raggedright
+ROS2 üzerinde navigasyon ve YOLO tabanlı algıyı birleştiren otonom depo robotunu ekip olarak geliştirdik. Kutuları alma ve bırakma mekanizmasını yaptım; veri etiketlemeyi ekiple birlikte yürüttüm ve diğer algoritmaların geliştirilmesine destek verdim.\par
+}
+\end{minipage}\par\vspace{2pt}
+
 
 \cvsection{\faCogs}{TEKNİK BECERİLER}
 {\small{}\textbf{Diller}\enspace{} Python / JavaScript/TypeScript / SQL / C/C++}\par\vspace{4pt}
@@ -139,28 +168,28 @@
 \textbf{\small{}\href{https://coursera.org/share/f8ab2981ab0bbdc3fec17c6e88804ff8}{AWS Cloud Technical Essentials\extarrow}}\dates{AWS · Coursera}\par\vspace{2pt}
 \cvbody{Bulut mimarisi; EC2, Lambda, S3, RDS ve DynamoDB dahil AWS servisleri.}\vspace{5pt}
 
-\vspace{5pt}
+\vspace{2pt}
 \faLanguage\enspace{}
 {\small{}\textbf{Türkçe}\enspace{}Anadil\quad{}\textbf{İngilizce}\enspace{}TOEFL iBT 109/120 (8 Kasım 2025)}\par
 
-\cvsection{\faHeartO}{İLGİ ALANLARI\hfill{\normalfont{}\small{}\href{https://rusenbirben.com}{rusenbirben.com\extarrow}}}
+\cvsection[4]{\faHeartO}{İLGİ ALANLARI\hfill{\normalfont{}\small{}\href{https://rusenbirben.com}{rusenbirben.com\extarrow}}}
 \noindent\begin{minipage}[t]{0.235\linewidth}\raggedright
-{\large{}\faCoffee}\par\vspace{5pt}{\ttfamily{}\bfseries{}\small{}Kahve}\par\vspace{4pt}
+{\ttfamily{}\bfseries{}\small{}Kahve}\par\vspace{4pt}
 \cvbody{V60 / Aeropress / Moka Pot}
 \end{minipage}%
 \hfill%
 \noindent\begin{minipage}[t]{0.235\linewidth}\raggedright
-{\large{}\faBook}\par\vspace{5pt}{\ttfamily{}\bfseries{}\small{}Kitap}\par\vspace{4pt}
+{\ttfamily{}\bfseries{}\small{}Kitap}\par\vspace{4pt}
 \cvbody{Felsefe / YZ/Bilgisayar / Finans}
 \end{minipage}%
 \hfill%
 \noindent\begin{minipage}[t]{0.235\linewidth}\raggedright
-{\large{}\faCamera}\par\vspace{5pt}{\ttfamily{}\bfseries{}\small{}Fotoğrafçılık}\par\vspace{4pt}
+{\ttfamily{}\bfseries{}\small{}Fotoğrafçılık}\par\vspace{4pt}
 \cvbody{Sokak fotoğrafçılığı / Çift pozlama / Kuş fotoğrafçılığı}
 \end{minipage}%
 \hfill%
 \noindent\begin{minipage}[t]{0.235\linewidth}\raggedright
-{\large{}\faFilm}\par\vspace{5pt}{\ttfamily{}\bfseries{}\small{}Anime ve Manga}\par\vspace{4pt}
+{\ttfamily{}\bfseries{}\small{}Anime ve Manga}\par\vspace{4pt}
 \cvbody{İzleyici / Okuyucu / Koleksiyoncu}
 \end{minipage}%
 \par

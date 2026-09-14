@@ -9,13 +9,17 @@ describe("public CV Markdown", () => {
       const cv = getCvData(locale);
       const text = renderCvMarkdown(cv, labels, locale);
       const researchStart = text.indexOf(`## ${labels.research}`);
+      const publicationsStart = text.indexOf(`## ${labels.publications}`);
       const projectsStart = text.indexOf(`## ${labels.projects}`);
       const professionalStart = text.indexOf(`## ${labels.experience}`);
       expect(text.indexOf(`## ${labels.education}`)).toBeLessThan(researchStart);
       expect(text.indexOf(`## ${labels.awards}`)).toBeGreaterThan(text.indexOf(`## ${labels.education}`));
       expect(text.indexOf(`## ${labels.awards}`)).toBeLessThan(researchStart);
       expect(researchStart).toBeGreaterThan(0);
-      expect(projectsStart).toBeGreaterThan(researchStart);
+      expect(publicationsStart).toBeGreaterThan(researchStart);
+      expect(projectsStart).toBeGreaterThan(publicationsStart);
+      expect(text.slice(publicationsStart, projectsStart)).toContain(cv.publications[0].description);
+      expect(text.slice(projectsStart, professionalStart)).not.toContain(cv.publications[0].description);
       expect(professionalStart).toBeGreaterThan(projectsStart);
       const research = text.slice(researchStart, projectsStart);
       expect(research).toContain("SIGTURK 2027");

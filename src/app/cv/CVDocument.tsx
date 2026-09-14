@@ -303,30 +303,36 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
         </div>
       </section>
 
-      <section className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <span className={styles.sectionNumber} aria-hidden="true">04</span>
-          <LuCodeXml className={styles.sectionIcon} aria-hidden="true" />
-          <h2 className={styles.sectionTitle}>{labels.projects}</h2>
-          <div className={styles.sectionLine} />
-        </div>
+      {[
+        { key: "publications", label: labels.publications, items: cv.publications, number: "04" },
+        { key: "projects", label: labels.projects, items: cv.projects, number: "05" },
+      ].map((group) => (
+        <section key={group.key} className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionNumber} aria-hidden="true">{group.number}</span>
+            {group.key === "publications" ? <LuBookOpen className={styles.sectionIcon} aria-hidden="true" /> : <LuCodeXml className={styles.sectionIcon} aria-hidden="true" />}
+            <h2 className={styles.sectionTitle}>{group.label}</h2>
+            <div className={styles.sectionLine} />
+          </div>
 
-        <div className={styles.projectsGrid}>
-          {cv.projects.map((project) => (
-            <div key={`${project.title}-${project.period}`} className={styles.projectCard}>
-              <div className={styles.projectCardHeader}>
-                <div className={styles.projectTitleGroup}>
-                  <h3 className={styles.projectTitle}>{project.title}</h3>
-                  <span className={styles.projectSubtitle}>{project.subtitle}</span>
+          <div className={group.key === "publications" ? styles.publicationsList : styles.projectsGrid}>
+            {group.items.map((project) => (
+              <div key={`${project.title}-${project.period}`} className={styles.projectCard}>
+                <div className={styles.projectCardHeader}>
+                  <div className={styles.projectTitleGroup}>
+                    <h3 className={styles.projectTitle}>{project.title}</h3>
+                    <span className={styles.projectSubtitle}>{project.subtitle}</span>
+                  </div>
+                  <span className={styles.projectPeriod}>{project.period}</span>
                 </div>
-                <span className={styles.projectPeriod}>{project.period}</span>
-              </div>
 
-              <p className={styles.projectDesc}>{renderDescription(project.description)}</p>
+                {project.description.split("\n\n").map((paragraph, index) => (
+                  <p key={index} className={styles.projectDesc}>{renderDescription(paragraph)}</p>
+                ))}
 
-              <div className={styles.projectTags}>
-                {project.tags.map((tag) => (
-                  <span key={tag} className={styles.projectTag}>{tag}</span>
+                <div className={styles.projectTags}>
+                  {project.tags.map((tag) => (
+                    <span key={tag} className={styles.projectTag}>{tag}</span>
                 ))}
               </div>
 
@@ -349,9 +355,11 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
         </div>
       </section>
 
+      ))}
+
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
-          <span className={styles.sectionNumber} aria-hidden="true">05</span>
+          <span className={styles.sectionNumber} aria-hidden="true">06</span>
           <LuBriefcaseBusiness className={styles.sectionIcon} aria-hidden="true" />
           <h2 className={styles.sectionTitle}>{labels.experience}</h2>
           <div className={styles.sectionLine} />
@@ -385,7 +393,7 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
 
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
-          <span className={styles.sectionNumber} aria-hidden="true">06</span>
+          <span className={styles.sectionNumber} aria-hidden="true">07</span>
           <LuWrench className={styles.sectionIcon} aria-hidden="true" />
           <h2 className={styles.sectionTitle}>{labels.skills}</h2>
           <div className={styles.sectionLine} />
@@ -399,7 +407,7 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
 
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
-          <span className={styles.sectionNumber} aria-hidden="true">07</span>
+          <span className={styles.sectionNumber} aria-hidden="true">08</span>
           <LuBookOpen className={styles.sectionIcon} aria-hidden="true" />
           <h2 className={styles.sectionTitle}>{labels.courses}</h2>
           <div className={styles.sectionLine} />
@@ -433,7 +441,7 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
 
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
-          <span className={styles.sectionNumber} aria-hidden="true">08</span>
+          <span className={styles.sectionNumber} aria-hidden="true">09</span>
           <LuLanguages className={styles.sectionIcon} aria-hidden="true" />
           <h2 className={styles.sectionTitle}>{labels.languages}</h2>
           <div className={styles.sectionLine} />
@@ -453,7 +461,7 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
 
       <section className={styles.section}>
         <div className={`${styles.sectionHeader} ${styles.interestsHeader}`}>
-          <span className={styles.sectionNumber} aria-hidden="true">09</span>
+          <span className={styles.sectionNumber} aria-hidden="true">10</span>
           <LuHeart className={styles.sectionIcon} aria-hidden="true" />
           <h2 className={styles.sectionTitle}>{labels.interests}</h2>
           <div className={styles.sectionLine} />

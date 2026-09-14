@@ -266,5 +266,24 @@
   "interestsLink": {
     "label": "rusenbirben.com",
     "url": "https://rusenbirben.com"
-  }
+  },
+  "publications": [
+    {
+      "title": "Türkçe Kültürel Bilgi Veri Seti - MRL 2026 Shared Task",
+      "subtitle": "Kabul edilen katkı · Hazırlık aşamasındaki ortak benchmark makalesi",
+      "period": "2026",
+      "description": "15 kültürel alanı kapsayan ve kabul edilen Türkçe kültürel bilgi veri setinin kaynaklara dayalı agent pipeline’ını ve veri hazırlama sürecini yönettim. 1.200 aday soru-cevap çiftinin ilk elemesini yaparak 500’ünü Büşra Tufan’ın sosyolojik incelemesine hazırladım; süreç sonunda 300 çiftlik nihai gönderim oluşturuldu. Çağrı Toraman’ın araştırma yönlendirmesiyle yürütülen çalışmada İngilizce çeviri kontrolüne katkı sağladım.\n\nKabul edilen Türkçe veri seti katkım, ortak yazarı olacağım makalede sunulacak çok dilli ve çok modlu benchmark’ın bir parçasını oluşturacak. Ortak veri seti ve preprint’in Ekim 2026’da yayımlanması, shared task sonuçlarının MRL @ EMNLP 2026’da sunulması planlanıyor. Organizatörler makaleyi 2027’de yüksek etkili bir AI yayın mecrasına göndermeyi hedefliyor.",
+      "tags": [
+        "Cultural QA",
+        "Data Curation",
+        "Agent Workflows"
+      ],
+      "links": [
+        {
+          "label": "Shared Task",
+          "url": "https://mrlbenchmarks.github.io/"
+        }
+      ]
+    }
+  ]
 }
