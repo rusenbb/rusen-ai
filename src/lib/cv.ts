@@ -84,6 +84,7 @@ export type CVData = {
   heroLinks: CVLink[];
   experience: CVExperienceItem[];
   projects: CVProjectItem[];
+  publications: CVProjectItem[];
   education: CVEducationItem[];
   interests: CVInterestItem[];
   interestsLink: CVLink;
@@ -107,6 +108,7 @@ export type CVLabels = {
   research: string;
   skills: string;
   projects: string;
+  publications: string;
   education: string;
   awards: string;
   courses: string;
@@ -175,16 +177,18 @@ function parseCvData(value: unknown, locale: CVLocale): CVData {
       throw new Error(`${context}.experience[${index}].category must be research or professional`);
     }
   }
-  const projects = requireObjectArray(
-    value.projects,
-    ["title", "subtitle", "period", "description"],
-    `${context}.projects`,
-  );
-  for (const [index, project] of projects.entries()) {
-    if (!Array.isArray(project.tags) || project.tags.some((tag) => typeof tag !== "string")) {
-      throw new Error(`${context}.projects[${index}].tags must be a string array`);
+  for (const section of ["publications", "projects"] as const) {
+    const projects = requireObjectArray(
+      value[section],
+      ["title", "subtitle", "period", "description"],
+      `${context}.${section}`,
+    );
+    for (const [index, project] of projects.entries()) {
+      if (!Array.isArray(project.tags) || project.tags.some((tag) => typeof tag !== "string")) {
+        throw new Error(`${context}.${section}[${index}].tags must be a string array`);
+      }
+      requireObjectArray(project.links, ["label", "url"], `${context}.${section}[${index}].links`);
     }
-    requireObjectArray(project.links, ["label", "url"], `${context}.projects[${index}].links`);
   }
   requireObjectArray(value.education, ["degree", "school", "period"], `${context}.education`);
   requireStringFields(value.interestsLink, ["label", "url"], `${context}.interestsLink`);
@@ -209,7 +213,7 @@ function parseCvData(value: unknown, locale: CVLocale): CVData {
 function assertLocaleParity(data: Record<CVLocale, CVData>): void {
   const reference = data.en;
   const arrayFields = [
-    "heroLinks", "experience", "projects", "education", "interests",
+    "heroLinks", "experience", "publications", "projects", "education", "interests",
     "courses", "awards", "languages",
   ] as const;
   for (const locale of ["tr", "ja"] as const) {
@@ -237,6 +241,7 @@ const LABELS_EN: CVLabels = {
   experience: "PROFESSIONAL EXPERIENCE",
   research: "RESEARCH EXPERIENCE",
   skills: "TECHNICAL SKILLS",
+  publications: "PUBLICATIONS & RESEARCH CONTRIBUTIONS",
   projects: "SELECTED PROJECTS",
   education: "EDUCATION",
   awards: "SCHOLARSHIPS & AWARDS",
@@ -260,6 +265,7 @@ const LABELS_TR: CVLabels = {
   experience: "PROFESYONEL DENEYİM",
   research: "ARAŞTIRMA DENEYİMİ",
   skills: "TEKNİK BECERİLER",
+  publications: "YAYINLAR VE ARAŞTIRMA KATKILARI",
   projects: "SEÇİLMİŞ PROJELER",
   education: "EĞİTİM",
   awards: "BURSLAR VE ÖDÜLLER",
@@ -283,6 +289,7 @@ const LABELS_JA: CVLabels = {
   experience: "職務経歴",
   research: "研究経験",
   skills: "技術スキル",
+  publications: "論文・研究貢献",
   projects: "プロジェクト",
   education: "学歴",
   awards: "受賞・表彰",

@@ -266,5 +266,24 @@
   "interestsLink": {
     "label": "rusenbirben.com",
     "url": "https://rusenbirben.com"
-  }
+  },
+  "publications": [
+    {
+      "title": "トルコ語文化知識データセット - MRL 2026 Shared Task",
+      "subtitle": "採択された貢献 · 共同ベンチマーク論文を準備中",
+      "period": "2026",
+      "description": "15分野を網羅する、採択されたトルコ語文化知識データセットの情報源に基づくエージェントパイプラインとデータ準備を主導。1,200件の質問・回答候補を一次審査し、Büşra Tufanによる社会学的審査に向けて500件を選定し、最終的に300組を提出した。Çağrı Toramanの研究指導のもと、英訳の確認にも貢献。\n\n採択された私のトルコ語データセット貢献は、多言語・マルチモーダル共同ベンチマークの一部となり、その論文に共著者として参加する予定。共同データセットとプレプリントは2026年10月に公開予定で、共有タスクの成果はMRL @ EMNLP 2026で発表予定。主催者は2027年にAI分野の影響力の高い学術会議・学術誌への投稿を計画している。",
+      "tags": [
+        "Cultural QA",
+        "Data Curation",
+        "Agent Workflows"
+      ],
+      "links": [
+        {
+          "label": "Shared Task",
+          "url": "https://mrlbenchmarks.github.io/"
+        }
+      ]
+    }
+  ]
 }

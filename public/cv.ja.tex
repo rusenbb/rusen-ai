@@ -27,11 +27,15 @@
 \renewcommand{\headrulewidth}{0pt}
 \fancypagestyle{firstpage}{\fancyhead{}}
 \newcounter{cvsec}
-\newcommand{\cvsection}[2]{%
-  \par\needspace{7\baselineskip}\vspace{6pt}\refstepcounter{cvsec}%
+\newlength{\cvsectionbefore}
+\newlength{\cvsectionafter}
+\setlength{\cvsectionbefore}{6pt}
+\setlength{\cvsectionafter}{7pt}
+\newcommand{\cvsection}[3][6]{%
+  \par\needspace{#1\baselineskip}\vspace{\cvsectionbefore}\refstepcounter{cvsec}%
   {\setlength{\fboxsep}{3pt}\colorbox{ink}{\color{white}\ttfamily{}\bfseries{}\small{}\ifnum\value{cvsec}<10 0\fi\thecvsec}}%
-  \hspace{7pt}{\large{} #1}\hspace{7pt}{\ttfamily{}\bfseries{}\fontsize{12}{14}\selectfont{} #2}%
-  \par\vspace{4pt}{\color{ink}\hrule height 0.9pt}\nopagebreak\vspace{7pt}%
+  \hspace{7pt}{\large{} #2}\hspace{7pt}{\ttfamily{}\bfseries{}\fontsize{12}{14}\selectfont{} #3}%
+  \par\vspace{4pt}{\color{ink}\hrule height 0.9pt}\nopagebreak\vspace{\cvsectionafter}%
 }
 \newcommand{\dates}[1]{\hfill{\ttfamily{}\small{}\color{muted}#1}}
 \newcommand{\cvbody}[1]{{\small{}\raggedright #1\par}}
@@ -95,42 +99,67 @@
 \end{minipage}\par\vspace{6pt}
 
 \newpage
+\setlength{\cvsectionbefore}{2pt}
+\setlength{\cvsectionafter}{2pt}
+\cvsection{\faBook}{論文・研究貢献}
+\begin{minipage}{\linewidth}\raggedright
+{\ttfamily{}\bfseries{}トルコ語文化知識データセット - MRL 2026 Shared Task}\dates{2026}\par
+{\small{}\itshape{}\color{muted}採択された貢献 · 共同ベンチマーク論文を準備中}\hfill{\small{}%
+\href{https://mrlbenchmarks.github.io/}{\faExternalLink\enspace{}Shared Task}%
+}\par\vspace{2pt}
+{\fontsize{9}{10}\selectfont{}\raggedright
+15分野を網羅する、採択されたトルコ語文化知識データセットの情報源に基づくエージェントパイプラインとデータ準備を主導。1,200件の質問・回答候補を一次審査し、Büşra Tufanによる社会学的審査に向けて500件を選定し、最終的に300組を提出した。Çağrı Toramanの研究指導のもと、英訳の確認にも貢献。\par
+\vspace{4pt}採択された私のトルコ語データセット貢献は、多言語・マルチモーダル共同ベンチマークの一部となり、その論文に共著者として参加する予定。共同データセットとプレプリントは2026年10月に公開予定で、共有タスクの成果はMRL @ EMNLP 2026で発表予定。主催者は2027年にAI分野の影響力の高い学術会議・学術誌への投稿を計画している。\par
+}
+\end{minipage}\par\vspace{2pt}
+
 \cvsection{\faCode}{プロジェクト}
 \begin{minipage}{\linewidth}\raggedright
 {\ttfamily{}\bfseries{}Kaira}\dates{2025}\par
 {\small{}\itshape{}\color{muted}卒業制作：金融推論LLM}\hfill{\small{}%
 %
-}\par\vspace{4pt}
-\cvbody{イスタンブール工科大学の卒業制作として、Qwen系LLMの金融推論を研究。UnslothとLoRAを用いてGRPOでファインチューニングし、FinQAとGSM8Kで報酬設計や推論の振る舞いを調べた。Ollamaを使ったチャットアプリも開発。}
-\end{minipage}\par\vspace{5pt}
+}\par\vspace{2pt}
+{\fontsize{9}{10}\selectfont{}\raggedright
+イスタンブール工科大学の卒業制作として、Qwen系LLMの金融推論を研究。UnslothとLoRAを用いてGRPOでファインチューニングし、FinQAとGSM8Kで報酬設計や推論の振る舞いを調べた。Ollamaを使ったチャットアプリも開発。\par
+}
+\end{minipage}\par\vspace{2pt}
 \begin{minipage}{\linewidth}\raggedright
 {\ttfamily{}\bfseries{}AIZheimer}\dates{2024}\par
 {\small{}\itshape{}\color{muted}Stable Diffusionの機械忘却}\hfill{\small{}%
 \href{https://github.com/rusenbb/ai-zheimer}{\faGithub\enspace{}コード}%
-}\par\vspace{4pt}
-\cvbody{Forget-Me-Notを基にStable Diffusion 2.1向けのクロスアテンションに基づく機械忘却を実装・調整。Attention controller/processorを開発し、attention re-steering、distraction、random stimulusの損失関数を検討。定性的実験と可視化を通じて、対象概念の除去とそれ以外の生成能力の維持とのトレードオフを調べた。}
-\end{minipage}\par\vspace{5pt}
+}\par\vspace{2pt}
+{\fontsize{9}{10}\selectfont{}\raggedright
+Forget-Me-Notを基にStable Diffusion 2.1向けのクロスアテンションに基づく機械忘却を実装・調整。Attention controller/processorを開発し、attention re-steering、distraction、random stimulusの損失関数を検討。定性的実験と可視化を通じて、対象概念の除去とそれ以外の生成能力の維持とのトレードオフを調べた。\par
+}
+\end{minipage}\par\vspace{2pt}
 \begin{minipage}{\linewidth}\raggedright
 {\ttfamily{}\bfseries{}Biting The Bytes}\dates{2024}\par
 {\small{}\itshape{}\color{muted}トルコ語ダイアクリティカル復元}\hfill{\small{}%
 \href{https://github.com/rusen-archive/Biting-The-Bytes}{\faGithub\enspace{}コード}\quad{}\href{https://huggingface.co/spaces/rusen/diacritize-tr}{\faExternalLink\enspace{}デモ}%
-}\par\vspace{4pt}
-\cvbody{トルコ語の文字復元をバイト単位のトークン分類として扱い、ByT5-smallをPEFT/LoRAでファインチューニング。モデル学習とハイパーパラメータ調整を主に担当し、デバッグとHugging Face Spacesへの公開はチームメイトと分担。ノイズやASCII表記を含む文章からş、ç、ı、ğ、ü、öなどの文字を復元する課題に取り組んだ。}
-\end{minipage}\par\vspace{5pt}
+}\par\vspace{2pt}
+{\fontsize{9}{10}\selectfont{}\raggedright
+トルコ語の文字復元をバイト単位のトークン分類として扱い、ByT5-smallをPEFT/LoRAでファインチューニング。モデル学習とハイパーパラメータ調整を主に担当し、デバッグとHugging Face Spacesへの公開はチームメイトと分担。ノイズやASCII表記を含む文章からş、ç、ı、ğ、ü、öなどの文字を復元する課題に取り組んだ。\par
+}
+\end{minipage}\par\vspace{2pt}
 \begin{minipage}{\linewidth}\raggedright
 {\ttfamily{}\bfseries{}To-AI-or-Not-to-AI}\dates{2023}\par
 {\small{}\itshape{}\color{muted}AI 生成テキスト検出器}\hfill{\small{}%
 \href{https://github.com/rusen-archive/To-AI-or-Not-to-AI}{\faGithub\enspace{}コード}\quad{}\href{https://huggingface.co/spaces/rusen/gpt_detector}{\faExternalLink\enspace{}デモ}%
-}\par\vspace{4pt}
-\cvbody{RoBERTaベースの検出器3種をファインチューニングし、多数決で予測を統合。26,270件のデータ作成・前処理を分担し、Hugging Face Spacesへの公開を担当。同一分布から無作為に分割したテストセットで94.21\%の正解率を達成したが、他言語や大きく異なるドメインへの汎化は評価していない。}
-\end{minipage}\par\vspace{5pt}
+}\par\vspace{2pt}
+{\fontsize{9}{10}\selectfont{}\raggedright
+RoBERTaベースの検出器3種をファインチューニングし、多数決で予測を統合。26,270件のデータ作成・前処理を分担し、Hugging Face Spacesへの公開を担当。同一分布から無作為に分割したテストセットで94.21\%の正解率を達成したが、他言語や大きく異なるドメインへの汎化は評価していない。\par
+}
+\end{minipage}\par\vspace{2pt}
 \begin{minipage}{\linewidth}\raggedright
 {\ttfamily{}\bfseries{}Tobor}\dates{2024 - 2025}\par
 {\small{}\itshape{}\color{muted}自律走行倉庫ロボット}\hfill{\small{}%
 \href{https://github.com/rusen-archive/Amazon-Warehouse-Robot}{\faGithub\enspace{}コード}\quad{}\href{https://youtu.be/h-Jxs_y9kNA}{\faYoutubePlay\enspace{}動画}%
-}\par\vspace{4pt}
-\cvbody{ROS2のナビゲーションとYOLOによる認識を組み合わせた自律走行倉庫ロボットをチームで開発。箱の持ち上げ・配置機構を実装し、データのアノテーションを共同で行い、他のアルゴリズム開発も支援。}
-\end{minipage}\par\vspace{5pt}
+}\par\vspace{2pt}
+{\fontsize{9}{10}\selectfont{}\raggedright
+ROS2のナビゲーションとYOLOによる認識を組み合わせた自律走行倉庫ロボットをチームで開発。箱の持ち上げ・配置機構を実装し、データのアノテーションを共同で行い、他のアルゴリズム開発も支援。\par
+}
+\end{minipage}\par\vspace{2pt}
+
 
 \cvsection{\faCogs}{スキル}
 {\small{}\textbf{言語}\enspace{} Python / JavaScript/TypeScript / SQL / C/C++}\par\vspace{4pt}
@@ -143,28 +172,28 @@
 \textbf{\small{}\href{https://coursera.org/share/f8ab2981ab0bbdc3fec17c6e88804ff8}{AWS Cloud Technical Essentials\extarrow}}\dates{AWS · Coursera}\par\vspace{2pt}
 \cvbody{クラウドアーキテクチャとEC2、Lambda、S3、RDS、DynamoDBなどのAWSサービス。}\vspace{5pt}
 
-\vspace{5pt}
+\vspace{2pt}
 \faLanguage\enspace{}
 {\small{}\textbf{トルコ語}\enspace{}母語\quad{}\textbf{英語}\enspace{}TOEFL iBT 109/120（2025年11月8日）}\par
 
-\cvsection{\faHeartO}{趣味\hfill{\normalfont{}\small{}\href{https://rusenbirben.com}{rusenbirben.com\extarrow}}}
+\cvsection[4]{\faHeartO}{趣味\hfill{\normalfont{}\small{}\href{https://rusenbirben.com}{rusenbirben.com\extarrow}}}
 \noindent\begin{minipage}[t]{0.235\linewidth}\raggedright
-{\large{}\faCoffee}\par\vspace{5pt}{\ttfamily{}\bfseries{}\small{}コーヒー}\par\vspace{4pt}
+{\ttfamily{}\bfseries{}\small{}コーヒー}\par\vspace{4pt}
 \cvbody{V60 / エアロプレス / モカポット}
 \end{minipage}%
 \hfill%
 \noindent\begin{minipage}[t]{0.235\linewidth}\raggedright
-{\large{}\faBook}\par\vspace{5pt}{\ttfamily{}\bfseries{}\small{}読書}\par\vspace{4pt}
+{\ttfamily{}\bfseries{}\small{}読書}\par\vspace{4pt}
 \cvbody{哲学 / AI/CS / 金融}
 \end{minipage}%
 \hfill%
 \noindent\begin{minipage}[t]{0.235\linewidth}\raggedright
-{\large{}\faCamera}\par\vspace{5pt}{\ttfamily{}\bfseries{}\small{}写真}\par\vspace{4pt}
+{\ttfamily{}\bfseries{}\small{}写真}\par\vspace{4pt}
 \cvbody{ストリート写真 / 二重露光 / 野鳥写真}
 \end{minipage}%
 \hfill%
 \noindent\begin{minipage}[t]{0.235\linewidth}\raggedright
-{\large{}\faFilm}\par\vspace{5pt}{\ttfamily{}\bfseries{}\small{}アニメ・漫画}\par\vspace{4pt}
+{\ttfamily{}\bfseries{}\small{}アニメ・漫画}\par\vspace{4pt}
 \cvbody{視聴 / 読書 / コレクション}
 \end{minipage}%
 \par

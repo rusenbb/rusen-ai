@@ -266,5 +266,24 @@
   "interestsLink": {
     "label": "rusenbirben.com",
     "url": "https://rusenbirben.com"
-  }
+  },
+  "publications": [
+    {
+      "title": "Turkish Cultural Knowledge Dataset - MRL 2026 Shared Task",
+      "subtitle": "Accepted contribution · Joint benchmark paper in preparation",
+      "period": "2026",
+      "description": "Led the source-grounded agent pipeline and data preparation for an accepted Turkish cultural knowledge dataset spanning 15 domains. Screened 1,200 candidate question-answer pairs, selecting 500 for sociological review by Büşra Tufan and producing a final submission of 300 pairs. Contributed to English translation review, with research guidance from Çağrı Toraman.\n\nMy accepted Turkish dataset contribution will form part of the joint multilingual and multimodal benchmark, whose paper I will co-author. The joint dataset and preprint are planned for release in October 2026, with shared task results scheduled for presentation at MRL @ EMNLP 2026. The organizers plan to submit the paper to a high-impact AI venue in 2027.",
+      "tags": [
+        "Cultural QA",
+        "Data Curation",
+        "Agent Workflows"
+      ],
+      "links": [
+        {
+          "label": "Shared Task",
+          "url": "https://mrlbenchmarks.github.io/"
+        }
+      ]
+    }
+  ]
 }
