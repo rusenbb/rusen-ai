@@ -9,7 +9,7 @@ import {
   LuWrench, LuLanguages, LuHeart, LuMail, LuMapPin,
   LuDownload, LuExternalLink,
 } from "react-icons/lu";
-import { FaGithub, FaLinkedinIn, FaYoutube } from "react-icons/fa";
+import { FaGithub, FaKaggle, FaLinkedinIn, FaYoutube } from "react-icons/fa";
 import {
   type CVData,
   type CVLabels,
@@ -133,7 +133,7 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
               rel={link.url.startsWith("mailto:") ? undefined : "noopener noreferrer"}
               className={styles.linkBtn}
             >
-              {link.url.includes("github.com") ? <FaGithub aria-hidden="true" /> : link.url.includes("linkedin.com") ? <FaLinkedinIn aria-hidden="true" /> : <LuMail aria-hidden="true" />} {link.label.toUpperCase()}
+              {link.url.includes("github.com") ? <FaGithub aria-hidden="true" /> : link.url.includes("kaggle.com") ? <FaKaggle aria-hidden="true" /> : link.url.includes("linkedin.com") ? <FaLinkedinIn aria-hidden="true" /> : <LuMail aria-hidden="true" />} {link.label.toUpperCase()}
             </a>
           ))}
 
@@ -254,7 +254,9 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
             <div key={award.title} className={styles.educationCard}>
               <div className={styles.eduHeader}>
                 <div className={styles.eduMain}>
-                  <h3 className={styles.eduDegree}>{award.title}</h3>
+                  <h3 className={styles.eduDegree}>
+                    {award.url ? <a href={award.url} target="_blank" rel="noopener noreferrer" className={styles.descLink}>{award.title}</a> : award.title}
+                  </h3>
                   <span className={styles.eduSchool}>{award.issuer}</span>
                 </div>
                 {award.period && (

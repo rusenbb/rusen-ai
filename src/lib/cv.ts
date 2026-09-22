@@ -53,6 +53,7 @@ export type CVAwardItem = {
   issuer: string;
   period?: string;
   summary: string;
+  url?: string;
 };
 
 export type CVLanguageItem = {
@@ -78,6 +79,8 @@ export type CVData = {
     linkedinUrl: string;
     github: string;
     githubUrl: string;
+    kaggle: string;
+    kaggleUrl: string;
     summary: string;
     printSummary: string;
   };
@@ -197,7 +200,12 @@ function parseCvData(value: unknown, locale: CVLocale): CVData {
     if (interest.link !== undefined) requireStringFields(interest.link, ["label", "url"], `${context}.interests[${index}].link`);
   }
   requireObjectArray(value.courses, ["title", "issuer", "summary"], `${context}.courses`);
-  requireObjectArray(value.awards, ["title", "issuer", "summary"], `${context}.awards`);
+  const awards = requireObjectArray(value.awards, ["title", "issuer", "summary"], `${context}.awards`);
+  for (const [index, award] of awards.entries()) {
+    if (award.url !== undefined && (typeof award.url !== "string" || !award.url.trim())) {
+      throw new Error(`${context}.awards[${index}].url must be a non-empty string when provided`);
+    }
+  }
   requireObjectArray(value.languages, ["name", "level"], `${context}.languages`);
   if (!isRecord(value.skills) || Object.keys(value.skills).length === 0) {
     throw new Error(`${context}.skills must be a non-empty object`);
