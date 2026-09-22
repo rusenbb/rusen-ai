@@ -11,6 +11,8 @@
     "linkedinUrl": "https://linkedin.com/in/rusenbirben",
     "github": "github.com/rusenbb",
     "githubUrl": "https://github.com/rusenbb",
+    "kaggle": "kaggle.com/rusenbirben",
+    "kaggleUrl": "https://www.kaggle.com/rusenbirben",
     "summary": "イスタンブール工科大学の人工知能・データ工学科を卒業し、中東工科大学の応用NLPグループで独立研究者として活動。LLMの頑健性と信頼性に関心を持ち、トルコ語NLP、機械忘却、金融分野のLLM応用に取り組んできました。",
     "printSummary": "イスタンブール工科大学の人工知能・データ工学科を卒業し、中東工科大学の応用NLPグループで独立研究者として活動。LLMの頑健性と信頼性に関心を持ち、トルコ語NLP、機械忘却、金融分野のLLM応用に取り組んできました。"
   },
@@ -22,6 +24,10 @@
     {
       "label": "LinkedIn",
       "url": "https://linkedin.com/in/rusenbirben"
+    },
+    {
+      "label": "Kaggle",
+      "url": "https://www.kaggle.com/rusenbirben"
     },
     {
       "label": "メール",
@@ -184,9 +190,16 @@
   ],
   "awards": [
     {
+      "title": "Kaggle ブロンズメダル · The Pokémon Company PTCG AI Battle Challenge",
+      "issuer": "Kaggle",
+      "period": "2026",
+      "summary": "Kaggleのシミュレーション競技で6,807チーム中677位（上位10%）。リプレイに基づく行動模倣、信念を考慮したモンテカルロ計画、自己対戦を用い、不完全情報下で意思決定するゲームエージェントを開発・評価した。",
+      "url": "https://www.kaggle.com/certification/competitions/rusenbirben/pokemon-tcg-ai-battle"
+    },
+    {
       "title": "1416 YLSY 奨学金 · 修士・博士課程",
       "issuer": "トルコ国民教育省",
-      "summary": "トルコ国民教育省による海外修士・博士課程向け1416 YLSY奨学金に採用。",
+      "summary": "海外修士・博士課程向けのトルコ政府選抜奨学金に採用。1416プログラムは、学費、生活費、医療費、渡航費、語学試験料、学用品を支給し、学位取得後の公的機関での義務勤務を伴う。",
       "period": "2026"
     }
   ],

@@ -52,7 +52,8 @@
 \faEnvelope\enspace{}\href{mailto:\VAR{cv.basics.email}}{\VAR{cv.basics.email | latex}}\quad{}
 \faGlobe\enspace{}\href{\VAR{cv.basics.websiteUrl}}{\VAR{cv.basics.website | latex}}\par\vspace{4pt}
 \faGithub\enspace{}\href{\VAR{cv.basics.githubUrl}}{\VAR{cv.basics.github | latex}}\quad{}
-\faLinkedin\enspace{}\href{\VAR{cv.basics.linkedinUrl}}{\VAR{cv.basics.linkedin | latex}}
+\faLinkedin\enspace{}\href{\VAR{cv.basics.linkedinUrl}}{\VAR{cv.basics.linkedin | latex}}\quad{}
+\faTrophy\enspace{}\href{\VAR{cv.basics.kaggleUrl}}{\VAR{cv.basics.kaggle | latex}}
 \BLOCK{ if personal_email }
 \par\faEnvelope\enspace{}\href{mailto:\VAR{personal_email}}{\VAR{personal_email | latex}}
 \BLOCK{ endif }
@@ -75,7 +76,7 @@
 \cvsection{\faTrophy}{\VAR{labels.awards | upper | latex}}
 \BLOCK{ for award in cv.awards }
 \begin{minipage}{\linewidth}\raggedright
-\textbf{\small{}\VAR{award.title | latex}}\dates{\VAR{award.period | latex}}\par\vspace{2pt}
+\textbf{\small{}\BLOCK{ if award.url }\href{\VAR{award.url}}{\VAR{award.title | latex}\extarrow}\BLOCK{ else }\VAR{award.title | latex}\BLOCK{ endif }}\dates{\VAR{award.period | latex}}\par\vspace{2pt}
 \cvbody{\VAR{award.summary | latex}}
 \end{minipage}\par\vspace{3pt}
 \BLOCK{ endfor }

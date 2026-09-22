@@ -11,6 +11,8 @@
     "linkedinUrl": "https://linkedin.com/in/rusenbirben",
     "github": "github.com/rusenbb",
     "githubUrl": "https://github.com/rusenbb",
+    "kaggle": "kaggle.com/rusenbirben",
+    "kaggleUrl": "https://www.kaggle.com/rusenbirben",
     "summary": "İTÜ Yapay Zeka ve Veri Mühendisliği mezunu ve ODTÜ Uygulamalı NLP Grubu’nda bağımsız araştırmacıyım. Araştırma ilgim LLM’lerin gürbüzlüğü ve güvenilirliği; deneyimim Türkçe NLP, makine unutma ve finans alanında LLM uygulamalarını kapsıyor.",
     "printSummary": "İTÜ Yapay Zeka ve Veri Mühendisliği mezunu ve ODTÜ Uygulamalı NLP Grubu’nda bağımsız araştırmacıyım. Araştırma ilgim LLM’lerin gürbüzlüğü ve güvenilirliği; deneyimim Türkçe NLP, makine unutma ve finans alanında LLM uygulamalarını kapsıyor."
   },
@@ -22,6 +24,10 @@
     {
       "label": "LinkedIn",
       "url": "https://linkedin.com/in/rusenbirben"
+    },
+    {
+      "label": "Kaggle",
+      "url": "https://www.kaggle.com/rusenbirben"
     },
     {
       "label": "E-posta",
@@ -184,9 +190,16 @@
   ],
   "awards": [
     {
+      "title": "Kaggle Bronz Madalya · The Pokémon Company PTCG AI Battle Challenge",
+      "issuer": "Kaggle",
+      "period": "2026",
+      "summary": "Kaggle’ın simülasyon yarışmasında 6.807 takım arasında 677. olarak ilk %10’da yer aldım; replay tabanlı davranış klonlama, inanç-duyarlı Monte Carlo planlama ve self-play kullanan eksik bilgi altında karar veren oyun ajanları geliştirdim ve değerlendirdim.",
+      "url": "https://www.kaggle.com/certification/competitions/rusenbirben/pokemon-tcg-ai-battle"
+    },
+    {
       "title": "1416 YLSY Bursu · Yüksek Lisans ve Doktora",
       "issuer": "T.C. Millî Eğitim Bakanlığı",
-      "summary": "T.C. Millî Eğitim Bakanlığının yurt dışında yüksek lisans ve doktora eğitimi için verdiği 1416 YLSY bursunu kazandım.",
+      "summary": "Yurt dışında yüksek lisans ve doktora eğitimi için verilen seçici resmî bursu kazandım. 1416 programı; öğrenim ücreti, aylık yaşam desteği, sağlık ve ulaşım giderleri, yabancı dil sınav ücretleri ile kırtasiye yardımını öğrenim sonrası mecburi kamu hizmeti karşılığında kapsar.",
       "period": "2026"
     }
   ],

@@ -11,6 +11,8 @@
     "linkedinUrl": "https://linkedin.com/in/rusenbirben",
     "github": "github.com/rusenbb",
     "githubUrl": "https://github.com/rusenbb",
+    "kaggle": "kaggle.com/rusenbirben",
+    "kaggleUrl": "https://www.kaggle.com/rusenbirben",
     "summary": "AI and Data Engineering graduate from Istanbul Technical University and independent researcher with METU’s Applied NLP Group. Research interests center on LLM robustness and reliability, with experience in Turkish NLP, machine unlearning, and LLM applications for finance.",
     "printSummary": "AI and Data Engineering graduate from Istanbul Technical University and independent researcher with METU’s Applied NLP Group. Research interests center on LLM robustness and reliability, with experience in Turkish NLP, machine unlearning, and LLM applications for finance."
   },
@@ -22,6 +24,10 @@
     {
       "label": "LinkedIn",
       "url": "https://linkedin.com/in/rusenbirben"
+    },
+    {
+      "label": "Kaggle",
+      "url": "https://www.kaggle.com/rusenbirben"
     },
     {
       "label": "Email",
@@ -184,10 +190,17 @@
   ],
   "awards": [
     {
+      "title": "Kaggle Bronze Medal · The Pokémon Company PTCG AI Battle Challenge",
+      "issuer": "Kaggle",
+      "period": "2026",
+      "summary": "Ranked 677th of 6,807 teams (top 10%) in Kaggle’s simulation competition, developing and evaluating partially observable game-playing agents with replay-based behavioral cloning, belief-aware Monte Carlo planning, and self-play.",
+      "url": "https://www.kaggle.com/certification/competitions/rusenbirben/pokemon-tcg-ai-battle"
+    },
+    {
       "title": "1416 YLSY Scholarship · M.Sc. & Ph.D.",
       "issuer": "Türkiye Ministry of National Education",
       "period": "2026",
-      "summary": "Awarded the 1416 YLSY scholarship by Türkiye’s Ministry of National Education for overseas master’s and doctoral study."
+      "summary": "Selected for Türkiye’s competitive government scholarship for overseas M.Sc. and Ph.D. study. The 1416 program funds tuition, monthly living support, health and travel costs, language-exam fees, and study supplies in return for a post-degree public-service obligation."
     }
   ],
   "interests": [
