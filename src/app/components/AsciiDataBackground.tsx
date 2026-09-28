@@ -198,11 +198,11 @@ export default function AsciiDataBackground({
     };
     layout();
 
-    const rebuildLetterMap = (startR: number) => {
+    const rebuildLetterMap = (startR: number, centerX: number) => {
       letterMap.clear();
       const word = wordRef.current;
       const totalW = word.length * PATTERN_COLS + (word.length - 1) * LETTER_GAP_COLS;
-      startC = Math.floor((cols - totalW) / 2);
+      startC = Math.floor(centerX / CELL_W - totalW / 2);
       for (let i = 0; i < word.length; i++) {
         const p = letterPatterns[word[i]];
         if (!p) continue;
@@ -213,6 +213,7 @@ export default function AsciiDataBackground({
           }
         }
       }
+      return centerX - (startC + totalW / 2) * CELL_W;
     };
 
     const startTime = performance.now();
@@ -273,17 +274,22 @@ export default function AsciiDataBackground({
       if (!anchorEl || !anchorEl.isConnected) {
         anchorEl = document.querySelector('[data-bg-anchor="data"]');
       }
-      let startR = Math.floor((rows - PATTERN_ROWS) / 2);
+      let centerX = w / 2;
+      let centerY = h / 2;
       if (anchorEl) {
         const rect = anchorEl.getBoundingClientRect();
-        const centerY = (rect.top + rect.bottom) / 2;
-        startR = Math.floor(centerY / CELL_H) - Math.floor(PATTERN_ROWS / 2);
+        const canvasRect = canvas.getBoundingClientRect();
+        centerX = (rect.left + rect.right) / 2 - canvasRect.left;
+        centerY = (rect.top + rect.bottom) / 2 - canvasRect.top;
       }
-      rebuildLetterMap(startR);
+      const startR = Math.floor(centerY / CELL_H - PATTERN_ROWS / 2);
+      // Keep the word exactly centered, even between grid cells.
+      const letterOffsetX = rebuildLetterMap(startR, centerX);
+      const letterOffsetY = centerY - (startR + PATTERN_ROWS / 2) * CELL_H;
 
       const noiseOn = noiseRef.current;
       for (let r = 0; r < rows; r++) {
-        const py = r * CELL_H + CELL_H / 2;
+        const rowY = r * CELL_H + CELL_H / 2;
         const rowPhase = r * 0.22 + noisePhase;
         for (let c = 0; c < cols; c++) {
           let density = noiseOn ? 0.06 + 0.05 * Math.sin(c * 0.18 + rowPhase) : 0;
@@ -300,7 +306,8 @@ export default function AsciiDataBackground({
             }
           }
 
-          const px = c * CELL_W + CELL_W / 2;
+          const px = c * CELL_W + CELL_W / 2 + (isLetter ? letterOffsetX : 0);
+          const py = rowY + (isLetter ? letterOffsetY : 0);
           // Track ripple contribution separately from ambient/letter density so
           // we can give it the same alpha multiplier letters get. Otherwise the
           // ring promotes the character but barely moves the alpha bucket.
@@ -337,7 +344,8 @@ export default function AsciiDataBackground({
           else if (bucket >= NUM_ALPHA_BUCKETS) bucket = NUM_ALPHA_BUCKETS - 1;
 
           const tile = atlas[bucket][charIdx - 1];
-          ctx.drawImage(tile, px - CELL_W, py - CELL_H);
+          // Atlas pixels include DPR; the destination remains in CSS pixels.
+          ctx.drawImage(tile, px - CELL_W, py - CELL_H, CELL_W * 2, CELL_H * 2);
         }
       }
 
