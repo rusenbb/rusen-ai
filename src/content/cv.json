@@ -4,7 +4,7 @@
     "role": "AI Researcher & Engineer",
     "location": "ANKARA, TR",
     "locationLong": "Ankara, Turkey",
-    "email": "contact@rusen.ai",
+    "email": "birben20@itu.edu.tr",
     "website": "rusen.ai",
     "websiteUrl": "https://rusen.ai",
     "linkedin": "linkedin.com/in/rusenbirben",
@@ -13,8 +13,8 @@
     "githubUrl": "https://github.com/rusenbb",
     "kaggle": "kaggle.com/rusenbirben",
     "kaggleUrl": "https://www.kaggle.com/rusenbirben",
-    "summary": "AI and Data Engineering graduate from Istanbul Technical University and independent researcher with METU’s Applied NLP Group. Research interests center on LLM robustness and reliability, with experience in Turkish NLP, machine unlearning, and LLM applications for finance.",
-    "printSummary": "AI and Data Engineering graduate from Istanbul Technical University and independent researcher with METU’s Applied NLP Group. Research interests center on LLM robustness and reliability, with experience in Turkish NLP, machine unlearning, and LLM applications for finance."
+    "summary": "AI and Data Engineering graduate from Istanbul Technical University and independent researcher with METU’s Applied NLP Group. Research interests center on LLM reliability and interpretability, with experience in Turkish NLP, machine unlearning, and LLM applications for finance.",
+    "printSummary": "AI and Data Engineering graduate from Istanbul Technical University and independent researcher with METU’s Applied NLP Group. Research interests center on LLM reliability and interpretability, with experience in Turkish NLP, machine unlearning, and LLM applications for finance."
   },
   "heroLinks": [
     {
@@ -31,7 +31,7 @@
     },
     {
       "label": "Email",
-      "url": "mailto:contact@rusen.ai"
+      "url": "mailto:birben20@itu.edu.tr"
     }
   ],
   "experience": [
@@ -40,7 +40,7 @@
       "company": "METU Applied NLP Group",
       "period": "03/2026 - Present",
       "location": "Ankara, TR",
-      "description": "Contribute to data creation and evaluation methodology for the SIGTURK 2027 benchmark on Turkic languages and cultural understanding with Çağrı Toraman. Support LlamaTurk2 through training-data collection and pretraining experiments. Also lead [METU NLP Connect](https://www.youtube.com/@metunlpconnect), producing expert interviews.",
+      "description": "Contribute to data creation and evaluation methodology for the SIGTURK 2027 benchmark on Turkic languages and cultural understanding with Çağrı Toraman.\n\nSupport LlamaTurk2 through training-data collection and pretraining experiments.\n\nLead [METU NLP Connect](https://www.youtube.com/@metunlpconnect), producing expert interviews.",
       "link": "https://nlp.ceng.metu.edu.tr",
       "category": "research"
     },
@@ -49,7 +49,7 @@
       "company": "Fiction Studios",
       "period": "08/2025 - 04/2026",
       "location": "Ankara, TR",
-      "description": "Co-founded Fiction Studios with a friend at Bilkent Cyberpark and served as technical lead. Directed technical development and coordinated three additional contributors supporting the two founders. Built a multilingual LLM-powered guide for museums and tourists, working on the conversational visitor experience alongside customer and investor discussions.",
+      "description": "Co-founded Fiction Studios at Bilkent Cyberpark; led technical development and coordinated three additional contributors. Built a multilingual LLM-powered museum and tourism guide, alongside customer and investor discussions.",
       "link": "https://github.com/fiction-ai-studios",
       "category": "professional"
     },
@@ -58,7 +58,7 @@
       "company": "CyberQuote",
       "period": "03/2025 - 07/2025",
       "location": "Istanbul, TR",
-      "description": "Joined CyberQuote, a Phillip Capital subsidiary, as the second member of its newly formed AI team. Developed news-sentiment pipelines and internal LLM tools for financial professionals, alongside web integrations and a mobile voice assistant. Worked with the practical challenge of retrieving current financial context from fragmented sources and PDF reports, where missing information could lead to unreliable answers.",
+      "description": "Developed news-sentiment pipelines, internal financial LLM tools, web integrations, and a mobile voice assistant at a Phillip Capital subsidiary. Worked on retrieving current context from fragmented sources and PDF reports.",
       "link": "https://cyberquote.com/tk/",
       "category": "professional"
     },
@@ -67,7 +67,7 @@
       "company": "Havelsan",
       "period": "08/2024 - 09/2024",
       "location": "Istanbul, TR",
-      "description": "Investigated software-log analysis for predictive maintenance and developed prototypes using HDFS logs.",
+      "description": "Investigated software-log analysis for predictive maintenance; developed prototypes using HDFS logs.",
       "link": "https://havelsan.com/tr",
       "category": "research"
     },
@@ -76,7 +76,7 @@
       "company": "ITU NLP Lab",
       "period": "07/2024 - 08/2024",
       "location": "Istanbul, TR",
-      "description": "Researched LLM applications in finance, including sentiment analysis, tool use, reasoning, forecasting, and retrieval-augmented generation. Conducted part of the experiments that contributed to Kaira, my undergraduate capstone on financial reasoning with LLMs.",
+      "description": "Researched financial LLM applications involving sentiment analysis, tool use, reasoning, forecasting, and retrieval-augmented generation. Contributed experiments to the Kaira undergraduate capstone.",
       "link": "https://nlp.itu.edu.tr/",
       "category": "research"
     }
@@ -86,7 +86,7 @@
       "title": "Kaira",
       "subtitle": "Undergraduate Capstone: Financial Reasoning LLM",
       "period": "2025",
-      "description": "Explored financial reasoning in Qwen-based LLMs through GRPO fine-tuning with Unsloth and LoRA. Ran FinQA and GSM8K experiments to examine reward design and reasoning behavior, and developed an Ollama-based chat application. Undergraduate capstone at Istanbul Technical University.",
+      "description": "Fine-tuned Qwen-based LLMs with GRPO, Unsloth, and LoRA; ran FinQA and GSM8K experiments on reward design and financial reasoning. Developed an Ollama-based chat application.",
       "tags": [
         "GRPO",
         "Unsloth",
@@ -96,10 +96,31 @@
       "links": []
     },
     {
+      "title": "Tobor",
+      "subtitle": "Autonomous Warehouse Robot",
+      "period": "2024 - 2025",
+      "description": "Implemented the box pickup/drop-off mechanism in a team-built ROS2 warehouse robot with navigation and YOLO perception; shared data annotation and supported other algorithms.",
+      "tags": [
+        "ROS2",
+        "YOLO",
+        "Python"
+      ],
+      "links": [
+        {
+          "label": "Code",
+          "url": "https://github.com/rusen-archive/Amazon-Warehouse-Robot"
+        },
+        {
+          "label": "Video",
+          "url": "https://youtu.be/h-Jxs_y9kNA"
+        }
+      ]
+    },
+    {
       "title": "AIZheimer",
       "subtitle": "Machine Unlearning in Stable Diffusion",
       "period": "2024",
-      "description": "Building on Forget-Me-Not, implemented and adapted cross-attention-based unlearning for Stable Diffusion 2.1. Developed attention controller/processor code and explored attention re-steering, distraction, and random-stimulus loss objectives. Ran qualitative experiments and prepared visualizations to examine the trade-off between removing a target concept and retaining unrelated generation capabilities.",
+      "description": "Adapted Forget-Me-Not-based unlearning for Stable Diffusion 2.1. Implemented attention controllers and explored loss objectives; qualitatively assessed concept removal and retention of unrelated generation capabilities.",
       "tags": [
         "Stable Diffusion 2.1",
         "Machine Unlearning"
@@ -115,7 +136,7 @@
       "title": "Biting The Bytes",
       "subtitle": "Turkish Diacritic Restoration",
       "period": "2024",
-      "description": "Fine-tuned ByT5-small with PEFT/LoRA for Turkish diacritic restoration, treating the task as byte-level token classification. Took primary responsibility for model training and hyperparameter tuning; shared debugging and Hugging Face Spaces deployment with a teammate. The project explored restoring characters such as ş, ç, ı, ğ, ü, and ö in noisy or ASCII-only Turkish text.",
+      "description": "Led ByT5-small training and hyperparameter tuning with PEFT/LoRA for byte-level Turkish diacritic restoration. Shared debugging and Hugging Face Spaces deployment with a teammate.",
       "tags": [
         "ByT5-small",
         "LoRA",
@@ -136,7 +157,7 @@
       "title": "To-AI-or-Not-to-AI",
       "subtitle": "GPT Detector",
       "period": "2023",
-      "description": "Fine-tuned three RoBERTa-based detectors and combined their predictions through majority voting. Shared data creation and preprocessing for a 26,270-example dataset, and deployed the application on Hugging Face Spaces. The ensemble achieved 94.21% accuracy on an in-domain random test split; this evaluation did not establish performance across languages or substantially different domains.",
+      "description": "Combined three fine-tuned RoBERTa detectors by majority vote. Shared preparation of 26,270 examples; achieved 94.21% accuracy on an in-domain random split, without establishing out-of-domain generalization.",
       "tags": [
         "RoBERTa",
         "Ensemble"
@@ -149,27 +170,6 @@
         {
           "label": "Demo",
           "url": "https://huggingface.co/spaces/rusen/gpt_detector"
-        }
-      ]
-    },
-    {
-      "title": "Tobor",
-      "subtitle": "Autonomous Warehouse Robot",
-      "period": "2024 - 2025",
-      "description": "Contributed to a team-built autonomous warehouse robot combining navigation and YOLO-based perception in ROS2. Implemented the box pickup and drop-off mechanism, shared data annotation with the team, and supported work on other algorithms.",
-      "tags": [
-        "ROS2",
-        "YOLO",
-        "Python"
-      ],
-      "links": [
-        {
-          "label": "Code",
-          "url": "https://github.com/rusen-archive/Amazon-Warehouse-Robot"
-        },
-        {
-          "label": "Video",
-          "url": "https://youtu.be/h-Jxs_y9kNA"
         }
       ]
     }
@@ -190,17 +190,17 @@
   ],
   "awards": [
     {
+      "title": "1416 YLSY Scholarship · M.Sc. & Ph.D.",
+      "issuer": "Türkiye Ministry of National Education",
+      "period": "2026",
+      "summary": "Awarded government funding for overseas master’s study followed by doctoral study, covering tuition fees, a monthly living stipend, health insurance, travel, language-exam fees, and study supplies. Following completion of the funded studies, will return to Türkiye as an assistant professor."
+    },
+    {
       "title": "Kaggle Bronze Medal · The Pokémon Company PTCG AI Battle Challenge",
       "issuer": "Kaggle",
       "period": "2026",
       "summary": "Ranked 677th of 6,807 teams (top 10%) in Kaggle’s simulation competition, developing and evaluating partially observable game-playing agents with replay-based behavioral cloning, belief-aware Monte Carlo planning, and self-play.",
       "url": "https://www.kaggle.com/certification/competitions/rusenbirben/pokemon-tcg-ai-battle"
-    },
-    {
-      "title": "1416 YLSY Scholarship · M.Sc. & Ph.D.",
-      "issuer": "Türkiye Ministry of National Education",
-      "period": "2026",
-      "summary": "Selected for Türkiye’s competitive government scholarship for overseas M.Sc. and Ph.D. study. The 1416 program funds tuition, monthly living support, health and travel costs, language-exam fees, and study supplies, followed by a research-assistant appointment in Türkiye after graduation."
     }
   ],
   "interests": [
@@ -282,10 +282,10 @@
   },
   "publications": [
     {
-      "title": "Turkish Cultural Knowledge Dataset - MRL 2026 Shared Task",
-      "subtitle": "Accepted contribution · Joint benchmark paper in preparation",
+      "title": "Turkish Cultural Knowledge Dataset - MRL 2026",
+      "subtitle": "Accepted dataset contribution; joint benchmark paper in preparation",
       "period": "2026",
-      "description": "Led the source-grounded agent pipeline and data preparation for an accepted Turkish cultural knowledge dataset spanning 15 domains. Screened 1,200 candidate question-answer pairs, selecting 500 for sociological review by Büşra Tufan and producing a final submission of 300 pairs. Contributed to English translation review, with research guidance from Çağrı Toraman.\n\nMy accepted Turkish dataset contribution will form part of the joint multilingual and multimodal benchmark, whose paper I will co-author. The joint dataset and preprint are planned for release in October 2026, with shared task results scheduled for presentation at MRL @ EMNLP 2026. The organizers plan to submit the paper to a high-impact AI venue in 2027.",
+      "description": "Led the source-grounded agent pipeline and data preparation for a Turkish cultural knowledge dataset spanning 15 domains.\n\nScreened 1,200 candidate question-answer pairs; selected 500 for sociological review by Büşra Tufan and prepared the final 300-pair submission.\n\nContributed to English translation review under the research guidance of Çağrı Toraman.",
       "tags": [
         "Cultural QA",
         "Data Curation",
