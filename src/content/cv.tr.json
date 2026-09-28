@@ -4,7 +4,7 @@
     "role": "Yapay Zeka Araştırmacısı ve Mühendisi",
     "location": "ANKARA, TR",
     "locationLong": "Ankara, Türkiye",
-    "email": "contact@rusen.ai",
+    "email": "birben20@itu.edu.tr",
     "website": "rusen.ai",
     "websiteUrl": "https://rusen.ai",
     "linkedin": "linkedin.com/in/rusenbirben",
@@ -13,8 +13,8 @@
     "githubUrl": "https://github.com/rusenbb",
     "kaggle": "kaggle.com/rusenbirben",
     "kaggleUrl": "https://www.kaggle.com/rusenbirben",
-    "summary": "İTÜ Yapay Zeka ve Veri Mühendisliği mezunu ve ODTÜ Uygulamalı NLP Grubu’nda bağımsız araştırmacıyım. Araştırma ilgim LLM’lerin gürbüzlüğü ve güvenilirliği; deneyimim Türkçe NLP, makine unutma ve finans alanında LLM uygulamalarını kapsıyor.",
-    "printSummary": "İTÜ Yapay Zeka ve Veri Mühendisliği mezunu ve ODTÜ Uygulamalı NLP Grubu’nda bağımsız araştırmacıyım. Araştırma ilgim LLM’lerin gürbüzlüğü ve güvenilirliği; deneyimim Türkçe NLP, makine unutma ve finans alanında LLM uygulamalarını kapsıyor."
+    "summary": "İTÜ Yapay Zeka ve Veri Mühendisliği mezunu ve ODTÜ Uygulamalı NLP Grubu’nda bağımsız araştırmacıyım. Araştırma ilgim LLM’lerin güvenilirliği ve yorumlanabilirliği; deneyimim Türkçe NLP, makine unutma ve finans alanında LLM uygulamalarını kapsıyor.",
+    "printSummary": "İTÜ Yapay Zeka ve Veri Mühendisliği mezunu ve ODTÜ Uygulamalı NLP Grubu’nda bağımsız araştırmacıyım. Araştırma ilgim LLM’lerin güvenilirliği ve yorumlanabilirliği; deneyimim Türkçe NLP, makine unutma ve finans alanında LLM uygulamalarını kapsıyor."
   },
   "heroLinks": [
     {
@@ -31,7 +31,7 @@
     },
     {
       "label": "E-posta",
-      "url": "mailto:contact@rusen.ai"
+      "url": "mailto:birben20@itu.edu.tr"
     }
   ],
   "experience": [
@@ -40,7 +40,7 @@
       "company": "ODTÜ Uygulamalı NLP Grubu",
       "period": "03/2026 - Bugün",
       "location": "Ankara, TR",
-      "description": "Çağrı Toraman ile SIGTURK 2027 kapsamında Türk dilleri ve kültürel bağlamı değerlendiren benchmark için veri oluşturma ve değerlendirme metodolojisine katkı sağlıyor; LlamaTurk2 için eğitim verisi toplama ve ön eğitim deneylerinde çalışıyorum. Ayrıca [METU NLP Connect](https://www.youtube.com/@metunlpconnect) kanalını yönetiyor ve uzman röportajları hazırlıyorum.",
+      "description": "Çağrı Toraman ile SIGTURK 2027’nin Türk dilleri ve kültürel anlayış benchmark’ına veri oluşturma ve değerlendirme metodolojisi katkısı.\n\nLlamaTurk2 için eğitim verisi toplama ve ön eğitim deneylerine destek.\n\n[METU NLP Connect](https://www.youtube.com/@metunlpconnect) için uzman röportajlarının hazırlanması ve kanal yönetimi.",
       "link": "https://nlp.ceng.metu.edu.tr",
       "category": "research"
     },
@@ -49,7 +49,7 @@
       "company": "Fiction Studios",
       "period": "08/2025 - 04/2026",
       "location": "Ankara, TR",
-      "description": "Bilkent Cyberpark’ta Fiction Studios’u bir arkadaşımla kurdum ve teknik liderliği üstlendim. Teknik geliştirmeyi yönettim; iki kurucuya destek veren üç arkadaşımızın çalışmalarını koordine ettim. Müzeler ve turistler için çok dilli, LLM destekli bir rehber uygulaması geliştirdik; sohbet tabanlı ziyaretçi deneyimi üzerine çalışırken müşteri ve yatırımcı görüşmeleri de yürüttük.",
+      "description": "Bilkent Cyberpark’ta Fiction Studios’un kurucu ortağı ve teknik lideri; üç ek katkıcının çalışmalarının koordinasyonu. Müzeler ve turistler için çok dilli LLM rehberi geliştirilmesi, müşteri ve yatırımcı görüşmeleri.",
       "link": "https://github.com/fiction-ai-studios",
       "category": "professional"
     },
@@ -58,7 +58,7 @@
       "company": "CyberQuote",
       "period": "03/2025 - 07/2025",
       "location": "İstanbul, TR",
-      "description": "Phillip Capital iştiraki CyberQuote’un yeni kurulan yapay zeka ekibine ikinci üye olarak katıldım. Haberlerden duygu analizi çıkaran veri işleme akışları, finans uzmanları için kurum içi LLM araçları, web entegrasyonları ve mobil sesli asistan üzerinde çalıştım. Güncel finansal bağlamın dağınık kaynaklar ve PDF raporlarından edinilmesi, eksik bilginin güvenilmez yanıtlara yol açması gibi üretim sorunlarıyla uğraştım.",
+      "description": "Phillip Capital iştiraki CyberQuote’ta haber duygu analizi, finans uzmanlarına yönelik LLM araçları, web entegrasyonları ve mobil sesli asistan geliştirilmesi. Dağınık kaynaklar ve PDF raporlarından güncel bağlamın getirilmesi.",
       "link": "https://cyberquote.com/tk/",
       "category": "professional"
     },
@@ -67,7 +67,7 @@
       "company": "Havelsan",
       "period": "08/2024 - 09/2024",
       "location": "İstanbul, TR",
-      "description": "Kestirimci bakım için yazılım loglarının analizini araştırdım; HDFS loglarıyla prototipler geliştirdim.",
+      "description": "Kestirimci bakım için yazılım loglarının analizi; HDFS loglarıyla prototip geliştirilmesi.",
       "link": "https://havelsan.com/tr",
       "category": "research"
     },
@@ -76,7 +76,7 @@
       "company": "İTÜ NLP Laboratuvarı",
       "period": "07/2024 - 08/2024",
       "location": "İstanbul, TR",
-      "description": "Finans alanında LLM uygulamalarını araştırdım: duygu analizi, araç kullanımı, akıl yürütme, tahminleme ve bilgi getirme destekli üretim (RAG). Bu süreçte bitirme projem Kaira’ya katkı sağlayan deneylerin bir kısmını yürüttüm.",
+      "description": "Finansal LLM uygulamalarında duygu analizi, araç kullanımı, akıl yürütme, tahmin ve RAG araştırması. Kaira bitirme projesine katkı sağlayan deneylerin yürütülmesi.",
       "link": "https://nlp.itu.edu.tr/",
       "category": "research"
     }
@@ -86,7 +86,7 @@
       "title": "Kaira",
       "subtitle": "Bitirme Projesi: Finansal Akıl Yürütme Modeli",
       "period": "2025",
-      "description": "İTÜ bitirme projemde Qwen tabanlı dil modellerinin finansal akıl yürütme becerilerini araştırdım. Unsloth ve LoRA kullanarak GRPO ile ince ayar yaptım; FinQA ve GSM8K üzerinde ödül tasarımı ve akıl yürütme davranışını inceleyen deneyler yürüttüm. Ollama tabanlı bir sohbet uygulaması da geliştirdim.",
+      "description": "Qwen tabanlı modellerin Unsloth ve LoRA ile GRPO ince ayarı; FinQA ve GSM8K üzerinde ödül tasarımı ve finansal akıl yürütme deneyleri. Ollama tabanlı sohbet uygulaması geliştirilmesi.",
       "tags": [
         "GRPO",
         "Unsloth",
@@ -96,10 +96,31 @@
       "links": []
     },
     {
+      "title": "Tobor",
+      "subtitle": "Otonom Depo Robotu",
+      "period": "2024 - 2025",
+      "description": "ROS2 ve YOLO kullanan ekip projesinde kutu alma/bırakma mekanizmasının geliştirilmesi; veri etiketleme ve diğer algoritmalara destek.",
+      "tags": [
+        "ROS2",
+        "YOLO",
+        "Python"
+      ],
+      "links": [
+        {
+          "label": "Kod",
+          "url": "https://github.com/rusen-archive/Amazon-Warehouse-Robot"
+        },
+        {
+          "label": "Video",
+          "url": "https://youtu.be/h-Jxs_y9kNA"
+        }
+      ]
+    },
+    {
       "title": "AIZheimer",
       "subtitle": "Stable Diffusion’da Makine Unutma",
       "period": "2024",
-      "description": "Forget-Me-Not çalışmasını temel alarak Stable Diffusion 2.1 için çapraz dikkat tabanlı makine unutma yöntemlerini uyguladım ve uyarladım. Attention controller/processor kodu geliştirerek attention re-steering, distraction ve random stimulus kayıplarını inceledim. Hedef kavramı unutturma ile diğer üretim yeteneklerini koruma arasındaki dengeyi nitel deneyler ve hazırladığım görselleştirmelerle değerlendirdim.",
+      "description": "Forget-Me-Not temelli unutmanın Stable Diffusion 2.1’e uyarlanması. Dikkat kontrol kodu ve alternatif kayıp işlevleri; kavram silme ile diğer üretim yeteneklerini korumanın nitel değerlendirmesi.",
       "tags": [
         "Stable Diffusion 2.1",
         "Makine Unutma"
@@ -115,7 +136,7 @@
       "title": "Biting The Bytes",
       "subtitle": "Türkçe Karakter Tamamlama",
       "period": "2024",
-      "description": "Türkçe karakter restorasyonunu bayt düzeyinde token sınıflandırması olarak ele alarak ByT5-small modelini PEFT/LoRA ile eğittim. Model eğitimi ve hiperparametre ayarlamasını ağırlıklı olarak üstlendim; hata ayıklama ve Hugging Face Spaces’te yayımlama sürecini ekip arkadaşımla paylaştım. Proje, gürültülü veya yalnızca ASCII karakterleri içeren Türkçe metinlerde ş, ç, ı, ğ, ü ve ö karakterlerinin geri kazandırılmasına odaklandı.",
+      "description": "Türkçe karakter restorasyonu için ByT5-small modelinin PEFT/LoRA ile bayt düzeyinde eğitimi ve hiperparametre ayarlarının yürütülmesi. Hata ayıklama ve Hugging Face Spaces yayınının ekip arkadaşıyla paylaşılması.",
       "tags": [
         "ByT5-small",
         "LoRA",
@@ -136,7 +157,7 @@
       "title": "To-AI-or-Not-to-AI",
       "subtitle": "Yapay Zeka Metin Tespiti",
       "period": "2023",
-      "description": "Üç RoBERTa tabanlı dedektörü ince ayarladım ve tahminlerini çoğunluk oylamasıyla birleştirdim. 26.270 örnekten oluşan veri kümesinin oluşturulmasını ve ön işlemesini ekip arkadaşımla paylaştım; uygulamayı Hugging Face Spaces’te yayımladım. Topluluk modeli, aynı dağılımdan rastgele ayrılmış test kümesinde %94,21 doğruluk sağladı; farklı diller ve belirgin biçimde farklı alanlar bu değerlendirmeye dahil değildi.",
+      "description": "Üç ince ayarlı RoBERTa dedektörünün çoğunluk oylamasıyla birleştirilmesi. 26.270 örneğin hazırlanmasına katkı; aynı dağılımdan rastgele test ayrımında %94,21 doğruluk. Dağılım dışı genelleme gösterilmedi.",
       "tags": [
         "RoBERTa",
         "Topluluk Öğrenmesi"
@@ -149,27 +170,6 @@
         {
           "label": "Demo",
           "url": "https://huggingface.co/spaces/rusen/gpt_detector"
-        }
-      ]
-    },
-    {
-      "title": "Tobor",
-      "subtitle": "Otonom Depo Robotu",
-      "period": "2024 - 2025",
-      "description": "ROS2 üzerinde navigasyon ve YOLO tabanlı algıyı birleştiren otonom depo robotunu ekip olarak geliştirdik. Kutuları alma ve bırakma mekanizmasını yaptım; veri etiketlemeyi ekiple birlikte yürüttüm ve diğer algoritmaların geliştirilmesine destek verdim.",
-      "tags": [
-        "ROS2",
-        "YOLO",
-        "Python"
-      ],
-      "links": [
-        {
-          "label": "Kod",
-          "url": "https://github.com/rusen-archive/Amazon-Warehouse-Robot"
-        },
-        {
-          "label": "Video",
-          "url": "https://youtu.be/h-Jxs_y9kNA"
         }
       ]
     }
@@ -190,17 +190,17 @@
   ],
   "awards": [
     {
+      "title": "1416 YLSY Bursu · Yüksek Lisans ve Doktora",
+      "issuer": "T.C. Millî Eğitim Bakanlığı",
+      "summary": "Yurt dışında yüksek lisans ve ardından doktora öğrenimi için devlet bursu kazandı. Burs; öğrenim ücretlerini, aylık yaşam bursunu, sağlık sigortasını, ulaşımı, yabancı dil sınav ücretlerini ve kırtasiye yardımını kapsar. Burslu öğrenimin tamamlanmasının ardından Türkiye’ye dönerek doktor öğretim üyesi olarak görev yapacaktır.",
+      "period": "2026"
+    },
+    {
       "title": "Kaggle Bronz Madalya · The Pokémon Company PTCG AI Battle Challenge",
       "issuer": "Kaggle",
       "period": "2026",
       "summary": "Kaggle’ın simülasyon yarışmasında 6.807 takım arasında 677. olarak ilk %10’da yer aldım; replay tabanlı davranış klonlama, inanç-duyarlı Monte Carlo planlama ve self-play kullanan eksik bilgi altında karar veren oyun ajanları geliştirdim ve değerlendirdim.",
       "url": "https://www.kaggle.com/certification/competitions/rusenbirben/pokemon-tcg-ai-battle"
-    },
-    {
-      "title": "1416 YLSY Bursu · Yüksek Lisans ve Doktora",
-      "issuer": "T.C. Millî Eğitim Bakanlığı",
-      "summary": "Yurt dışında yüksek lisans ve doktora eğitimi için verilen seçici resmî bursu kazandım. 1416 programı; öğrenim ücreti, aylık yaşam desteği, sağlık ve ulaşım giderleri, yabancı dil sınav ücretleri ile kırtasiye yardımını kapsar; öğrenim sonrasında Türkiye’de araştırma görevlisi olarak çalışacağım.",
-      "period": "2026"
     }
   ],
   "interests": [
@@ -282,10 +282,10 @@
   },
   "publications": [
     {
-      "title": "Türkçe Kültürel Bilgi Veri Seti - MRL 2026 Shared Task",
-      "subtitle": "Kabul edilen katkı · Hazırlık aşamasındaki ortak benchmark makalesi",
+      "title": "Türk Kültürel Bilgi Veri Kümesi - MRL 2026",
+      "subtitle": "Kabul edilmiş veri katkısı; ortak benchmark makalesi hazırlanıyor",
       "period": "2026",
-      "description": "15 kültürel alanı kapsayan ve kabul edilen Türkçe kültürel bilgi veri setinin kaynaklara dayalı agent pipeline’ını ve veri hazırlama sürecini yönettim. 1.200 aday soru-cevap çiftinin ilk elemesini yaparak 500’ünü Büşra Tufan’ın sosyolojik incelemesine hazırladım; süreç sonunda 300 çiftlik nihai gönderim oluşturuldu. Çağrı Toraman’ın araştırma yönlendirmesiyle yürütülen çalışmada İngilizce çeviri kontrolüne katkı sağladım.\n\nKabul edilen Türkçe veri seti katkım, ortak yazarı olacağım makalede sunulacak çok dilli ve çok modlu benchmark’ın bir parçasını oluşturacak. Ortak veri seti ve preprint’in Ekim 2026’da yayımlanması, shared task sonuçlarının MRL @ EMNLP 2026’da sunulması planlanıyor. Organizatörler makaleyi 2027’de yüksek etkili bir AI yayın mecrasına göndermeyi hedefliyor.",
+      "description": "15 alanı kapsayan Türk kültürel bilgi veri kümesi için kaynak temelli ajan hattını ve veri hazırlığını yönetti.\n\n1.200 aday soru-cevap çiftini taradı; 500 çifti Büşra Tufan’ın sosyolojik incelemesine seçerek 300 çiftlik nihai teslimi hazırladı.\n\nÇağrı Toraman’ın araştırma rehberliğinde İngilizce çeviri incelemesine katkıda bulundu.",
       "tags": [
         "Cultural QA",
         "Data Curation",

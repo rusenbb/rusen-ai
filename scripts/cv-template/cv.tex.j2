@@ -11,8 +11,8 @@
 \setCJKsansfont{Noto Sans CJK JP}
 \setCJKmonofont{Noto Sans Mono CJK JP}
 \BLOCK{ endif }
-\usepackage[top=0.6in,bottom=0.6in,left=0.7in,right=0.7in,headheight=14pt,headsep=12pt]{geometry}
-\usepackage{xcolor,hyperref,needspace,fancyhdr,lastpage,fontawesome}
+\usepackage[top=0.75in,bottom=0.75in,left=0.75in,right=0.75in,headheight=14pt,headsep=12pt]{geometry}
+\usepackage{xcolor,hyperref,needspace,fancyhdr,lastpage,fontawesome,tabularx,enumitem}
 \definecolor{ink}{HTML}{171717}
 \definecolor{muted}{HTML}{555555}
 \definecolor{paper}{HTML}{F3F3F1}
@@ -24,29 +24,29 @@
 \color{ink}
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{\ttfamily{}\small{}\VAR{cv.basics.name | latex}\enspace{} / CV}
-\fancyfoot[R]{\ttfamily{}\footnotesize{}\thepage\ / \pageref*{LastPage}}
+\fancyhead[L]{\small{}\VAR{cv.basics.name | latex}\enspace{} / CV}
+\fancyfoot[R]{\footnotesize{}\thepage\ / \pageref*{LastPage}}
 \renewcommand{\headrulewidth}{0pt}
 \fancypagestyle{firstpage}{\fancyhead{}}
-\newcounter{cvsec}
-\newlength{\cvsectionbefore}
-\newlength{\cvsectionafter}
-\setlength{\cvsectionbefore}{6pt}
-\setlength{\cvsectionafter}{7pt}
-\newcommand{\cvsection}[3][6]{%
-  \par\needspace{#1\baselineskip}\vspace{\cvsectionbefore}\refstepcounter{cvsec}%
-  {\setlength{\fboxsep}{3pt}\colorbox{ink}{\color{white}\ttfamily{}\bfseries{}\small{}\ifnum\value{cvsec}<10 0\fi\thecvsec}}%
-  \hspace{7pt}{\large{} #2}\hspace{7pt}{\ttfamily{}\bfseries{}\fontsize{12}{14}\selectfont{} #3}%
-  \par\vspace{4pt}{\color{ink}\hrule height 0.9pt}\nopagebreak\vspace{\cvsectionafter}%
+\newcommand{\cvsection}[3][5]{%
+  \par\needspace{#1\baselineskip}\vspace{6pt}%
+  {\bfseries\fontsize{11}{13}\selectfont #3}\par\nobreak
+  \vspace{3pt}{\color{muted}\hrule height 0.4pt}\nobreak\vspace{6pt}%
 }
-\newcommand{\dates}[1]{\hfill{\ttfamily{}\small{}\color{muted}#1}}
-\newcommand{\cvbody}[1]{{\small{}\raggedright #1\par}}
-\newcommand{\extarrow}{\,{\scriptsize\faExternalLink}}
+\newcommand{\cvheading}[2]{%
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}X@{\hspace{10pt}}r@{}}%
+  \textbf{#1} & {\small\color{muted}#2}\\
+  \end{tabularx}\par\nobreak
+}
+\newcommand{\dates}[1]{\hfill{\small\color{muted}#1}}
+\newcommand{\cvbody}[1]{{\small\raggedright #1\par}}
+\newcommand{\extarrow}{}
+\newenvironment{cvpoints}{\begin{itemize}[leftmargin=12pt,itemsep=2pt,topsep=2pt,parsep=0pt]\small}{\end{itemize}}
 \begin{document}
 \thispagestyle{firstpage}
-\hrule height 2.5pt\vspace{6pt}
-{\ttfamily{}\fontsize{30}{33}\selectfont{}\bfseries{} \VAR{cv.basics.name | latex}}\par\vspace{3pt}
-{\ttfamily{}\fontsize{11}{13}\selectfont{}\VAR{cv.basics.role | latex}}\par\vspace{6pt}
+
+{\fontsize{24}{28}\selectfont{}\bfseries{} \VAR{cv.basics.name | latex}}\par\vspace{3pt}
+{\fontsize{11}{13}\selectfont{}\VAR{cv.basics.role | latex}}\par\vspace{6pt}
 {\small{}
 \faMapMarker\enspace{}\VAR{cv.basics.locationLong | latex}\quad{}
 \faEnvelope\enspace{}\href{mailto:\VAR{cv.basics.email}}{\VAR{cv.basics.email | latex}}\quad{}
@@ -66,7 +66,7 @@
 \cvsection{\faGraduationCap}{\VAR{labels.education | upper | latex}}
 \BLOCK{ for edu in cv.education }
 \begin{minipage}{\linewidth}\raggedright
-\textbf{\VAR{edu.degree | latex}}\dates{\VAR{edu.period | latex}}\par
+\cvheading{\VAR{edu.degree | latex}}{\VAR{edu.period | latex}}
 {\small{}\VAR{edu.school | latex}}\BLOCK{ if edu.gpa }\dates{\VAR{labels.gpa | latex}: \VAR{edu.gpa | latex}}\BLOCK{ endif }\par
 \BLOCK{ if edu.note }{\small{}\itshape{}\color{muted}\VAR{edu.note | latex}}\par\BLOCK{ endif }
 \end{minipage}\par\vspace{5pt}
@@ -76,44 +76,61 @@
 \cvsection{\faTrophy}{\VAR{labels.awards | upper | latex}}
 \BLOCK{ for award in cv.awards }
 \begin{minipage}{\linewidth}\raggedright
-\textbf{\small{}\BLOCK{ if award.url }\href{\VAR{award.url}}{\VAR{award.title | latex}\extarrow}\BLOCK{ else }\VAR{award.title | latex}\BLOCK{ endif }}\dates{\VAR{award.period | latex}}\par\vspace{2pt}
+\cvheading{\small{}\BLOCK{ if award.url }\href{\VAR{award.url}}{\VAR{award.title | latex}}\BLOCK{ else }\VAR{award.title | latex}\BLOCK{ endif }}{\VAR{award.period | latex}}\vspace{2pt}
 \cvbody{\VAR{award.summary | latex}}
 \end{minipage}\par\vspace{3pt}
 \BLOCK{ endfor }
-\BLOCK{ for category in ['research', 'professional'] }
+\BLOCK{ for category in ['research'] }
 \cvsection{\BLOCK{ if category == 'research' }\faFlask\BLOCK{ else }\faBriefcase\BLOCK{ endif }}{\VAR{(labels.research if category == 'research' else labels.experience) | upper | latex}}
 \BLOCK{ for item in cv.experience if item.category == category }
 \begin{minipage}{\linewidth}\raggedright
-\textbf{\VAR{item.role | latex}}\dates{\VAR{item.period | latex}}\par
+\cvheading{\VAR{item.role | latex}}{\VAR{item.period | latex}}
 {\small{}\itshape{}\BLOCK{ if item.link }\href{\VAR{item.link}}{\VAR{item.company | latex}\extarrow}\BLOCK{ else }\VAR{item.company | latex}\BLOCK{ endif }}\dates{\VAR{item.location | latex}}\par\vspace{3pt}
-\cvbody{\VAR{item.description | latex_md}}
+\begin{cvpoints}
+\BLOCK{ for paragraph in item.description.split("\n\n") }
+\item \VAR{paragraph | latex_md}
+\BLOCK{ endfor }
+\end{cvpoints}
 \end{minipage}\par\vspace{6pt}
 \BLOCK{ endfor }
 \BLOCK{ endfor }
 
-\newpage
-\setlength{\cvsectionbefore}{2pt}
-\setlength{\cvsectionafter}{2pt}
 \BLOCK{ for section in ['publications', 'projects'] }
+\BLOCK{ if section == 'projects' }\newpage\BLOCK{ endif }
 \cvsection{\BLOCK{ if section == 'publications' }\faBook\BLOCK{ else }\faCode\BLOCK{ endif }}{\VAR{labels[section] | upper | latex}}
 \BLOCK{ for proj in cv[section] }
 \begin{minipage}{\linewidth}\raggedright
-{\ttfamily{}\bfseries{}\VAR{proj.title | latex}}\dates{\VAR{proj.period | latex}}\par
+\cvheading{\VAR{proj.title | latex}}{\VAR{proj.period | latex}}
 {\small{}\itshape{}\color{muted}\VAR{proj.subtitle | latex}}\hfill{\small{}%
 \BLOCK{ for link in proj.links }
 \href{\VAR{link.url}}{\BLOCK{ if 'github.com' in link.url }\faGithub\BLOCK{ elif 'youtu' in link.url }\faYoutubePlay\BLOCK{ else }\faExternalLink\BLOCK{ endif }\enspace{}\VAR{link.label | latex}}\BLOCK{ if not loop.last }\quad{}\BLOCK{ endif }
 \BLOCK{ endfor }%
 }\par\vspace{2pt}
-{\fontsize{9}{10}\selectfont{}\raggedright
+\begin{cvpoints}
 \BLOCK{ for paragraph in proj.description.split("\n\n") }
-\VAR{paragraph | latex_md}\par
-\BLOCK{ if not loop.last }\vspace{4pt}\BLOCK{ endif }
+\item \VAR{paragraph | latex_md}
 \BLOCK{ endfor }
-}
-\end{minipage}\par\vspace{2pt}
+\end{cvpoints}
+\end{minipage}\par\vspace{5pt}
 \BLOCK{ endfor }
 
 \BLOCK{ endfor }
+
+\BLOCK{ for category in ['professional'] }
+\cvsection{\BLOCK{ if category == 'research' }\faFlask\BLOCK{ else }\faBriefcase\BLOCK{ endif }}{\VAR{(labels.research if category == 'research' else labels.experience) | upper | latex}}
+\BLOCK{ for item in cv.experience if item.category == category }
+\begin{minipage}{\linewidth}\raggedright
+\cvheading{\VAR{item.role | latex}}{\VAR{item.period | latex}}
+{\small{}\itshape{}\BLOCK{ if item.link }\href{\VAR{item.link}}{\VAR{item.company | latex}\extarrow}\BLOCK{ else }\VAR{item.company | latex}\BLOCK{ endif }}\dates{\VAR{item.location | latex}}\par\vspace{3pt}
+\begin{cvpoints}
+\BLOCK{ for paragraph in item.description.split("\n\n") }
+\item \VAR{paragraph | latex_md}
+\BLOCK{ endfor }
+\end{cvpoints}
+\end{minipage}\par\vspace{6pt}
+\BLOCK{ endfor }
+\BLOCK{ endfor }
+
 
 \cvsection{\faCogs}{\VAR{labels.skills | upper | latex}}
 \BLOCK{ for category, items in cv.skills.items() }
@@ -123,21 +140,17 @@
 \cvsection{\faCertificate}{\VAR{labels.courses | upper | latex} / \VAR{labels.languages | upper | latex}}
 \BLOCK{ for course in cv.courses }
 \textbf{\small{}\href{\VAR{course.url}}{\VAR{course.title | latex}\extarrow}}\dates{\VAR{course.issuer | latex}}\par\vspace{2pt}
-\cvbody{\VAR{course.summary | latex}}\vspace{5pt}
+\vspace{3pt}
 \BLOCK{ endfor }
 
 \vspace{2pt}
 \faLanguage\enspace{}
 {\small{}\BLOCK{ for lang in cv.languages }\textbf{\VAR{lang.name | latex}}\enspace{}\VAR{lang.level | latex}\BLOCK{ if not loop.last }\quad{}\BLOCK{ endif }\BLOCK{ endfor }}\par
 
-\cvsection[4]{\faHeartO}{\VAR{labels.interests | upper | latex}\hfill{\normalfont{}\small{}\href{\VAR{cv.interestsLink.url}}{\VAR{cv.interestsLink.label | latex}\extarrow}}}
+\vspace{5pt}\textbf{\small{}\VAR{labels.interests | latex}:}\enspace{}
+{\small
 \BLOCK{ for item in cv.interests }
-\noindent\begin{minipage}[t]{0.235\linewidth}\raggedright
-{\ttfamily{}\bfseries{}\small{}\BLOCK{ if item.link }\href{\VAR{item.link.url}}{\VAR{item.title | latex}\extarrow}\BLOCK{ else }\VAR{item.title | latex}\BLOCK{ endif }}\par\vspace{4pt}
-\cvbody{\VAR{item.desc | replace(' - ', ' / ') | latex}}
-\end{minipage}%
-\BLOCK{ if not loop.last }\hfill%
-\BLOCK{ else }\par
-\BLOCK{ endif }
+\VAR{item.title | latex}\BLOCK{ if not loop.last }\enspace{} / \enspace{}\BLOCK{ endif }
 \BLOCK{ endfor }
+}\par
 \end{document}

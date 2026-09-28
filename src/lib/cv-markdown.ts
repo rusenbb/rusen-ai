@@ -7,7 +7,8 @@ import type { CVData, CVLabels, CVLocale } from "./cv";
  *
  * The JSON files remain the single source of truth: this is a pure projection.
  * Academic ordering matches the web CV; PDF pagination groups experience
- * on page one and selected projects and supporting information on page two.
+ * and research contributions on page one, with projects and professional
+ * experience followed by supporting information on subsequent pages.
  */
 
 /** Section headings missing from CVLabels. Strings mirror the localized
