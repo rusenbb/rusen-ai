@@ -5,8 +5,8 @@
 \setsansfont{TeX Gyre Heros}
 \setmonofont{Latin Modern Mono Light}[Scale=MatchLowercase]
 \renewcommand{\familydefault}{\sfdefault}
-\usepackage[top=0.6in,bottom=0.6in,left=0.7in,right=0.7in,headheight=14pt,headsep=12pt]{geometry}
-\usepackage{xcolor,hyperref,needspace,fancyhdr,lastpage,fontawesome}
+\usepackage[top=0.75in,bottom=0.75in,left=0.75in,right=0.75in,headheight=14pt,headsep=12pt]{geometry}
+\usepackage{xcolor,hyperref,needspace,fancyhdr,lastpage,fontawesome,tabularx,enumitem}
 \definecolor{ink}{HTML}{171717}
 \definecolor{muted}{HTML}{555555}
 \definecolor{paper}{HTML}{F3F3F1}
@@ -18,148 +18,160 @@
 \color{ink}
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{\ttfamily{}\small{}Ruşen Birben\enspace{} / CV}
-\fancyfoot[R]{\ttfamily{}\footnotesize{}\thepage\ / \pageref*{LastPage}}
+\fancyhead[L]{\small{}Ruşen Birben\enspace{} / CV}
+\fancyfoot[R]{\footnotesize{}\thepage\ / \pageref*{LastPage}}
 \renewcommand{\headrulewidth}{0pt}
 \fancypagestyle{firstpage}{\fancyhead{}}
-\newcounter{cvsec}
-\newlength{\cvsectionbefore}
-\newlength{\cvsectionafter}
-\setlength{\cvsectionbefore}{6pt}
-\setlength{\cvsectionafter}{7pt}
-\newcommand{\cvsection}[3][6]{%
-  \par\needspace{#1\baselineskip}\vspace{\cvsectionbefore}\refstepcounter{cvsec}%
-  {\setlength{\fboxsep}{3pt}\colorbox{ink}{\color{white}\ttfamily{}\bfseries{}\small{}\ifnum\value{cvsec}<10 0\fi\thecvsec}}%
-  \hspace{7pt}{\large{} #2}\hspace{7pt}{\ttfamily{}\bfseries{}\fontsize{12}{14}\selectfont{} #3}%
-  \par\vspace{4pt}{\color{ink}\hrule height 0.9pt}\nopagebreak\vspace{\cvsectionafter}%
+\newcommand{\cvsection}[3][5]{%
+  \par\needspace{#1\baselineskip}\vspace{6pt}%
+  {\bfseries\fontsize{11}{13}\selectfont #3}\par\nobreak
+  \vspace{3pt}{\color{muted}\hrule height 0.4pt}\nobreak\vspace{6pt}%
 }
-\newcommand{\dates}[1]{\hfill{\ttfamily{}\small{}\color{muted}#1}}
-\newcommand{\cvbody}[1]{{\small{}\raggedright #1\par}}
-\newcommand{\extarrow}{\,{\scriptsize\faExternalLink}}
+\newcommand{\cvheading}[2]{%
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}X@{\hspace{10pt}}r@{}}%
+  \textbf{#1} & {\small\color{muted}#2}\\
+  \end{tabularx}\par\nobreak
+}
+\newcommand{\dates}[1]{\hfill{\small\color{muted}#1}}
+\newcommand{\cvbody}[1]{{\small\raggedright #1\par}}
+\newcommand{\extarrow}{}
+\newenvironment{cvpoints}{\begin{itemize}[leftmargin=12pt,itemsep=2pt,topsep=2pt,parsep=0pt]\small}{\end{itemize}}
 \begin{document}
 \thispagestyle{firstpage}
-\hrule height 2.5pt\vspace{6pt}
-{\ttfamily{}\fontsize{30}{33}\selectfont{}\bfseries{} Ruşen Birben}\par\vspace{3pt}
-{\ttfamily{}\fontsize{11}{13}\selectfont{}AI Researcher \& Engineer}\par\vspace{6pt}
+
+{\fontsize{24}{28}\selectfont{}\bfseries{} Ruşen Birben}\par\vspace{3pt}
+{\fontsize{11}{13}\selectfont{}AI Researcher \& Engineer}\par\vspace{6pt}
 {\small{}
 \faMapMarker\enspace{}Ankara, Turkey\quad{}
-\faEnvelope\enspace{}\href{mailto:contact@rusen.ai}{contact@rusen.ai}\quad{}
+\faEnvelope\enspace{}\href{mailto:birben20@itu.edu.tr}{birben20@itu.edu.tr}\quad{}
 \faGlobe\enspace{}\href{https://rusen.ai}{rusen.ai}\par\vspace{4pt}
 \faGithub\enspace{}\href{https://github.com/rusenbb}{github.com/rusenbb}\quad{}
 \faLinkedin\enspace{}\href{https://linkedin.com/in/rusenbirben}{linkedin.com/in/rusenbirben}\quad{}
 \faTrophy\enspace{}\href{https://www.kaggle.com/rusenbirben}{kaggle.com/rusenbirben}
 }\par\vspace{6pt}
-\cvbody{AI and Data Engineering graduate from Istanbul Technical University and independent researcher with METU’s Applied NLP Group. Research interests center on LLM robustness and reliability, with experience in Turkish NLP, machine unlearning, and LLM applications for finance.}
+\cvbody{AI and Data Engineering graduate from Istanbul Technical University and independent researcher with METU’s Applied NLP Group. Research interests center on LLM reliability and interpretability, with experience in Turkish NLP, machine unlearning, and LLM applications for finance.}
 
 \cvsection{\faGraduationCap}{EDUCATION}
 \begin{minipage}{\linewidth}\raggedright
-\textbf{B.Sc. AI and Data Engineering}\dates{2022 - 2025}\par
+\cvheading{B.Sc. AI and Data Engineering}{2022 - 2025}
 {\small{}Istanbul Technical University}\dates{GPA: 3.61 / 4.00}\par
 \end{minipage}\par\vspace{5pt}
 \begin{minipage}{\linewidth}\raggedright
-\textbf{Undergraduate studies in Electronics \& Communication Engineering}\dates{2020 - 2022}\par
+\cvheading{Undergraduate studies in Electronics \& Communication Engineering}{2020 - 2022}
 {\small{}Istanbul Technical University}\par
 {\small{}\itshape{}\color{muted}Transferred to AI \& Data Engineering}\par\end{minipage}\par\vspace{5pt}
 
 
 \cvsection{\faTrophy}{SCHOLARSHIPS \& AWARDS}
 \begin{minipage}{\linewidth}\raggedright
-\textbf{\small{}\href{https://www.kaggle.com/certification/competitions/rusenbirben/pokemon-tcg-ai-battle}{Kaggle Bronze Medal · The Pokémon Company PTCG AI Battle Challenge\extarrow}}\dates{2026}\par\vspace{2pt}
-\cvbody{Ranked 677th of 6,807 teams (top 10\%) in Kaggle’s simulation competition, developing and evaluating partially observable game-playing agents with replay-based behavioral cloning, belief-aware Monte Carlo planning, and self-play.}
+\cvheading{\small{}1416 YLSY Scholarship · M.Sc. \& Ph.D.}{2026}\vspace{2pt}
+\cvbody{Awarded government funding for overseas master’s study followed by doctoral study, covering tuition fees, a monthly living stipend, health insurance, travel, language-exam fees, and study supplies. Following completion of the funded studies, will return to Türkiye as an assistant professor.}
 \end{minipage}\par\vspace{3pt}
 \begin{minipage}{\linewidth}\raggedright
-\textbf{\small{}1416 YLSY Scholarship · M.Sc. \& Ph.D.}\dates{2026}\par\vspace{2pt}
-\cvbody{Selected for Türkiye’s competitive government scholarship for overseas M.Sc. and Ph.D. study. The 1416 program funds tuition, monthly living support, health and travel costs, language-exam fees, and study supplies, followed by a research-assistant appointment in Türkiye after graduation.}
+\cvheading{\small{}\href{https://www.kaggle.com/certification/competitions/rusenbirben/pokemon-tcg-ai-battle}{Kaggle Bronze Medal · The Pokémon Company PTCG AI Battle Challenge}}{2026}\vspace{2pt}
+\cvbody{Ranked 677th of 6,807 teams (top 10\%) in Kaggle’s simulation competition, developing and evaluating partially observable game-playing agents with replay-based behavioral cloning, belief-aware Monte Carlo planning, and self-play.}
 \end{minipage}\par\vspace{3pt}
 \cvsection{\faFlask}{RESEARCH EXPERIENCE}
 \begin{minipage}{\linewidth}\raggedright
-\textbf{Independent Researcher}\dates{03/2026 - Present}\par
+\cvheading{Independent Researcher}{03/2026 - Present}
 {\small{}\itshape{}\href{https://nlp.ceng.metu.edu.tr}{METU Applied NLP Group\extarrow}}\dates{Ankara, TR}\par\vspace{3pt}
-\cvbody{Contribute to data creation and evaluation methodology for the SIGTURK 2027 benchmark on Turkic languages and cultural understanding with Çağrı Toraman. Support LlamaTurk2 through training-data collection and pretraining experiments. Also lead \href{https://www.youtube.com/@metunlpconnect}{METU NLP Connect}, producing expert interviews.}
+\begin{cvpoints}
+\item Contribute to data creation and evaluation methodology for the SIGTURK 2027 benchmark on Turkic languages and cultural understanding with Çağrı Toraman.
+\item Support LlamaTurk2 through training-data collection and pretraining experiments.
+\item Lead \href{https://www.youtube.com/@metunlpconnect}{METU NLP Connect}, producing expert interviews.
+\end{cvpoints}
 \end{minipage}\par\vspace{6pt}
 \begin{minipage}{\linewidth}\raggedright
-\textbf{AIOps Research Intern}\dates{08/2024 - 09/2024}\par
+\cvheading{AIOps Research Intern}{08/2024 - 09/2024}
 {\small{}\itshape{}\href{https://havelsan.com/tr}{Havelsan\extarrow}}\dates{Istanbul, TR}\par\vspace{3pt}
-\cvbody{Investigated software-log analysis for predictive maintenance and developed prototypes using HDFS logs.}
+\begin{cvpoints}
+\item Investigated software-log analysis for predictive maintenance; developed prototypes using HDFS logs.
+\end{cvpoints}
 \end{minipage}\par\vspace{6pt}
 \begin{minipage}{\linewidth}\raggedright
-\textbf{NLP Research Intern}\dates{07/2024 - 08/2024}\par
+\cvheading{NLP Research Intern}{07/2024 - 08/2024}
 {\small{}\itshape{}\href{https://nlp.itu.edu.tr/}{ITU NLP Lab\extarrow}}\dates{Istanbul, TR}\par\vspace{3pt}
-\cvbody{Researched LLM applications in finance, including sentiment analysis, tool use, reasoning, forecasting, and retrieval-augmented generation. Conducted part of the experiments that contributed to Kaira, my undergraduate capstone on financial reasoning with LLMs.}
-\end{minipage}\par\vspace{6pt}
-\cvsection{\faBriefcase}{PROFESSIONAL EXPERIENCE}
-\begin{minipage}{\linewidth}\raggedright
-\textbf{Co-Founder \& Technical Lead}\dates{08/2025 - 04/2026}\par
-{\small{}\itshape{}\href{https://github.com/fiction-ai-studios}{Fiction Studios\extarrow}}\dates{Ankara, TR}\par\vspace{3pt}
-\cvbody{Co-founded Fiction Studios with a friend at Bilkent Cyberpark and served as technical lead. Directed technical development and coordinated three additional contributors supporting the two founders. Built a multilingual LLM-powered guide for museums and tourists, working on the conversational visitor experience alongside customer and investor discussions.}
-\end{minipage}\par\vspace{6pt}
-\begin{minipage}{\linewidth}\raggedright
-\textbf{Junior AI Engineer}\dates{03/2025 - 07/2025}\par
-{\small{}\itshape{}\href{https://cyberquote.com/tk/}{CyberQuote\extarrow}}\dates{Istanbul, TR}\par\vspace{3pt}
-\cvbody{Joined CyberQuote, a Phillip Capital subsidiary, as the second member of its newly formed AI team. Developed news-sentiment pipelines and internal LLM tools for financial professionals, alongside web integrations and a mobile voice assistant. Worked with the practical challenge of retrieving current financial context from fragmented sources and PDF reports, where missing information could lead to unreliable answers.}
+\begin{cvpoints}
+\item Researched financial LLM applications involving sentiment analysis, tool use, reasoning, forecasting, and retrieval-augmented generation. Contributed experiments to the Kaira undergraduate capstone.
+\end{cvpoints}
 \end{minipage}\par\vspace{6pt}
 
-\newpage
-\setlength{\cvsectionbefore}{2pt}
-\setlength{\cvsectionafter}{2pt}
 \cvsection{\faBook}{PUBLICATIONS \& RESEARCH CONTRIBUTIONS}
 \begin{minipage}{\linewidth}\raggedright
-{\ttfamily{}\bfseries{}Turkish Cultural Knowledge Dataset - MRL 2026 Shared Task}\dates{2026}\par
-{\small{}\itshape{}\color{muted}Accepted contribution · Joint benchmark paper in preparation}\hfill{\small{}%
+\cvheading{Turkish Cultural Knowledge Dataset - MRL 2026}{2026}
+{\small{}\itshape{}\color{muted}Accepted dataset contribution; joint benchmark paper in preparation}\hfill{\small{}%
 \href{https://mrlbenchmarks.github.io/}{\faExternalLink\enspace{}Shared Task}%
 }\par\vspace{2pt}
-{\fontsize{9}{10}\selectfont{}\raggedright
-Led the source-grounded agent pipeline and data preparation for an accepted Turkish cultural knowledge dataset spanning 15 domains. Screened 1,200 candidate question-answer pairs, selecting 500 for sociological review by Büşra Tufan and producing a final submission of 300 pairs. Contributed to English translation review, with research guidance from Çağrı Toraman.\par
-\vspace{4pt}My accepted Turkish dataset contribution will form part of the joint multilingual and multimodal benchmark, whose paper I will co-author. The joint dataset and preprint are planned for release in October 2026, with shared task results scheduled for presentation at MRL @ EMNLP 2026. The organizers plan to submit the paper to a high-impact AI venue in 2027.\par
-}
-\end{minipage}\par\vspace{2pt}
+\begin{cvpoints}
+\item Led the source-grounded agent pipeline and data preparation for a Turkish cultural knowledge dataset spanning 15 domains.
+\item Screened 1,200 candidate question-answer pairs; selected 500 for sociological review by Büşra Tufan and prepared the final 300-pair submission.
+\item Contributed to English translation review under the research guidance of Çağrı Toraman.
+\end{cvpoints}
+\end{minipage}\par\vspace{5pt}
 
-\cvsection{\faCode}{SELECTED PROJECTS}
+\newpage\cvsection{\faCode}{SELECTED PROJECTS}
 \begin{minipage}{\linewidth}\raggedright
-{\ttfamily{}\bfseries{}Kaira}\dates{2025}\par
+\cvheading{Kaira}{2025}
 {\small{}\itshape{}\color{muted}Undergraduate Capstone: Financial Reasoning LLM}\hfill{\small{}%
 %
 }\par\vspace{2pt}
-{\fontsize{9}{10}\selectfont{}\raggedright
-Explored financial reasoning in Qwen-based LLMs through GRPO fine-tuning with Unsloth and LoRA. Ran FinQA and GSM8K experiments to examine reward design and reasoning behavior, and developed an Ollama-based chat application. Undergraduate capstone at Istanbul Technical University.\par
-}
-\end{minipage}\par\vspace{2pt}
+\begin{cvpoints}
+\item Fine-tuned Qwen-based LLMs with GRPO, Unsloth, and LoRA; ran FinQA and GSM8K experiments on reward design and financial reasoning. Developed an Ollama-based chat application.
+\end{cvpoints}
+\end{minipage}\par\vspace{5pt}
 \begin{minipage}{\linewidth}\raggedright
-{\ttfamily{}\bfseries{}AIZheimer}\dates{2024}\par
-{\small{}\itshape{}\color{muted}Machine Unlearning in Stable Diffusion}\hfill{\small{}%
-\href{https://github.com/rusenbb/ai-zheimer}{\faGithub\enspace{}Code}%
-}\par\vspace{2pt}
-{\fontsize{9}{10}\selectfont{}\raggedright
-Building on Forget-Me-Not, implemented and adapted cross-attention-based unlearning for Stable Diffusion 2.1. Developed attention controller/processor code and explored attention re-steering, distraction, and random-stimulus loss objectives. Ran qualitative experiments and prepared visualizations to examine the trade-off between removing a target concept and retaining unrelated generation capabilities.\par
-}
-\end{minipage}\par\vspace{2pt}
-\begin{minipage}{\linewidth}\raggedright
-{\ttfamily{}\bfseries{}Biting The Bytes}\dates{2024}\par
-{\small{}\itshape{}\color{muted}Turkish Diacritic Restoration}\hfill{\small{}%
-\href{https://github.com/rusen-archive/Biting-The-Bytes}{\faGithub\enspace{}Code}\quad{}\href{https://huggingface.co/spaces/rusen/diacritize-tr}{\faExternalLink\enspace{}Demo}%
-}\par\vspace{2pt}
-{\fontsize{9}{10}\selectfont{}\raggedright
-Fine-tuned ByT5-small with PEFT/LoRA for Turkish diacritic restoration, treating the task as byte-level token classification. Took primary responsibility for model training and hyperparameter tuning; shared debugging and Hugging Face Spaces deployment with a teammate. The project explored restoring characters such as ş, ç, ı, ğ, ü, and ö in noisy or ASCII-only Turkish text.\par
-}
-\end{minipage}\par\vspace{2pt}
-\begin{minipage}{\linewidth}\raggedright
-{\ttfamily{}\bfseries{}To-AI-or-Not-to-AI}\dates{2023}\par
-{\small{}\itshape{}\color{muted}GPT Detector}\hfill{\small{}%
-\href{https://github.com/rusen-archive/To-AI-or-Not-to-AI}{\faGithub\enspace{}Code}\quad{}\href{https://huggingface.co/spaces/rusen/gpt_detector}{\faExternalLink\enspace{}Demo}%
-}\par\vspace{2pt}
-{\fontsize{9}{10}\selectfont{}\raggedright
-Fine-tuned three RoBERTa-based detectors and combined their predictions through majority voting. Shared data creation and preprocessing for a 26,270-example dataset, and deployed the application on Hugging Face Spaces. The ensemble achieved 94.21\% accuracy on an in-domain random test split; this evaluation did not establish performance across languages or substantially different domains.\par
-}
-\end{minipage}\par\vspace{2pt}
-\begin{minipage}{\linewidth}\raggedright
-{\ttfamily{}\bfseries{}Tobor}\dates{2024 - 2025}\par
+\cvheading{Tobor}{2024 - 2025}
 {\small{}\itshape{}\color{muted}Autonomous Warehouse Robot}\hfill{\small{}%
 \href{https://github.com/rusen-archive/Amazon-Warehouse-Robot}{\faGithub\enspace{}Code}\quad{}\href{https://youtu.be/h-Jxs_y9kNA}{\faYoutubePlay\enspace{}Video}%
 }\par\vspace{2pt}
-{\fontsize{9}{10}\selectfont{}\raggedright
-Contributed to a team-built autonomous warehouse robot combining navigation and YOLO-based perception in ROS2. Implemented the box pickup and drop-off mechanism, shared data annotation with the team, and supported work on other algorithms.\par
-}
-\end{minipage}\par\vspace{2pt}
+\begin{cvpoints}
+\item Implemented the box pickup/drop-off mechanism in a team-built ROS2 warehouse robot with navigation and YOLO perception; shared data annotation and supported other algorithms.
+\end{cvpoints}
+\end{minipage}\par\vspace{5pt}
+\begin{minipage}{\linewidth}\raggedright
+\cvheading{AIZheimer}{2024}
+{\small{}\itshape{}\color{muted}Machine Unlearning in Stable Diffusion}\hfill{\small{}%
+\href{https://github.com/rusenbb/ai-zheimer}{\faGithub\enspace{}Code}%
+}\par\vspace{2pt}
+\begin{cvpoints}
+\item Adapted Forget-Me-Not-based unlearning for Stable Diffusion 2.1. Implemented attention controllers and explored loss objectives; qualitatively assessed concept removal and retention of unrelated generation capabilities.
+\end{cvpoints}
+\end{minipage}\par\vspace{5pt}
+\begin{minipage}{\linewidth}\raggedright
+\cvheading{Biting The Bytes}{2024}
+{\small{}\itshape{}\color{muted}Turkish Diacritic Restoration}\hfill{\small{}%
+\href{https://github.com/rusen-archive/Biting-The-Bytes}{\faGithub\enspace{}Code}\quad{}\href{https://huggingface.co/spaces/rusen/diacritize-tr}{\faExternalLink\enspace{}Demo}%
+}\par\vspace{2pt}
+\begin{cvpoints}
+\item Led ByT5-small training and hyperparameter tuning with PEFT/LoRA for byte-level Turkish diacritic restoration. Shared debugging and Hugging Face Spaces deployment with a teammate.
+\end{cvpoints}
+\end{minipage}\par\vspace{5pt}
+\begin{minipage}{\linewidth}\raggedright
+\cvheading{To-AI-or-Not-to-AI}{2023}
+{\small{}\itshape{}\color{muted}GPT Detector}\hfill{\small{}%
+\href{https://github.com/rusen-archive/To-AI-or-Not-to-AI}{\faGithub\enspace{}Code}\quad{}\href{https://huggingface.co/spaces/rusen/gpt_detector}{\faExternalLink\enspace{}Demo}%
+}\par\vspace{2pt}
+\begin{cvpoints}
+\item Combined three fine-tuned RoBERTa detectors by majority vote. Shared preparation of 26,270 examples; achieved 94.21\% accuracy on an in-domain random split, without establishing out-of-domain generalization.
+\end{cvpoints}
+\end{minipage}\par\vspace{5pt}
+
+
+\cvsection{\faBriefcase}{PROFESSIONAL EXPERIENCE}
+\begin{minipage}{\linewidth}\raggedright
+\cvheading{Co-Founder \& Technical Lead}{08/2025 - 04/2026}
+{\small{}\itshape{}\href{https://github.com/fiction-ai-studios}{Fiction Studios\extarrow}}\dates{Ankara, TR}\par\vspace{3pt}
+\begin{cvpoints}
+\item Co-founded Fiction Studios at Bilkent Cyberpark; led technical development and coordinated three additional contributors. Built a multilingual LLM-powered museum and tourism guide, alongside customer and investor discussions.
+\end{cvpoints}
+\end{minipage}\par\vspace{6pt}
+\begin{minipage}{\linewidth}\raggedright
+\cvheading{Junior AI Engineer}{03/2025 - 07/2025}
+{\small{}\itshape{}\href{https://cyberquote.com/tk/}{CyberQuote\extarrow}}\dates{Istanbul, TR}\par\vspace{3pt}
+\begin{cvpoints}
+\item Developed news-sentiment pipelines, internal financial LLM tools, web integrations, and a mobile voice assistant at a Phillip Capital subsidiary. Worked on retrieving current context from fragmented sources and PDF reports.
+\end{cvpoints}
+\end{minipage}\par\vspace{6pt}
 
 
 \cvsection{\faCogs}{TECHNICAL SKILLS}
@@ -169,33 +181,15 @@ Contributed to a team-built autonomous warehouse robot combining navigation and 
 
 \cvsection{\faCertificate}{COURSES / LANGUAGES}
 \textbf{\small{}\href{https://coursera.org/share/9c59e9758d378fb8a8b4ab7074dd71ed}{Deep Learning Specialization\extarrow}}\dates{DeepLearning.AI · Coursera}\par\vspace{2pt}
-\cvbody{Neural networks, CNNs, sequence models, optimization, and structuring machine learning projects.}\vspace{5pt}
+\vspace{3pt}
 \textbf{\small{}\href{https://coursera.org/share/f8ab2981ab0bbdc3fec17c6e88804ff8}{AWS Cloud Technical Essentials\extarrow}}\dates{AWS · Coursera}\par\vspace{2pt}
-\cvbody{Cloud architecture and AWS services including EC2, Lambda, S3, RDS, and DynamoDB.}\vspace{5pt}
+\vspace{3pt}
 
 \vspace{2pt}
 \faLanguage\enspace{}
 {\small{}\textbf{Turkish}\enspace{}Native\quad{}\textbf{English}\enspace{}TOEFL iBT 109/120 (November 8, 2025)}\par
 
-\cvsection[4]{\faHeartO}{INTERESTS\hfill{\normalfont{}\small{}\href{https://rusenbirben.com}{rusenbirben.com\extarrow}}}
-\noindent\begin{minipage}[t]{0.235\linewidth}\raggedright
-{\ttfamily{}\bfseries{}\small{}Coffee}\par\vspace{4pt}
-\cvbody{V60 / Aeropress / Moka Pot}
-\end{minipage}%
-\hfill%
-\noindent\begin{minipage}[t]{0.235\linewidth}\raggedright
-{\ttfamily{}\bfseries{}\small{}Books}\par\vspace{4pt}
-\cvbody{Philosophy / AI/CS / Finance}
-\end{minipage}%
-\hfill%
-\noindent\begin{minipage}[t]{0.235\linewidth}\raggedright
-{\ttfamily{}\bfseries{}\small{}Photography}\par\vspace{4pt}
-\cvbody{Street Photography / Double Exposure / Bird Photography}
-\end{minipage}%
-\hfill%
-\noindent\begin{minipage}[t]{0.235\linewidth}\raggedright
-{\ttfamily{}\bfseries{}\small{}Anime \& Manga}\par\vspace{4pt}
-\cvbody{Watcher / Reader / Collector}
-\end{minipage}%
-\par
+\vspace{5pt}\textbf{\small{}Interests:}\enspace{}
+{\small
+Coffee\enspace{} / \enspace{}Books\enspace{} / \enspace{}Photography\enspace{} / \enspace{}Anime \& Manga}\par
 \end{document}

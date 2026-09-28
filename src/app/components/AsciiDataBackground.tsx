@@ -185,8 +185,7 @@ export default function AsciiDataBackground({
     };
 
     const layout = () => {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
+      const { width: w, height: h } = canvas.getBoundingClientRect();
       dpr = window.devicePixelRatio || 1;
       canvas.width = Math.floor(w * dpr);
       canvas.height = Math.floor(h * dpr);
@@ -257,6 +256,7 @@ export default function AsciiDataBackground({
       rs.length = writeIdx;
 
       const isDark = currentTheme === "dark";
+      const mobile = w < 640;
       const baseAlpha = isDark ? 0.14 : 0.22;
       const pulseAlpha = isDark ? 0.55 : 0.65;
       const ambientFactor = isDark ? 0.18 : 0.3;
@@ -330,6 +330,8 @@ export default function AsciiDataBackground({
             const ambientPart = density - rippleBoost;
             visualAlpha = baseAlpha + ambientPart * ambientFactor + rippleBoost * pulseAlpha;
           }
+          // Keep mobile body text readable without dimming letters or interactions.
+          if (mobile && !isLetter && rippleBoost === 0) visualAlpha *= 0.3;
           let bucket = Math.floor(visualAlpha * NUM_ALPHA_BUCKETS);
           if (bucket < 0) bucket = 0;
           else if (bucket >= NUM_ALPHA_BUCKETS) bucket = NUM_ALPHA_BUCKETS - 1;
@@ -400,6 +402,8 @@ export default function AsciiDataBackground({
     };
 
     wakeRef.current = wake;
+    const resizeObserver = new ResizeObserver(onResize);
+    resizeObserver.observe(canvas);
     window.addEventListener("resize", onResize);
     window.addEventListener(THEME_EVENT, wake);
     document.addEventListener("visibilitychange", onVisibilityChange);
@@ -410,6 +414,7 @@ export default function AsciiDataBackground({
       cancelScheduledFrame();
       wakeRef.current = null;
       motionAllowedRef.current = true;
+      resizeObserver.disconnect();
       window.removeEventListener("resize", onResize);
       window.removeEventListener(THEME_EVENT, wake);
       document.removeEventListener("visibilitychange", onVisibilityChange);

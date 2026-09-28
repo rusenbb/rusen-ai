@@ -22,6 +22,8 @@ describe("AsciiDataBackground lifecycle", () => {
   let clearRect: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
+    vi.stubGlobal("ResizeObserver", class { observe = vi.fn(); disconnect = vi.fn(); });
+    vi.spyOn(HTMLCanvasElement.prototype, "getBoundingClientRect").mockReturnValue({ width: 375, height: 812 } as DOMRect);
     callbacks.clear();
     nextFrameId = 1;
     vi.stubGlobal("requestAnimationFrame", vi.fn((callback: FrameRequestCallback) => {

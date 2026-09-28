@@ -4,7 +4,7 @@
     "role": "AI研究者・エンジニア",
     "location": "ANKARA, TR",
     "locationLong": "アンカラ、トルコ",
-    "email": "contact@rusen.ai",
+    "email": "birben20@itu.edu.tr",
     "website": "rusen.ai",
     "websiteUrl": "https://rusen.ai",
     "linkedin": "linkedin.com/in/rusenbirben",
@@ -13,8 +13,8 @@
     "githubUrl": "https://github.com/rusenbb",
     "kaggle": "kaggle.com/rusenbirben",
     "kaggleUrl": "https://www.kaggle.com/rusenbirben",
-    "summary": "イスタンブール工科大学の人工知能・データ工学科を卒業し、中東工科大学の応用NLPグループで独立研究者として活動。LLMの頑健性と信頼性に関心を持ち、トルコ語NLP、機械忘却、金融分野のLLM応用に取り組んできました。",
-    "printSummary": "イスタンブール工科大学の人工知能・データ工学科を卒業し、中東工科大学の応用NLPグループで独立研究者として活動。LLMの頑健性と信頼性に関心を持ち、トルコ語NLP、機械忘却、金融分野のLLM応用に取り組んできました。"
+    "summary": "イスタンブール工科大学の人工知能・データ工学科を卒業し、中東工科大学の応用NLPグループで独立研究者として活動。LLMの信頼性と解釈可能性に関心を持ち、トルコ語NLP、機械忘却、金融分野のLLM応用に取り組んできました。",
+    "printSummary": "イスタンブール工科大学の人工知能・データ工学科を卒業し、中東工科大学の応用NLPグループで独立研究者として活動。LLMの信頼性と解釈可能性に関心を持ち、トルコ語NLP、機械忘却、金融分野のLLM応用に取り組んできました。"
   },
   "heroLinks": [
     {
@@ -31,7 +31,7 @@
     },
     {
       "label": "メール",
-      "url": "mailto:contact@rusen.ai"
+      "url": "mailto:birben20@itu.edu.tr"
     }
   ],
   "experience": [
@@ -40,7 +40,7 @@
       "company": "中東工科大学 応用NLPグループ",
       "period": "03/2026 - 現在",
       "location": "アンカラ、トルコ",
-      "description": "Çağrı Toramanとともに、SIGTURK 2027ではテュルク諸語と文化的知識を評価するベンチマークのデータ作成・評価手法に貢献し、LlamaTurk2の学習データ収集と事前学習実験にも参加。研究室の[METU NLP Connect](https://www.youtube.com/@metunlpconnect)を運営し、専門家インタビューを担当。",
+      "description": "Çağrı Toramanとともに、テュルク諸語と文化的理解を対象とするSIGTURK 2027のデータ作成と評価手法に貢献。\n\nLlamaTurk2の学習データ収集と事前学習実験を支援。\n\n[METU NLP Connect](https://www.youtube.com/@metunlpconnect)を運営し、専門家インタビューを制作。",
       "link": "https://nlp.ceng.metu.edu.tr",
       "category": "research"
     },
@@ -49,7 +49,7 @@
       "company": "Fiction Studios",
       "period": "08/2025 - 04/2026",
       "location": "アンカラ、トルコ",
-      "description": "ビルケント・サイバーパークで友人とFiction Studiosを共同創業し、技術責任者を担当。技術開発を主導し、創業者2人を支援する追加メンバー3人の活動を調整した。博物館・観光客向けの多言語LLMガイドを開発し、対話型の来館体験づくりと並行して顧客・投資家との協議にも参加。",
+      "description": "Bilkent CyberparkでFiction Studiosを共同創業し、技術開発と追加メンバー3名の活動を統括。博物館・観光向けの多言語LLMガイドを開発し、顧客・投資家との対話にも参加。",
       "link": "https://github.com/fiction-ai-studios",
       "category": "professional"
     },
@@ -58,7 +58,7 @@
       "company": "CyberQuote",
       "period": "03/2025 - 07/2025",
       "location": "イスタンブール、トルコ",
-      "description": "Phillip Capital子会社CyberQuoteの新設AIチームに2人目のメンバーとして入社。ニュース感情分析パイプライン、金融専門家向け社内LLMツール、Web統合、モバイル音声アシスタントを開発。分散した情報源やPDFレポートから最新の金融情報を取得する際の難しさや、情報不足による回答の信頼性低下に取り組んだ。",
+      "description": "Phillip Capital傘下のCyberQuoteでニュース感情分析、金融専門家向けLLMツール、Web連携、音声アシスタントを開発。分散した情報源やPDFから最新の金融情報を取得する課題に取り組んだ。",
       "link": "https://cyberquote.com/tk/",
       "category": "professional"
     },
@@ -67,7 +67,7 @@
       "company": "Havelsan",
       "period": "08/2024 - 09/2024",
       "location": "イスタンブール、トルコ",
-      "description": "予知保全に向けたソフトウェアログ分析を研究し、HDFSログを使ったプロトタイプを開発。",
+      "description": "予知保全に向けてソフトウェアログを分析し、HDFSログを用いた試作を実施。",
       "link": "https://havelsan.com/tr",
       "category": "research"
     },
@@ -76,7 +76,7 @@
       "company": "ITU NLP 研究室",
       "period": "07/2024 - 08/2024",
       "location": "イスタンブール、トルコ",
-      "description": "金融分野のLLM応用を研究。感情分析、ツール利用、推論、予測、検索拡張生成（RAG）を検討し、金融推論LLMを扱う卒業制作Kairaにつながる実験の一部を実施。",
+      "description": "金融分野の感情分析、ツール利用、推論、予測、RAGを研究。学部卒業研究Kairaに関連する実験に貢献。",
       "link": "https://nlp.itu.edu.tr/",
       "category": "research"
     }
@@ -86,7 +86,7 @@
       "title": "Kaira",
       "subtitle": "卒業制作：金融推論LLM",
       "period": "2025",
-      "description": "イスタンブール工科大学の卒業制作として、Qwen系LLMの金融推論を研究。UnslothとLoRAを用いてGRPOでファインチューニングし、FinQAとGSM8Kで報酬設計や推論の振る舞いを調べた。Ollamaを使ったチャットアプリも開発。",
+      "description": "UnslothとLoRAによるGRPOでQwen系LLMを調整。FinQAとGSM8Kで報酬設計と金融推論を実験し、Ollamaベースのチャットアプリを開発。",
       "tags": [
         "GRPO",
         "Unsloth",
@@ -96,10 +96,31 @@
       "links": []
     },
     {
+      "title": "Tobor",
+      "subtitle": "自律走行倉庫ロボット",
+      "period": "2024 - 2025",
+      "description": "ROS2とYOLOを利用するチーム制作の倉庫ロボットで、箱の取得・配置機構を実装。データ注釈と他のアルゴリズム開発を支援。",
+      "tags": [
+        "ROS2",
+        "YOLO",
+        "Python"
+      ],
+      "links": [
+        {
+          "label": "コード",
+          "url": "https://github.com/rusen-archive/Amazon-Warehouse-Robot"
+        },
+        {
+          "label": "動画",
+          "url": "https://youtu.be/h-Jxs_y9kNA"
+        }
+      ]
+    },
+    {
       "title": "AIZheimer",
       "subtitle": "Stable Diffusionの機械忘却",
       "period": "2024",
-      "description": "Forget-Me-Notを基にStable Diffusion 2.1向けのクロスアテンションに基づく機械忘却を実装・調整。Attention controller/processorを開発し、attention re-steering、distraction、random stimulusの損失関数を検討。定性的実験と可視化を通じて、対象概念の除去とそれ以外の生成能力の維持とのトレードオフを調べた。",
+      "description": "Forget-Me-Notを基にStable Diffusion 2.1のアンラーニングを実装。注意制御と損失関数を検討し、概念除去と無関係な生成能力の保持を定性的に評価。",
       "tags": [
         "Stable Diffusion 2.1",
         "機械忘却"
@@ -115,7 +136,7 @@
       "title": "Biting The Bytes",
       "subtitle": "トルコ語ダイアクリティカル復元",
       "period": "2024",
-      "description": "トルコ語の文字復元をバイト単位のトークン分類として扱い、ByT5-smallをPEFT/LoRAでファインチューニング。モデル学習とハイパーパラメータ調整を主に担当し、デバッグとHugging Face Spacesへの公開はチームメイトと分担。ノイズやASCII表記を含む文章からş、ç、ı、ğ、ü、öなどの文字を復元する課題に取り組んだ。",
+      "description": "トルコ語の発音区別符号復元で、PEFT/LoRAを使ったByT5-smallの学習と調整を主導。バイト単位の処理を実装し、デバッグとHugging Face Spaces公開を共同で担当。",
       "tags": [
         "ByT5-small",
         "LoRA",
@@ -136,7 +157,7 @@
       "title": "To-AI-or-Not-to-AI",
       "subtitle": "AI 生成テキスト検出器",
       "period": "2023",
-      "description": "RoBERTaベースの検出器3種をファインチューニングし、多数決で予測を統合。26,270件のデータ作成・前処理を分担し、Hugging Face Spacesへの公開を担当。同一分布から無作為に分割したテストセットで94.21%の正解率を達成したが、他言語や大きく異なるドメインへの汎化は評価していない。",
+      "description": "調整済みRoBERTa検出器3個を多数決で統合。26,270例の準備に貢献し、同一分布のランダムテスト分割で94.21%の精度を達成。分布外への汎化は未検証。",
       "tags": [
         "RoBERTa",
         "アンサンブル"
@@ -149,27 +170,6 @@
         {
           "label": "デモ",
           "url": "https://huggingface.co/spaces/rusen/gpt_detector"
-        }
-      ]
-    },
-    {
-      "title": "Tobor",
-      "subtitle": "自律走行倉庫ロボット",
-      "period": "2024 - 2025",
-      "description": "ROS2のナビゲーションとYOLOによる認識を組み合わせた自律走行倉庫ロボットをチームで開発。箱の持ち上げ・配置機構を実装し、データのアノテーションを共同で行い、他のアルゴリズム開発も支援。",
-      "tags": [
-        "ROS2",
-        "YOLO",
-        "Python"
-      ],
-      "links": [
-        {
-          "label": "コード",
-          "url": "https://github.com/rusen-archive/Amazon-Warehouse-Robot"
-        },
-        {
-          "label": "動画",
-          "url": "https://youtu.be/h-Jxs_y9kNA"
         }
       ]
     }
@@ -190,17 +190,17 @@
   ],
   "awards": [
     {
+      "title": "1416 YLSY 奨学金 · 修士・博士課程",
+      "issuer": "トルコ国民教育省",
+      "summary": "海外での修士課程と、その後の博士課程を対象とする政府奨学金に採択。授業料、毎月の生活費、健康保険、渡航費、語学試験費用、学用品費を支援。奨学金対象の学業修了後は、トルコに帰国し、助教（Assistant Professor）として勤務予定。",
+      "period": "2026"
+    },
+    {
       "title": "Kaggle ブロンズメダル · The Pokémon Company PTCG AI Battle Challenge",
       "issuer": "Kaggle",
       "period": "2026",
       "summary": "Kaggleのシミュレーション競技で6,807チーム中677位（上位10%）。リプレイに基づく行動模倣、信念を考慮したモンテカルロ計画、自己対戦を用い、不完全情報下で意思決定するゲームエージェントを開発・評価した。",
       "url": "https://www.kaggle.com/certification/competitions/rusenbirben/pokemon-tcg-ai-battle"
-    },
-    {
-      "title": "1416 YLSY 奨学金 · 修士・博士課程",
-      "issuer": "トルコ国民教育省",
-      "summary": "海外修士・博士課程向けのトルコ政府選抜奨学金に採用。1416プログラムは、学費、生活費、医療費、渡航費、語学試験料、学用品を支給し、学位取得後はトルコで研究助手として勤務する。",
-      "period": "2026"
     }
   ],
   "interests": [
@@ -282,10 +282,10 @@
   },
   "publications": [
     {
-      "title": "トルコ語文化知識データセット - MRL 2026 Shared Task",
-      "subtitle": "採択された貢献 · 共同ベンチマーク論文を準備中",
+      "title": "トルコ文化知識データセット - MRL 2026",
+      "subtitle": "データ貢献採択済み・共同ベンチマーク論文準備中",
       "period": "2026",
-      "description": "15分野を網羅する、採択されたトルコ語文化知識データセットの情報源に基づくエージェントパイプラインとデータ準備を主導。1,200件の質問・回答候補を一次審査し、Büşra Tufanによる社会学的審査に向けて500件を選定し、最終的に300組を提出した。Çağrı Toramanの研究指導のもと、英訳の確認にも貢献。\n\n採択された私のトルコ語データセット貢献は、多言語・マルチモーダル共同ベンチマークの一部となり、その論文に共著者として参加する予定。共同データセットとプレプリントは2026年10月に公開予定で、共有タスクの成果はMRL @ EMNLP 2026で発表予定。主催者は2027年にAI分野の影響力の高い学術会議・学術誌への投稿を計画している。",
+      "description": "15分野を対象とするトルコ文化知識データセットのため、出典に基づくエージェントパイプラインとデータ準備を主導。\n\n候補1,200組を精査し、500組をBüşra Tufanによる社会学的レビューに選定。最終提出用の300組を準備。\n\nÇağrı Toramanの研究指導のもと、英訳のレビューに貢献。",
       "tags": [
         "Cultural QA",
         "Data Curation",
