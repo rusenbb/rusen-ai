@@ -54,6 +54,7 @@ export type CVAwardItem = {
   period?: string;
   summary: string;
   url?: string;
+  linkText?: string;
 };
 
 export type CVLanguageItem = {
@@ -204,6 +205,12 @@ function parseCvData(value: unknown, locale: CVLocale): CVData {
   for (const [index, award] of awards.entries()) {
     if (award.url !== undefined && (typeof award.url !== "string" || !award.url.trim())) {
       throw new Error(`${context}.awards[${index}].url must be a non-empty string when provided`);
+    }
+    if (award.linkText !== undefined &&
+      (typeof award.linkText !== "string" || !award.linkText.trim() ||
+        typeof award.title !== "string" || !award.title.includes(award.linkText) ||
+        typeof award.url !== "string")) {
+      throw new Error(`${context}.awards[${index}].linkText requires a matching title substring and url`);
     }
   }
   requireObjectArray(value.languages, ["name", "level"], `${context}.languages`);

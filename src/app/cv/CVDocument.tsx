@@ -255,7 +255,15 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
               <div className={styles.eduHeader}>
                 <div className={styles.eduMain}>
                   <h3 className={styles.eduDegree}>
-                    {award.url ? <a href={award.url} target="_blank" rel="noopener noreferrer" className={styles.descLink}>{award.title}</a> : award.title}
+                    {award.url && award.linkText ? (
+                      <>
+                        {award.title.split(award.linkText, 1)[0]}
+                        <a href={award.url} target="_blank" rel="noopener noreferrer" className={styles.descLink}>{award.linkText}</a>
+                        {award.title.slice(award.title.indexOf(award.linkText) + award.linkText.length)}
+                      </>
+                    ) : award.url ? (
+                      <a href={award.url} target="_blank" rel="noopener noreferrer" className={styles.descLink}>{award.title}</a>
+                    ) : award.title}
                   </h3>
                   <span className={styles.eduSchool}>{award.issuer}</span>
                 </div>
