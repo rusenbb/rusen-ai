@@ -76,7 +76,7 @@
 \cvsection{\faTrophy}{\VAR{labels.awards | upper | latex}}
 \BLOCK{ for award in cv.awards }
 \begin{minipage}{\linewidth}\raggedright
-\cvheading{\small{}\BLOCK{ if award.url }\href{\VAR{award.url}}{\VAR{award.title | latex}}\BLOCK{ else }\VAR{award.title | latex}\BLOCK{ endif }}{\VAR{award.period | latex}}\vspace{2pt}
+\cvheading{\small{}\BLOCK{ if award.url and award.linkText }\VAR{award.title.split(award.linkText, 1)[0] | latex}\href{\VAR{award.url}}{\underline{\VAR{award.linkText | latex}}}\VAR{award.title.split(award.linkText, 1)[1] | latex}\BLOCK{ elif award.url }\href{\VAR{award.url}}{\VAR{award.title | latex}}\BLOCK{ else }\VAR{award.title | latex}\BLOCK{ endif }}{\VAR{award.period | latex}}\vspace{2pt}
 \cvbody{\VAR{award.summary | latex}}
 \end{minipage}\par\vspace{3pt}
 \BLOCK{ endfor }

@@ -54,7 +54,9 @@ export function renderCvMarkdown(
   // ── Awards ───────────────────────────────────────────────────────────
   out.push("", `## ${labels.awards}`);
   for (const a of cv.awards) {
-    const title = a.url ? `[${a.title}](${a.url})` : a.title;
+    const title = a.url && a.linkText
+      ? a.title.replace(a.linkText, `[${a.linkText}](${a.url})`)
+      : a.url ? `[${a.title}](${a.url})` : a.title;
     out.push("", `### ${title} - ${a.issuer}`);
     if (a.period) out.push(`*${a.period}*`);
     out.push("", a.summary);
