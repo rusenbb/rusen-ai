@@ -1,5 +1,6 @@
 "use client";
 
+import { MODEL_LOAD_ERROR } from "@/lib/model-errors";
 import { useCallback, useRef, useState } from "react";
 import { maskProbabilities } from "../maps";
 
@@ -69,8 +70,9 @@ export function useClipSeg(): UseClipSeg {
         setStatus("ready");
         setProgress(100);
       } catch (err) {
+        console.error("Error loading model:", err);
         setStatus("error");
-        setError(err instanceof Error ? err.message : "Failed to load attention model");
+        setError(MODEL_LOAD_ERROR);
       } finally {
         initPromise.current = null;
       }
@@ -95,7 +97,7 @@ export function useClipSeg(): UseClipSeg {
         inputs: Record<string, unknown>,
       ) => Promise<{ logits: { dims: number[]; data: Float32Array } }>;
       if (!tokenizer || !processor || !model) {
-        throw new Error("Attention model not ready");
+        throw new Error(MODEL_LOAD_ERROR);
       }
       const tf = await import("@huggingface/transformers");
       const text_inputs = tokenizer(labels, { padding: true, truncation: true });

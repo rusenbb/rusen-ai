@@ -1,3 +1,4 @@
+import { MODEL_LOAD_ERROR } from "@/lib/model-errors";
 import { AutoTokenizer, env } from "@huggingface/transformers";
 import * as ort from "onnxruntime-web/wasm";
 import DIRECTIONS from "@/content/steering-directions.json";
@@ -110,9 +111,14 @@ self.onmessage = async ({ data: settings }: MessageEvent<SteeringSettings>) => {
     env.allowLocalModels = false;
     if (!tokenizer) {
       post({ stage: "Loading tokenizer…" });
-      tokenizer = await AutoTokenizer.from_pretrained(MODEL_ID, {
-        revision: MODEL_REVISION,
-      });
+      try {
+        tokenizer = await AutoTokenizer.from_pretrained(MODEL_ID, {
+          revision: MODEL_REVISION,
+        });
+      } catch (error) {
+        console.error("Error loading steering tokenizer:", error);
+        throw new Error(MODEL_LOAD_ERROR);
+      }
     }
     if (!bytes) bytes = await download();
     if (!engine || currentLayer !== settings.layer) {

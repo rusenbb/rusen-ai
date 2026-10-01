@@ -1,5 +1,6 @@
 "use client";
 
+import { MODEL_LOAD_ERROR } from "@/lib/model-errors";
 import { useCallback, useRef, useState } from "react";
 
 export type VisionResult = { label: string; score: number };
@@ -60,7 +61,7 @@ export function useVisionClassifier(): UseVisionClassifier {
         setStatus("ready");
         setLoadProgress(100);
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Failed to load model";
+        const message = MODEL_LOAD_ERROR;
         setError(message);
         setStatus("error");
         console.error("vision-anything: load failed", err);
@@ -82,7 +83,7 @@ export function useVisionClassifier(): UseVisionClassifier {
         await initModel();
       }
       if (!pipelineRef.current) {
-        throw new Error("Model failed to initialise.");
+        throw new Error(MODEL_LOAD_ERROR);
       }
       const out = await pipelineRef.current(imageUrl, labels);
       return [...out].sort((a, b) => b.score - a.score);

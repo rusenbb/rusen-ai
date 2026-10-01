@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "inputFingerprint": "7e660b8d26132328f053e5679dfaef99c55cb7bc78755a823f701eb89ede7730",
+  "inputFingerprint": "4b8d304621d691e7af069e51600f728d7f7202a64524ba9f5f6f28dbc98150af",
   "assets": [
     {
       "route": "/",
@@ -87,7 +87,7 @@
       "image": "/social/projects/classify-anything.png",
       "width": 1200,
       "height": 630,
-      "bytes": 25754,
+      "bytes": 25983,
       "format": "png"
     },
     {

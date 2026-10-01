@@ -1,5 +1,6 @@
 "use client";
 
+import { MODEL_LOAD_ERROR } from "@/lib/model-errors";
 import { useCallback, useRef } from "react";
 import type { ProgressInfo } from "@huggingface/transformers";
 import type { SAMAction, SegmentPoint, MaskCandidate } from "../types";
@@ -125,7 +126,7 @@ export function useSAM(dispatch: React.Dispatch<SAMAction>): UseSAMResult {
         loadMessageRef.current = null;
         dispatch({
           type: "MODEL_ERROR",
-          error: err instanceof Error ? err.message : "Failed to load model",
+          error: MODEL_LOAD_ERROR,
         });
         console.error("SAM model init error:", err);
       } finally {
@@ -146,7 +147,7 @@ export function useSAM(dispatch: React.Dispatch<SAMAction>): UseSAMResult {
       const model = modelRef.current;
       const processor = processorRef.current;
       const RawImage = RawImageCtor.current;
-      if (!model || !processor || !RawImage) throw new Error("Model not available");
+      if (!model || !processor || !RawImage) throw new Error(MODEL_LOAD_ERROR);
       if (request !== imageRequestRef.current) throw new DOMException("Image changed", "AbortError");
 
       dispatch({ type: "ENCODE_START" });

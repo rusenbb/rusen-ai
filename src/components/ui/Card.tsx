@@ -60,7 +60,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(function Card(
   return (
     <div
       ref={ref}
-      className={`bg-[var(--surface)] ${borderClasses} ${interactiveClasses} ${className}`}
+      className={`min-w-0 bg-[var(--surface)] ${borderClasses} ${interactiveClasses} ${className}`}
       {...props}
     >
       {header && (

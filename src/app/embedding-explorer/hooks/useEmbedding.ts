@@ -1,5 +1,6 @@
 "use client";
 
+import { MODEL_LOAD_ERROR } from "@/lib/model-errors";
 import { useState, useCallback, useRef } from "react";
 
 // Type for pipeline function - we use dynamic import
@@ -75,7 +76,7 @@ export function useEmbedding(): UseEmbeddingResult {
         setIsModelReady(true);
         setLoadProgress(100);
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Failed to load model";
+        const message = MODEL_LOAD_ERROR;
         setError(message);
         console.error("Error loading embedding model:", err);
       } finally {

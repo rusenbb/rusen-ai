@@ -1,5 +1,6 @@
 "use client";
 
+import { MODEL_LOAD_ERROR } from "@/lib/model-errors";
 import { useState, useCallback, useRef } from "react";
 import type { ClassificationResult, ModelStatus } from "../types";
 
@@ -83,7 +84,7 @@ export function useClassifier(): UseClassifierResult {
         setModelStatus("ready");
         setLoadProgress(100);
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Failed to load model";
+        const message = MODEL_LOAD_ERROR;
         setError(message);
         setModelStatus("error");
         console.error("Error loading classifier model:", err);
@@ -113,7 +114,7 @@ export function useClassifier(): UseClassifierResult {
       }
 
       if (!classifierPipeline.current) {
-        throw new Error("Model failed to load");
+        throw new Error(MODEL_LOAD_ERROR);
       }
 
       try {
