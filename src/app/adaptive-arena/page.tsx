@@ -24,13 +24,11 @@ import {
 import { createDQNAgent, deserializeDQNWeights } from "./dqn";
 import { ADAPTIVE_ARENA_CHECKPOINTS } from "./checkpoints.generated";
 import { drawArena } from "./rendering";
+import { ArenaControls } from "./ArenaControls";
 import {
-  ABILITY_BUTTONS,
   ARENA_LEGEND,
-  CONTROL_BUTTONS,
   FullscreenCornersIcon,
   StatBlock,
-  getKeycapClass,
 } from "./presentation";
 
 type ControlState = {
@@ -308,13 +306,22 @@ export default function AdaptiveArenaPage() {
   }, []);
 
   useEffect(() => {
+    const clearControls = () => {
+      pressedMovesRef.current = [];
+      controlsRef.current = { move: null, ability: null, abilityTicksLeft: 0 };
+    };
     const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
+      if (checkpointLoading || checkpointError) return;
       if (event.key === " ") {
+        if (target?.closest("button")) return;
         event.preventDefault();
         if (event.repeat) return;
         setIsRunning((current) => !current);
         return;
       }
+      if (!isRunning) return;
 
       const move = MOVE_KEYS[event.key] ?? MOVE_KEYS[event.key.toLowerCase()];
       if (move) {
@@ -342,12 +349,15 @@ export default function AdaptiveArenaPage() {
 
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("blur", clearControls);
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
+      window.removeEventListener("blur", clearControls);
+      clearControls();
     };
-  }, [setActiveMove]);
+  }, [setActiveMove, checkpointLoading, checkpointError, isRunning]);
 
   const toggleFullscreen = useCallback(async () => {
     const panel = arenaPanelRef.current;
@@ -368,7 +378,7 @@ export default function AdaptiveArenaPage() {
         : "Start Next Round"
       : "Start Match";
   const arenaMaxWidth = isFullscreen
-    ? "min(calc(100vw - 2rem), calc(100vh - 2rem))"
+    ? "min(calc(100vw - 2rem), calc(100vh - 10rem))"
     : "min(100%, calc(100vh - 12rem), 1080px)";
 
   return (
@@ -425,6 +435,7 @@ export default function AdaptiveArenaPage() {
                         <button
                           type="button"
                           onClick={() => setIsRunning((current) => !current)}
+                          disabled={checkpointLoading || Boolean(checkpointError)}
                           className="rounded-full border border-white/10 bg-[#02060b]/80 px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-neutral-100 backdrop-blur transition hover:bg-[#0a1118] sm:px-4 sm:text-[11px] sm:tracking-[0.22em]"
                         >
                           {isRunning ? "Pause" : primaryActionLabel}
@@ -445,6 +456,7 @@ export default function AdaptiveArenaPage() {
                         <button
                           type="button"
                           onClick={resetSession}
+                          disabled={checkpointLoading}
                           className="rounded-full border border-white/10 bg-[#02060b]/80 px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-neutral-200 backdrop-blur transition hover:bg-[#0a1118] sm:px-4 sm:text-[11px] sm:tracking-[0.22em]"
                         >
                           Reset
@@ -463,7 +475,7 @@ export default function AdaptiveArenaPage() {
                       <FullscreenCornersIcon />
                     </button>
                     <div
-                      className={`${isFullscreen ? "flex h-[calc(100vh-2rem)] items-center justify-center" : ""}`}
+                      className={`${isFullscreen ? "flex h-[calc(100vh-10rem)] items-center justify-center" : ""}`}
                     >
                       <div
                         className="mx-auto w-full"
@@ -471,10 +483,25 @@ export default function AdaptiveArenaPage() {
                       >
                         <canvas
                           ref={canvasRef}
+                          role="img"
+                          aria-label={`Arena. You: (${match.player.position.x}, ${match.player.position.y}), health ${match.player.health}. Bot: (${match.bot.position.x}, ${match.bot.position.y}), health ${match.bot.health}.`}
                           className={`aspect-square w-full bg-[#020407] ${isFullscreen ? "" : "rounded-[22px] border border-white/10"}`}
                         />
                       </div>
                     </div>
+                    {isFullscreen && (
+                      <div className="mx-auto mt-2 max-w-2xl rounded-2xl border border-white/10 bg-[#02060b] p-2">
+                        <ArenaControls
+                          compact
+                          disabled={!isRunning || checkpointLoading || Boolean(checkpointError)}
+                          onMove={setActiveMove}
+                          onAbility={(ability) => {
+                            controlsRef.current.ability = ability;
+                            controlsRef.current.abilityTicksLeft = ABILITY_BUFFER_TICKS;
+                          }}
+                        />
+                      </div>
+                    )}
                   </div>
 
                   {!isFullscreen && (
@@ -568,68 +595,14 @@ export default function AdaptiveArenaPage() {
                         <div className="mb-3 text-[10px] uppercase tracking-[0.24em] text-neutral-500">
                           Controls
                         </div>
-                        <div className="grid gap-4">
-                          <div className="grid grid-cols-3 gap-2 text-center">
-                            <div />
-                            {CONTROL_BUTTONS.slice(0, 1).map((button) => (
-                              <div
-                                key={button.action}
-                                className={`rounded-2xl border px-4 py-3 ${getKeycapClass()}`}
-                              >
-                                <div className="text-sm font-semibold">
-                                  {button.label}
-                                </div>
-                              </div>
-                            ))}
-                            <div />
-                            {CONTROL_BUTTONS.slice(2, 3).map((button) => (
-                              <div
-                                key={button.action}
-                                className={`rounded-2xl border px-4 py-3 ${getKeycapClass()}`}
-                              >
-                                <div className="text-sm font-semibold">
-                                  {button.label}
-                                </div>
-                              </div>
-                            ))}
-                            {CONTROL_BUTTONS.slice(1, 2).map((button) => (
-                              <div
-                                key={button.action}
-                                className={`rounded-2xl border px-4 py-3 ${getKeycapClass()}`}
-                              >
-                                <div className="text-sm font-semibold">
-                                  {button.label}
-                                </div>
-                              </div>
-                            ))}
-                            {CONTROL_BUTTONS.slice(3, 4).map((button) => (
-                              <div
-                                key={button.action}
-                                className={`rounded-2xl border px-4 py-3 ${getKeycapClass()}`}
-                              >
-                                <div className="text-sm font-semibold">
-                                  {button.label}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-
-                          <div className="grid grid-cols-3 gap-2">
-                            {ABILITY_BUTTONS.map((button) => (
-                              <div
-                                key={button.action}
-                                className={`rounded-2xl border px-4 py-3 ${getKeycapClass()}`}
-                              >
-                                <div className="text-sm font-semibold uppercase tracking-[0.18em] text-neutral-100">
-                                  {button.label}
-                                </div>
-                                <div className="mt-1 text-[10px] uppercase tracking-[0.22em] text-neutral-500">
-                                  {button.hint}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
+                        <ArenaControls
+                          disabled={!isRunning || checkpointLoading || Boolean(checkpointError)}
+                          onMove={setActiveMove}
+                          onAbility={(ability) => {
+                            controlsRef.current.ability = ability;
+                            controlsRef.current.abilityTicksLeft = ABILITY_BUFFER_TICKS;
+                          }}
+                        />
                       </div>
 
                     </aside>

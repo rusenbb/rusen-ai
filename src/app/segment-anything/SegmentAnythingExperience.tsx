@@ -181,6 +181,7 @@ export default function SegmentAnythingExperience() {
             <input
               ref={fileInputRef}
               type="file"
+              aria-label="Image to segment"
               accept="image/*"
               className="sr-only"
               onChange={handleUpload}

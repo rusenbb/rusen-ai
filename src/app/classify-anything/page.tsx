@@ -52,14 +52,14 @@ export default function ClassifyAnythingPage() {
         title="Classify Anything"
         description={
           <>
-          Zero-shot text classification. Define your own classes, paste any text, get predictions.
+          Zero-shot classification for English text. Define your own classes, paste an excerpt, get predictions.
           All processing happens locally in your browser.
           </>
         }
       />
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="min-w-0 lg:col-span-1">
           <DemoPanel title="Labels" description="Create the classes your prompt should be sorted into.">
             <label className="mb-4 flex items-center gap-2 text-sm"><input type="checkbox" checked={multiLabel} disabled={state.isClassifying} onChange={(event) => { setMultiLabel(event.target.checked); dispatch({ type: "SET_LABELS", labels: state.labels }); }} />Allow multiple matching labels</label>
             <p className="mb-4 text-xs text-neutral-500">{multiLabel ? "Each label is scored independently; scores do not need to sum to 100%." : "Labels compete for one best match; scores are relative to this label set."} Scores are model estimates, not measured accuracy.</p>
@@ -73,8 +73,8 @@ export default function ClassifyAnythingPage() {
           </DemoPanel>
         </div>
 
-        <div className="lg:col-span-1">
-          <DemoPanel title="Input Text" description="Paste any sentence, paragraph, or document excerpt.">
+        <div className="min-w-0 lg:col-span-1">
+          <DemoPanel title="Input Text" description="Paste an English sentence, paragraph, or short document excerpt.">
             <TextInput
               value={state.inputText}
               onChange={handleSetInputText}
@@ -86,7 +86,7 @@ export default function ClassifyAnythingPage() {
           </DemoPanel>
         </div>
 
-        <div className="lg:col-span-1">
+        <div className="min-w-0 lg:col-span-1">
           <DemoPanel title="Results" description="Review the predicted label distribution and model status.">
             <ResultsPanel
               results={state.results}
@@ -115,8 +115,10 @@ export default function ClassifyAnythingPage() {
               2. Enter Text
             </h3>
             <p>
-              Paste or type any text you want to classify. The model works with sentences,
-              paragraphs, or longer documents.
+              Use English sentences or short paragraphs. The model reads up to
+              512 tokens, including the label hypothesis and special tokens.
+              Longer inputs are automatically truncated; their full content is
+              not classified. Split long documents into excerpts.
             </p>
           </div>
           <div>

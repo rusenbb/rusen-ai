@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { Button, DemoFootnote, DemoHeader, DemoPage, DemoPanel } from "@/components/ui";
 
 import { RasterCanvas, type RasterFocus } from "./RasterCanvas";
+import { KernelWeightInput } from "./KernelWeightInput";
 import {
   KERNEL_PRESETS,
   convolve2d,
@@ -52,6 +53,10 @@ function cloneMatrix(matrix: Matrix): Matrix {
 function format(value: number): string {
   const rounded = Math.round(value * 100) / 100;
   return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2);
+}
+
+function formatWeight(value: number): string {
+  return Number(value.toPrecision(8)).toString();
 }
 
 function intensityColor(intensity: number, channel: InspectChannel): string {
@@ -121,8 +126,8 @@ function KernelPreview({ kernel, label = "Kernel weights" }: { kernel: Matrix; l
                 ? `rgb(${Math.round(150 - strength * 72)} ${Math.round(216 - strength * 56)} ${Math.round(245 - strength * 15)})`
                 : "rgb(229 231 235)";
             return (
-              <div key={`${rowIndex}:${columnIndex}`} className="grid aspect-square min-h-16 place-items-center p-2 font-mono text-sm font-bold text-neutral-950" style={{ backgroundColor: color }}>
-                {format(value)}
+              <div key={`${rowIndex}:${columnIndex}`} className="grid aspect-square min-h-16 place-items-center break-all p-2 font-mono text-xs font-bold text-neutral-950" style={{ backgroundColor: color }}>
+                {formatWeight(value)}
               </div>
             );
           }),
@@ -140,15 +145,10 @@ function KernelEditor({ kernel, onChange }: { kernel: Matrix; onChange: (row: nu
         row.map((value, columnIndex) => (
           <label key={`${rowIndex}-${columnIndex}`} className="block border border-[var(--line)] bg-[color-mix(in_srgb,var(--foreground)_3%,transparent)] p-1">
             <span className="sr-only">Kernel row {rowIndex + 1}, column {columnIndex + 1}</span>
-            <input
-              aria-label={`Kernel row ${rowIndex + 1}, column ${columnIndex + 1}`}
-              className="w-full bg-transparent text-center font-mono text-sm outline-none"
-              type="number"
-              min="-9"
-              max="9"
-              step="0.1"
-              value={format(value)}
-              onChange={(event) => onChange(rowIndex, columnIndex, Number(event.target.value))}
+            <KernelWeightInput
+              label={`Kernel row ${rowIndex + 1}, column ${columnIndex + 1}`}
+              value={value}
+              onChange={(next) => onChange(rowIndex, columnIndex, next)}
             />
           </label>
         )),
@@ -387,6 +387,7 @@ export default function ConvolutionLabPage() {
               ref={fileInputRef}
               className="sr-only"
               type="file"
+              aria-label="Convolution source image"
               accept="image/jpeg,image/png,image/webp"
               onChange={handleUpload}
             />
@@ -418,6 +419,7 @@ export default function ConvolutionLabPage() {
                 ))}
               </div>
             </div>
+            <p id="kernel-input-help" className="mb-2 text-xs text-neutral-500">Enter weights from −9 to 9. Values outside this range are not applied.</p>
             <KernelEditor
               kernel={kernel}
               onChange={(row, col, value) => {
@@ -548,8 +550,9 @@ export default function ConvolutionLabPage() {
                 <div className="mt-5 border-t border-[var(--line)] pt-5">
                   <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-neutral-500">The raw dot product</p>
                   <p className="mt-2 break-words font-mono text-sm leading-relaxed">
-                    {channelLabel(inspectChannel)}[{active.row}, {active.col}] = {productTerms.map(({ pixel, weight }) => `${format(pixel)}×${format(weight)}`).join(" + ")} = <strong>{format(selectedValue)}</strong>
+                    {channelLabel(inspectChannel)}[{active.row}, {active.col}] = {productTerms.map(({ pixel, weight }) => `${format(pixel)}×${formatWeight(weight)}`).join(" + ")} ≈ <strong>{format(selectedValue)}</strong>
                   </p>
+                  <p className="mt-2 text-xs text-neutral-500">Displayed values are rounded; the calculation uses full precision.</p>
                   {imageMode === "rgb" ? (
                     <div className="mt-4 grid gap-2 sm:grid-cols-3">
                       {rgbResponses.map(({ id, label, value }) => (

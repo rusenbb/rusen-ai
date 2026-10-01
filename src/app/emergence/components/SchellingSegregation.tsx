@@ -616,8 +616,8 @@ export default function SchellingSegregation() {
           be similar.
         </p>
         <p className="text-neutral-600 dark:text-neutral-400">
-          Thomas Schelling won the Nobel Prize in Economics for this model in
-          2005.
+          Thomas Schelling shared the 2005 Nobel Prize in Economics for his
+          game-theoretic analysis of conflict and cooperation.
         </p>
         <p>
           Emergence isn&apos;t always beautiful. Sometimes simple rules produce
