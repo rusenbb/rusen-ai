@@ -10,13 +10,13 @@ import {
 } from "./widgets";
 
 export default function PulseBoardPage() {
-  const [lastUpdated, setLastUpdated] = useState<string>("");
+  const [currentTime, setCurrentTime] = useState<string>("");
   const [showShortcuts, setShowShortcuts] = useState(false);
   const closeShortcuts = useCallback(() => setShowShortcuts(false), []);
 
   useEffect(() => {
     const updateTime = () => {
-      setLastUpdated(new Date().toLocaleTimeString());
+      setCurrentTime(new Date().toLocaleTimeString());
     };
     updateTime();
     const interval = setInterval(updateTime, 1000);
@@ -94,7 +94,7 @@ export default function PulseBoardPage() {
       </div>
 
       <div className="mt-8 text-center text-sm text-neutral-500">
-        Last updated: {lastUpdated}
+        Current local time: {currentTime}
       </div>
     </DemoPage>
   );

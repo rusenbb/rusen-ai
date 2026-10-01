@@ -79,12 +79,13 @@ export default function ClassInput({
         {/* Add new label */}
         <form onSubmit={handleSubmit} className="flex gap-2">
           <input
+            aria-label="New classification label"
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             placeholder="Add a label..."
             disabled={disabled}
-            className="flex-1 px-3 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+            className="min-w-0 flex-1 px-3 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
           />
           <button
             type="submit"

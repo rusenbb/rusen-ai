@@ -67,6 +67,17 @@ function FourierCanvas({
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
+  const [legendColor, setLegendColor] = useState("#737373");
+
+  useEffect(() => {
+    const update = () => {
+      setLegendColor(getComputedStyle(document.documentElement).getPropertyValue("--muted").trim());
+    };
+    update();
+    const observer = new MutationObserver(update);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -152,10 +163,15 @@ function FourierCanvas({
       context.beginPath(); context.arc(head.x, head.y, 5, 0, Math.PI * 2); context.fill();
     }
 
-    context.fillStyle = "rgba(82, 82, 82, 0.84)";
+    context.fillStyle = legendColor;
     context.font = "11px ui-monospace, SFMono-Regular, Menlo, monospace";
-    context.fillText(path.length < 2 ? "draw one continuous stroke" : "cyan = stroke · orange = added closure · magenta = reconstruction", 12, size.height - 15);
-  }, [drawing, path, reconstruction, size, terms, time]);
+    if (path.length < 2) {
+      context.fillText("draw one continuous stroke", 12, size.height - 15);
+    } else {
+      context.fillText("cyan: stroke · orange: closure", 12, size.height - 30);
+      context.fillText("magenta: reconstruction", 12, size.height - 15);
+    }
+  }, [drawing, legendColor, path, reconstruction, size, terms, time]);
 
   return (
     <canvas

@@ -355,6 +355,7 @@ export default function VisionAnythingPage() {
             <div className="flex gap-2">
               <input
                 type="text"
+                aria-label="New image classification label"
                 value={labelInput}
                 onChange={(e) => setLabelInput(e.target.value)}
                 onKeyDown={(e) => {
@@ -364,7 +365,7 @@ export default function VisionAnythingPage() {
                   }
                 }}
                 placeholder="add a label, press Enter"
-                className="flex-1 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 text-sm font-mono"
+                className="min-w-0 flex-1 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 text-sm font-mono"
               />
               <button
                 type="button"

@@ -57,8 +57,8 @@
     "slug": "classify-anything",
     "collection": "demos",
     "status": "live",
-    "summary": "Zero-shot text classification. Define your own classes, paste any text, get predictions.",
-    "description": "Zero-shot text classification in the browser.",
+    "summary": "Zero-shot classification for English text. Define your own classes, paste a short excerpt, get predictions.",
+    "description": "Zero-shot classification of short English text excerpts in the browser.",
     "tags": [
       "Zero-shot",
       "Transformers.js"

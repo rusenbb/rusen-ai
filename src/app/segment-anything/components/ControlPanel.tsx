@@ -170,6 +170,7 @@ export default function ControlPanel({
         <div className="flex items-center gap-3">
           <input
             type="range"
+            aria-label="Mask opacity"
             min={0}
             max={1}
             step={0.05}

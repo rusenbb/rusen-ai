@@ -645,6 +645,7 @@ function WeatherWidget() {
         )}
       </div>
       <select
+        aria-label="Weather city"
         value={selectedCity.name}
         onChange={(e) => {
           const city = CITIES.find((c) => c.name === e.target.value);

@@ -1,5 +1,6 @@
 "use client";
 
+import { MODEL_LOAD_ERROR } from "@/lib/model-errors";
 import { useCallback, useMemo, useRef, useState } from "react";
 
 const MODEL_ID = "Xenova/distilbert-base-uncased";
@@ -67,8 +68,9 @@ export function useFillMask(): UseFillMask {
         setStatus("ready");
         setProgress(100);
       } catch (err) {
+        console.error("Error loading model:", err);
         setStatus("error");
-        setError(err instanceof Error ? err.message : "Failed to load model");
+        setError(MODEL_LOAD_ERROR);
       } finally {
         initPromise.current = null;
       }
@@ -80,7 +82,7 @@ export function useFillMask(): UseFillMask {
   const predict = useCallback(
     async (sentenceWithMask: string, topk = 5): Promise<FillMaskPrediction[]> => {
       if (!pipelineRef.current) await initModel();
-      if (!pipelineRef.current) throw new Error("Fill-mask model failed to load");
+      if (!pipelineRef.current) throw new Error(MODEL_LOAD_ERROR);
       const out = await pipelineRef.current(sentenceWithMask, { topk });
       return out.map((p) => ({ token: p.token_str.trim(), score: p.score }));
     },

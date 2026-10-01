@@ -24,7 +24,6 @@ import {
   type DiscretePredictor,
 } from "./predictors/discrete";
 import { scoreDiscrete } from "./scoring";
-import { discreteWhy } from "./why";
 
 const KEYS_2 = ["f", "j"];
 const KEYS_4 = ["w", "a", "s", "d"];
@@ -33,12 +32,6 @@ const LABELS_4 = ["W", "A", "S", "D"];
 const SESSION_TARGET = 200;
 const ENTROPY_WINDOW = 80;
 const WARMUP_TRIALS = 20;
-
-function effectiveOrder(id: string): number {
-  if (id.startsWith("markov-")) return parseInt(id.slice(7), 10);
-  if (id.startsWith("ppm-")) return Math.min(5, parseInt(id.slice(4), 10));
-  return 3;
-}
 
 export default function OutguessPage() {
   const [alphabet, setAlphabet] = useState<2 | 4>(2);
@@ -58,8 +51,7 @@ export default function OutguessPage() {
       <Session key={`session-${alphabet}`} alphabet={alphabet} />
 
       <DemoFootnote align="left">
-        <strong>Why this works.</strong> An order-5 Markov chain catches human key-tapping
-        can learn repeated patterns. This demo does not claim a population-wide accuracy. Hide the AI guess to play a fair test of your own randomness, and watch
+        <strong>Why this works.</strong> Markov and PPM predictors can learn repeated key-tapping patterns. This demo does not claim a population-wide accuracy. Hide the AI guess to play a fair test of your own randomness, and watch
         the lifetime tally to see how the leading model is doing across the whole session.
       </DemoFootnote>
     </DemoPage>
@@ -192,9 +184,8 @@ function Session({ alphabet }: { alphabet: 2 | 4 }) {
 
   const whyData = useMemo(() => {
     if (!leaderId) return null;
-    const order = effectiveOrder(leaderId);
-    return discreteWhy(trials, Math.max(1, order), alphabet);
-  }, [trials, alphabet, leaderId]);
+    return predictors.find((predictor) => predictor.meta.id === leaderId)?.inspect(trials.map((trial) => trial.symbol)) ?? null;
+  }, [trials, predictors, leaderId]);
 
   const lastResult = useMemo(() => {
     if (trials.length === 0) return null;
@@ -229,7 +220,7 @@ function Session({ alphabet }: { alphabet: 2 | 4 }) {
         <div className="w-full flex flex-wrap gap-4 text-sm">{[false, true].map((hint) => { const slice = trials.filter((trial) => trial.hintShown === hint); const hits = slice.filter((trial) => trial.shownGuess === trial.symbol).length; return <span key={String(hint)}>{hint ? "Hint visible" : "Blind"}: {hits}/{slice.length} correct{slice.length ? " (" + Math.round(hits / slice.length * 100) + "%)" : ""}</span>; })}</div>
         <div
           className="ml-auto rounded-md border border-[var(--line)] bg-[var(--surface)] px-3 py-1.5 font-mono text-xs"
-          title={`Lifetime tally for ${arenaShownLabel}. Jumps when the leader changes.`}
+          title="Combined tally of the guesses shown at each trial, across predictor changes."
         >
           <span className="uppercase tracking-[0.18em] text-neutral-500">
             AI ({arenaShownLabel})

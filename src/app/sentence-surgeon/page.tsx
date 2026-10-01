@@ -217,6 +217,7 @@ export default function SentenceSurgeonPage() {
         </div>
 
         <textarea
+          aria-label="Sentence"
           value={text}
           onChange={(e) => { setText(e.target.value); setMaskedIdx(null); clearPrediction(); }}
           spellCheck={false}
