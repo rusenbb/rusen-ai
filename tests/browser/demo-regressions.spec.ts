@@ -101,7 +101,7 @@ test.describe("Arena touch controls", () => {
     await page.waitForTimeout(600);
     const beforeActivation = await position();
     // Screen readers can activate a button without pointer or keyboard events.
-    await fullscreenMove.evaluate((button) => button.click());
+    await fullscreenMove.evaluate((button) => (button as HTMLButtonElement).click());
     await expect.poll(position).not.toBe(beforeActivation);
     await expect(fullscreenMove).toHaveAttribute("aria-pressed", "false");
 
