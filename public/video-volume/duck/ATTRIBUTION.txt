@@ -1,0 +1,8 @@
+Duck walking in Yvoire.webm
+By Clément Bucco-Lechat
+Source: https://commons.wikimedia.org/wiki/File:Duck_walking_in_Yvoire.webm
+License: CC BY-SA 3.0 — https://creativecommons.org/licenses/by-sa/3.0
+Changes: Three-second excerpt; audio removed; resized to 640 × 360. Frames sampled at 8 fps for AI analysis. Start: 3 seconds.
+The derivative clip, poster, frame atlas and mask data are provided under the same source license.
+Inference: DETR ResNet-50 boxes, SAM 2.1 Hiera Tiny image masks; algorithmic IoU association. See analysis.json for parameters and pinned revisions.
+Original file SHA-256: 2ac02c2596f550f2e045813ed281595b377aaceb8043774258339c2f179b79bf

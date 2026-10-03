@@ -5,8 +5,8 @@
     "slug": "video-volume",
     "collection": "demos",
     "status": "live",
-    "summary": "Pull a frame through a three-dimensional time volume. Filter cars and people to reveal the shapes their motion leaves behind.",
-    "description": "Interactive space-time visualization of an original procedural street scene, with authored object tracks, frame scrubbing, and view controls.",
+    "summary": "Explore five real videos as space-time volumes, with pre-analyzed AI masks and object tracks.",
+    "description": "Real video frames and offline DETR / SAM 2.1 masks in an interactive time volume. Five openly licensed clips, sampled frame scrubbing, class filters, and view controls.",
     "tags": [
       "Video",
       "Space-time",
