@@ -202,7 +202,7 @@ export default function PhotoGallery({ hero, series, photos }: PhotoGalleryProps
   const openerRef = useRef<HTMLButtonElement | null>(null);
   const closeRef = useRef<HTMLButtonElement | null>(null);
   const dialogRef = useRef<HTMLDivElement | null>(null);
-  const pointerStart = useRef<number | null>(null);
+  const pointerStart = useRef<{ id: number; x: number; y: number } | null>(null);
   const indexById = useMemo(
     () => new Map(photos.map((photo, index) => [photo.id, index])),
     [photos],
@@ -210,7 +210,10 @@ export default function PhotoGallery({ hero, series, photos }: PhotoGalleryProps
   const ui = UI_COPY[locale];
   const heroCopy = hero.translations[locale];
 
-  const close = useCallback(() => setActiveIndex(null), []);
+  const close = useCallback(() => {
+    pointerStart.current = null;
+    setActiveIndex(null);
+  }, []);
   const move = useCallback((direction: -1 | 1) => {
     setActiveIndex((current) => {
       if (current === null) return null;
@@ -256,14 +259,21 @@ export default function PhotoGallery({ hero, series, photos }: PhotoGalleryProps
   };
 
   const onPointerDown = (event: ReactPointerEvent) => {
-    pointerStart.current = event.clientX;
+    // Decide per gesture so a mouse on a touchscreen laptop still selects text.
+    if (event.pointerType !== "touch") return;
+    if (!event.isPrimary) {
+      pointerStart.current = null;
+      return;
+    }
+    pointerStart.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
   };
 
   const onPointerUp = (event: ReactPointerEvent) => {
-    if (pointerStart.current === null) return;
-    const distance = event.clientX - pointerStart.current;
+    const start = pointerStart.current;
+    if (event.pointerType !== "touch" || !start || event.pointerId !== start.id) return;
     pointerStart.current = null;
-    if (Math.abs(distance) < 50) return;
+    const distance = event.clientX - start.x;
+    if (Math.abs(distance) < 50 || Math.abs(distance) <= Math.abs(event.clientY - start.y)) return;
     move(distance > 0 ? -1 : 1);
   };
 
@@ -413,6 +423,7 @@ export default function PhotoGallery({ hero, series, photos }: PhotoGalleryProps
           })}
           onPointerDown={onPointerDown}
           onPointerUp={onPointerUp}
+          onPointerCancel={() => { pointerStart.current = null; }}
         >
           <button ref={closeRef} type="button" className="photo-lightbox-close" onClick={close}>
             {ui.close} <span aria-hidden="true">×</span>
