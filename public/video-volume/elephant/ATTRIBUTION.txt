@@ -1,0 +1,8 @@
+African elephant (Loxodonta africana) rumbling.webm
+By Kent Wang
+Source: https://commons.wikimedia.org/wiki/File:African_elephant_(Loxodonta_africana)_rumbling.webm
+License: CC BY-SA 2.0 — https://creativecommons.org/licenses/by-sa/2.0
+Changes: Three-second excerpt; audio removed; resized to 640 × 360. Frames sampled at 12 fps for AI analysis. Start: 4 seconds.
+The derivative clip, poster, frame atlas and mask data are provided under the same source license.
+Inference: DETR ResNet-50 boxes, SAM 2.1 Hiera Tiny image masks; algorithmic IoU association. See analysis.json for parameters and pinned revisions.
+Original file SHA-256: f80b4d7fe2611a524acb513d3cfa3480bd4f310ed7b3d6e12778d921c9b5a093

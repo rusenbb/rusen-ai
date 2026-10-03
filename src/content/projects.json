@@ -5,8 +5,8 @@
     "slug": "video-volume",
     "collection": "demos",
     "status": "live",
-    "summary": "Explore five real videos as space-time volumes, with pre-analyzed AI masks and object tracks.",
-    "description": "Real video frames and offline DETR / SAM 2.1 masks in an interactive time volume. Five openly licensed clips, sampled frame scrubbing, class filters, and view controls.",
+    "summary": "Explore eight real videos as space-time volumes, with pre-analyzed AI masks, 12 fps sampling, and fullscreen orbit controls.",
+    "description": "Real video frames and offline DETR / SAM 2.1 masks in an interactive time volume. Eight openly licensed clips, 36 analyzed frames per clip, fullscreen rotation, zoom, and timeline scrubbing.",
     "tags": [
       "Video",
       "Space-time",

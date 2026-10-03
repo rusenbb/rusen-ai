@@ -35,3 +35,11 @@ it("suppresses duplicate boxes and excludes no-object predictions", () => {
   expect(detections).toHaveLength(1);
   expect(detections[0].score).toBeGreaterThan(0.99);
 });
+
+it("preserves a quarter-second association window at 12 fps without inventing detections", () => {
+  const tracker = new DetectionTracker(2);
+  expect(tracker.update([object(0)])[0].id).toBe(1);
+  expect(tracker.update([])).toEqual([]);
+  expect(tracker.update([])).toEqual([]);
+  expect(tracker.update([object(0.01)])[0].id).toBe(1);
+});

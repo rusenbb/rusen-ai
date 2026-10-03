@@ -1,4 +1,4 @@
-/** Rebuild licensed excerpts, exact inference frames and lossless atlases.
+/** Rebuild licensed excerpts, exact inference frames and compressed frame atlases.
  * Requires ffmpeg on PATH. Run from repository root:
  * node scripts/prepare-video-gallery.mjs /path/to/originals /path/to/frames
  * Supply the original Commons files as <clip-id>.webm. Hashes must match the manifest.
@@ -9,10 +9,13 @@ import { resolve } from "node:path";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import sharp from "sharp";
-const [sources, frames] = process.argv.slice(2);
+const [sources, frames, only] = process.argv.slice(2);
 if (!sources || !frames)
   throw new Error("Provide original-video and extracted-frame directories.");
-const clips = JSON.parse(readFileSync("src/content/video-volume.json", "utf8"));
+const manifest = JSON.parse(
+  readFileSync("src/content/video-volume.json", "utf8"),
+);
+const clips = manifest.filter((clip) => !only || clip.id === only);
 const ffmpeg = (args) =>
   execFileSync("ffmpeg", ["-v", "error", "-y", ...args], { stdio: "inherit" });
 for (const clip of clips) {
@@ -59,16 +62,21 @@ for (const clip of clips) {
   ]);
   ffmpeg(["-i", `${directory}/001.jpg`, `${destination}/poster.webp`]);
   await sharp({
-    create: { width: 2560, height: 2160, channels: 3, background: "#000" },
+    create: {
+      width: 2560,
+      height: Math.ceil(clip.frameCount / 4) * 360,
+      channels: 3,
+      background: "#000",
+    },
   })
     .composite(
-      Array.from({ length: 24 }, (_, i) => ({
+      Array.from({ length: clip.frameCount }, (_, i) => ({
         input: `${directory}/${String(i + 1).padStart(3, "0")}.jpg`,
         left: (i % 4) * 640,
         top: Math.floor(i / 4) * 360,
       })),
     )
-    .webp({ lossless: true })
+    .webp({ quality: 82, effort: 5 })
     .toFile(`${destination}/frames.webp`);
   writeFileSync(
     `${destination}/ATTRIBUTION.txt`,

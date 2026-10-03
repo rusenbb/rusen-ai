@@ -9,8 +9,9 @@ import {
   DemoPage,
   DemoPanel,
 } from "@/components/ui";
-import { clamp, DEFAULT_PITCH, DEFAULT_YAW, HEIGHT, WIDTH } from "./scene";
-import { drawFrame, drawVolume } from "./render";
+import { HEIGHT, WIDTH } from "./scene";
+import { VolumeViewer } from "./volume-viewer";
+import { drawFrame } from "./render";
 import {
   clips,
   objectColor,
@@ -18,8 +19,6 @@ import {
   validateAnalysis,
   type Gallery,
 } from "./gallery";
-const inputClass =
-  "w-full accent-emerald-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-500";
 export default function VideoVolumePage() {
   const [selected, setSelected] = useState(clips[0].id),
     [attempt, setAttempt] = useState(0);
@@ -29,23 +28,10 @@ export default function VideoVolumePage() {
   const abort = useRef<AbortController | null>(null);
   const [index, setIndex] = useState(0),
     [filter, setFilter] = useState("all"),
-    [yaw, setYaw] = useState(DEFAULT_YAW),
-    [pitch, setPitch] = useState(DEFAULT_PITCH),
-    [depth, setDepth] = useState(800),
-    [ghosts, setGhosts] = useState(true),
     [playing, setPlaying] = useState(false),
-    [mode, setMode] = useState<"slice" | "orbit">("slice");
-  const volume = useRef<HTMLCanvasElement>(null),
-    preview = useRef<HTMLCanvasElement>(null),
+    [resetSerial, setResetSerial] = useState(0);
+  const preview = useRef<HTMLCanvasElement>(null),
     video = useRef<HTMLVideoElement>(null);
-  const drag = useRef<{
-    id: number;
-    x: number;
-    y: number;
-    index: number;
-    yaw: number;
-    pitch: number;
-  } | null>(null);
   const ready = gallery?.clipId === clip.id;
   const matches = ready
     ? gallery.frames[index].objects.filter(
@@ -83,7 +69,10 @@ export default function VideoVolumePage() {
             );
           return;
         }
-        if (bitmap.width !== 2560 || bitmap.height !== 2160)
+        if (
+          bitmap.width !== 2560 ||
+          bitmap.height !== Math.ceil(clip.frameCount / 4) * HEIGHT
+        )
           throw new Error("Invalid frame atlas.");
         setGallery({
           clipId: clip.id,
@@ -113,28 +102,9 @@ export default function VideoVolumePage() {
     };
   }, [clip, attempt]);
   useEffect(() => {
-    if (!ready || !gallery || !volume.current) return;
-    const canvas = volume.current,
-      frame = document.createElement("canvas");
-    frame.width = WIDTH;
-    frame.height = HEIGHT;
-    const render = () => {
-      drawVolume(canvas, frame, gallery, {
-        index,
-        yaw,
-        pitch,
-        depth,
-        filter,
-        ghosts,
-      });
-      const context = preview.current?.getContext("2d");
-      if (context) drawFrame(context, gallery, index, filter);
-    };
-    render();
-    const observer = new ResizeObserver(render);
-    observer.observe(canvas);
-    return () => observer.disconnect();
-  }, [ready, gallery, index, yaw, pitch, depth, filter, ghosts]);
+    const context = preview.current?.getContext("2d");
+    if (ready && gallery && context) drawFrame(context, gallery, index, filter);
+  }, [ready, gallery, index, filter]);
   useEffect(() => {
     if (!playing || !ready) return;
     const timer = setInterval(
@@ -154,12 +124,7 @@ export default function VideoVolumePage() {
     setPlaying(false);
     setIndex(0);
     setFilter("all");
-    setYaw(DEFAULT_YAW);
-    setPitch(DEFAULT_PITCH);
-    setDepth(800);
-    setGhosts(true);
-    setMode("slice");
-    drag.current = null;
+    setResetSerial((value) => value + 1);
     if (video.current) {
       video.current.pause();
       video.current.currentTime = 0;
@@ -186,7 +151,7 @@ export default function VideoVolumePage() {
         actions={<Button onClick={reset}>Reset</Button>}
       />
       <div
-        className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-5"
+        className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4"
         role="group"
         aria-label="Choose a video"
       >
@@ -210,7 +175,8 @@ export default function VideoVolumePage() {
       </div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-neutral-500">
-          5 real clips · 24 analyzed frames each · No model download
+          {clips.length} real clips · {clip.frameCount} analyzed frames each ·
+          No model download
         </p>
         <div className="flex flex-wrap gap-2" aria-label="Object filters">
           {["all", ...clip.labels].map((label) => (
@@ -224,140 +190,41 @@ export default function VideoVolumePage() {
           ))}
         </div>
       </div>
-      <div className="overflow-hidden border border-[var(--line)]">
-        <div className="flex flex-wrap justify-between gap-2 bg-[#090e12] px-4 pt-4 text-xs text-[#afc0c7]">
-          <span>{clip.title} · 3 seconds / 8 samples per second</span>
-          <span>
-            {mode === "slice" ? "Drag sideways through time" : "Drag to rotate"}
-          </span>
-        </div>
-        {ready ? (
-          <canvas
-            ref={volume}
-            role="img"
-            aria-label={`Time volume at ${seconds} seconds; ${matches.length} detected objects. Use the controls below to explore.`}
-            className="block h-[340px] w-full cursor-grab active:cursor-grabbing sm:h-[500px] lg:h-[560px]"
-            style={{ touchAction: mode === "orbit" ? "none" : "pan-y" }}
-            onPointerDown={(e) => {
-              if (e.button !== 0 || !e.isPrimary) return;
-              setPlaying(false);
-              e.currentTarget.setPointerCapture(e.pointerId);
-              drag.current = {
-                id: e.pointerId,
-                x: e.clientX,
-                y: e.clientY,
-                index,
-                yaw,
-                pitch,
-              };
-            }}
-            onPointerMove={(e) => {
-              const start = drag.current;
-              if (!start || start.id !== e.pointerId) return;
-              const dx = e.clientX - start.x,
-                dy = e.clientY - start.y;
-              if (mode === "slice")
-                setIndex(
-                  Math.round(
-                    clamp(
-                      start.index +
-                        (dx / (e.currentTarget.clientWidth * 0.65)) * 23,
-                      0,
-                      23,
-                    ),
-                  ),
-                );
-              else {
-                setYaw(clamp(start.yaw + dx * 0.18, 15, 70));
-                setPitch(clamp(start.pitch - dy * 0.13, -20, 35));
-              }
-            }}
-            onPointerUp={() => {
-              drag.current = null;
-            }}
-            onPointerCancel={() => {
-              drag.current = null;
-            }}
-            onLostPointerCapture={() => {
-              drag.current = null;
-            }}
-          >
-            Real video frames and detected object silhouettes stacked along
-            time. All controls are below.
-          </canvas>
-        ) : (
-          <div className="flex h-[340px] flex-col items-center justify-center gap-5 bg-[#090e12] text-white sm:h-[500px] lg:h-[560px]">
-            <p role="status">{status}</p>
-            {status.startsWith("Loading analyzed") ? (
-              <Button
-                onClick={() => {
-                  abort.current?.abort("cancel");
-                  setStatus("Loading cancelled.");
-                }}
-              >
-                Cancel loading
-              </Button>
-            ) : (
-              <Button onClick={retry}>Retry</Button>
-            )}
-          </div>
-        )}
-        <div className="space-y-4 border-t border-[var(--line)] p-4 sm:p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap gap-2">
-              <Button
-                disabled={!ready}
-                onClick={() => setPlaying((p) => !p)}
-                aria-pressed={playing}
-              >
-                {playing ? "Pause" : "Play"}
-              </Button>
-              <Button
-                aria-pressed={mode === "slice"}
-                onClick={() => setMode("slice")}
-              >
-                Drag time
-              </Button>
-              <Button
-                aria-pressed={mode === "orbit"}
-                onClick={() => setMode("orbit")}
-              >
-                Rotate
-              </Button>
-            </div>
-            <output
-              data-testid="time-output"
-              className="font-mono text-xs tabular-nums"
+      {ready && gallery ? (
+        <VolumeViewer
+          key={`${clip.id}-${resetSerial}`}
+          gallery={gallery}
+          title={clip.title}
+          fps={clip.fps}
+          index={index}
+          filter={filter}
+          playing={playing}
+          onIndex={setIndex}
+          onPlaying={setPlaying}
+        />
+      ) : (
+        <div className="flex h-[340px] flex-col items-center justify-center gap-5 border border-[var(--line)] bg-[#090e12] text-white">
+          <p role="status">{status}</p>
+          {status.startsWith("Loading analyzed") ? (
+            <Button
+              style={{ color: "white", borderColor: "#87979b" }}
+              onClick={() => {
+                abort.current?.abort("cancel");
+                setStatus("Loading cancelled.");
+              }}
             >
-              {seconds} s · Frame {index + 1} / 24
-            </output>
-          </div>
-          <label
-            htmlFor="time"
-            className="block text-xs font-mono uppercase tracking-wider"
-          >
-            Time slice
-          </label>
-          <input
-            id="time"
-            type="range"
-            min="0"
-            max="23"
-            step="1"
-            disabled={!ready}
-            value={index}
-            aria-valuetext={`${seconds} seconds, frame ${index + 1} of 24`}
-            onChange={(e) => {
-              setPlaying(false);
-              setIndex(Number(e.target.value));
-            }}
-            className={inputClass}
-          />
-          <p className="text-xs text-neutral-500">
-            Sampled frames only. Masks are not interpolated between samples.
-          </p>
+              Cancel loading
+            </Button>
+          ) : (
+            <Button
+              style={{ color: "white", borderColor: "#87979b" }}
+              onClick={retry}
+            >
+              Retry
+            </Button>
+          )}
         </div>
-      </div>
+      )}
       <p
         role="status"
         id="query-result"
@@ -397,43 +264,24 @@ export default function VideoVolumePage() {
           </ul>
         </DemoPanel>
         <DemoPanel
-          title="View controls"
-          description="Keyboard alternatives to dragging; spread time out to inspect the silhouettes."
+          title="Explore space and time"
+          description="Rotate the volume to follow the shapes each object leaves through time."
         >
-          <div className="mt-5 space-y-5">
-            {[
-              { label: "Rotation", value: yaw, min: 15, max: 70, set: setYaw },
-              { label: "Tilt", value: pitch, min: -20, max: 35, set: setPitch },
-              {
-                label: "Time-axis spacing",
-                value: depth,
-                min: 400,
-                max: 1200,
-                set: setDepth,
-              },
-            ].map((control) => (
-              <label key={control.label} className="block text-xs">
-                {control.label}
-                <input
-                  aria-label={control.label}
-                  type="range"
-                  min={control.min}
-                  max={control.max}
-                  value={control.value}
-                  onChange={(e) => control.set(Number(e.target.value))}
-                  className={`${inputClass} mt-3 block`}
-                />
-              </label>
-            ))}
-            <label className="flex min-h-10 items-center gap-3 text-sm">
-              <input
-                type="checkbox"
-                checked={ghosts}
-                onChange={(e) => setGhosts(e.target.checked)}
-                className="h-4 w-4 accent-emerald-600"
-              />
-              Show faint frame stack
-            </label>
+          <div className="mt-4 space-y-3 text-sm leading-relaxed">
+            <p>
+              Drag the volume to rotate it. Use the timeline for exact frame
+              selection, or choose Drag time to scrub directly on the canvas.
+            </p>
+            <p>
+              Fullscreen gives the volume more room. Scroll or pinch to zoom, or
+              use the zoom buttons and camera sliders. Reset view restores the
+              camera without changing the selected moment.
+            </p>
+            <p className="text-neutral-500">
+              Every contour is a real model prediction at one sampled moment.
+              Missing detections remain gaps; object IDs are associated by box
+              overlap.
+            </p>
           </div>
         </DemoPanel>
       </div>
@@ -452,8 +300,8 @@ export default function VideoVolumePage() {
           />
           <div className="space-y-3 text-sm leading-relaxed">
             <p>
-              Original frame rate, without masks. The volume above uses 24
-              samples from this three-second excerpt.
+              Original frame rate, without masks. The volume above uses{" "}
+              {clip.frameCount} samples from this three-second excerpt.
             </p>
             <p>
               <a className="underline" href={clip.source}>
@@ -465,6 +313,13 @@ export default function VideoVolumePage() {
               </a>
               .
             </p>
+            {clip.minimumTrackFrames > 0 && (
+              <p className="text-neutral-500">
+                This sample shows only tracks observed in at least{" "}
+                {clip.minimumTrackFrames} of {clip.frameCount} frames. Short
+                transient detections are omitted; missing masks remain gaps.
+              </p>
+            )}
             <p className="text-neutral-500">
               {clip.modifications} Excerpt starts at {clip.sourceOffset} seconds
               in the original. Clip, poster and frame atlas retain the source
@@ -495,8 +350,9 @@ export default function VideoVolumePage() {
               DETR ResNet-50 (q8), confidence ≥ 0.70, duplicate-box suppression
               at IoU 0.60, up to 3 detections per class and 4 per frame. SAM 2.1
               Hiera Tiny (uint8), highest predicted-IoU mask, logits &gt; 0, 256
-              × 256 masks. Association IoU ≥ 0.15 with one missed-frame grace.
-              Eight samples per second; no interpolated masks.
+              × 256 masks. Association IoU ≥ 0.15 with two missed-frame grace
+              (up to 0.25 seconds between detections). Twelve samples per
+              second; no interpolated masks.
             </p>
             <p className="mt-3">
               <a
@@ -521,7 +377,7 @@ export default function VideoVolumePage() {
         </div>
       </DemoMutedSection>
       <DemoFootnote>
-        Five openly licensed real videos, analyzed offline on CPU. Playback
+        Eight openly licensed real videos, analyzed offline on CPU. Playback
         starts only when you press Play. No uploads or paid APIs. Confidence
         scores describe model predictions, not verified accuracy.
       </DemoFootnote>

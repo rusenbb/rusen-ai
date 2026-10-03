@@ -59,7 +59,8 @@ const dispose = (record) => {
 };
 try {
   for (const clip of selected) {
-    const tracker = new DetectionTracker();
+    const missedFrameAllowance = Math.ceil(clip.fps * 0.25) - 1;
+    const tracker = new DetectionTracker(missedFrameAllowance);
     const frames = [];
     const indices =
       mode === "pilot"
@@ -163,8 +164,8 @@ try {
       detector: DETECTOR,
       segmenter: SEGMENTER,
       tracking: "detection-association",
-      association:
-        "Class-matched greedy IoU >= 0.15; one missed-frame grace. No temporal SAM memory.",
+      missedFrameAllowance,
+      association: `Class-matched greedy IoU >= 0.15; ${missedFrameAllowance} missed-frame grace (up to 0.25 seconds between detections). No temporal SAM memory.`,
       detectionThreshold: 0.7,
       detectorResize: { shortestEdge: 384, longestEdge: 640 },
       boxNmsIoU: 0.6,
@@ -177,6 +178,8 @@ try {
       frameCount: frames.length,
       frames,
     };
+    if (mode !== "pilot")
+      selectPersistentTracks(result, clip.minimumTrackFrames);
     const destination =
       mode === "pilot"
         ? resolve(frameRoot, clip.id, "pilot.json")
