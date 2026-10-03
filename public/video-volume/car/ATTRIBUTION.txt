@@ -2,7 +2,7 @@ Street traffic.webm
 By Editor (YouTube)
 Source: https://commons.wikimedia.org/wiki/File:Street_traffic.webm
 License: CC BY 3.0 — https://creativecommons.org/licenses/by/3.0
-Changes: Three-second excerpt; audio removed; resized to 640 × 360. Frames sampled at 8 fps for AI analysis. Start: 18 seconds.
+Changes: Three-second excerpt; audio removed; resized to 640 × 360. Frames sampled at 12 fps for AI analysis. Start: 18 seconds.
 The derivative clip, poster, frame atlas and mask data are provided under the same source license.
 Inference: DETR ResNet-50 boxes, SAM 2.1 Hiera Tiny image masks; algorithmic IoU association. See analysis.json for parameters and pinned revisions.
 Original file SHA-256: e5facb24baf755f0c1193999d823e99f6032661ad2bdef5cc28cc1cbbfde03e2

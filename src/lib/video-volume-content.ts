@@ -10,8 +10,8 @@ export const videoVolumeClips = manifest.map((clip) => {
     !clip.licenseUrl.startsWith("https://creativecommons.org/licenses/") ||
     clip.width !== 640 ||
     clip.height !== 360 ||
-    clip.fps !== 8 ||
-    clip.frameCount !== 24 ||
+    clip.fps !== 12 ||
+    clip.frameCount !== 36 ||
     clip.duration !== 3 ||
     !clip.labels.length ||
     ![clip.video, clip.poster, clip.atlas, clip.analysis].every((path) =>
