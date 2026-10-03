@@ -3,6 +3,14 @@ import { getCvData, getCvLabels } from "./cv";
 import { renderCvMarkdown } from "./cv-markdown";
 
 describe("public CV Markdown", () => {
+  it("preserves linked conference names in every locale export", () => {
+    for (const locale of ["en", "tr", "ja"] as const) {
+      const text = renderCvMarkdown(getCvData(locale), getCvLabels(locale), locale);
+      expect(text).toContain("MRL Workshop @ [EMNLP 2026](https://2026.emnlp.org/)");
+      expect(text).toContain("Agenthon Workshop @ [NeurIPS 2026](https://neurips.cc/Conferences/2026)");
+    }
+  });
+
   it("exports research and professional contributions as separate, linked prose sections in every language", () => {
     for (const locale of ["en", "tr", "ja"] as const) {
       const labels = getCvLabels(locale);

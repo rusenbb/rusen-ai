@@ -285,18 +285,24 @@
   "publications": [
     {
       "title": "Exact First, Then Fast: An Event-for-Event C++ Rebuild of the Agenthon ABIDES Market",
-      "subtitle": "Yüz yüze poster sunumu için kabul edildi - Agenthon 2026",
+      "subtitle": "Agenthon Workshop @ [NeurIPS 2026](https://neurips.cc/Conferences/2026) - Yüz yüze poster sunumu için kabul edildi",
       "period": "2026",
-      "description": "Göktürk Batın Dervişoğlu, Muhammed Faruk Aytın, Muhammed Rüşen Birben.\n\nNeurIPS 2026 kapsamında düzenlenen Agenthon 2026: Verifiable AI for Quantitative Finance etkinliğinde yüz yüze poster sunumu için kabul edildi. Atlanta, ABD, 12 Aralık 2026.",
+      "description": "Göktürk Batın Dervişoğlu, Muhammed Faruk Aytın, Muhammed Rüşen Birben.\n\nAtlanta, ABD, 12 Aralık 2026.",
       "tags": [
         "C++",
-        "ABIDES"
+        "ABIDES",
+        "Differential Testing"
       ],
-      "links": []
+      "links": [
+        {
+          "label": "Yarışma",
+          "url": "https://www.agenthon.net/"
+        }
+      ]
     },
     {
-      "title": "Türk Kültürel Bilgi Veri Kümesi - MRL 2026",
-      "subtitle": "Kabul edilmiş veri katkısı; ortak benchmark makalesi hazırlanıyor",
+      "title": "Türk Kültürel Bilgi Veri Kümesi",
+      "subtitle": "MRL Workshop @ [EMNLP 2026](https://2026.emnlp.org/) - Kabul edilmiş veri katkısı; ortak benchmark makalesi hazırlanıyor",
       "period": "2026",
       "description": "15 alanı kapsayan Türk kültürel bilgi veri kümesi için kaynak temelli ajan hattını ve veri hazırlığını yönetti.\n\n1.200 aday soru-cevap çiftini taradı; 500 çifti Büşra Tufan’ın sosyolojik incelemesine seçerek 300 çiftlik nihai teslimi hazırladı.\n\nÇağrı Toraman’ın araştırma rehberliğinde İngilizce çeviri incelemesine katkıda bulundu.",
       "tags": [
