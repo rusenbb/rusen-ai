@@ -331,7 +331,7 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
                 <div className={styles.projectCardHeader}>
                   <div className={styles.projectTitleGroup}>
                     <h3 className={styles.projectTitle}>{project.title}</h3>
-                    <span className={styles.projectSubtitle}>{project.subtitle}</span>
+                    <span className={styles.projectSubtitle}>{renderDescription(project.subtitle)}</span>
                   </div>
                   <span className={styles.projectPeriod}>{project.period}</span>
                 </div>

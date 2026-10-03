@@ -285,18 +285,24 @@
   "publications": [
     {
       "title": "Exact First, Then Fast: An Event-for-Event C++ Rebuild of the Agenthon ABIDES Market",
-      "subtitle": "対面ポスター発表に採択 - Agenthon 2026",
+      "subtitle": "Agenthon Workshop @ [NeurIPS 2026](https://neurips.cc/Conferences/2026) - 対面ポスター発表に採択",
       "period": "2026",
-      "description": "Göktürk Batın Dervişoğlu, Muhammed Faruk Aytın, Muhammed Rüşen Birben.\n\nNeurIPS 2026で開催されるAgenthon 2026: Verifiable AI for Quantitative Financeにて、対面ポスター発表に採択。2026年12月12日、米国アトランタ。",
+      "description": "Göktürk Batın Dervişoğlu, Muhammed Faruk Aytın, Muhammed Rüşen Birben.\n\n2026年12月12日、米国アトランタ。",
       "tags": [
         "C++",
-        "ABIDES"
+        "ABIDES",
+        "Differential Testing"
       ],
-      "links": []
+      "links": [
+        {
+          "label": "コンペティション",
+          "url": "https://www.agenthon.net/"
+        }
+      ]
     },
     {
-      "title": "トルコ文化知識データセット - MRL 2026",
-      "subtitle": "データ貢献採択済み・共同ベンチマーク論文準備中",
+      "title": "トルコ文化知識データセット",
+      "subtitle": "MRL Workshop @ [EMNLP 2026](https://2026.emnlp.org/) - データ貢献採択済み・共同ベンチマーク論文準備中",
       "period": "2026",
       "description": "15分野を対象とするトルコ文化知識データセットのため、出典に基づくエージェントパイプラインとデータ準備を主導。\n\n候補1,200組を精査し、500組をBüşra Tufanによる社会学的レビューに選定。最終提出用の300組を準備。\n\nÇağrı Toramanの研究指導のもと、英訳のレビューに貢献。",
       "tags": [
