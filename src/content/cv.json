@@ -179,10 +179,11 @@
       "degree": "B.Sc. AI and Data Engineering",
       "school": "Istanbul Technical University",
       "period": "2022 - 2025",
-      "gpa": "3.61 / 4.00"
+      "gpa": "3.61 / 4.00",
+      "note": "Graduated at 09.07.2025"
     },
     {
-      "degree": "Undergraduate studies in Electronics & Communication Engineering",
+      "degree": "Electronics and Communication Engineering",
       "school": "Istanbul Technical University",
       "period": "2020 - 2022",
       "note": "Transferred to AI & Data Engineering"
