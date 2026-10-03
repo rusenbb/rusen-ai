@@ -1,0 +1,8 @@
+Wild horses (Equus ferus) in Nevada.webm
+By Rick Cooper
+Source: https://commons.wikimedia.org/wiki/File:Wild_horses_(Equus_ferus)_in_Nevada.webm
+License: CC BY 2.0 — https://creativecommons.org/licenses/by/2.0
+Changes: Three-second excerpt; audio removed; resized to 640 × 360. Frames sampled at 8 fps for AI analysis. Start: 10 seconds.
+The derivative clip, poster, frame atlas and mask data are provided under the same source license.
+Inference: DETR ResNet-50 boxes, SAM 2.1 Hiera Tiny image masks; algorithmic IoU association. See analysis.json for parameters and pinned revisions.
+Original file SHA-256: ef1c017e37e0deae6c7066e1044271ca4b44c595372ee615b1ea443b3cc005c2

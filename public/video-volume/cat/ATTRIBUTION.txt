@@ -1,0 +1,8 @@
+Cat relaxing on a sofa.webm
+By Ivan Kurmanov
+Source: https://commons.wikimedia.org/wiki/File:Cat_relaxing_on_a_sofa.webm
+License: CC BY 2.0 — https://creativecommons.org/licenses/by/2.0
+Changes: Three-second excerpt; audio removed; resized to 640 × 360. Frames sampled at 8 fps for AI analysis. Start: 12 seconds.
+The derivative clip, poster, frame atlas and mask data are provided under the same source license.
+Inference: DETR ResNet-50 boxes, SAM 2.1 Hiera Tiny image masks; algorithmic IoU association. See analysis.json for parameters and pinned revisions.
+Original file SHA-256: 7e15ecdc1549f5ed3a5b957e2080c7f1cd32ee61c8d308632896826b6ae5b726
