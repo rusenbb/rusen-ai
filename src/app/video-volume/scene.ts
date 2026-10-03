@@ -13,6 +13,7 @@ export function createProjection(
   yaw: number,
   pitch: number,
   depth: number,
+  zoom = 1,
 ) {
   const a = (yaw * Math.PI) / 180;
   const b = (pitch * Math.PI) / 180;
@@ -34,6 +35,6 @@ export function createProjection(
   const scale = Math.min((width - 44) / spanX, (height - 72) / spanY);
   return (x: number, y: number, t: number): Point => {
     const [rx, ry] = raw(x, y, t);
-    return [width / 2 + rx * scale, height / 2 + ry * scale];
+    return [width / 2 + rx * scale * zoom, height / 2 + ry * scale * zoom];
   };
 }

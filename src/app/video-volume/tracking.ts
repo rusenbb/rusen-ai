@@ -16,6 +16,10 @@ export function boxIoU(a: Box, b: Box): number {
 
 /** Tracking by detection, not SAM's temporal-memory predictor. */
 export class DetectionTracker {
+  private readonly missedFrameAllowance: number;
+  constructor(missedFrameAllowance = 1) {
+    this.missedFrameAllowance = missedFrameAllowance;
+  }
   private nextId = 1;
   private previous: Memory[] = [];
   update(detections: Detection[]): TrackedDetection[] {
@@ -42,7 +46,10 @@ export class DetectionTracker {
     this.previous = [
       ...tracked.map((object) => ({ ...object, missed: 0 })),
       ...this.previous
-        .filter((old, index) => !used.has(index) && old.missed < 1)
+        .filter(
+          (old, index) =>
+            !used.has(index) && old.missed < this.missedFrameAllowance,
+        )
         .map((old) => ({ ...old, missed: old.missed + 1 })),
     ];
     return tracked;
