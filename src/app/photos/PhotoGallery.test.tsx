@@ -111,3 +111,68 @@ describe("PhotoGallery language scope", () => {
     );
   });
 });
+
+describe("PhotoGallery touch gestures", () => {
+  function setup() {
+    const { container } = render(
+      <PhotoGallery hero={heroPhoto} series={photoSeries} photos={allPhotos} />,
+    );
+    fireEvent.click(container.querySelector(".photo-frame")!);
+    const dialog = container.querySelector('[role="dialog"]')!;
+    const label = () => dialog.getAttribute("aria-label");
+    const initial = label();
+    const pointer = (type: string, options: Record<string, unknown> = {}) => {
+      const event = new MouseEvent(type, { bubbles: true, clientX: 200, clientY: 100 });
+      for (const [key, value] of Object.entries({ pointerType: "touch", pointerId: 1, isPrimary: true, ...options })) {
+        Object.defineProperty(event, key, { value });
+      }
+      fireEvent(dialog, event);
+    };
+    return { pointer, label, initial, container };
+  }
+
+  it.each(["mouse", "pen"])("ignores %s dragging", (pointerType) => {
+    const { pointer, label, initial } = setup();
+    pointer("pointerdown", { pointerType });
+    pointer("pointerup", { pointerType, clientX: 50 });
+    expect(label()).toBe(initial);
+  });
+
+  it("uses the actual pointer type on hybrid devices and swipes in both directions", () => {
+    const { pointer, label, initial } = setup();
+    pointer("pointerdown", { pointerType: "mouse" });
+    pointer("pointerup", { pointerType: "mouse", clientX: 50 });
+    expect(label()).toBe(initial);
+    pointer("pointerdown");
+    pointer("pointerup", { clientX: 50 });
+    expect(label()).not.toBe(initial);
+    pointer("pointerdown");
+    pointer("pointerup", { clientX: 350 });
+    expect(label()).toBe(initial);
+  });
+
+  it.each(["cancel", "multitouch", "short", "vertical", "unmatched"])("ignores %s gestures", (kind) => {
+    const { pointer, label, initial } = setup();
+    pointer("pointerdown");
+    if (kind === "cancel") pointer("pointercancel");
+    if (kind === "multitouch") pointer("pointerdown", { pointerId: 2, isPrimary: false });
+    pointer("pointerup", {
+      clientX: kind === "short" ? 170 : 50,
+      clientY: kind === "vertical" ? 350 : 100,
+      pointerId: kind === "unmatched" ? 2 : 1,
+    });
+    expect(label()).toBe(initial);
+  });
+
+  it("clears unfinished gestures when closed and reopened", () => {
+    const { pointer, initial, container } = setup();
+    pointer("pointerdown");
+    fireEvent.keyDown(window, { key: "Escape" });
+    fireEvent.click(container.querySelector(".photo-frame")!);
+    const dialog = container.querySelector('[role="dialog"]')!;
+    const up = new MouseEvent("pointerup", { bubbles: true, clientX: 50 });
+    Object.defineProperties(up, { pointerType: { value: "touch" }, pointerId: { value: 1 } });
+    fireEvent(dialog, up);
+    expect(dialog.getAttribute("aria-label")).toBe(initial);
+  });
+});
