@@ -1,38 +1,6 @@
 import { describe, expect, it } from "vitest";
-import {
-  createProjection,
-  HEIGHT,
-  matchingKinds,
-  tracksAt,
-  WIDTH,
-} from "./scene";
-
-describe("video volume tracks", () => {
-  it("keeps identities and contours in frame across the complete sequence", () => {
-    const ids = tracksAt(0).map((track) => track.id);
-    for (let i = 0; i <= 96; i++) {
-      const tracks = tracksAt(i / 96);
-      expect(tracks.map((track) => track.id)).toEqual(ids);
-      for (const track of tracks) {
-        expect(
-          track.points.every(
-            ([x, y]) => x >= 0 && x <= WIDTH && y >= 0 && y <= HEIGHT,
-          ),
-        ).toBe(true);
-      }
-    }
-    expect(tracksAt(0)[2].points).toEqual(tracksAt(1)[2].points);
-    expect(tracksAt(0)[0].points).not.toEqual(tracksAt(1)[0].points);
-    expect(tracksAt(-1)).toEqual(tracksAt(0));
-    expect(tracksAt(2)).toEqual(tracksAt(1));
-  });
-  it("supports named filters and never silently treats an unknown query as all", () => {
-    expect(matchingKinds(" Cars ")).toEqual(["car"]);
-    expect(matchingKinds("people")).toEqual(["person"]);
-    expect(matchingKinds("yaya")).toEqual(["person"]);
-    expect(matchingKinds("")).toEqual(["car", "person"]);
-    expect(matchingKinds("bicycle")).toEqual([]);
-  });
+import { createProjection, HEIGHT, WIDTH } from "./scene";
+describe("video volume projection", () => {
   it("fits every corner at mobile and desktop sizes across all view limits", () => {
     for (const [width, height] of [
       [326, 340],

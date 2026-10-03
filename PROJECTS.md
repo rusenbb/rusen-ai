@@ -20,7 +20,7 @@ Edit `src/content/projects.json`, then run `npm run projects:docs`.
 | Pulse Board | `live` | `/pulse-board` | Live dashboard with real-time WebSocket crypto prices, Chainlink oracle, earthquakes, weather, and more. |
 | RL-Arena | `live` | `/adaptive-arena` | Fight trained bots in a full 30x30 tactical arena with checkpoint-based difficulties. |
 | Outguess | `live` | `/outguess` | Try to be unpredictable. Small sequence models learn your patterns, with separate blind and hint-visible scores. |
-| Video Volume | `live` | `/video-volume` | Pull a frame through a three-dimensional time volume. Filter cars and people to reveal the shapes their motion leaves behind. |
+| Video Volume | `live` | `/video-volume` | Explore five real videos as space-time volumes, with pre-analyzed AI masks and object tracks. |
 
 ## Nerdy Stuff
 
