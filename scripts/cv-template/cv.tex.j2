@@ -100,9 +100,9 @@
 \BLOCK{ for proj in cv[section] }
 \begin{minipage}{\linewidth}\raggedright
 \cvheading{\VAR{proj.title | latex}}{\VAR{proj.period | latex}}
-{\small{}\itshape{}\color{muted}\VAR{proj.subtitle | latex}}\hfill{\small{}%
+{\small{}\itshape{}\color{muted}\VAR{proj.subtitle | latex_md}}\hfill{\small{}%
 \BLOCK{ for link in proj.links }
-\href{\VAR{link.url}}{\BLOCK{ if 'github.com' in link.url }\faGithub\BLOCK{ elif 'youtu' in link.url }\faYoutubePlay\BLOCK{ else }\faExternalLink\BLOCK{ endif }\enspace{}\VAR{link.label | latex}}\BLOCK{ if not loop.last }\quad{}\BLOCK{ endif }
+\mbox{\href{\VAR{link.url}}{\BLOCK{ if 'github.com' in link.url }\faGithub\BLOCK{ elif 'youtu' in link.url }\faYoutubePlay\BLOCK{ else }\faExternalLink\BLOCK{ endif }\enspace{}\VAR{link.label | latex}}}\BLOCK{ if not loop.last }\quad{}\BLOCK{ endif }
 \BLOCK{ endfor }%
 }\par\vspace{2pt}
 \begin{cvpoints}
