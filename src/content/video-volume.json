@@ -9,8 +9,8 @@
     "sourceTitle": "Cat relaxing on a sofa.webm",
     "sourceOffset": 12,
     "duration": 3,
-    "fps": 8,
-    "frameCount": 24,
+    "fps": 12,
+    "frameCount": 36,
     "width": 640,
     "height": 360,
     "labels": [
@@ -20,8 +20,9 @@
     "poster": "/video-volume/cat/poster.webp",
     "atlas": "/video-volume/cat/frames.webp",
     "analysis": "/video-volume/cat/analysis.json",
-    "modifications": "Three-second excerpt; audio removed; resized to 640 × 360. Frames sampled at 8 fps for AI analysis.",
-    "sourceSha256": "7e15ecdc1549f5ed3a5b957e2080c7f1cd32ee61c8d308632896826b6ae5b726"
+    "modifications": "Three-second excerpt; audio removed; resized to 640 × 360. Frames sampled at 12 fps for AI analysis.",
+    "sourceSha256": "7e15ecdc1549f5ed3a5b957e2080c7f1cd32ee61c8d308632896826b6ae5b726",
+    "minimumTrackFrames": 0
   },
   {
     "id": "duck",
@@ -33,8 +34,8 @@
     "sourceTitle": "Duck walking in Yvoire.webm",
     "sourceOffset": 3,
     "duration": 3,
-    "fps": 8,
-    "frameCount": 24,
+    "fps": 12,
+    "frameCount": 36,
     "width": 640,
     "height": 360,
     "labels": [
@@ -44,8 +45,9 @@
     "poster": "/video-volume/duck/poster.webp",
     "atlas": "/video-volume/duck/frames.webp",
     "analysis": "/video-volume/duck/analysis.json",
-    "modifications": "Three-second excerpt; audio removed; resized to 640 × 360. Frames sampled at 8 fps for AI analysis.",
-    "sourceSha256": "2ac02c2596f550f2e045813ed281595b377aaceb8043774258339c2f179b79bf"
+    "modifications": "Three-second excerpt; audio removed; resized to 640 × 360. Frames sampled at 12 fps for AI analysis.",
+    "sourceSha256": "2ac02c2596f550f2e045813ed281595b377aaceb8043774258339c2f179b79bf",
+    "minimumTrackFrames": 0
   },
   {
     "id": "runner",
@@ -57,8 +59,8 @@
     "sourceTitle": "Jogging - near arakawa river - tokyo japan - 2022 may 3.webm",
     "sourceOffset": 1,
     "duration": 3,
-    "fps": 8,
-    "frameCount": 24,
+    "fps": 12,
+    "frameCount": 36,
     "width": 640,
     "height": 360,
     "labels": [
@@ -68,8 +70,9 @@
     "poster": "/video-volume/runner/poster.webp",
     "atlas": "/video-volume/runner/frames.webp",
     "analysis": "/video-volume/runner/analysis.json",
-    "modifications": "Three-second excerpt; audio removed; resized to 640 × 360. Frames sampled at 8 fps for AI analysis.",
-    "sourceSha256": "b35ed9e09daf639306305fd2cbdc8ff466c02cbd1795aca44013e7263c18df2d"
+    "modifications": "Three-second excerpt; audio removed; resized to 640 × 360. Frames sampled at 12 fps for AI analysis.",
+    "sourceSha256": "b35ed9e09daf639306305fd2cbdc8ff466c02cbd1795aca44013e7263c18df2d",
+    "minimumTrackFrames": 0
   },
   {
     "id": "car",
@@ -81,21 +84,21 @@
     "sourceTitle": "Street traffic.webm",
     "sourceOffset": 18,
     "duration": 3,
-    "fps": 8,
-    "frameCount": 24,
+    "fps": 12,
+    "frameCount": 36,
     "width": 640,
     "height": 360,
     "labels": [
       "car",
-      "bus",
-      "truck"
+      "bus"
     ],
     "video": "/video-volume/car/clip.mp4",
     "poster": "/video-volume/car/poster.webp",
     "atlas": "/video-volume/car/frames.webp",
     "analysis": "/video-volume/car/analysis.json",
-    "modifications": "Three-second excerpt; audio removed; resized to 640 × 360. Frames sampled at 8 fps for AI analysis.",
-    "sourceSha256": "e5facb24baf755f0c1193999d823e99f6032661ad2bdef5cc28cc1cbbfde03e2"
+    "modifications": "Three-second excerpt; audio removed; resized to 640 × 360. Frames sampled at 12 fps for AI analysis.",
+    "sourceSha256": "e5facb24baf755f0c1193999d823e99f6032661ad2bdef5cc28cc1cbbfde03e2",
+    "minimumTrackFrames": 0
   },
   {
     "id": "horse",
@@ -107,8 +110,8 @@
     "sourceTitle": "Wild horses (Equus ferus) in Nevada.webm",
     "sourceOffset": 10,
     "duration": 3,
-    "fps": 8,
-    "frameCount": 24,
+    "fps": 12,
+    "frameCount": 36,
     "width": 640,
     "height": 360,
     "labels": [
@@ -118,7 +121,83 @@
     "poster": "/video-volume/horse/poster.webp",
     "atlas": "/video-volume/horse/frames.webp",
     "analysis": "/video-volume/horse/analysis.json",
-    "modifications": "Three-second excerpt; audio removed; resized to 640 × 360. Frames sampled at 8 fps for AI analysis.",
-    "sourceSha256": "ef1c017e37e0deae6c7066e1044271ca4b44c595372ee615b1ea443b3cc005c2"
+    "modifications": "Three-second excerpt; audio removed; resized to 640 × 360. Frames sampled at 12 fps for AI analysis.",
+    "sourceSha256": "ef1c017e37e0deae6c7066e1044271ca4b44c595372ee615b1ea443b3cc005c2",
+    "minimumTrackFrames": 0
+  },
+  {
+    "id": "bear",
+    "source": "https://commons.wikimedia.org/wiki/File:Juraparc_06-07-2013_-_Bear_walking_and_climbing_a_tree.webm",
+    "author": "Clément Bucco-Lechat",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "title": "Bear by the pond",
+    "sourceTitle": "Juraparc 06-07-2013 - Bear walking and climbing a tree.webm",
+    "sourceOffset": 10,
+    "duration": 3,
+    "fps": 12,
+    "frameCount": 36,
+    "width": 640,
+    "height": 360,
+    "labels": [
+      "bear"
+    ],
+    "video": "/video-volume/bear/clip.mp4",
+    "poster": "/video-volume/bear/poster.webp",
+    "atlas": "/video-volume/bear/frames.webp",
+    "analysis": "/video-volume/bear/analysis.json",
+    "modifications": "Three-second excerpt; audio removed; resized to 640 × 360. Frames sampled at 12 fps for AI analysis.",
+    "sourceSha256": "d287a39ab248db693a4fa3ed8cc25cb23c87a73fc5bfb8925ab0b5a6e308d2bc",
+    "minimumTrackFrames": 30
+  },
+  {
+    "id": "elephant",
+    "source": "https://commons.wikimedia.org/wiki/File:African_elephant_(Loxodonta_africana)_rumbling.webm",
+    "author": "Kent Wang",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+    "title": "Elephant at the water",
+    "sourceTitle": "African elephant (Loxodonta africana) rumbling.webm",
+    "sourceOffset": 4,
+    "duration": 3,
+    "fps": 12,
+    "frameCount": 36,
+    "width": 640,
+    "height": 360,
+    "labels": [
+      "elephant"
+    ],
+    "video": "/video-volume/elephant/clip.mp4",
+    "poster": "/video-volume/elephant/poster.webp",
+    "atlas": "/video-volume/elephant/frames.webp",
+    "analysis": "/video-volume/elephant/analysis.json",
+    "modifications": "Three-second excerpt; audio removed; resized to 640 × 360. Frames sampled at 12 fps for AI analysis.",
+    "sourceSha256": "f80b4d7fe2611a524acb513d3cfa3480bd4f310ed7b3d6e12778d921c9b5a093",
+    "minimumTrackFrames": 30
+  },
+  {
+    "id": "giraffe",
+    "source": "https://commons.wikimedia.org/wiki/File:Le_galop_de_la_girafe.webm",
+    "author": "Thierry Dugnolle",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "title": "Giraffe in motion",
+    "sourceTitle": "Le galop de la girafe.webm",
+    "sourceOffset": 1,
+    "duration": 3,
+    "fps": 12,
+    "frameCount": 36,
+    "width": 640,
+    "height": 360,
+    "labels": [
+      "giraffe"
+    ],
+    "video": "/video-volume/giraffe/clip.mp4",
+    "poster": "/video-volume/giraffe/poster.webp",
+    "atlas": "/video-volume/giraffe/frames.webp",
+    "analysis": "/video-volume/giraffe/analysis.json",
+    "modifications": "Three-second excerpt; audio removed; resized to 640 × 360. Frames sampled at 12 fps for AI analysis.",
+    "sourceSha256": "3719f21ed346cf3d08ac919794387fbad02211db36541da260424531e399bcad",
+    "minimumTrackFrames": 30
   }
 ]

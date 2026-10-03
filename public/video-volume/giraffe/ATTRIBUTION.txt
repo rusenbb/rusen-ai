@@ -1,8 +1,8 @@
-Jogging - near arakawa river - tokyo japan - 2022 may 3.webm
-By Nesnad
-Source: https://commons.wikimedia.org/wiki/File:Jogging_-_near_arakawa_river_-_tokyo_japan_-_2022_may_3.webm
-License: CC BY 4.0 — https://creativecommons.org/licenses/by/4.0
+Le galop de la girafe.webm
+By Thierry Dugnolle
+Source: https://commons.wikimedia.org/wiki/File:Le_galop_de_la_girafe.webm
+License: CC BY-SA 3.0 — https://creativecommons.org/licenses/by-sa/3.0
 Changes: Three-second excerpt; audio removed; resized to 640 × 360. Frames sampled at 12 fps for AI analysis. Start: 1 seconds.
 The derivative clip, poster, frame atlas and mask data are provided under the same source license.
 Inference: DETR ResNet-50 boxes, SAM 2.1 Hiera Tiny image masks; algorithmic IoU association. See analysis.json for parameters and pinned revisions.
-Original file SHA-256: b35ed9e09daf639306305fd2cbdc8ff466c02cbd1795aca44013e7263c18df2d
+Original file SHA-256: 3719f21ed346cf3d08ac919794387fbad02211db36541da260424531e399bcad
