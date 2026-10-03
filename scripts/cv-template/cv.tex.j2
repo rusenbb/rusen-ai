@@ -96,7 +96,6 @@
 \BLOCK{ endfor }
 
 \BLOCK{ for section in ['publications', 'projects'] }
-\BLOCK{ if section == 'projects' }\newpage\BLOCK{ endif }
 \cvsection{\BLOCK{ if section == 'publications' }\faBook\BLOCK{ else }\faCode\BLOCK{ endif }}{\VAR{labels[section] | upper | latex}}
 \BLOCK{ for proj in cv[section] }
 \begin{minipage}{\linewidth}\raggedright
@@ -117,6 +116,7 @@
 \BLOCK{ endfor }
 
 \BLOCK{ for category in ['professional'] }
+\newpage
 \cvsection{\BLOCK{ if category == 'research' }\faFlask\BLOCK{ else }\faBriefcase\BLOCK{ endif }}{\VAR{(labels.research if category == 'research' else labels.experience) | upper | latex}}
 \BLOCK{ for item in cv.experience if item.category == category }
 \begin{minipage}{\linewidth}\raggedright

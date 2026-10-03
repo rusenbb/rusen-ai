@@ -284,6 +284,17 @@
   },
   "publications": [
     {
+      "title": "Exact First, Then Fast: An Event-for-Event C++ Rebuild of the Agenthon ABIDES Market",
+      "subtitle": "対面ポスター発表に採択 - Agenthon 2026",
+      "period": "2026",
+      "description": "Göktürk Batın Dervişoğlu, Muhammed Faruk Aytın, Muhammed Rüşen Birben.\n\nNeurIPS 2026で開催されるAgenthon 2026: Verifiable AI for Quantitative Financeにて、対面ポスター発表に採択。2026年12月12日、米国アトランタ。",
+      "tags": [
+        "C++",
+        "ABIDES"
+      ],
+      "links": []
+    },
+    {
       "title": "トルコ文化知識データセット - MRL 2026",
       "subtitle": "データ貢献採択済み・共同ベンチマーク論文準備中",
       "period": "2026",
