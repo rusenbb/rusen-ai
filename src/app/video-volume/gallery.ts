@@ -1,3 +1,4 @@
+import { maskBoundary } from "./mask-boundary";
 import { videoVolumeClips as clips } from "@/lib/video-volume-content";
 import { decodeMask, type InferredVideoFrame } from "./inference-contract";
 export { clips };
@@ -83,22 +84,16 @@ export function prepareFrames(data: Analysis): PreparedFrame[] {
         h = object.mask.height;
       const outline = new Path2D(),
         fill = new Path2D();
-      const edge = (x: number, y: number, xx: number, yy: number) => {
+      for (const [x, y, xx, yy] of maskBoundary(pixels, w, h)) {
         outline.moveTo((x / w) * 640, (y / h) * 360);
         outline.lineTo((xx / w) * 640, (yy / h) * 360);
-      };
+      }
       for (let y = 0; y < h; y++) {
         let run = -1;
         for (let x = 0; x <= w; x++) {
           const on = x < w && pixels[y * w + x];
           if (on) {
             if (run < 0) run = x;
-            if (!y || !pixels[(y - 1) * w + x]) edge(x, y, x + 1, y);
-            if (y === h - 1 || !pixels[(y + 1) * w + x])
-              edge(x, y + 1, x + 1, y + 1);
-            if (!x || !pixels[y * w + x - 1]) edge(x, y, x, y + 1);
-            if (x === w - 1 || !pixels[y * w + x + 1])
-              edge(x + 1, y, x + 1, y + 1);
           } else if (run >= 0) {
             fill.rect(
               (run / w) * 640,
