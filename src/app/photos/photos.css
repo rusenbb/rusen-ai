@@ -627,7 +627,7 @@
   place-items: center;
   color: #f5f4ef;
   background: rgba(3, 3, 3, 0.985);
-  touch-action: pan-y;
+  touch-action: pan-y pinch-zoom;
   animation: photo-lightbox-in 180ms ease-out both;
 }
 
