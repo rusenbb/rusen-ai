@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "inputFingerprint": "fabae3efea5ca1eab1db24dae39a94697b3e705c44998641d2f6fb1d7b4494de",
+  "inputFingerprint": "c6aa978c4ce29eb4eec60f2e445f05ded49e86f79815a5c65648403c09932a52",
   "assets": [
     {
       "route": "/",
@@ -71,7 +71,7 @@
       "image": "/social/projects/video-volume.png",
       "width": 1200,
       "height": 630,
-      "bytes": 25022,
+      "bytes": 25378,
       "format": "png"
     },
     {
