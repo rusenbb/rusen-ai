@@ -287,7 +287,7 @@
       "title": "Exact First, Then Fast: An Event-for-Event C++ Rebuild of the Agenthon ABIDES Market",
       "subtitle": "Agenthon Workshop @ [NeurIPS 2026](https://neurips.cc/Conferences/2026) - Yüz yüze poster sunumu için kabul edildi",
       "period": "2026",
-      "description": "Göktürk Batın Dervişoğlu, Muhammed Faruk Aytın, Muhammed Rüşen Birben.\n\nAgenthon ABIDES piyasa simülatörü; olay sırası, rastgele sayı dizileri ve referans çıktılar korunarak C++ ile yeniden geliştirildi. 6.900 rastgele karşılaştırmada birebir uyum doğrulandı; aynı dizüstü bilgisayarda ölçülen en büyük açık benchmark’ta simülasyon döngüsünde 1.299× hızlanma elde edildi.\n\nAtlanta, ABD, 12 Aralık 2026.",
+      "description": "Göktürk Batın Dervişoğlu, Muhammed Faruk Aytin, Muhammed Rüşen Birben.\n\nAgenthon ABIDES piyasa simülatörü; olay sırası, rastgele sayı dizileri ve referans çıktılar korunarak C++ ile yeniden geliştirildi. 6.900 rastgele karşılaştırmada birebir uyum doğrulandı; aynı dizüstü bilgisayarda ölçülen en büyük açık benchmark’ta simülasyon döngüsünde 1.299× hızlanma elde edildi.\n\nAtlanta, ABD, 12 Aralık 2026.",
       "tags": [
         "C++",
         "ABIDES",
