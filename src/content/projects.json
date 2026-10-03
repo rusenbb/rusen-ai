@@ -1,5 +1,31 @@
 [
   {
+    "id": "video-volume",
+    "title": "Video Volume",
+    "slug": "video-volume",
+    "collection": "demos",
+    "status": "live",
+    "summary": "Pull a frame through a three-dimensional time volume. Filter cars and people to reveal the shapes their motion leaves behind.",
+    "description": "Interactive space-time visualization of an original procedural street scene, with authored object tracks, frame scrubbing, and view controls.",
+    "tags": [
+      "Video",
+      "Space-time",
+      "Object tracking"
+    ],
+    "domains": [
+      "Computational Tools"
+    ],
+    "capabilities": [
+      "Visualization",
+      "Simulation"
+    ],
+    "tech": [
+      "TypeScript",
+      "Canvas 2D"
+    ],
+    "order": 91
+  },
+  {
     "id": "sampling-lab",
     "title": "Sampling Lab",
     "slug": "sampling-lab",

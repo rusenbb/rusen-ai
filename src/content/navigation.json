@@ -26,6 +26,7 @@
         "/pulse-board",
         "/sampling-lab",
         "/segment-anything",
+        "/video-volume",
         "/vision-anything"
       ]
     },
