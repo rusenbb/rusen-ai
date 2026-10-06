@@ -5,6 +5,8 @@
 /* eslint-disable @next/next/no-img-element */
 
 import {
+  lazy,
+  Suspense,
   useCallback,
   useEffect,
   useMemo,
@@ -14,6 +16,7 @@ import {
 } from "react";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import editorialManifest from "@/content/photos.json";
+import labCopy from "@/content/photo-lab.json";
 import type { Photo, PhotoLocale, PhotoSeries } from "@/lib/photos";
 
 const PHOTO_LOCALES = editorialManifest.locales as readonly {
@@ -31,6 +34,7 @@ const ENDING_LINK = editorialManifest.endingLink;
 const PORTFOLIO_LINK = editorialManifest.portfolioLink;
 const PHOTO_LANGUAGE_KEY = "photoLanguage";
 const PHOTO_LANGUAGE_EVENT = "photo-language-change";
+const PhotoLab = lazy(() => import("./PhotoLab"));
 let inMemoryLocale: PhotoLocale | null = null;
 
 function isPhotoLocale(value: string | null): value is PhotoLocale {
@@ -199,6 +203,7 @@ export default function PhotoGallery({ hero, series, photos }: PhotoGalleryProps
     () => DEFAULT_PHOTO_LOCALE,
   );
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [labOpen, setLabOpen] = useState(false);
   const openerRef = useRef<HTMLButtonElement | null>(null);
   const closeRef = useRef<HTMLButtonElement | null>(null);
   const dialogRef = useRef<HTMLDivElement | null>(null);
@@ -212,6 +217,7 @@ export default function PhotoGallery({ hero, series, photos }: PhotoGalleryProps
 
   const close = useCallback(() => {
     pointerStart.current = null;
+    setLabOpen(false);
     setActiveIndex(null);
   }, []);
   const move = useCallback((direction: -1 | 1) => {
@@ -228,11 +234,15 @@ export default function PhotoGallery({ hero, series, photos }: PhotoGalleryProps
     document.body.style.overflow = "hidden";
     closeRef.current?.focus();
     const onKeyDown = (event: KeyboardEvent) => {
+      const editing = event.target instanceof HTMLElement
+        && event.target.matches("input, select, textarea, [contenteditable=true]");
       if (event.key === "Escape") close();
-      else if (event.key === "ArrowLeft") move(-1);
-      else if (event.key === "ArrowRight") move(1);
+      else if (event.key === "ArrowLeft" && !editing) move(-1);
+      else if (event.key === "ArrowRight" && !editing) move(1);
       else if (event.key === "Tab") {
-        const focusable = dialogRef.current?.querySelectorAll<HTMLButtonElement>("button");
+        const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
+          "button:not(:disabled), input:not(:disabled), select:not(:disabled), a[href]",
+        );
         if (!focusable?.length) return;
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
@@ -255,10 +265,15 @@ export default function PhotoGallery({ hero, series, photos }: PhotoGalleryProps
 
   const open = (index: number, opener: HTMLButtonElement) => {
     openerRef.current = opener;
+    setLabOpen(false);
     setActiveIndex(index);
   };
 
   const onPointerDown = (event: ReactPointerEvent) => {
+    if (event.target instanceof Element && event.target.closest("[data-photo-interactive]")) {
+      pointerStart.current = null;
+      return;
+    }
     // Decide per gesture so a mouse on a touchscreen laptop still selects text.
     if (event.pointerType !== "touch") return;
     if (!event.isPrimary) {
@@ -436,18 +451,24 @@ export default function PhotoGallery({ hero, series, photos }: PhotoGalleryProps
           >
             ←
           </button>
-          <div className="photo-lightbox-layout">
+          <div className={`photo-lightbox-layout${labOpen ? " photo-lightbox-lab" : ""}`}>
             <figure>
-              <img
-                key={activePhoto.id}
-                src={activePhoto.sources.display.url}
-                srcSet={sourceSet(activePhoto)}
-                sizes="(max-width: 720px) 100vw, 72vw"
-                width={activePhoto.width}
-                height={activePhoto.height}
-                alt={activeCopy.alt}
-                decoding="async"
-              />
+              <Suspense fallback={<img src={activePhoto.sources.display.url} alt={activeCopy.alt} />}>
+                {labOpen ? (
+                  <PhotoLab key={activePhoto.id} photo={activePhoto} locale={locale} />
+                ) : (
+                  <img
+                    key={activePhoto.id}
+                    src={activePhoto.sources.display.url}
+                    srcSet={sourceSet(activePhoto)}
+                    sizes="(max-width: 720px) 100vw, 72vw"
+                    width={activePhoto.width}
+                    height={activePhoto.height}
+                    alt={activeCopy.alt}
+                    decoding="async"
+                  />
+                )}
+              </Suspense>
             </figure>
             <aside>
               <p className="photo-lightbox-series">{activePhoto.seriesTitles[locale]}</p>
@@ -469,6 +490,14 @@ export default function PhotoGallery({ hero, series, photos }: PhotoGalleryProps
                   {activePhoto.seriesCredit.translations[locale]} ↗
                 </a>
               )}
+              <button
+                type="button"
+                className="photo-lab-toggle"
+                aria-pressed={labOpen}
+                onClick={() => setLabOpen(!labOpen)}
+              >
+                {labOpen ? labCopy[locale].close : labCopy[locale].open}
+              </button>
               <div className="photo-lightbox-meta">
                 <span>{activePhoto.filename.replace(/\.[^.]+$/, "")}</span>
                 <span>
