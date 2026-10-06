@@ -774,6 +774,106 @@
   right: 0.75rem;
 }
 
+.photo-lab-toggle {
+  align-self: flex-start;
+  margin: 1.75rem 0;
+  border: 1px solid #445c4b;
+  padding: 0.85rem 1rem;
+  color: #7ef2aa;
+  background: #152019;
+  font: inherit;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.photo-lab-toggle:hover { background: #21352a; }
+
+.photo-lab {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 1.25rem;
+  font-family: var(--font-geist-mono), monospace;
+}
+
+.photo-lab-stage {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.photo-lab-frame { position: relative; flex-shrink: 0; overflow: hidden; }
+
+.photo-lightbox .photo-lab-frame > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  animation: none;
+}
+
+.photo-lab-treatment { position: absolute; inset: 0; background: #060606; }
+.photo-lab-canvas { display: block; width: 100%; height: 100%; }
+.photo-lab-controls { flex-shrink: 0; width: min(100%, 46rem); margin-inline: auto; }
+.photo-lab-modes { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+
+.photo-lab-controls button {
+  min-height: 2.75rem;
+  border: 1px solid #343531;
+  padding: 0.6rem 0.8rem;
+  color: #aaa9a1;
+  background: transparent;
+  font: inherit;
+  font-size: 0.65rem;
+  cursor: pointer;
+}
+
+.photo-lab-controls button[aria-pressed="true"] { border-color: #7ef2aa; color: #7ef2aa; background: #152019; }
+.photo-lab-controls button:hover:not(:disabled) { color: #f5f4ef; border-color: #b1b1a9; }
+.photo-lab-controls button:disabled { opacity: 0.4; cursor: default; }
+.photo-lab-controls :focus-visible,
+.photo-lab-toggle:focus-visible { outline: 2px solid #7ef2aa; outline-offset: 4px; }
+.photo-lab-description,
+.photo-lab-status { margin: 0.85rem 0; color: #aaa9a1; font-size: 0.65rem; line-height: 1.6; }
+.photo-lab-status { color: #d9c68e; }
+.photo-lab-status:empty { display: none; }
+.photo-lab-settings { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.photo-lab-settings label,
+.photo-lab-comparison-control { display: flex; flex-direction: column; gap: 0.35rem; color: #aaa9a1; font-size: 0.6rem; }
+.photo-lab-settings label > span { display: flex; justify-content: space-between; gap: 1rem; }
+.photo-lab-settings output { color: #7ef2aa; }
+.photo-lab-controls input[type="range"] { width: 100%; height: 1.75rem; margin: 0; accent-color: #7ef2aa; cursor: pointer; }
+.photo-lab-controls input:disabled { opacity: 0.4; cursor: default; }
+.photo-lab-actions { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.6rem; }
+.photo-lab-actions button:last-child { margin-left: auto; }
+.photo-lab-comparison-control { margin-top: 0.75rem; }
+.photo-lab-compare-labels { position: absolute; inset: 0.65rem 0.65rem auto; display: flex; justify-content: space-between; pointer-events: none; }
+.photo-lab-compare-labels span { padding: 0.35rem 0.5rem; color: white; background: #000a; font-size: 0.55rem; }
+
+.photo-lab-divider {
+  position: absolute;
+  inset: 0 auto 0 var(--divider);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  margin-left: -22px;
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.photo-lab-divider::before { content: ""; position: absolute; inset: 0 auto; width: 2px; background: white; box-shadow: 0 0 8px #0008; }
+.photo-lab-divider span { position: relative; display: grid; place-items: center; width: 2rem; height: 2rem; border: 1px solid white; border-radius: 50%; color: white; background: #151515; }
+
 @keyframes photo-hero-arrive {
   from { transform: scale(1.035); }
   to { transform: scale(1); }
@@ -975,6 +1075,14 @@
   .photo-lightbox figure img {
     max-height: calc(58svh - 3.5rem);
   }
+
+  .photo-lightbox .photo-lightbox-lab figure {
+    height: max(48rem, 94svh);
+    padding: 3.5rem 0.75rem 0;
+  }
+
+  .photo-lab { padding: 0.5rem 0 1rem; }
+  .photo-lab-controls button { padding-inline: 0.6rem; }
 
   .photo-lightbox aside {
     min-height: 42svh;

@@ -92,6 +92,21 @@ The generated URLs include a source-derived version directory. `public/_headers`
 gives those versioned assets a one-year immutable cache policy. Raw originals
 remain outside the repository.
 
+The photo viewer offers an opt-in Photo Lab with Original, ASCII, Dither,
+Newsprint, and Particles treatments. Copy lives in `src/content/photo-lab.json`
+for Turkish, English, and Japanese. Lab and its `shaders` WebGPU runtime load
+on demand; unsupported browsers retain the original photograph. Detail and
+contrast controls update the renderer, and a draggable or keyboard-operated
+divider compares the treatment with the original.
+
+`PhotoLabCanvas.tsx` uses the library's public core API without starting its
+optional telemetry collector. Static treatments render on demand; particles
+run at most 30 frames per second and stop while the document is hidden.
+Reduced-motion preferences disable particle animation and cursor displacement.
+Backing buffers are capped at 1200 pixels on their longest side, and closing
+Lab or changing photographs releases the renderer. Bundled third-party notices are
+available at `/licenses/shaders.txt`.
+
 ### CV
 
 Locale content is stored in `src/content/cv.json`, `cv.tr.json`, and
