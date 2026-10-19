@@ -40,7 +40,7 @@
       "company": "中東工科大学 応用NLPグループ",
       "period": "03/2026 - 現在",
       "location": "アンカラ、トルコ",
-      "description": "Çağrı Toraman、Evren Ayberk Munisとともに、SIGTURK 2027 Workshop（ACL 2027）の[SIGTURK 2027 Shared Task](https://sigturk.github.io/workshops/2027/shared-task/)を共同主催。データ作成と評価手法に貢献し、Webサイトと評価パイプラインを構築。\n\nGemmaTurkの学習データ収集と事前学習実験を支援。\n\n[METU NLP Connect](https://www.youtube.com/@metunlpconnect)を運営し、専門家インタビューを制作。",
+      "description": "Çağrı Toraman、Evren Ayberk Munisとともに、SIGTURK 2027 Workshop（ACL 2027）の[SIGTURK 2027 Shared Task](https://sigturk.github.io/workshops/2027/shared-task/)を共同主催。データ作成と評価手法に貢献し、Webサイトと評価パイプラインを構築。\n\nGemmaTurkの学習データ収集、mid-training向けの合成instruction・reasoningデータ生成、事前学習実験を支援。\n\n[METU NLP Connect](https://www.youtube.com/@metunlpconnect)を運営し、専門家インタビューを制作。",
       "link": "https://nlp.ceng.metu.edu.tr",
       "category": "research"
     },
