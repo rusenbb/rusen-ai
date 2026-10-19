@@ -61,6 +61,14 @@ export default function RootLayout({
             `,
           }}
         />
+        {/* The blog language filter lives here, not in /blogs/layout.tsx: React
+            never runs inline scripts it renders during client-side navigation,
+            so a nested-layout script is skipped when a visitor clicks into /blogs. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(() => { let s = null; try { s = localStorage.getItem('blogLang'); } catch (_) {} const a = (navigator.language || '').toLowerCase().startsWith('tr') ? 'tr' : 'en'; document.documentElement.dataset.blogLang = (s === 'en' || s === 'tr') ? s : a; })();`,
+          }}
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}

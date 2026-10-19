@@ -1648,7 +1648,7 @@ export function AnimatedWidget({ children, index, id }: { children: React.ReactN
   return (
     <div
       id={`widget-${id}`}
-      className="animate-fade-in-up h-full"
+      className="animate-fade-in-up h-full min-w-0"
       style={{ animationDelay: `${index * 75}ms` }}
     >
       {children}
