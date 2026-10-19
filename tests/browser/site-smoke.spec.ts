@@ -73,6 +73,27 @@ test("blog sections fit a narrow phone screen", async ({ page }) => {
   await expect(heading).toHaveAttribute("aria-expanded", "true");
 });
 
+test("blog language filter applies after client-side navigation into the blog", async ({ page }) => {
+  await page.addInitScript(() => window.localStorage.setItem("blogLang", "tr"));
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: /switch to .* theme/i })).toBeEnabled();
+  await page.evaluate(() => { (window as Window & { clientNavMarker?: boolean }).clientNavMarker = true; });
+  await page.getByRole("link", { name: "Blog", exact: true }).click();
+  await expect(page).toHaveURL(/\/blogs\/$/);
+  expect(await page.evaluate(() => (window as Window & { clientNavMarker?: boolean }).clientNavMarker)).toBe(true);
+  await expect(page.locator("html")).toHaveAttribute("data-blog-lang", "tr");
+  await expect(page.locator('.series-entry[data-post-lang="tr"]').first()).toBeVisible();
+  await expect(page.locator('.series-entry[data-post-lang="en"]').first()).toBeHidden();
+});
+
+test("a single-language tag page lists its posts when the other language is selected", async ({ page }) => {
+  await page.addInitScript(() => window.localStorage.setItem("blogLang", "tr"));
+  await page.goto("/blogs/tag/human/");
+  await expect(page.locator("html")).toHaveAttribute("data-blog-lang", "tr");
+  await expect(page.locator('.entry-row[data-post-lang="en"]').first()).toBeVisible();
+  await expect(page.locator('.tag-strip a[data-tag-lang="en"]').first()).toBeVisible();
+});
+
 test("mobile menu stays usable on a short landscape screen", async ({ page }) => {
   await page.setViewportSize({ width: 667, height: 375 });
   await page.goto("/");
