@@ -9,13 +9,15 @@
   color: var(--foreground);
 }
 
-/* Language filter - same pattern as the dark-mode data-theme switching. */
-html[data-blog-lang="en"] [data-post-lang="tr"],
-html[data-blog-lang="en"] [data-tag-lang="tr"] {
+/* Language filter - same pattern as the dark-mode data-theme switching.
+   A single-language archive (data-blog-force-lang) opts out of the document
+   preference; otherwise both rules together would hide every row. */
+html[data-blog-lang="en"] [data-post-lang="tr"]:not([data-blog-force-lang] *),
+html[data-blog-lang="en"] [data-tag-lang="tr"]:not([data-blog-force-lang] *) {
   display: none;
 }
-html[data-blog-lang="tr"] [data-post-lang="en"],
-html[data-blog-lang="tr"] [data-tag-lang="en"] {
+html[data-blog-lang="tr"] [data-post-lang="en"]:not([data-blog-force-lang] *),
+html[data-blog-lang="tr"] [data-tag-lang="en"]:not([data-blog-force-lang] *) {
   display: none;
 }
 [data-blog-force-lang="en"] [data-post-lang="tr"],
