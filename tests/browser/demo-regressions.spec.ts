@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import sharp from "sharp";
 
 for (const width of [320, 390]) {
-  for (const slug of ["outguess", "optimizer-racetrack", "classify-anything", "steering-llms"]) {
+  for (const slug of ["outguess", "optimizer-racetrack", "classify-anything", "steering-llms", "bulletin/metuclass"]) {
     test(`${slug} fits a ${width}px phone`, async ({ page }) => {
       await page.setViewportSize({ width, height: 844 });
       await page.goto(`/${slug}/`);
