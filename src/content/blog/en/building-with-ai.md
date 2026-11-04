@@ -15,7 +15,7 @@ seriesOrder: 2
 
 AI has gained incredible skill at coding - I think we all agree on that. And extrapolating this trend, it seems clear that we'll use virtual AI assistants much like real people. As capitalism dictates, labor always gets cheaper relative to its output (i.e., productivity increases).
 
-At this point, even though a few things are being overlooked - as I mentioned in the previous post in this series - we'll ignore them for now too. To avoid repeating myself, I won't revisit those points; if you're curious, you can check out the previous post [s1].
+At this point, even though a few things are being overlooked - as I mentioned in the previous post in this series - we'll ignore them for now too. To avoid repeating myself, I won't revisit those points; if you're curious, you can check out [the previous post](/blogs/ai-and-the-future-of-programming/).
 
 Today I want to talk about something different. I want to talk about the death of knowledge-shuffling.
 

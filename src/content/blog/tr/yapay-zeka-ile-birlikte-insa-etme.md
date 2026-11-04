@@ -15,7 +15,7 @@ seriesOrder: 2
 
 Yapay zeka kodlamada müthiş bir beceri kazandı, bu konuda hepimiz hemfikiriz sanırım. Ve aynı şekilde bu trendin extrapole edildiğinde (geleceğe uzatıldığı zaman) sanal yapay zeka asistanlarını tıpkı gerçek insanlar gibi kullanacağımız açık gibi gözüküyor. Kapitalizmin emrettiği gibi, iş her zaman çıktısı karşısında ucuzlar (e.g. verimlilik artar).
 
-Bu noktada serinin bir önceki blog postunda bahsettiğim gibi birkaç şey göz ardı ediliyor olsa bile, şimdilik biz de onları göz ardı edeceğiz. Kendimi tekrar etmemek adına bu noktaların bahsini geçmeyeceğim, merak ettiyseniz önceki blog postuma [s1] gidebilirsiniz.
+Bu noktada serinin bir önceki blog postunda bahsettiğim gibi birkaç şey göz ardı ediliyor olsa bile, şimdilik biz de onları göz ardı edeceğiz. Kendimi tekrar etmemek adına bu noktaların bahsini geçmeyeceğim, merak ettiyseniz [önceki blog postuma](/blogs/yapay-zeka-ve-programlamanin-gelecegi/) gidebilirsiniz.
 
 Bugün daha farklı bir konudan bahsetmek istiyorum. Yapay zeka ile bilgiyi evirip çevirmenin ölümünden bahsetmek istiyorum.
 
