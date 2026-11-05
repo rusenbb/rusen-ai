@@ -76,7 +76,7 @@
       "company": "İTÜ NLP Laboratuvarı",
       "period": "07/2024 - 08/2024",
       "location": "İstanbul, TR",
-      "description": "Finansal LLM uygulamalarında duygu analizi, araç kullanımı, akıl yürütme, tahmin ve RAG araştırması. Kaira bitirme projesine katkı sağlayan deneylerin yürütülmesi.",
+      "description": "Duygu analizi, araç kullanımı, akıl yürütme, tahmin ve RAG alanlarında finansal LLM deneylerinin yürütülmesi; sonuçlar Kaira bitirme projesine aktarıldı.",
       "link": "https://nlp.itu.edu.tr/",
       "category": "research"
     }
@@ -136,7 +136,7 @@
       "title": "Biting The Bytes",
       "subtitle": "Türkçe Karakter Tamamlama",
       "period": "2024",
-      "description": "Türkçe karakter restorasyonu için ByT5-small modelinin PEFT/LoRA ile bayt düzeyinde eğitimi ve hiperparametre ayarlarının yürütülmesi. Hata ayıklama ve Hugging Face Spaces yayınının ekip arkadaşıyla paylaşılması.",
+      "description": "Bayt düzeyinde Türkçe diakritik restorasyonu için ByT5-small modelinin PEFT/LoRA ile ince ayarına liderlik; test setinde %96,18 kelime doğruluğu. Modelin Hugging Face Spaces’te ekip arkadaşıyla birlikte yayınlanması.",
       "tags": [
         "ByT5-small",
         "LoRA",
@@ -192,7 +192,7 @@
     {
       "title": "1416 YLSY Bursu · Yüksek Lisans ve Doktora",
       "issuer": "T.C. Millî Eğitim Bakanlığı",
-      "summary": "Yurt dışında yüksek lisans ve ardından doktora öğrenimi için devlet bursu kazandı. Burs; öğrenim ücretlerini, aylık yaşam bursunu, sağlık sigortasını, ulaşımı, yabancı dil sınav ücretlerini ve kırtasiye yardımını kapsar. Burslu öğrenimin tamamlanmasının ardından Türkiye’ye dönerek doktor öğretim üyesi olarak görev yapacaktır.",
+      "summary": "ABD’de Yapay Zekâ ve Büyük Veri alanında yüksek lisans ve doktora için tam burslu devlet bursu; ulusal seçme sınavıyla kazanıldı.",
       "period": "2026",
       "url": "https://rusen.ai/Sponsorship-MSc-PhD.pdf",
       "linkText": "Yüksek Lisans ve Doktora"
@@ -294,7 +294,7 @@
       "title": "Exact First, Then Fast: An Event-for-Event C++ Rebuild of the Agenthon ABIDES Market",
       "subtitle": "Agenthon Workshop @ [NeurIPS 2026](https://neurips.cc/Conferences/2026) - Yüz yüze poster sunumu için kabul edildi",
       "period": "2026",
-      "description": "Göktürk Batın Dervişoğlu, Muhammed Faruk Aytin, Muhammed Rüşen Birben.\n\nAgenthon ABIDES piyasa simülatörü; olay sırası, rastgele sayı dizileri ve referans çıktılar korunarak C++ ile yeniden geliştirildi. 6.900 rastgele karşılaştırmada birebir uyum doğrulandı; aynı dizüstü bilgisayarda ölçülen en büyük açık benchmark’ta simülasyon döngüsünde 1.299× hızlanma elde edildi.\n\nAtlanta, ABD, 12 Aralık 2026.",
+      "description": "Göktürk Batın Dervişoğlu, Muhammed Faruk Aytin, Muhammed Rüşen Birben.\n\nAgenthon ABIDES piyasa simülatörü; olay sırası, rastgele sayı dizileri ve referans çıktılar korunarak C++ ile yeniden geliştirildi. 6.900 rastgele karşılaştırmada birebir uyum doğrulandı; en büyük açık benchmark’ta simülasyon döngüsünde 1.299× hızlanma elde edildi.\n\nAtlanta, ABD, 12 Aralık 2026.",
       "tags": [
         "C++",
         "ABIDES",

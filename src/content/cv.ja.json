@@ -76,7 +76,7 @@
       "company": "ITU NLP 研究室",
       "period": "07/2024 - 08/2024",
       "location": "イスタンブール、トルコ",
-      "description": "金融分野の感情分析、ツール利用、推論、予測、RAGを研究。学部卒業研究Kairaに関連する実験に貢献。",
+      "description": "感情分析、ツール利用、推論、予測、RAGにわたる金融LLMの実験を実施し、学部卒業研究Kairaに反映。",
       "link": "https://nlp.itu.edu.tr/",
       "category": "research"
     }
@@ -136,7 +136,7 @@
       "title": "Biting The Bytes",
       "subtitle": "トルコ語ダイアクリティカル復元",
       "period": "2024",
-      "description": "トルコ語の発音区別符号復元で、PEFT/LoRAを使ったByT5-smallの学習と調整を主導。バイト単位の処理を実装し、デバッグとHugging Face Spaces公開を共同で担当。",
+      "description": "バイト単位のトルコ語発音区別符号復元に向け、PEFT/LoRAによるByT5-smallのファインチューニングを主導し、テストセットで単語単位の精度96.18%を達成。Hugging Face Spacesでの公開を共同で担当。",
       "tags": [
         "ByT5-small",
         "LoRA",
@@ -192,7 +192,7 @@
     {
       "title": "1416 YLSY 奨学金 · 修士・博士課程",
       "issuer": "トルコ国民教育省",
-      "summary": "海外での修士課程と、その後の博士課程を対象とする政府奨学金に採択。授業料、毎月の生活費、健康保険、渡航費、語学試験費用、学用品費を支援。奨学金対象の学業修了後は、トルコに帰国し、助教（Assistant Professor）として勤務予定。",
+      "summary": "米国での人工知能・ビッグデータ分野の修士・博士課程を対象とする全額支給の政府奨学金。国家選抜試験を経て採択。",
       "period": "2026",
       "url": "https://rusen.ai/Sponsorship-MSc-PhD.pdf",
       "linkText": "修士・博士課程"
@@ -294,7 +294,7 @@
       "title": "Exact First, Then Fast: An Event-for-Event C++ Rebuild of the Agenthon ABIDES Market",
       "subtitle": "Agenthon Workshop @ [NeurIPS 2026](https://neurips.cc/Conferences/2026) - 対面ポスター発表に採択",
       "period": "2026",
-      "description": "Göktürk Batın Dervişoğlu, Muhammed Faruk Aytin, Muhammed Rüşen Birben.\n\nAgenthon ABIDES市場シミュレータをC++で再構築し、イベント順序、乱数列、参照出力を保持。6,900件のランダム化比較で完全一致を検証し、同一のノートPCで測定した最大規模の公開ベンチマークにおいて、シミュレーションループの1,299倍の高速化を達成。\n\n2026年12月12日、米国アトランタ。",
+      "description": "Göktürk Batın Dervişoğlu, Muhammed Faruk Aytin, Muhammed Rüşen Birben.\n\nAgenthon ABIDES市場シミュレータをC++で再構築し、イベント順序、乱数列、参照出力を保持。6,900件のランダム化比較で完全一致を検証し、最大規模の公開ベンチマークにおいて、シミュレーションループの1,299倍の高速化を達成。\n\n2026年12月12日、米国アトランタ。",
       "tags": [
         "C++",
         "ABIDES",
