@@ -40,7 +40,7 @@
       "company": "METU Applied NLP Group",
       "period": "03/2026 - Present",
       "location": "Ankara, TR",
-      "description": "Co-organize the [SIGTURK 2027 Shared Task](https://sigturk.github.io/workshops/2027/shared-task/) at the SIGTURK 2027 Workshop (ACL 2027) with Çağrı Toraman, Evren Ayberk Munis, and İlker Kesen. Contribute to data creation and evaluation methodology; built the shared-task website and evaluation pipeline.\n\nSupport GemmaTurk through training-data collection, synthetic instruction and reasoning data generation for mid-training, and pretraining experiments.\n\nLead [METU NLP Connect](https://www.youtube.com/@metunlpconnect), producing expert interviews.",
+      "description": "Co-organize the [SIGTURK 2027 Shared Task](https://sigturk.github.io/workshops/2027/shared-task/) at the SIGTURK 2027 Workshop (ACL 2027) with Çağrı Toraman, Evren Ayberk Munis, and İlker Kesen. Contribute to data creation and evaluation methodology; built the shared-task website and evaluation pipeline.\n\nContribute to GemmaTurk, a Turkish LLM, across training-data collection, synthetic instruction and reasoning data generation, mid-training, continual pre-training, and pre-training evaluation.\n\nLead [METU NLP Connect](https://www.youtube.com/@metunlpconnect), producing expert interviews.",
       "link": "https://nlp.ceng.metu.edu.tr",
       "category": "research"
     },
@@ -49,7 +49,7 @@
       "company": "Fiction Studios",
       "period": "08/2025 - 04/2026",
       "location": "Ankara, TR",
-      "description": "Co-founded Fiction Studios at Bilkent Cyberpark; led technical development and coordinated three additional contributors. Built a multilingual LLM-powered museum and tourism guide, alongside customer and investor discussions.",
+      "description": "Co-founded Fiction Studios at Bilkent Cyberpark; led technical development and coordinated three additional contributors. Built a multilingual LLM-powered museum and tourism guide and pitched it to customers and investors.",
       "link": "https://github.com/fiction-ai-studios",
       "category": "professional"
     },
@@ -67,7 +67,7 @@
       "company": "Havelsan",
       "period": "08/2024 - 09/2024",
       "location": "Istanbul, TR",
-      "description": "Investigated software-log analysis for predictive maintenance; developed prototypes using HDFS logs.",
+      "description": "Built LSTM and random-forest prototypes for log-based anomaly detection on HDFS logs for predictive maintenance; the LSTM reached 0.96 F1 and 99% accuracy on the test set.",
       "link": "https://havelsan.com/tr",
       "category": "research"
     },
@@ -76,7 +76,7 @@
       "company": "ITU NLP Lab",
       "period": "07/2024 - 08/2024",
       "location": "Istanbul, TR",
-      "description": "Researched financial LLM applications involving sentiment analysis, tool use, reasoning, forecasting, and retrieval-augmented generation. Contributed experiments to the Kaira undergraduate capstone.",
+      "description": "Ran experiments on financial LLMs across sentiment analysis, tool use, reasoning, forecasting, and RAG, feeding into the Kaira capstone.",
       "link": "https://nlp.itu.edu.tr/",
       "category": "research"
     }
@@ -86,7 +86,7 @@
       "title": "Kaira",
       "subtitle": "Undergraduate Capstone: Financial Reasoning LLM",
       "period": "2025",
-      "description": "Fine-tuned Qwen-based LLMs with GRPO, Unsloth, and LoRA; ran FinQA and GSM8K experiments on reward design and financial reasoning. Developed an Ollama-based chat application.",
+      "description": "Fine-tuned Qwen-based LLMs with GRPO, Unsloth, and LoRA, reaching 58.08% FinQA accuracy with Qwen3-4B, up from 47.48% with Qwen2.5-3B; ran FinQA and GSM8K experiments on reward design and financial reasoning. Developed an Ollama-based chat application.",
       "tags": [
         "GRPO",
         "Unsloth",
@@ -99,7 +99,7 @@
       "title": "Tobor",
       "subtitle": "Autonomous Warehouse Robot",
       "period": "2024 - 2025",
-      "description": "Implemented the box pickup/drop-off mechanism in a team-built ROS2 warehouse robot with navigation and YOLO perception; shared data annotation and supported other algorithms.",
+      "description": "Implemented the box pickup/drop-off mechanism for a team-built ROS2 warehouse robot with navigation and YOLO perception; contributed to data annotation.",
       "tags": [
         "ROS2",
         "YOLO",
@@ -120,7 +120,7 @@
       "title": "AIZheimer",
       "subtitle": "Machine Unlearning in Stable Diffusion",
       "period": "2024",
-      "description": "Adapted Forget-Me-Not-based unlearning for Stable Diffusion 2.1. Implemented attention controllers and explored loss objectives; qualitatively assessed concept removal and retention of unrelated generation capabilities.",
+      "description": "Adapted Forget-Me-Not unlearning to Stable Diffusion 2.1, implementing attention controllers and testing loss objectives to erase target concepts while preserving unrelated generation.",
       "tags": [
         "Stable Diffusion 2.1",
         "Machine Unlearning"
@@ -136,7 +136,7 @@
       "title": "Biting The Bytes",
       "subtitle": "Turkish Diacritic Restoration",
       "period": "2024",
-      "description": "Led ByT5-small training and hyperparameter tuning with PEFT/LoRA for byte-level Turkish diacritic restoration. Shared debugging and Hugging Face Spaces deployment with a teammate.",
+      "description": "Led ByT5-small fine-tuning with PEFT/LoRA for byte-level Turkish diacritic restoration, reaching 96.18% word-level accuracy on the test set and tying for 2nd of 17 teams in the course's Kaggle competition; co-deployed the model on Hugging Face Spaces.",
       "tags": [
         "ByT5-small",
         "LoRA",
@@ -194,7 +194,7 @@
       "title": "1416 YLSY Scholarship · M.Sc. & Ph.D.",
       "issuer": "Türkiye Ministry of National Education",
       "period": "2026",
-      "summary": "Awarded government funding for overseas master’s study followed by doctoral study, covering tuition fees, a monthly living stipend, health insurance, travel, language-exam fees, and study supplies. Following completion of the funded studies, will return to Türkiye as an assistant professor.",
+      "summary": "Fully funded government scholarship for M.Sc. and Ph.D. study in Artificial Intelligence and Big Data in the USA, awarded through a national selection exam.",
       "url": "https://rusen.ai/Sponsorship-MSc-PhD.pdf",
       "linkText": "M.Sc. & Ph.D."
     },
@@ -202,7 +202,7 @@
       "title": "1st Place · Agenthon 2026, Track 3 (Simulation)",
       "issuer": "NeurIPS 2026 Competition Track",
       "period": "2026",
-      "summary": "Ranked 1st of 55 teams in the simulation track, building as a team an ABIDES-compatible market simulator that maximizes event throughput while preserving matching-engine semantics. Selected to present a team poster at the Agenthon workshop at NeurIPS 2026.",
+      "summary": "Ranked 1st of 55 teams in the simulation track with an event-for-event C++ rebuild of the ABIDES market simulator (see Publications). The win earned an additional team poster presentation at the Agenthon workshop at NeurIPS 2026.",
       "url": "https://www.agenthon.net/"
     },
     {
@@ -295,7 +295,7 @@
       "title": "Exact First, Then Fast: An Event-for-Event C++ Rebuild of the Agenthon ABIDES Market",
       "subtitle": "Agenthon Workshop @ [NeurIPS 2026](https://neurips.cc/Conferences/2026) - Accepted for in-person poster presentation",
       "period": "2026",
-      "description": "Göktürk Batın Dervişoğlu, Muhammed Faruk Aytin, Muhammed Rüşen Birben.\n\nRebuilt the Agenthon ABIDES market simulator in C++, preserving event ordering, random-number sequences, and reference outputs. Validated exact agreement across 6,900 randomized comparisons and achieved a 1,299× simulation-loop speedup on the largest public benchmark, measured on the same laptop.\n\nAtlanta, USA, December 12, 2026.",
+      "description": "Göktürk Batın Dervişoğlu, Muhammed Faruk Aytin, Muhammed Rüşen Birben.\n\nRebuilt the Agenthon ABIDES market simulator in C++, preserving event ordering, random-number sequences, and reference outputs. Validated exact agreement across 6,900 randomized comparisons and achieved a 1,299× simulation-loop speedup on the largest public benchmark.\n\nAtlanta, USA, December 12, 2026.",
       "tags": [
         "C++",
         "ABIDES",
@@ -312,7 +312,7 @@
       "title": "Turkish Cultural Knowledge Dataset",
       "subtitle": "MRL Workshop @ [EMNLP 2026](https://2026.emnlp.org/) - Accepted dataset contribution; joint benchmark paper in preparation",
       "period": "2026",
-      "description": "Led the source-grounded agent pipeline and data preparation for a Turkish cultural knowledge dataset spanning 15 domains.\n\nScreened 1,200 candidate question-answer pairs; selected 500 for sociological review by Büşra Tufan and prepared the final 300-pair submission.\n\nContributed to English translation review under the research guidance of Çağrı Toraman.",
+      "description": "Led the source-grounded agent pipeline and data preparation for a Turkish cultural knowledge dataset spanning 15 domains.\n\nScreened 1,200 candidate question-answer pairs; selected 500 for sociological review by Büşra Tufan and prepared the final 300-pair submission.\n\nReviewed English translations; supervised by Çağrı Toraman.",
       "tags": [
         "Cultural QA",
         "Data Curation",
