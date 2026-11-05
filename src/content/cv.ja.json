@@ -40,7 +40,7 @@
       "company": "中東工科大学 応用NLPグループ",
       "period": "03/2026 - 現在",
       "location": "アンカラ、トルコ",
-      "description": "Çağrı Toraman、Evren Ayberk Munis、İlker Kesenとともに、SIGTURK 2027 Workshop（ACL 2027）の[SIGTURK 2027 Shared Task](https://sigturk.github.io/workshops/2027/shared-task/)を共同主催。データ作成と評価手法に貢献し、Webサイトと評価パイプラインを構築。\n\nGemmaTurkの学習データ収集、mid-training向けの合成instruction・reasoningデータ生成、事前学習実験を支援。\n\n[METU NLP Connect](https://www.youtube.com/@metunlpconnect)を運営し、専門家インタビューを制作。",
+      "description": "Çağrı Toraman、Evren Ayberk Munis、İlker Kesenとともに、SIGTURK 2027 Workshop（ACL 2027）の[SIGTURK 2027 Shared Task](https://sigturk.github.io/workshops/2027/shared-task/)を共同主催。データ作成と評価手法に貢献し、Webサイトと評価パイプラインを構築。\n\nトルコ語LLMであるGemmaTurkで、学習データ収集、合成インストラクション・推論データの生成、mid-training、継続事前学習、事前学習の評価に携わる。\n\n[METU NLP Connect](https://www.youtube.com/@metunlpconnect)を運営し、専門家インタビューを制作。",
       "link": "https://nlp.ceng.metu.edu.tr",
       "category": "research"
     },
@@ -49,7 +49,7 @@
       "company": "Fiction Studios",
       "period": "08/2025 - 04/2026",
       "location": "アンカラ、トルコ",
-      "description": "Bilkent CyberparkでFiction Studiosを共同創業し、技術開発と追加メンバー3名の活動を統括。博物館・観光向けの多言語LLMガイドを開発し、顧客・投資家との対話にも参加。",
+      "description": "Bilkent CyberparkでFiction Studiosを共同創業し、技術開発と追加メンバー3名の活動を統括。博物館・観光向けの多言語LLMガイドを開発し、顧客と投資家に提案。",
       "link": "https://github.com/fiction-ai-studios",
       "category": "professional"
     },
@@ -67,7 +67,7 @@
       "company": "Havelsan",
       "period": "08/2024 - 09/2024",
       "location": "イスタンブール、トルコ",
-      "description": "予知保全に向けてソフトウェアログを分析し、HDFSログを用いた試作を実施。",
+      "description": "HDFSのソフトウェアログを用い、予知保全向けのLSTMおよびランダムフォレストの試作モデルを構築。",
       "link": "https://havelsan.com/tr",
       "category": "research"
     },
@@ -99,7 +99,7 @@
       "title": "Tobor",
       "subtitle": "自律走行倉庫ロボット",
       "period": "2024 - 2025",
-      "description": "ROS2とYOLOを利用するチーム制作の倉庫ロボットで、箱の取得・配置機構を実装。データ注釈と他のアルゴリズム開発を支援。",
+      "description": "ナビゲーションとYOLO認識を備えたチーム制作のROS2倉庫ロボットで、箱の取得・配置機構を実装。データ注釈にも貢献。",
       "tags": [
         "ROS2",
         "YOLO",
@@ -120,7 +120,7 @@
       "title": "AIZheimer",
       "subtitle": "Stable Diffusionの機械忘却",
       "period": "2024",
-      "description": "Forget-Me-Notを基にStable Diffusion 2.1のアンラーニングを実装。注意制御と損失関数を検討し、概念除去と無関係な生成能力の保持を定性的に評価。",
+      "description": "Forget-Me-NotによるアンラーニングをStable Diffusion 2.1に適用。注意制御を実装し、無関係な生成能力を保ちながら対象概念を消去する損失関数を検証。",
       "tags": [
         "Stable Diffusion 2.1",
         "機械忘却"
@@ -201,7 +201,7 @@
       "title": "1位 · Agenthon 2026 Track 3（シミュレーション）",
       "issuer": "NeurIPS 2026 Competition Track",
       "period": "2026",
-      "summary": "シミュレーション部門で55チーム中1位。マッチングエンジンの挙動を保ちつつ毎秒処理イベント数を最大化する、ABIDES互換の市場シミュレータをチームで開発した。NeurIPS 2026のAgenthonワークショップでチームポスター発表に選出。",
+      "summary": "ABIDES市場シミュレータをイベント単位で忠実にC++で再構築し、シミュレーション部門で55チーム中1位（論文欄参照）。この受賞により、NeurIPS 2026のAgenthonワークショップでの追加のチームポスター発表を獲得。",
       "url": "https://www.agenthon.net/"
     },
     {
@@ -311,7 +311,7 @@
       "title": "トルコ文化知識データセット",
       "subtitle": "MRL Workshop @ [EMNLP 2026](https://2026.emnlp.org/) - データ貢献採択済み・共同ベンチマーク論文準備中",
       "period": "2026",
-      "description": "15分野を対象とするトルコ文化知識データセットのため、出典に基づくエージェントパイプラインとデータ準備を主導。\n\n候補1,200組を精査し、500組をBüşra Tufanによる社会学的レビューに選定。最終提出用の300組を準備。\n\nÇağrı Toramanの研究指導のもと、英訳のレビューに貢献。",
+      "description": "15分野を対象とするトルコ文化知識データセットのため、出典に基づくエージェントパイプラインとデータ準備を主導。\n\n候補1,200組を精査し、500組をBüşra Tufanによる社会学的レビューに選定。最終提出用の300組を準備。\n\n英訳をレビュー。指導：Çağrı Toraman。",
       "tags": [
         "Cultural QA",
         "Data Curation",

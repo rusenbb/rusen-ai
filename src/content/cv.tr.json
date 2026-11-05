@@ -40,7 +40,7 @@
       "company": "ODTÜ Uygulamalı NLP Grubu",
       "period": "03/2026 - Bugün",
       "location": "Ankara, TR",
-      "description": "Çağrı Toraman, Evren Ayberk Munis ve İlker Kesen ile SIGTURK 2027 Workshop’u (ACL 2027) kapsamındaki [SIGTURK 2027 Shared Task](https://sigturk.github.io/workshops/2027/shared-task/) ortak organizatörlüğü. Veri oluşturma ve değerlendirme metodolojisine katkı; görevin web sitesinin ve değerlendirme hattının geliştirilmesi.\n\nGemmaTurk için eğitim verisi toplama, mid-training için sentetik instruction ve reasoning verisi üretimi ve ön eğitim deneylerine destek.\n\n[METU NLP Connect](https://www.youtube.com/@metunlpconnect) için uzman röportajlarının hazırlanması ve kanal yönetimi.",
+      "description": "Çağrı Toraman, Evren Ayberk Munis ve İlker Kesen ile SIGTURK 2027 Workshop’u (ACL 2027) kapsamındaki [SIGTURK 2027 Shared Task](https://sigturk.github.io/workshops/2027/shared-task/) ortak organizatörlüğü. Veri oluşturma ve değerlendirme metodolojisine katkı; görevin web sitesinin ve değerlendirme hattının geliştirilmesi.\n\nTürkçe LLM GemmaTurk’te eğitim verisi toplama, sentetik instruction ve reasoning verisi üretimi, mid-training, continual pre-training ve ön eğitim değerlendirmeleri üzerinde çalışma.\n\n[METU NLP Connect](https://www.youtube.com/@metunlpconnect) için uzman röportajlarının hazırlanması ve kanal yönetimi.",
       "link": "https://nlp.ceng.metu.edu.tr",
       "category": "research"
     },
@@ -49,7 +49,7 @@
       "company": "Fiction Studios",
       "period": "08/2025 - 04/2026",
       "location": "Ankara, TR",
-      "description": "Bilkent Cyberpark’ta Fiction Studios’un kurucu ortağı ve teknik lideri; üç ek katkıcının çalışmalarının koordinasyonu. Müzeler ve turistler için çok dilli LLM rehberi geliştirilmesi, müşteri ve yatırımcı görüşmeleri.",
+      "description": "Bilkent Cyberpark’ta Fiction Studios’un kurucu ortağı ve teknik lideri; üç ek katkıcının çalışmalarının koordinasyonu. Müzeler ve turistler için çok dilli LLM rehberinin geliştirilmesi ve müşterilere ve yatırımcılara sunulması.",
       "link": "https://github.com/fiction-ai-studios",
       "category": "professional"
     },
@@ -67,7 +67,7 @@
       "company": "Havelsan",
       "period": "08/2024 - 09/2024",
       "location": "İstanbul, TR",
-      "description": "Kestirimci bakım için yazılım loglarının analizi; HDFS loglarıyla prototip geliştirilmesi.",
+      "description": "HDFS yazılım loglarından kestirimci bakım için LSTM ve random forest prototiplerinin geliştirilmesi.",
       "link": "https://havelsan.com/tr",
       "category": "research"
     },
@@ -99,7 +99,7 @@
       "title": "Tobor",
       "subtitle": "Otonom Depo Robotu",
       "period": "2024 - 2025",
-      "description": "ROS2 ve YOLO kullanan ekip projesinde kutu alma/bırakma mekanizmasının geliştirilmesi; veri etiketleme ve diğer algoritmalara destek.",
+      "description": "Ekip tarafından geliştirilen, navigasyon ve YOLO algılaması kullanan ROS2 depo robotunda kutu alma/bırakma mekanizmasının geliştirilmesi; veri etiketlemeye katkı.",
       "tags": [
         "ROS2",
         "YOLO",
@@ -120,7 +120,7 @@
       "title": "AIZheimer",
       "subtitle": "Stable Diffusion’da Makine Unutma",
       "period": "2024",
-      "description": "Forget-Me-Not temelli unutmanın Stable Diffusion 2.1’e uyarlanması. Dikkat kontrol kodu ve alternatif kayıp işlevleri; kavram silme ile diğer üretim yeteneklerini korumanın nitel değerlendirmesi.",
+      "description": "Forget-Me-Not unutma yönteminin Stable Diffusion 2.1’e uyarlanması; hedef kavramları silip ilgisiz üretim yeteneklerini korumak için dikkat kontrolcüleri geliştirilmesi ve kayıp fonksiyonlarının test edilmesi.",
       "tags": [
         "Stable Diffusion 2.1",
         "Makine Unutma"
@@ -201,7 +201,7 @@
       "title": "Birincilik · Agenthon 2026, Track 3 (Simülasyon)",
       "issuer": "NeurIPS 2026 Competition Track",
       "period": "2026",
-      "summary": "Simülasyon kategorisinde 55 takım arasında birinci olduk; eşleştirme motoru davranışını koruyarak saniyede işlenen olay sayısını en üst düzeye çıkaran, ABIDES uyumlu bir piyasa simülatörünü ekip olarak geliştirdik. NeurIPS 2026’daki Agenthon çalıştayında takım posteri sunmak üzere seçildik.",
+      "summary": "Simülasyon kategorisinde, ABIDES piyasa simülatörünün olay olay birebir C++ yeniden yazımıyla 55 takım arasında birinci olduk (bkz. Yayınlar). Birincilik, NeurIPS 2026’daki Agenthon çalıştayında ek bir takım posteri sunumu kazandırdı.",
       "url": "https://www.agenthon.net/"
     },
     {
@@ -311,7 +311,7 @@
       "title": "Türk Kültürel Bilgi Veri Kümesi",
       "subtitle": "MRL Workshop @ [EMNLP 2026](https://2026.emnlp.org/) - Kabul edilmiş veri katkısı; ortak benchmark makalesi hazırlanıyor",
       "period": "2026",
-      "description": "15 alanı kapsayan Türk kültürel bilgi veri kümesi için kaynak temelli ajan hattını ve veri hazırlığını yönetti.\n\n1.200 aday soru-cevap çiftini taradı; 500 çifti Büşra Tufan’ın sosyolojik incelemesine seçerek 300 çiftlik nihai teslimi hazırladı.\n\nÇağrı Toraman’ın araştırma rehberliğinde İngilizce çeviri incelemesine katkıda bulundu.",
+      "description": "15 alanı kapsayan Türk kültürel bilgi veri kümesi için kaynak temelli ajan hattını ve veri hazırlığını yönetti.\n\n1.200 aday soru-cevap çiftini taradı; 500 çifti Büşra Tufan’ın sosyolojik incelemesine seçerek 300 çiftlik nihai teslimi hazırladı.\n\nİngilizce çevirileri inceledi; danışman: Çağrı Toraman.",
       "tags": [
         "Cultural QA",
         "Data Curation",
