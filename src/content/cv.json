@@ -67,7 +67,7 @@
       "company": "Havelsan",
       "period": "08/2024 - 09/2024",
       "location": "Istanbul, TR",
-      "description": "Built LSTM and random-forest prototypes for predictive maintenance from HDFS software logs.",
+      "description": "Built LSTM and random-forest prototypes for log-based anomaly detection on HDFS logs for predictive maintenance; the LSTM reached 0.96 F1 and 99% accuracy on the test set.",
       "link": "https://havelsan.com/tr",
       "category": "research"
     },
@@ -86,7 +86,7 @@
       "title": "Kaira",
       "subtitle": "Undergraduate Capstone: Financial Reasoning LLM",
       "period": "2025",
-      "description": "Fine-tuned Qwen-based LLMs with GRPO, Unsloth, and LoRA; ran FinQA and GSM8K experiments on reward design and financial reasoning. Developed an Ollama-based chat application.",
+      "description": "Fine-tuned Qwen-based LLMs with GRPO, Unsloth, and LoRA, reaching 58.08% FinQA accuracy with Qwen3-4B, up from 47.48% with Qwen2.5-3B; ran FinQA and GSM8K experiments on reward design and financial reasoning. Developed an Ollama-based chat application.",
       "tags": [
         "GRPO",
         "Unsloth",
@@ -136,7 +136,7 @@
       "title": "Biting The Bytes",
       "subtitle": "Turkish Diacritic Restoration",
       "period": "2024",
-      "description": "Led ByT5-small fine-tuning with PEFT/LoRA for byte-level Turkish diacritic restoration, reaching 96.18% word-level accuracy on the test set; co-deployed the model on Hugging Face Spaces.",
+      "description": "Led ByT5-small fine-tuning with PEFT/LoRA for byte-level Turkish diacritic restoration, reaching 96.18% word-level accuracy on the test set and tying for 2nd of 17 teams in the course's Kaggle competition; co-deployed the model on Hugging Face Spaces.",
       "tags": [
         "ByT5-small",
         "LoRA",

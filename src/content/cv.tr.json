@@ -67,7 +67,7 @@
       "company": "Havelsan",
       "period": "08/2024 - 09/2024",
       "location": "İstanbul, TR",
-      "description": "HDFS yazılım loglarından kestirimci bakım için LSTM ve random forest prototiplerinin geliştirilmesi.",
+      "description": "HDFS loglarında kestirimci bakım için log tabanlı anomali tespitinde LSTM ve random forest prototiplerinin geliştirilmesi; LSTM test setinde 0,96 F1 ve %99 doğruluk.",
       "link": "https://havelsan.com/tr",
       "category": "research"
     },
@@ -86,7 +86,7 @@
       "title": "Kaira",
       "subtitle": "Bitirme Projesi: Finansal Akıl Yürütme Modeli",
       "period": "2025",
-      "description": "Qwen tabanlı modellerin Unsloth ve LoRA ile GRPO ince ayarı; FinQA ve GSM8K üzerinde ödül tasarımı ve finansal akıl yürütme deneyleri. Ollama tabanlı sohbet uygulaması geliştirilmesi.",
+      "description": "Qwen tabanlı modellerin Unsloth ve LoRA ile GRPO ince ayarı; Qwen3-4B ile FinQA’da %58,08 doğruluk (Qwen2.5-3B ile %47,48). FinQA ve GSM8K üzerinde ödül tasarımı ve finansal akıl yürütme deneyleri. Ollama tabanlı sohbet uygulaması geliştirilmesi.",
       "tags": [
         "GRPO",
         "Unsloth",
@@ -136,7 +136,7 @@
       "title": "Biting The Bytes",
       "subtitle": "Türkçe Karakter Tamamlama",
       "period": "2024",
-      "description": "Bayt düzeyinde Türkçe diakritik restorasyonu için ByT5-small modelinin PEFT/LoRA ile ince ayarına liderlik; test setinde %96,18 kelime doğruluğu. Modelin Hugging Face Spaces’te ekip arkadaşıyla birlikte yayınlanması.",
+      "description": "Bayt düzeyinde Türkçe diakritik restorasyonu için ByT5-small modelinin PEFT/LoRA ile ince ayarına liderlik; test setinde %96,18 kelime doğruluğu; dersin Kaggle yarışmasında 17 takım arasında paylaşılan 2.lik. Modelin Hugging Face Spaces’te ekip arkadaşıyla birlikte yayınlanması.",
       "tags": [
         "ByT5-small",
         "LoRA",

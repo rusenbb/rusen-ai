@@ -67,7 +67,7 @@
       "company": "Havelsan",
       "period": "08/2024 - 09/2024",
       "location": "イスタンブール、トルコ",
-      "description": "HDFSのソフトウェアログを用い、予知保全向けのLSTMおよびランダムフォレストの試作モデルを構築。",
+      "description": "予知保全に向け、HDFSログのログベース異常検知でLSTMとランダムフォレストの試作モデルを構築。LSTMはテストセットでF1 0.96、精度99%を達成。",
       "link": "https://havelsan.com/tr",
       "category": "research"
     },
@@ -86,7 +86,7 @@
       "title": "Kaira",
       "subtitle": "卒業制作：金融推論LLM",
       "period": "2025",
-      "description": "UnslothとLoRAによるGRPOでQwen系LLMを調整。FinQAとGSM8Kで報酬設計と金融推論を実験し、Ollamaベースのチャットアプリを開発。",
+      "description": "UnslothとLoRAによるGRPOでQwen系LLMを調整し、Qwen3-4BでFinQA精度58.08%を達成（Qwen2.5-3Bでは47.48%）。FinQAとGSM8Kで報酬設計と金融推論を実験し、Ollamaベースのチャットアプリを開発。",
       "tags": [
         "GRPO",
         "Unsloth",
@@ -136,7 +136,7 @@
       "title": "Biting The Bytes",
       "subtitle": "トルコ語ダイアクリティカル復元",
       "period": "2024",
-      "description": "バイト単位のトルコ語発音区別符号復元に向け、PEFT/LoRAによるByT5-smallのファインチューニングを主導し、テストセットで単語単位の精度96.18%を達成。Hugging Face Spacesでの公開を共同で担当。",
+      "description": "バイト単位のトルコ語発音区別符号復元に向け、PEFT/LoRAによるByT5-smallのファインチューニングを主導し、テストセットで単語単位の精度96.18%を達成し、授業のKaggleコンペで17チーム中2位タイ。Hugging Face Spacesでの公開を共同で担当。",
       "tags": [
         "ByT5-small",
         "LoRA",
