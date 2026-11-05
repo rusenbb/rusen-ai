@@ -58,7 +58,7 @@
       "company": "CyberQuote",
       "period": "03/2025 - 07/2025",
       "location": "Istanbul, TR",
-      "description": "Developed news-sentiment pipelines, internal financial LLM tools, web integrations, and a mobile voice assistant at a Phillip Capital subsidiary. Worked on retrieving current context from fragmented sources and PDF reports.",
+      "description": "Built RAG pipelines that retrieve up-to-date context from fragmented internal sources and PDF financial reports, and agent pipelines for internal financial LLM tools. Also developed news-sentiment pipelines and web integrations at a Phillip Capital subsidiary.",
       "link": "https://cyberquote.com/tk/",
       "category": "professional"
     },

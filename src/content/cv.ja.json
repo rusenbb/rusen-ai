@@ -58,7 +58,7 @@
       "company": "CyberQuote",
       "period": "03/2025 - 07/2025",
       "location": "イスタンブール、トルコ",
-      "description": "Phillip Capital傘下のCyberQuoteでニュース感情分析、金融専門家向けLLMツール、Web連携、音声アシスタントを開発。分散した情報源やPDFから最新の金融情報を取得する課題に取り組んだ。",
+      "description": "Phillip Capital傘下のCyberQuoteで、分散した社内情報源やPDF金融レポートから最新の文脈を取得するRAGパイプラインと、社内向け金融LLMツールのエージェントパイプラインを構築。ニュース感情分析パイプラインとWeb連携も開発。",
       "link": "https://cyberquote.com/tk/",
       "category": "professional"
     },

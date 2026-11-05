@@ -58,7 +58,7 @@
       "company": "CyberQuote",
       "period": "03/2025 - 07/2025",
       "location": "İstanbul, TR",
-      "description": "Phillip Capital iştiraki CyberQuote’ta haber duygu analizi, finans uzmanlarına yönelik LLM araçları, web entegrasyonları ve mobil sesli asistan geliştirilmesi. Dağınık kaynaklar ve PDF raporlarından güncel bağlamın getirilmesi.",
+      "description": "Phillip Capital iştiraki CyberQuote’ta dağınık iç kaynaklardan ve PDF finans raporlarından güncel bağlam getiren RAG pipeline’ları ve şirket içi finansal LLM araçları için agent pipeline’ları geliştirilmesi. Ayrıca haber duygu analizi pipeline’ları ve web entegrasyonları.",
       "link": "https://cyberquote.com/tk/",
       "category": "professional"
     },
