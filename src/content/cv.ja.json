@@ -40,7 +40,7 @@
       "company": "中東工科大学 応用NLPグループ",
       "period": "03/2026 - 現在",
       "location": "アンカラ、トルコ",
-      "description": "Çağrı Toraman、Evren Ayberk Munis、İlker Kesenとともに、SIGTURK 2027 Workshop（ACL 2027）の[SIGTURK 2027 Shared Task](https://sigturk.github.io/workshops/2027/shared-task/)を共同主催。データ作成と評価手法に貢献し、Webサイトと評価パイプラインを構築。\n\nGemmaTurkの学習データ収集、mid-training向けの合成instruction・reasoningデータ生成、事前学習実験を支援。\n\n[METU NLP Connect](https://www.youtube.com/@metunlpconnect)を運営し、専門家インタビューを制作。",
+      "description": "Çağrı Toraman、Evren Ayberk Munis、İlker Kesenとともに、SIGTURK 2027 Workshop（ACL 2027）の[SIGTURK 2027 Shared Task](https://sigturk.github.io/workshops/2027/shared-task/)を共同主催。データ作成と評価手法に貢献し、Webサイトと評価パイプラインを構築。\n\nトルコ語LLMであるGemmaTurkで、学習データ収集、合成インストラクション・推論データの生成、mid-training、継続事前学習、事前学習の評価に携わる。\n\n[METU NLP Connect](https://www.youtube.com/@metunlpconnect)を運営し、専門家インタビューを制作。",
       "link": "https://nlp.ceng.metu.edu.tr",
       "category": "research"
     },
@@ -49,7 +49,7 @@
       "company": "Fiction Studios",
       "period": "08/2025 - 04/2026",
       "location": "アンカラ、トルコ",
-      "description": "Bilkent CyberparkでFiction Studiosを共同創業し、技術開発と追加メンバー3名の活動を統括。博物館・観光向けの多言語LLMガイドを開発し、顧客・投資家との対話にも参加。",
+      "description": "Bilkent CyberparkでFiction Studiosを共同創業し、技術開発と追加メンバー3名の活動を統括。博物館・観光向けの多言語LLMガイドを開発し、顧客と投資家に提案。",
       "link": "https://github.com/fiction-ai-studios",
       "category": "professional"
     },
@@ -67,7 +67,7 @@
       "company": "Havelsan",
       "period": "08/2024 - 09/2024",
       "location": "イスタンブール、トルコ",
-      "description": "予知保全に向けてソフトウェアログを分析し、HDFSログを用いた試作を実施。",
+      "description": "予知保全に向け、HDFSログのログベース異常検知でLSTMとランダムフォレストの試作モデルを構築。LSTMはテストセットでF1 0.96、精度99%を達成。",
       "link": "https://havelsan.com/tr",
       "category": "research"
     },
@@ -76,7 +76,7 @@
       "company": "ITU NLP 研究室",
       "period": "07/2024 - 08/2024",
       "location": "イスタンブール、トルコ",
-      "description": "金融分野の感情分析、ツール利用、推論、予測、RAGを研究。学部卒業研究Kairaに関連する実験に貢献。",
+      "description": "感情分析、ツール利用、推論、予測、RAGにわたる金融LLMの実験を実施し、学部卒業研究Kairaに反映。",
       "link": "https://nlp.itu.edu.tr/",
       "category": "research"
     }
@@ -86,7 +86,7 @@
       "title": "Kaira",
       "subtitle": "卒業制作：金融推論LLM",
       "period": "2025",
-      "description": "UnslothとLoRAによるGRPOでQwen系LLMを調整。FinQAとGSM8Kで報酬設計と金融推論を実験し、Ollamaベースのチャットアプリを開発。",
+      "description": "UnslothとLoRAによるGRPOでQwen系LLMを調整し、Qwen3-4BでFinQA精度58.08%を達成（Qwen2.5-3Bでは47.48%）。FinQAとGSM8Kで報酬設計と金融推論を実験し、Ollamaベースのチャットアプリを開発。",
       "tags": [
         "GRPO",
         "Unsloth",
@@ -99,7 +99,7 @@
       "title": "Tobor",
       "subtitle": "自律走行倉庫ロボット",
       "period": "2024 - 2025",
-      "description": "ROS2とYOLOを利用するチーム制作の倉庫ロボットで、箱の取得・配置機構を実装。データ注釈と他のアルゴリズム開発を支援。",
+      "description": "ナビゲーションとYOLO認識を備えたチーム制作のROS2倉庫ロボットで、箱の取得・配置機構を実装。データ注釈にも貢献。",
       "tags": [
         "ROS2",
         "YOLO",
@@ -120,7 +120,7 @@
       "title": "AIZheimer",
       "subtitle": "Stable Diffusionの機械忘却",
       "period": "2024",
-      "description": "Forget-Me-Notを基にStable Diffusion 2.1のアンラーニングを実装。注意制御と損失関数を検討し、概念除去と無関係な生成能力の保持を定性的に評価。",
+      "description": "Forget-Me-NotによるアンラーニングをStable Diffusion 2.1に適用。注意制御を実装し、無関係な生成能力を保ちながら対象概念を消去する損失関数を検証。",
       "tags": [
         "Stable Diffusion 2.1",
         "機械忘却"
@@ -136,7 +136,7 @@
       "title": "Biting The Bytes",
       "subtitle": "トルコ語ダイアクリティカル復元",
       "period": "2024",
-      "description": "トルコ語の発音区別符号復元で、PEFT/LoRAを使ったByT5-smallの学習と調整を主導。バイト単位の処理を実装し、デバッグとHugging Face Spaces公開を共同で担当。",
+      "description": "バイト単位のトルコ語発音区別符号復元に向け、PEFT/LoRAによるByT5-smallのファインチューニングを主導し、テストセットで単語単位の精度96.18%を達成し、授業のKaggleコンペで17チーム中2位タイ。Hugging Face Spacesでの公開を共同で担当。",
       "tags": [
         "ByT5-small",
         "LoRA",
@@ -192,7 +192,7 @@
     {
       "title": "1416 YLSY 奨学金 · 修士・博士課程",
       "issuer": "トルコ国民教育省",
-      "summary": "海外での修士課程と、その後の博士課程を対象とする政府奨学金に採択。授業料、毎月の生活費、健康保険、渡航費、語学試験費用、学用品費を支援。奨学金対象の学業修了後は、トルコに帰国し、助教（Assistant Professor）として勤務予定。",
+      "summary": "米国での人工知能・ビッグデータ分野の修士・博士課程を対象とする全額支給の政府奨学金。国家選抜試験を経て採択。",
       "period": "2026",
       "url": "https://rusen.ai/Sponsorship-MSc-PhD.pdf",
       "linkText": "修士・博士課程"
@@ -201,7 +201,7 @@
       "title": "1位 · Agenthon 2026 Track 3（シミュレーション）",
       "issuer": "NeurIPS 2026 Competition Track",
       "period": "2026",
-      "summary": "シミュレーション部門で55チーム中1位。マッチングエンジンの挙動を保ちつつ毎秒処理イベント数を最大化する、ABIDES互換の市場シミュレータをチームで開発した。NeurIPS 2026のAgenthonワークショップでチームポスター発表に選出。",
+      "summary": "ABIDES市場シミュレータをイベント単位で忠実にC++で再構築し、シミュレーション部門で55チーム中1位（論文欄参照）。この受賞により、NeurIPS 2026のAgenthonワークショップでの追加のチームポスター発表を獲得。",
       "url": "https://www.agenthon.net/"
     },
     {
@@ -294,7 +294,7 @@
       "title": "Exact First, Then Fast: An Event-for-Event C++ Rebuild of the Agenthon ABIDES Market",
       "subtitle": "Agenthon Workshop @ [NeurIPS 2026](https://neurips.cc/Conferences/2026) - 対面ポスター発表に採択",
       "period": "2026",
-      "description": "Göktürk Batın Dervişoğlu, Muhammed Faruk Aytin, Muhammed Rüşen Birben.\n\nAgenthon ABIDES市場シミュレータをC++で再構築し、イベント順序、乱数列、参照出力を保持。6,900件のランダム化比較で完全一致を検証し、同一のノートPCで測定した最大規模の公開ベンチマークにおいて、シミュレーションループの1,299倍の高速化を達成。\n\n2026年12月12日、米国アトランタ。",
+      "description": "Göktürk Batın Dervişoğlu, Muhammed Faruk Aytin, Muhammed Rüşen Birben.\n\nAgenthon ABIDES市場シミュレータをC++で再構築し、イベント順序、乱数列、参照出力を保持。6,900件のランダム化比較で完全一致を検証し、最大規模の公開ベンチマークにおいて、シミュレーションループの1,299倍の高速化を達成。\n\n2026年12月12日、米国アトランタ。",
       "tags": [
         "C++",
         "ABIDES",
@@ -311,7 +311,7 @@
       "title": "トルコ文化知識データセット",
       "subtitle": "MRL Workshop @ [EMNLP 2026](https://2026.emnlp.org/) - データ貢献採択済み・共同ベンチマーク論文準備中",
       "period": "2026",
-      "description": "15分野を対象とするトルコ文化知識データセットのため、出典に基づくエージェントパイプラインとデータ準備を主導。\n\n候補1,200組を精査し、500組をBüşra Tufanによる社会学的レビューに選定。最終提出用の300組を準備。\n\nÇağrı Toramanの研究指導のもと、英訳のレビューに貢献。",
+      "description": "15分野を対象とするトルコ文化知識データセットのため、出典に基づくエージェントパイプラインとデータ準備を主導。\n\n候補1,200組を精査し、500組をBüşra Tufanによる社会学的レビューに選定。最終提出用の300組を準備。\n\n英訳をレビュー。指導：Çağrı Toraman。",
       "tags": [
         "Cultural QA",
         "Data Curation",

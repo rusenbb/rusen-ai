@@ -40,7 +40,7 @@
       "company": "ODTÜ Uygulamalı NLP Grubu",
       "period": "03/2026 - Bugün",
       "location": "Ankara, TR",
-      "description": "Çağrı Toraman, Evren Ayberk Munis ve İlker Kesen ile SIGTURK 2027 Workshop’u (ACL 2027) kapsamındaki [SIGTURK 2027 Shared Task](https://sigturk.github.io/workshops/2027/shared-task/) ortak organizatörlüğü. Veri oluşturma ve değerlendirme metodolojisine katkı; görevin web sitesinin ve değerlendirme hattının geliştirilmesi.\n\nGemmaTurk için eğitim verisi toplama, mid-training için sentetik instruction ve reasoning verisi üretimi ve ön eğitim deneylerine destek.\n\n[METU NLP Connect](https://www.youtube.com/@metunlpconnect) için uzman röportajlarının hazırlanması ve kanal yönetimi.",
+      "description": "Çağrı Toraman, Evren Ayberk Munis ve İlker Kesen ile SIGTURK 2027 Workshop’u (ACL 2027) kapsamındaki [SIGTURK 2027 Shared Task](https://sigturk.github.io/workshops/2027/shared-task/) ortak organizatörlüğü. Veri oluşturma ve değerlendirme metodolojisine katkı; görevin web sitesinin ve değerlendirme hattının geliştirilmesi.\n\nTürkçe LLM GemmaTurk’te eğitim verisi toplama, sentetik instruction ve reasoning verisi üretimi, mid-training, continual pre-training ve ön eğitim değerlendirmeleri üzerinde çalışma.\n\n[METU NLP Connect](https://www.youtube.com/@metunlpconnect) için uzman röportajlarının hazırlanması ve kanal yönetimi.",
       "link": "https://nlp.ceng.metu.edu.tr",
       "category": "research"
     },
@@ -49,7 +49,7 @@
       "company": "Fiction Studios",
       "period": "08/2025 - 04/2026",
       "location": "Ankara, TR",
-      "description": "Bilkent Cyberpark’ta Fiction Studios’un kurucu ortağı ve teknik lideri; üç ek katkıcının çalışmalarının koordinasyonu. Müzeler ve turistler için çok dilli LLM rehberi geliştirilmesi, müşteri ve yatırımcı görüşmeleri.",
+      "description": "Bilkent Cyberpark’ta Fiction Studios’un kurucu ortağı ve teknik lideri; üç ek katkıcının çalışmalarının koordinasyonu. Müzeler ve turistler için çok dilli LLM rehberinin geliştirilmesi ve müşterilere ve yatırımcılara sunulması.",
       "link": "https://github.com/fiction-ai-studios",
       "category": "professional"
     },
@@ -67,7 +67,7 @@
       "company": "Havelsan",
       "period": "08/2024 - 09/2024",
       "location": "İstanbul, TR",
-      "description": "Kestirimci bakım için yazılım loglarının analizi; HDFS loglarıyla prototip geliştirilmesi.",
+      "description": "HDFS loglarında kestirimci bakım için log tabanlı anomali tespitinde LSTM ve random forest prototiplerinin geliştirilmesi; LSTM test setinde 0,96 F1 ve %99 doğruluk.",
       "link": "https://havelsan.com/tr",
       "category": "research"
     },
@@ -76,7 +76,7 @@
       "company": "İTÜ NLP Laboratuvarı",
       "period": "07/2024 - 08/2024",
       "location": "İstanbul, TR",
-      "description": "Finansal LLM uygulamalarında duygu analizi, araç kullanımı, akıl yürütme, tahmin ve RAG araştırması. Kaira bitirme projesine katkı sağlayan deneylerin yürütülmesi.",
+      "description": "Duygu analizi, araç kullanımı, akıl yürütme, tahmin ve RAG alanlarında finansal LLM deneylerinin yürütülmesi; sonuçlar Kaira bitirme projesine aktarıldı.",
       "link": "https://nlp.itu.edu.tr/",
       "category": "research"
     }
@@ -86,7 +86,7 @@
       "title": "Kaira",
       "subtitle": "Bitirme Projesi: Finansal Akıl Yürütme Modeli",
       "period": "2025",
-      "description": "Qwen tabanlı modellerin Unsloth ve LoRA ile GRPO ince ayarı; FinQA ve GSM8K üzerinde ödül tasarımı ve finansal akıl yürütme deneyleri. Ollama tabanlı sohbet uygulaması geliştirilmesi.",
+      "description": "Qwen tabanlı modellerin Unsloth ve LoRA ile GRPO ince ayarı; Qwen3-4B ile FinQA’da %58,08 doğruluk (Qwen2.5-3B ile %47,48). FinQA ve GSM8K üzerinde ödül tasarımı ve finansal akıl yürütme deneyleri. Ollama tabanlı sohbet uygulaması geliştirilmesi.",
       "tags": [
         "GRPO",
         "Unsloth",
@@ -99,7 +99,7 @@
       "title": "Tobor",
       "subtitle": "Otonom Depo Robotu",
       "period": "2024 - 2025",
-      "description": "ROS2 ve YOLO kullanan ekip projesinde kutu alma/bırakma mekanizmasının geliştirilmesi; veri etiketleme ve diğer algoritmalara destek.",
+      "description": "Ekip tarafından geliştirilen, navigasyon ve YOLO algılaması kullanan ROS2 depo robotunda kutu alma/bırakma mekanizmasının geliştirilmesi; veri etiketlemeye katkı.",
       "tags": [
         "ROS2",
         "YOLO",
@@ -120,7 +120,7 @@
       "title": "AIZheimer",
       "subtitle": "Stable Diffusion’da Makine Unutma",
       "period": "2024",
-      "description": "Forget-Me-Not temelli unutmanın Stable Diffusion 2.1’e uyarlanması. Dikkat kontrol kodu ve alternatif kayıp işlevleri; kavram silme ile diğer üretim yeteneklerini korumanın nitel değerlendirmesi.",
+      "description": "Forget-Me-Not unutma yönteminin Stable Diffusion 2.1’e uyarlanması; hedef kavramları silip ilgisiz üretim yeteneklerini korumak için dikkat kontrolcüleri geliştirilmesi ve kayıp fonksiyonlarının test edilmesi.",
       "tags": [
         "Stable Diffusion 2.1",
         "Makine Unutma"
@@ -136,7 +136,7 @@
       "title": "Biting The Bytes",
       "subtitle": "Türkçe Karakter Tamamlama",
       "period": "2024",
-      "description": "Türkçe karakter restorasyonu için ByT5-small modelinin PEFT/LoRA ile bayt düzeyinde eğitimi ve hiperparametre ayarlarının yürütülmesi. Hata ayıklama ve Hugging Face Spaces yayınının ekip arkadaşıyla paylaşılması.",
+      "description": "Bayt düzeyinde Türkçe diakritik restorasyonu için ByT5-small modelinin PEFT/LoRA ile ince ayarına liderlik; test setinde %96,18 kelime doğruluğu; dersin Kaggle yarışmasında 17 takım arasında paylaşılan 2.lik. Modelin Hugging Face Spaces’te ekip arkadaşıyla birlikte yayınlanması.",
       "tags": [
         "ByT5-small",
         "LoRA",
@@ -192,7 +192,7 @@
     {
       "title": "1416 YLSY Bursu · Yüksek Lisans ve Doktora",
       "issuer": "T.C. Millî Eğitim Bakanlığı",
-      "summary": "Yurt dışında yüksek lisans ve ardından doktora öğrenimi için devlet bursu kazandı. Burs; öğrenim ücretlerini, aylık yaşam bursunu, sağlık sigortasını, ulaşımı, yabancı dil sınav ücretlerini ve kırtasiye yardımını kapsar. Burslu öğrenimin tamamlanmasının ardından Türkiye’ye dönerek doktor öğretim üyesi olarak görev yapacaktır.",
+      "summary": "ABD’de Yapay Zekâ ve Büyük Veri alanında yüksek lisans ve doktora için tam burslu devlet bursu; ulusal seçme sınavıyla kazanıldı.",
       "period": "2026",
       "url": "https://rusen.ai/Sponsorship-MSc-PhD.pdf",
       "linkText": "Yüksek Lisans ve Doktora"
@@ -201,7 +201,7 @@
       "title": "Birincilik · Agenthon 2026, Track 3 (Simülasyon)",
       "issuer": "NeurIPS 2026 Competition Track",
       "period": "2026",
-      "summary": "Simülasyon kategorisinde 55 takım arasında birinci olduk; eşleştirme motoru davranışını koruyarak saniyede işlenen olay sayısını en üst düzeye çıkaran, ABIDES uyumlu bir piyasa simülatörünü ekip olarak geliştirdik. NeurIPS 2026’daki Agenthon çalıştayında takım posteri sunmak üzere seçildik.",
+      "summary": "Simülasyon kategorisinde, ABIDES piyasa simülatörünün olay olay birebir C++ yeniden yazımıyla 55 takım arasında birinci olduk (bkz. Yayınlar). Birincilik, NeurIPS 2026’daki Agenthon çalıştayında ek bir takım posteri sunumu kazandırdı.",
       "url": "https://www.agenthon.net/"
     },
     {
@@ -294,7 +294,7 @@
       "title": "Exact First, Then Fast: An Event-for-Event C++ Rebuild of the Agenthon ABIDES Market",
       "subtitle": "Agenthon Workshop @ [NeurIPS 2026](https://neurips.cc/Conferences/2026) - Yüz yüze poster sunumu için kabul edildi",
       "period": "2026",
-      "description": "Göktürk Batın Dervişoğlu, Muhammed Faruk Aytin, Muhammed Rüşen Birben.\n\nAgenthon ABIDES piyasa simülatörü; olay sırası, rastgele sayı dizileri ve referans çıktılar korunarak C++ ile yeniden geliştirildi. 6.900 rastgele karşılaştırmada birebir uyum doğrulandı; aynı dizüstü bilgisayarda ölçülen en büyük açık benchmark’ta simülasyon döngüsünde 1.299× hızlanma elde edildi.\n\nAtlanta, ABD, 12 Aralık 2026.",
+      "description": "Göktürk Batın Dervişoğlu, Muhammed Faruk Aytin, Muhammed Rüşen Birben.\n\nAgenthon ABIDES piyasa simülatörü; olay sırası, rastgele sayı dizileri ve referans çıktılar korunarak C++ ile yeniden geliştirildi. 6.900 rastgele karşılaştırmada birebir uyum doğrulandı; en büyük açık benchmark’ta simülasyon döngüsünde 1.299× hızlanma elde edildi.\n\nAtlanta, ABD, 12 Aralık 2026.",
       "tags": [
         "C++",
         "ABIDES",
@@ -311,7 +311,7 @@
       "title": "Türk Kültürel Bilgi Veri Kümesi",
       "subtitle": "MRL Workshop @ [EMNLP 2026](https://2026.emnlp.org/) - Kabul edilmiş veri katkısı; ortak benchmark makalesi hazırlanıyor",
       "period": "2026",
-      "description": "15 alanı kapsayan Türk kültürel bilgi veri kümesi için kaynak temelli ajan hattını ve veri hazırlığını yönetti.\n\n1.200 aday soru-cevap çiftini taradı; 500 çifti Büşra Tufan’ın sosyolojik incelemesine seçerek 300 çiftlik nihai teslimi hazırladı.\n\nÇağrı Toraman’ın araştırma rehberliğinde İngilizce çeviri incelemesine katkıda bulundu.",
+      "description": "15 alanı kapsayan Türk kültürel bilgi veri kümesi için kaynak temelli ajan hattını ve veri hazırlığını yönetti.\n\n1.200 aday soru-cevap çiftini taradı; 500 çifti Büşra Tufan’ın sosyolojik incelemesine seçerek 300 çiftlik nihai teslimi hazırladı.\n\nİngilizce çevirileri inceledi; danışman: Çağrı Toraman.",
       "tags": [
         "Cultural QA",
         "Data Curation",

@@ -69,11 +69,11 @@
 \cvsection{\faTrophy}{受賞歴}
 \begin{minipage}{\linewidth}\raggedright
 \cvheading{\small{}1416 YLSY 奨学金 · \href{https://rusen.ai/Sponsorship-MSc-PhD.pdf}{\underline{修士・博士課程}}}{2026}\vspace{2pt}
-\cvbody{海外での修士課程と、その後の博士課程を対象とする政府奨学金に採択。授業料、毎月の生活費、健康保険、渡航費、語学試験費用、学用品費を支援。奨学金対象の学業修了後は、トルコに帰国し、助教（Assistant Professor）として勤務予定。}
+\cvbody{米国での人工知能・ビッグデータ分野の修士・博士課程を対象とする全額支給の政府奨学金。国家選抜試験を経て採択。}
 \end{minipage}\par\vspace{3pt}
 \begin{minipage}{\linewidth}\raggedright
 \cvheading{\small{}\href{https://www.agenthon.net/}{1位 · Agenthon 2026 Track 3（シミュレーション）}}{2026}\vspace{2pt}
-\cvbody{シミュレーション部門で55チーム中1位。マッチングエンジンの挙動を保ちつつ毎秒処理イベント数を最大化する、ABIDES互換の市場シミュレータをチームで開発した。NeurIPS 2026のAgenthonワークショップでチームポスター発表に選出。}
+\cvbody{ABIDES市場シミュレータをイベント単位で忠実にC++で再構築し、シミュレーション部門で55チーム中1位（論文欄参照）。この受賞により、NeurIPS 2026のAgenthonワークショップでの追加のチームポスター発表を獲得。}
 \end{minipage}\par\vspace{3pt}
 \begin{minipage}{\linewidth}\raggedright
 \cvheading{\small{}\href{https://www.kaggle.com/certification/competitions/rusenbirben/pokemon-tcg-ai-battle}{Kaggle ブロンズメダル · The Pokémon Company PTCG AI Battle Challenge}}{2026}\vspace{2pt}
@@ -85,7 +85,7 @@
 {\small{}\itshape{}\href{https://nlp.ceng.metu.edu.tr}{中東工科大学 応用NLPグループ\extarrow}}\dates{アンカラ、トルコ}\par\vspace{3pt}
 \begin{cvpoints}
 \item Çağrı Toraman、Evren Ayberk Munis、İlker Kesenとともに、SIGTURK 2027 Workshop（ACL 2027）の\href{https://sigturk.github.io/workshops/2027/shared-task/}{SIGTURK 2027 Shared Task}を共同主催。データ作成と評価手法に貢献し、Webサイトと評価パイプラインを構築。
-\item GemmaTurkの学習データ収集、mid-training向けの合成instruction・reasoningデータ生成、事前学習実験を支援。
+\item トルコ語LLMであるGemmaTurkで、学習データ収集、合成インストラクション・推論データの生成、mid-training、継続事前学習、事前学習の評価に携わる。
 \item \href{https://www.youtube.com/@metunlpconnect}{METU NLP Connect}を運営し、専門家インタビューを制作。
 \end{cvpoints}
 \end{minipage}\par\vspace{6pt}
@@ -93,14 +93,14 @@
 \cvheading{AIOps 研究インターン}{08/2024 - 09/2024}
 {\small{}\itshape{}\href{https://havelsan.com/tr}{Havelsan\extarrow}}\dates{イスタンブール、トルコ}\par\vspace{3pt}
 \begin{cvpoints}
-\item 予知保全に向けてソフトウェアログを分析し、HDFSログを用いた試作を実施。
+\item 予知保全に向け、HDFSログのログベース異常検知でLSTMとランダムフォレストの試作モデルを構築。LSTMはテストセットでF1 0.96、精度99\%を達成。
 \end{cvpoints}
 \end{minipage}\par\vspace{6pt}
 \begin{minipage}{\linewidth}\raggedright
 \cvheading{NLP 研究インターン}{07/2024 - 08/2024}
 {\small{}\itshape{}\href{https://nlp.itu.edu.tr/}{ITU NLP 研究室\extarrow}}\dates{イスタンブール、トルコ}\par\vspace{3pt}
 \begin{cvpoints}
-\item 金融分野の感情分析、ツール利用、推論、予測、RAGを研究。学部卒業研究Kairaに関連する実験に貢献。
+\item 感情分析、ツール利用、推論、予測、RAGにわたる金融LLMの実験を実施し、学部卒業研究Kairaに反映。
 \end{cvpoints}
 \end{minipage}\par\vspace{6pt}
 
@@ -112,7 +112,7 @@
 }\par\vspace{2pt}
 \begin{cvpoints}
 \item Göktürk Batın Dervişoğlu, Muhammed Faruk Aytin, Muhammed Rüşen Birben.
-\item Agenthon ABIDES市場シミュレータをC++で再構築し、イベント順序、乱数列、参照出力を保持。6,900件のランダム化比較で完全一致を検証し、同一のノートPCで測定した最大規模の公開ベンチマークにおいて、シミュレーションループの1,299倍の高速化を達成。
+\item Agenthon ABIDES市場シミュレータをC++で再構築し、イベント順序、乱数列、参照出力を保持。6,900件のランダム化比較で完全一致を検証し、最大規模の公開ベンチマークにおいて、シミュレーションループの1,299倍の高速化を達成。
 \item 2026年12月12日、米国アトランタ。
 \end{cvpoints}
 \end{minipage}\par\vspace{5pt}
@@ -124,7 +124,7 @@
 \begin{cvpoints}
 \item 15分野を対象とするトルコ文化知識データセットのため、出典に基づくエージェントパイプラインとデータ準備を主導。
 \item 候補1,200組を精査し、500組をBüşra Tufanによる社会学的レビューに選定。最終提出用の300組を準備。
-\item Çağrı Toramanの研究指導のもと、英訳のレビューに貢献。
+\item 英訳をレビュー。指導：Çağrı Toraman。
 \end{cvpoints}
 \end{minipage}\par\vspace{5pt}
 
@@ -135,7 +135,7 @@
 %
 }\par\vspace{2pt}
 \begin{cvpoints}
-\item UnslothとLoRAによるGRPOでQwen系LLMを調整。FinQAとGSM8Kで報酬設計と金融推論を実験し、Ollamaベースのチャットアプリを開発。
+\item UnslothとLoRAによるGRPOでQwen系LLMを調整し、Qwen3-4BでFinQA精度58.08\%を達成（Qwen2.5-3Bでは47.48\%）。FinQAとGSM8Kで報酬設計と金融推論を実験し、Ollamaベースのチャットアプリを開発。
 \end{cvpoints}
 \end{minipage}\par\vspace{5pt}
 \begin{minipage}{\linewidth}\raggedright
@@ -144,7 +144,7 @@
 \mbox{\href{https://github.com/rusen-archive/Amazon-Warehouse-Robot}{\faGithub\enspace{}コード}}\quad{}\mbox{\href{https://youtu.be/h-Jxs_y9kNA}{\faYoutubePlay\enspace{}動画}}%
 }\par\vspace{2pt}
 \begin{cvpoints}
-\item ROS2とYOLOを利用するチーム制作の倉庫ロボットで、箱の取得・配置機構を実装。データ注釈と他のアルゴリズム開発を支援。
+\item ナビゲーションとYOLO認識を備えたチーム制作のROS2倉庫ロボットで、箱の取得・配置機構を実装。データ注釈にも貢献。
 \end{cvpoints}
 \end{minipage}\par\vspace{5pt}
 \begin{minipage}{\linewidth}\raggedright
@@ -153,7 +153,7 @@
 \mbox{\href{https://github.com/rusenbb/ai-zheimer}{\faGithub\enspace{}コード}}%
 }\par\vspace{2pt}
 \begin{cvpoints}
-\item Forget-Me-Notを基にStable Diffusion 2.1のアンラーニングを実装。注意制御と損失関数を検討し、概念除去と無関係な生成能力の保持を定性的に評価。
+\item Forget-Me-NotによるアンラーニングをStable Diffusion 2.1に適用。注意制御を実装し、無関係な生成能力を保ちながら対象概念を消去する損失関数を検証。
 \end{cvpoints}
 \end{minipage}\par\vspace{5pt}
 \begin{minipage}{\linewidth}\raggedright
@@ -162,7 +162,7 @@
 \mbox{\href{https://github.com/rusen-archive/Biting-The-Bytes}{\faGithub\enspace{}コード}}\quad{}\mbox{\href{https://huggingface.co/spaces/rusen/diacritize-tr}{\faExternalLink\enspace{}デモ}}%
 }\par\vspace{2pt}
 \begin{cvpoints}
-\item トルコ語の発音区別符号復元で、PEFT/LoRAを使ったByT5-smallの学習と調整を主導。バイト単位の処理を実装し、デバッグとHugging Face Spaces公開を共同で担当。
+\item バイト単位のトルコ語発音区別符号復元に向け、PEFT/LoRAによるByT5-smallのファインチューニングを主導し、テストセットで単語単位の精度96.18\%を達成し、授業のKaggleコンペで17チーム中2位タイ。Hugging Face Spacesでの公開を共同で担当。
 \end{cvpoints}
 \end{minipage}\par\vspace{5pt}
 \begin{minipage}{\linewidth}\raggedright
@@ -182,7 +182,7 @@
 \cvheading{共同創業者・技術責任者}{08/2025 - 04/2026}
 {\small{}\itshape{}\href{https://github.com/fiction-ai-studios}{Fiction Studios\extarrow}}\dates{アンカラ、トルコ}\par\vspace{3pt}
 \begin{cvpoints}
-\item Bilkent CyberparkでFiction Studiosを共同創業し、技術開発と追加メンバー3名の活動を統括。博物館・観光向けの多言語LLMガイドを開発し、顧客・投資家との対話にも参加。
+\item Bilkent CyberparkでFiction Studiosを共同創業し、技術開発と追加メンバー3名の活動を統括。博物館・観光向けの多言語LLMガイドを開発し、顧客と投資家に提案。
 \end{cvpoints}
 \end{minipage}\par\vspace{6pt}
 \begin{minipage}{\linewidth}\raggedright
