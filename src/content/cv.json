@@ -157,7 +157,7 @@
       "title": "To-AI-or-Not-to-AI",
       "subtitle": "GPT Detector",
       "period": "2023",
-      "description": "Combined three fine-tuned RoBERTa detectors by majority vote. Shared preparation of 26,270 examples; achieved 94.21% accuracy on an in-domain random split, without establishing out-of-domain generalization.",
+      "description": "Built an ensemble of three fine-tuned RoBERTa detectors combined by majority vote, reaching 94.21% accuracy on the held-out test split of a 26,270-example dataset prepared with teammates.",
       "tags": [
         "RoBERTa",
         "Ensemble"
@@ -196,7 +196,14 @@
       "period": "2026",
       "summary": "Awarded government funding for overseas master’s study followed by doctoral study, covering tuition fees, a monthly living stipend, health insurance, travel, language-exam fees, and study supplies. Following completion of the funded studies, will return to Türkiye as an assistant professor.",
       "url": "https://rusen.ai/Sponsorship.pdf",
-      "linkText": "M.Sc."
+      "linkText": "M.Sc. & Ph.D."
+    },
+    {
+      "title": "1st Place · Agenthon 2026, Track 3 (Simulation)",
+      "issuer": "NeurIPS 2026 Competition Track",
+      "period": "2026",
+      "summary": "Ranked 1st of 55 teams in the simulation track, building as a team an ABIDES-compatible market simulator that maximizes event throughput while preserving matching-engine semantics. Selected to present a team poster at the Agenthon workshop at NeurIPS 2026.",
+      "url": "https://www.agenthon.net/"
     },
     {
       "title": "Kaggle Bronze Medal · The Pokémon Company PTCG AI Battle Challenge",
