@@ -58,7 +58,7 @@
       "company": "CyberQuote",
       "period": "03/2025 - 07/2025",
       "location": "イスタンブール、トルコ",
-      "description": "Phillip Capital傘下のCyberQuoteでニュース感情分析、金融専門家向けLLMツール、Web連携、音声アシスタントを開発。分散した情報源やPDFから最新の金融情報を取得する課題に取り組んだ。",
+      "description": "Phillip Capital傘下のCyberQuoteで、分散した社内情報源やPDF金融レポートから最新の文脈を取得するRAGパイプラインと、社内向け金融LLMツールのエージェントパイプラインを構築。ニュース感情分析パイプラインとWeb連携も開発。",
       "link": "https://cyberquote.com/tk/",
       "category": "professional"
     },
@@ -157,7 +157,7 @@
       "title": "To-AI-or-Not-to-AI",
       "subtitle": "AI 生成テキスト検出器",
       "period": "2023",
-      "description": "調整済みRoBERTa検出器3個を多数決で統合。26,270例の準備に貢献し、同一分布のランダムテスト分割で94.21%の精度を達成。分布外への汎化は未検証。",
+      "description": "調整済みRoBERTa検出器3個を多数決で統合したアンサンブルを構築。チームで準備した26,270例のデータセットのテスト分割で94.21%の精度を達成。",
       "tags": [
         "RoBERTa",
         "アンサンブル"
@@ -195,7 +195,14 @@
       "summary": "海外での修士課程と、その後の博士課程を対象とする政府奨学金に採択。授業料、毎月の生活費、健康保険、渡航費、語学試験費用、学用品費を支援。奨学金対象の学業修了後は、トルコに帰国し、助教（Assistant Professor）として勤務予定。",
       "period": "2026",
       "url": "https://rusen.ai/Sponsorship.pdf",
-      "linkText": "修士"
+      "linkText": "修士・博士課程"
+    },
+    {
+      "title": "1位 · Agenthon 2026 Track 3（シミュレーション）",
+      "issuer": "NeurIPS 2026 Competition Track",
+      "period": "2026",
+      "summary": "シミュレーション部門で55チーム中1位。マッチングエンジンの挙動を保ちつつ毎秒処理イベント数を最大化する、ABIDES互換の市場シミュレータをチームで開発した。NeurIPS 2026のAgenthonワークショップでチームポスター発表に選出。",
+      "url": "https://www.agenthon.net/"
     },
     {
       "title": "Kaggle ブロンズメダル · The Pokémon Company PTCG AI Battle Challenge",

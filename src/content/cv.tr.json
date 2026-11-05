@@ -58,7 +58,7 @@
       "company": "CyberQuote",
       "period": "03/2025 - 07/2025",
       "location": "İstanbul, TR",
-      "description": "Phillip Capital iştiraki CyberQuote’ta haber duygu analizi, finans uzmanlarına yönelik LLM araçları, web entegrasyonları ve mobil sesli asistan geliştirilmesi. Dağınık kaynaklar ve PDF raporlarından güncel bağlamın getirilmesi.",
+      "description": "Phillip Capital iştiraki CyberQuote’ta dağınık iç kaynaklardan ve PDF finans raporlarından güncel bağlam getiren RAG pipeline’ları ve şirket içi finansal LLM araçları için agent pipeline’ları geliştirilmesi. Ayrıca haber duygu analizi pipeline’ları ve web entegrasyonları.",
       "link": "https://cyberquote.com/tk/",
       "category": "professional"
     },
@@ -157,7 +157,7 @@
       "title": "To-AI-or-Not-to-AI",
       "subtitle": "Yapay Zeka Metin Tespiti",
       "period": "2023",
-      "description": "Üç ince ayarlı RoBERTa dedektörünün çoğunluk oylamasıyla birleştirilmesi. 26.270 örneğin hazırlanmasına katkı; aynı dağılımdan rastgele test ayrımında %94,21 doğruluk. Dağılım dışı genelleme gösterilmedi.",
+      "description": "Üç ince ayarlı RoBERTa dedektörünü çoğunluk oylamasıyla birleştiren topluluk modeli. Ekiple hazırlanan 26.270 örneklik veri setinin test ayrımında %94,21 doğruluk.",
       "tags": [
         "RoBERTa",
         "Topluluk Öğrenmesi"
@@ -195,7 +195,14 @@
       "summary": "Yurt dışında yüksek lisans ve ardından doktora öğrenimi için devlet bursu kazandı. Burs; öğrenim ücretlerini, aylık yaşam bursunu, sağlık sigortasını, ulaşımı, yabancı dil sınav ücretlerini ve kırtasiye yardımını kapsar. Burslu öğrenimin tamamlanmasının ardından Türkiye’ye dönerek doktor öğretim üyesi olarak görev yapacaktır.",
       "period": "2026",
       "url": "https://rusen.ai/Sponsorship.pdf",
-      "linkText": "Yüksek Lisans"
+      "linkText": "Yüksek Lisans ve Doktora"
+    },
+    {
+      "title": "Birincilik · Agenthon 2026, Track 3 (Simülasyon)",
+      "issuer": "NeurIPS 2026 Competition Track",
+      "period": "2026",
+      "summary": "Simülasyon kategorisinde 55 takım arasında birinci olduk; eşleştirme motoru davranışını koruyarak saniyede işlenen olay sayısını en üst düzeye çıkaran, ABIDES uyumlu bir piyasa simülatörünü ekip olarak geliştirdik. NeurIPS 2026’daki Agenthon çalıştayında takım posteri sunmak üzere seçildik.",
+      "url": "https://www.agenthon.net/"
     },
     {
       "title": "Kaggle Bronz Madalya · The Pokémon Company PTCG AI Battle Challenge",
