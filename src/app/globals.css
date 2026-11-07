@@ -762,6 +762,16 @@ html.dark .term-cover {
   color: var(--sub);
   text-transform: uppercase;
 }
+/* A card's tags as one quiet line: lowercase, "·"-separated, so multi-word
+   tags stay readable as units. */
+.term-tags {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: var(--sub);
+  text-transform: lowercase;
+  margin: 0;
+}
 .term-tag--soon {
   color: #dc2626;
 }

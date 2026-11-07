@@ -30,13 +30,7 @@ export default function DemoCard({ title, description, href, tags = [], status =
       </div>
       <p className={`text-neutral-700 dark:text-neutral-400 text-sm leading-relaxed mb-3 ${mutedContent}`}>{description}</p>
       {tags.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-3">
-          {tags.map((tag) => (
-            <span key={tag} className={`term-tag ${mutedContent}`}>
-              {tag}
-            </span>
-          ))}
-        </div>
+        <p className={`term-tags ${mutedContent}`}>{tags.slice(0, 3).join(" · ")}</p>
       )}
       {isLive && !cover && (
         <div className="term-status">

@@ -212,9 +212,9 @@ function DemoPreview({
       </div>
       <div className="flex items-start justify-between gap-3 mb-2">
         <h3 className="font-semibold text-base sm:text-lg group-hover:opacity-80 transition">{title}</h3>
-        {tag && <span className="term-tag shrink-0">{tag}</span>}
       </div>
       <p className="text-neutral-600 dark:text-neutral-400 text-sm leading-relaxed">{description}</p>
+      {tag && <p className="term-tags mt-3">{tag}</p>}
     </Link>
   );
 }
