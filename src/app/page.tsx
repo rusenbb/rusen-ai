@@ -1,4 +1,6 @@
 import Link from "next/link";
+import JsonLd from "./components/JsonLd";
+import { PERSON } from "@/lib/agent-docs";
 import AsciiCover from "./components/ascii-cover/AsciiCover";
 import PostSigil from "./blogs/components/PostSigil";
 import { buildSigil, type Sigil } from "@/lib/blog-sigil";
@@ -18,6 +20,7 @@ export default function Home() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-10 sm:py-12 md:py-16">
+      <JsonLd data={{ "@context": "https://schema.org", "@type": "Person", ...PERSON }} />
       {/* Hero */}
       <section className="text-center">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 leading-tight text-balance">

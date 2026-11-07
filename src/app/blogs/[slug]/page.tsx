@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import CopyMarkdown from "../components/CopyMarkdown";
 import { postMarkdown } from "@/lib/blog-markdown";
+import JsonLd from "../../components/JsonLd";
+import { PERSON } from "@/lib/agent-docs";
 import { compileMDX } from "next-mdx-remote/rsc";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
@@ -21,7 +23,7 @@ import {
   tagSlug,
   tagDisplay,
 } from "@/lib/blog";
-import { blogPostImagePath, buildSocialMetadata } from "@/lib/social-metadata";
+import { blogPostImagePath, buildSocialMetadata, SITE_ORIGIN } from "@/lib/social-metadata";
 import TableOfContents from "../components/TableOfContents";
 
 export async function generateStaticParams() {
@@ -59,7 +61,7 @@ export async function generateMetadata({
     [post.lang]: `/blogs/${post.slug}`,
     ...(sibling ? { [sibling.lang]: `/blogs/${sibling.slug}` } : {}),
   };
-  return buildSocialMetadata({
+  const meta = buildSocialMetadata({
     title: `${post.title} | Rusen.ai`,
     description: post.description,
     path: `/blogs/${post.slug}`,
@@ -74,6 +76,11 @@ export async function generateMetadata({
       tags: post.tags,
     },
   });
+  // Point agents at the Markdown twin written by scripts/blog-md-export.ts.
+  return {
+    ...meta,
+    alternates: { ...meta.alternates, types: { "text/markdown": `/blogs/${post.slug}.md` } },
+  };
 }
 
 export default async function PostPage({
@@ -124,6 +131,21 @@ export default async function PostPage({
 
   return (
     <div className="post-shell" data-no-ripple lang={post.lang}>
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "BlogPosting",
+          headline: post.title,
+          description: post.description,
+          datePublished: post.date,
+          inLanguage: post.lang,
+          keywords: post.tags.join(", "),
+          wordCount: post.wordCount,
+          url: `${SITE_ORIGIN}/blogs/${post.slug}`,
+          author: { "@type": "Person", name: PERSON.name, url: PERSON.url },
+          ...(series ? { isPartOf: { "@type": "CreativeWorkSeries", name: series.title[post.lang] } } : {}),
+        }}
+      />
       {headings.length >= 2 && (
         <TableOfContents headings={headings} label={tocLabel} />
       )}
