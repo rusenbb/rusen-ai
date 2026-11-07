@@ -45,7 +45,7 @@ export default function PostSigil({ sigil }: { sigil: Sigil }) {
     if (!canvas || !ctx) return;
     const cells = layout(sigil);
     const rows = cells.length;
-    const host = (canvas.closest(".series-entry, .standalone-entry, .writing-card") as HTMLElement | null) ?? canvas;
+    const host = (canvas.closest(".latest-entry, .series-card, .archive-row, .writing-card") as HTMLElement | null) ?? canvas;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
     const letters = sigil.letters || "abcdefghijklmnopqrstuvwxyz";
     let dark = getResolvedTheme() === "dark";

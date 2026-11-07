@@ -372,25 +372,121 @@ html { scroll-behavior: smooth; }
 .post-toc-item.is-active .post-toc-marker::before { content: "▸"; }
 
 /* ============================================================
-   INDEX PAGE - accordion + series-first
+   INDEX PAGE - latest, series shelf, archive
    ============================================================ */
 
 .idx-head { margin-bottom: 2rem; }
 
-/* Opaque panel behind the article list so the ASCII DATA bg doesn't bleed
-   through the rows. Hero/lede above stays transparent on purpose. */
-.idx-content-panel {
-  background: var(--surface);
+/* Post sigil: the rhythm of the post's sentences, drawn as ASCII. */
+.post-sigil { display: block; flex-shrink: 0; }
+
+.entry-meta {
+  display: block;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  color: var(--sub);
+  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+}
+
+/* 01 Latest: the newest posts, sigil beside each. */
+.latest-entry {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+  padding: 1rem 0;
+  border-bottom: 1px dashed var(--line);
+  color: inherit;
+  text-decoration: none;
+}
+.latest-entry:last-child { border-bottom: none; }
+.latest-entry .post-sigil { width: 84px; height: 63px; }
+.latest-entry h3 { font-size: 1.2rem; font-weight: 600; margin: 0 0 0.35rem; line-height: 1.3; }
+.latest-entry p { color: var(--muted); font-size: 0.92rem; margin: 0; max-width: 62ch; }
+.latest-entry:hover h3 { text-decoration: underline; text-underline-offset: 0.25em; text-decoration-thickness: 1px; }
+
+/* 02 Series: one card per series; its parts' sigils form the chain. */
+.series-shelf {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: 1rem;
+}
+.series-card {
+  display: block;
+  padding: 1.1rem 1.2rem;
   border: 1px solid var(--line);
-  padding: 0 1.5rem 1rem;
+  background: var(--surface);
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.15s ease;
 }
-.idx-content-panel > .idx-section:first-child {
-  margin-top: 0;
-  border-top: none;
+.series-card:hover { transform: translateY(-2px); }
+.series-card h3 { font-size: 1.05rem; font-weight: 600; margin: 0 0 0.4rem; }
+.series-card__chain { display: flex; flex-wrap: wrap; align-items: center; row-gap: 0.4rem; margin-top: 0.6rem; }
+.series-card__link { display: inline-flex; align-items: center; }
+.series-card__dash { color: var(--sub); opacity: 0.6; padding: 0 0.3rem; font-family: var(--font-geist-mono), ui-monospace, monospace; font-size: 0.7rem; }
+.series-card .post-sigil { width: 48px; height: 36px; }
+
+/* 03 Archive: every post, one compact row each, grouped by year. */
+.archive-year {
+  display: grid;
+  grid-template-columns: 4rem minmax(0, 1fr);
+  gap: 1rem;
+  padding: 0.5rem 0;
 }
-@media (max-width: 540px) {
-  .idx-content-panel { padding: 0 1rem 1rem; }
+.archive-year__label {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  color: var(--sub);
+  padding-top: 0.55rem;
 }
+.archive-row {
+  display: grid;
+  grid-template-columns: 7.5rem 32px minmax(0, 1fr) auto;
+  gap: 0.9rem;
+  align-items: center;
+  padding: 0.45rem 0;
+  border-bottom: 1px dashed var(--line);
+  color: inherit;
+  text-decoration: none;
+}
+.archive-row:last-child { border-bottom: none; }
+.archive-row .post-sigil { width: 32px; height: 24px; }
+.archive-row__date,
+.archive-row__series {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  color: var(--sub);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.archive-row__title { font-weight: 500; }
+.archive-row:hover .archive-row__title { text-decoration: underline; text-underline-offset: 0.25em; text-decoration-thickness: 1px; }
+
+.idx-footnote {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  color: var(--sub);
+  text-transform: uppercase;
+  margin-top: 3rem;
+}
+
+@media (max-width: 640px) {
+  .latest-entry { grid-template-columns: 60px minmax(0, 1fr); gap: 0.9rem; }
+  .latest-entry .post-sigil { width: 60px; height: 45px; }
+  .archive-year { grid-template-columns: minmax(0, 1fr); gap: 0.25rem; }
+  .archive-row { grid-template-columns: 32px minmax(0, 1fr); row-gap: 0.15rem; }
+  .archive-row .post-sigil { grid-row: span 2; }
+  .archive-row__date { grid-column: 2; order: 2; }
+  .archive-row__title { grid-column: 2; order: 1; }
+  .archive-row__series { display: none; }
+}
+
 .idx-head h1 {
   font-size: 2rem;
   font-weight: 700;
@@ -472,55 +568,7 @@ html { scroll-behavior: smooth; }
 }
 .series-entry:last-child { border-bottom: none; }
 
-/* Post sigil: the rhythm of the post's sentences, drawn as ASCII. */
-.post-sigil {
-  width: 84px;
-  height: 63px;
-  flex-shrink: 0;
-  display: block;
-}
-.series-entry { padding-right: 104px; }
-/* Doubled class beats the generic `.series-entry > *` stacking rule below. */
-.series-entry > .post-sigil.post-sigil {
-  position: absolute;
-  right: 0;
-  top: 1rem;
-}
-.standalone-entry > .post-sigil { align-self: center; }
-@media (max-width: 560px) {
-  .post-sigil { width: 60px; height: 45px; }
-  .series-entry { padding-right: 72px; }
-  .standalone-entry > .post-sigil { display: none; }
-}
 
-/* Series chain: the parts as linked nodes under the series header. */
-.series-chain {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  row-gap: 0.25rem;
-  margin: -0.35rem 0 0.9rem 1.6rem;
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 0.68rem;
-  letter-spacing: 0.12em;
-  color: var(--sub);
-}
-.series-chain__link { opacity: 0.5; padding: 0 0.35rem; }
-.series-chain__node {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  transition: color 0.15s ease;
-}
-.series-chain__node[data-latest="true"] .series-chain__dot {
-  color: var(--signal);
-  animation: signal-blip 1.5s ease-in-out infinite;
-}
-.series-chain__node[data-active="true"] { color: var(--foreground); }
-.series-chain__node[data-active="true"] .series-chain__dot { color: var(--signal); }
-@media (prefers-reduced-motion: reduce) {
-  .series-chain__node[data-latest="true"] .series-chain__dot { animation: none; }
-}
 .series-entry::before {
   content: '';
   position: absolute;
