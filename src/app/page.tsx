@@ -1,4 +1,7 @@
 import Link from "next/link";
+import AsciiCover from "./components/ascii-cover/AsciiCover";
+import PostSigil from "./blogs/components/PostSigil";
+import { buildSigil, type Sigil } from "@/lib/blog-sigil";
 import BgKickerToggle from "./components/BgKickerToggle";
 import { getFeaturedProjects, getProjectPath } from "@/lib/projects";
 import { getLatestUniquePosts, formatDate, readUnit } from "@/lib/blog";
@@ -63,6 +66,7 @@ export default function Home() {
               description={project.summary}
               href={getProjectPath(project)}
               tag={project.capabilities[0] ?? project.tags[0]}
+              cover={project.id}
             />
           ))}
         </div>
@@ -82,6 +86,7 @@ export default function Home() {
               description={project.summary}
               href={getProjectPath(project)}
               tag={project.capabilities[0] ?? project.tags[0]}
+              cover={project.id}
             />
           ))}
         </div>
@@ -101,6 +106,7 @@ export default function Home() {
               description={project.summary}
               href={getProjectPath(project)}
               tag={project.capabilities[0] ?? project.tags[0]}
+              cover={project.id}
             />
           ))}
         </div>
@@ -122,6 +128,7 @@ export default function Home() {
               date={formatDate(post.date, post.lang)}
               minutes={post.readingMinutes}
               lang={post.lang}
+              sigil={buildSigil(post.body)}
             />
           ))}
         </div>
@@ -137,6 +144,7 @@ function WritingPreview({
   date,
   minutes,
   lang,
+  sigil,
 }: {
   title: string;
   description: string;
@@ -144,20 +152,21 @@ function WritingPreview({
   date: string;
   minutes: number;
   lang: "en" | "tr";
+  sigil: Sigil;
 }) {
   return (
-    <Link href={href} className="term-card block group">
+    <Link href={href} className="term-card writing-card block group">
       <div className="flex items-start justify-between gap-3 mb-2">
         <h3 className="font-semibold text-base sm:text-lg group-hover:opacity-80 transition">
           {title}
         </h3>
-        <span className="term-tag shrink-0">{lang.toUpperCase()}</span>
+        <PostSigil sigil={sigil} />
       </div>
       <p className="text-neutral-600 dark:text-neutral-400 text-sm leading-relaxed">
         {description}
       </p>
       <div className="term-status mt-3">
-        {date} · {minutes} {readUnit(lang)}
+        {date} · {minutes} {readUnit(lang)} · {lang.toUpperCase()}
       </div>
     </Link>
   );
@@ -180,18 +189,29 @@ function SectionHeader({ num, title, href }: { num: string; title: string; href:
   );
 }
 
-function DemoPreview({ title, description, href, tag }: { title: string; description: string; href: string; tag?: string }) {
+function DemoPreview({
+  title,
+  description,
+  href,
+  tag,
+  cover,
+}: {
+  title: string;
+  description: string;
+  href: string;
+  tag?: string;
+  cover: string;
+}) {
   return (
     <Link href={href} className="term-card block group">
+      <div className="term-cover">
+        <AsciiCover scene={cover} className="term-cover__canvas" />
+      </div>
       <div className="flex items-start justify-between gap-3 mb-2">
         <h3 className="font-semibold text-base sm:text-lg group-hover:opacity-80 transition">{title}</h3>
         {tag && <span className="term-tag shrink-0">{tag}</span>}
       </div>
       <p className="text-neutral-600 dark:text-neutral-400 text-sm leading-relaxed">{description}</p>
-      <div className="term-status mt-3">
-        <span className="signal-blip" aria-hidden="true" />
-        LIVE
-      </div>
     </Link>
   );
 }

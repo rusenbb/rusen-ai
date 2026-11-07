@@ -746,6 +746,13 @@ html.dark .term-cover {
   height: 100%;
   display: block;
 }
+/* Blog sigil on the home page's writing cards (blog.css styles it on /blogs). */
+.writing-card .post-sigil {
+  width: 60px;
+  height: 45px;
+  flex-shrink: 0;
+  display: block;
+}
 /* The moving cover already signals hover; skip the border highlight. */
 .term-card:has(.term-cover):hover { border-color: var(--line); }
 .term-tag {
