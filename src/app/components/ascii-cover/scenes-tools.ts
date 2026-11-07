@@ -93,80 +93,119 @@ const bar = (frac: number, width: number) => {
 
 // ---------------------------------------------------------------- demos
 
-/** Frames stacked in depth like a flip-book; one tracked object moves
- *  through every slice and a tube joins its positions across time. */
+/** Frames stacked in depth like a flip-book; tracked objects move through
+ *  every slice and a tube joins their positions across time. The motion
+ *  changes every few seconds: an orbit, a bounce, and two crossing paths. */
 const videoVolume: SceneFactory = (g) => {
   const cv = new CharCanvas(g);
   const slices = 6;
+  type Path = (phase: number) => [number, number];
+  const motions: { hue: number; path: Path }[][] = [
+    [{ hue: 15, path: (p) => [Math.sin(p), Math.cos(p * 1.3)] }],
+    [{ hue: 45, path: (p) => [Math.sin(p * 0.7), 1 - 2 * Math.abs(Math.sin(p * 1.6))] }],
+    [
+      { hue: 15, path: (p) => [Math.sin(p * 0.9), -0.5] },
+      { hue: 195, path: (p) => [-Math.sin(p * 0.9), 0.5] },
+    ],
+  ];
   let t = 0;
   return {
     step(dt) {
       t += dt;
+      const { index } = cycle(t, motions.length, 6);
       cv.clear();
       const w = Math.floor(g.cols * 0.4);
       const h = Math.max(4, Math.floor(g.rows * 0.5));
       const stepC = (g.cols - w - 4) / (slices - 1);
       const stepR = (g.rows - h - 2) / (slices - 1);
-      const centers: [number, number, number][] = [];
+      const objects = motions[index].map(() => [] as [number, number, number][]);
       // Back slice first (top right), front slice last (bottom left).
       for (let k = slices - 1; k >= 0; k--) {
         const c0 = 2 + k * stepC;
         const r0 = 1 + (slices - 1 - k) * stepR;
         const depth = 1 - k / slices;
         cv.box(c0, r0, c0 + w, r0 + h, 0.2 + 0.4 * depth, 210);
-        const phase = t * 0.8 - k * 0.45;
-        const ox = c0 + w / 2 + Math.sin(phase) * (w / 2 - 3);
-        const oy = r0 + h / 2 + Math.cos(phase * 1.3) * (h / 2 - 1.5);
-        centers.push([ox, oy, depth]);
+        motions[index].forEach((m, j) => {
+          const [ux, uy] = m.path(t * 0.8 - k * 0.45);
+          objects[j].push([c0 + w / 2 + ux * (w / 2 - 3), r0 + h / 2 + uy * (h / 2 - 1.5), depth]);
+        });
       }
-      for (let i = 1; i < centers.length; i++) {
-        const [ax, ay] = centers[i - 1];
-        const [bx, by] = centers[i];
-        const n = Math.ceil(Math.hypot(bx - ax, by - ay));
-        for (let s = 1; s < n; s++) {
-          const x = ax + ((bx - ax) * s) / n;
-          const y = ay + ((by - ay) * s) / n;
-          cv.put(x, y, "·", 0.6, 25);
+      objects.forEach((centers, j) => {
+        const hue = motions[index][j].hue;
+        for (let i = 1; i < centers.length; i++) {
+          const [ax, ay] = centers[i - 1];
+          const [bx, by] = centers[i];
+          const n = Math.ceil(Math.hypot(bx - ax, by - ay));
+          for (let s2 = 1; s2 < n; s2++) cv.put(ax + ((bx - ax) * s2) / n, ay + ((by - ay) * s2) / n, "·", 0.6, hue);
         }
-      }
-      // Objects last so no frame line covers them; the front one is ringed.
-      centers.forEach(([x, y, depth], i) => {
-        const front = i === centers.length - 1;
-        cv.put(x, y, "●", front ? 1 : 0.4 + 0.5 * depth, 15);
-        if (front) {
-          cv.put(x - 1, y, "(", 0.85, 15);
-          cv.put(x + 1, y, ")", 0.85, 15);
-        }
+        // Objects last so no frame line covers them; the front one is ringed.
+        centers.forEach(([x, y, depth], i) => {
+          const front = i === centers.length - 1;
+          cv.put(x, y, "●", front ? 1 : 0.4 + 0.5 * depth, hue);
+          if (front) {
+            cv.put(x - 1, y, "(", 0.85, hue);
+            cv.put(x + 1, y, ")", 0.85, hue);
+          }
+        });
       });
     },
     sample: (c, r, out) => cv.sample(c, r, out),
   };
 };
 
-/** A continuous wave, the samples taken from it, and the alias they imply. */
+/** A 5 Hz wave sampled at four rates in turn. Above twice the signal
+ *  frequency the reconstruction matches; below it, the samples trace a
+ *  slower alias. The alias is computed, not drawn by hand. */
 const samplingLab: SceneFactory = (g) => {
-  const buf = new TrailBuffer(g);
-  const h = g.rows * g.aspect;
+  const cv = new CharCanvas(g);
+  const label = new TextScreen(g, 1);
+  const SIGNAL_HZ = 5;
+  const rates = [24, 12, 7, 4];
   let t = 0;
   return {
     step(dt) {
       t += dt;
-      buf.decay(0);
-      const freq = 5.5;
-      const rate = 7 + 5 * (0.5 + 0.5 * Math.sin(t * 0.25));
-      const y = (x: number) => h / 2 + Math.sin((x / g.cols) * TAU * freq + t * 1.4) * h * 0.32;
-      for (let x = 0; x < g.cols; x += 0.25) buf.plot(x, y(x), 0.32, 200);
-      const alias = Math.abs(freq - Math.round(freq / rate) * rate);
-      for (let x = 0; x < g.cols; x += 0.25) {
-        buf.plot(x, h / 2 + Math.sin((x / g.cols) * TAU * alias + t * 1.4) * h * 0.32, 0.5, 330);
+      const { index } = cycle(t, rates.length, 4.5);
+      const fs = rates[index];
+      const ok = fs > 2 * SIGNAL_HZ;
+      // Signed alias: sin(2π f n/fs) equals sin(2π fa n/fs) at every sample.
+      const fa = SIGNAL_HZ - Math.round(SIGNAL_HZ / fs) * fs;
+      const top = 2;
+      const mid = top + (g.rows - top) / 2;
+      const amp = (g.rows - top) / 2 - 1;
+      const phase = t * 1.2;
+      const at = (f: number, x: number) => mid - Math.sin(2 * Math.PI * f * (x / g.cols) + phase) * amp;
+
+      cv.clear();
+      for (let x = 0; x < g.cols; x++) cv.put(x, at(SIGNAL_HZ, x), "·", 0.4, 210);
+      // The wave the samples imply: the signal itself when fs is high
+      // enough, a slower alias when it is not.
+      for (let x = 0; x < g.cols; x++) {
+        const y0 = at(fa, x);
+        const y1 = at(fa, x + 1);
+        const glyph = y1 < y0 - 0.35 ? "╱" : y1 > y0 + 0.35 ? "╲" : "─";
+        cv.put(x, y0, glyph, ok ? 0.55 : 0.85, ok ? 140 : 330);
       }
-      const step = g.cols / rate;
-      for (let x = step / 2; x < g.cols; x += step) {
-        buf.line(x, h / 2, x, y(x), 0.45, 45);
-        buf.plot(x, y(x), 1, 45);
+      const spacing = g.cols / fs;
+      for (let x = spacing / 2; x < g.cols; x += spacing) {
+        const y = at(SIGNAL_HZ, x);
+        const from = Math.min(y, mid);
+        const to = Math.max(y, mid);
+        // Stems only when samples are sparse enough to read as separate.
+        if (spacing >= 4) for (let r = Math.ceil(from); r <= Math.floor(to); r++) cv.put(x, r, "│", 0.35, 45);
+        cv.put(x, y, "●", 1, 45);
       }
+      const verdict = ok ? "OK" : `ALIASED → ${Math.abs(fa)} Hz`;
+      const head = `signal 5 Hz · fs ${fs} Hz · `;
+      label.lines = [{ text: head + verdict, hue: 210, v: 0.6, spans: [{ from: head.length, to: head.length + verdict.length, hue: ok ? 140 : 330, v: 0.95 }] }];
     },
-    sample: (c, r, out) => buf.sample(c, r, out),
+    sample(c, r, out) {
+      if (r === 0) {
+        label.sample(c, r, out);
+        return;
+      }
+      cv.sample(c, r, out);
+    },
   };
 };
 
@@ -317,26 +356,62 @@ const segmentAnything: SceneFactory = (g, rand) => {
   };
 };
 
-/** A dithered scene being scanned, labels scoring what the model sees. */
+/** Three different pictures in turn, each scanned and then scored against
+ *  its own labels, the way a CLIP-style model ranks free-form text. */
 const visionAnything: SceneFactory = (g) => {
-  const labels = ["mountains", "a city", "the sea"];
   const screen = new TextScreen(g, 0);
   const split = Math.floor(g.cols * 0.58);
+  type Pixel = (x: number, y: number) => [number, number];
+  const examples: { labels: string[]; image: Pixel }[] = [
+    {
+      labels: ["mountains", "a city", "the sea"],
+      image: (x, y) => {
+        const ridge = 0.55 - 0.25 * Math.abs(Math.sin(x * 5.2)) - 0.1 * Math.sin(x * 13);
+        if (Math.hypot(x - 0.75, (y - 0.25) * 1.6) < 0.1) return [0.9, 40];
+        return y > ridge ? [0.35 + 0.4 * (y - ridge), 160] : [0.12, 210];
+      },
+    },
+    {
+      labels: ["a city", "a forest", "the moon"],
+      image: (x, y) => {
+        const b = Math.floor(x * 9);
+        const height = 0.25 + 0.5 * Math.abs(Math.sin(b * 12.9898) % 1);
+        if (y > 1 - height) {
+          const window = Math.floor(x * 40) % 2 === 0 && Math.floor(y * 14) % 2 === 0;
+          return window ? [0.95, 48] : [0.35, 220];
+        }
+        return [0.06, 230];
+      },
+    },
+    {
+      labels: ["the sea", "a desert", "a city"],
+      image: (x, y) => {
+        const horizon = 0.45;
+        if (Math.hypot(x - 0.3, (y - 0.2) * 1.6) < 0.08) return [0.9, 50];
+        if (y > horizon - 0.08 && y < horizon && Math.abs(x - 0.62) < 0.07) return [0.85, 15];
+        if (y > horizon) return [0.3 + 0.35 * Math.max(0, Math.sin(x * 30 + y * 18)), 200];
+        return [0.08, 220];
+      },
+    },
+  ];
   let t = 0;
+  let index = 0;
   return {
     step(dt) {
       t += dt;
-      const p = Math.min(1, (t % 5) / 2.2);
+      const c0 = cycle(t, examples.length, 5);
+      index = c0.index;
+      const p = Math.min(1, Math.max(0, (c0.local - 1.2) / 1.6));
       const width = Math.max(4, g.cols - split - 6);
       screen.lines = [];
       for (let r = 0; r < g.rows; r++) screen.lines.push({ text: "", hue: 0, v: 0 });
-      labels.forEach((label, k) => {
+      examples[index].labels.forEach((label, k) => {
         const target = k === 0 ? 0.83 : 0.08;
         const prob = 0.33 + (target - 0.33) * p;
         const row = 2 + k * 3;
         if (row + 1 >= g.rows) return;
         screen.lines[row] = { text: " ".repeat(split + 2) + label, hue: 210, v: 0.6 };
-        screen.lines[row + 1] = { text: " ".repeat(split + 2) + bar(prob, width), hue: k === 0 ? 140 : 0, v: k === 0 ? 0.9 : 0.4 };
+        screen.lines[row + 1] = { text: " ".repeat(split + 2) + bar(prob, width), hue: k === 0 && p > 0.5 ? 140 : 0, v: k === 0 ? 0.9 : 0.4 };
       });
     },
     sample(c, r, out) {
@@ -345,81 +420,124 @@ const visionAnything: SceneFactory = (g) => {
         return;
       }
       out.ch = null;
-      const x = c / split;
-      const y = r / g.rows;
-      const ridge = 0.55 - 0.25 * Math.abs(Math.sin(x * 5.2)) - 0.1 * Math.sin(x * 13);
-      const sun = Math.hypot(x - 0.75, (y - 0.25) * 1.6) < 0.1;
-      let v = y > ridge ? 0.35 + 0.4 * (y - ridge) : 0.12;
-      let hue = y > ridge ? 160 : 210;
-      if (sun) {
-        v = 0.9;
-        hue = 40;
-      }
-      const scan = (t * 12) % (split + 8);
-      if (Math.abs(c - scan) < 1) v = Math.min(1, v + 0.4);
-      out.v = v;
+      const local = t % 5;
+      // The new picture is revealed by the scan line sweeping across.
+      const scan = Math.min(split + 2, local * 30);
+      const shown = c < scan ? index : (index + examples.length - 1) % examples.length;
+      const [v, hue] = examples[shown].image(c / split, r / g.rows);
+      out.v = Math.abs(c - scan) < 1 ? Math.min(1, v + 0.5) : v;
       out.hue = hue;
     },
   };
 };
 
-/** Noisy points and a small network's fit sliding into place. */
+/** Noisy samples from four different curves in turn, a fit sliding from a
+ *  straight line into shape, and the mean squared error it reaches. */
 const curveFitter: SceneFactory = (g, rand) => {
   const buf = new TrailBuffer(g);
+  const label = new TextScreen(g, 1);
   const h = g.rows * g.aspect;
-  const target = (x: number) => Math.sin(x * 2.4) * 0.6 + Math.tanh((x - 0.3) * 4) * 0.3;
-  const pts = Array.from({ length: 22 }, () => {
-    const x = rand() * 2 - 1;
-    return { x, y: target(x) + (rand() - 0.5) * 0.25 };
-  });
+  const targets: ((x: number) => number)[] = [
+    (x) => Math.sin(x * 2.4) * 0.6 + Math.tanh((x - 0.3) * 4) * 0.3,
+    (x) => Math.tanh(x * 6) * 0.7,
+    (x) => 1.3 * x * x - 0.6,
+    (x) => Math.exp(-((x - 0.2) ** 2) * 9) * 1.2 - 0.5,
+  ];
+  const samples = targets.map((f) =>
+    Array.from({ length: 22 }, () => {
+      const x = rand() * 2 - 1;
+      return { x, y: f(x) + (rand() - 0.5) * 0.25 };
+    }),
+  );
   let t = 0;
   return {
     step(dt) {
       t += dt;
+      const { index, local } = cycle(t, targets.length, 6);
+      const f = targets[index];
+      const pts = samples[index];
       buf.decay(0);
-      const k = Math.min(1, (t % 7) / 5);
+      const k = Math.min(1, local / 4);
+      const fit = (x: number) => k * f(x) + (1 - k) * (0.4 * x);
       const toX = (x: number) => ((x + 1) / 2) * g.cols;
-      const toY = (y: number) => h / 2 - y * h * 0.4;
+      const toY = (y: number) => h * 0.55 - y * h * 0.38;
       for (const p of pts) buf.plot(toX(p.x), toY(p.y), 0.75, 45);
       let px = -1;
-      let py = 0;
-      for (let x = -1; x <= 1; x += 0.02) {
-        const y = k * target(x) + (1 - k) * (0.4 * x);
-        if (x > -1) buf.line(toX(px), toY(py), toX(x), toY(y), 0.9, 190 + 120 * (1 - k));
+      let py = fit(-1);
+      for (let x = -0.98; x <= 1; x += 0.02) {
+        const y = fit(x);
+        buf.line(toX(px), toY(py), toX(x), toY(y), 0.9, 190 + 120 * (1 - k));
         px = x;
         py = y;
       }
+      const mse = pts.reduce((s2, p) => s2 + (fit(p.x) - p.y) ** 2, 0) / pts.length;
+      const epoch = Math.round(k * 500);
+      label.lines = [{ text: `epoch ${String(epoch).padStart(3)} · mse ${mse.toFixed(3)}`, hue: k >= 1 ? 140 : 45, v: 0.85 }];
     },
-    sample: (c, r, out) => buf.sample(c, r, out),
+    sample(c, r, out) {
+      if (r === 0) {
+        label.sample(c, r, out);
+        return;
+      }
+      buf.sample(c, r, out);
+    },
   };
 };
 
-/** A kernel window slides over an image, leaving its edge map behind. */
+/** A 3×3 window slides over a picture, leaving the filtered result behind.
+ *  Each pass uses a different picture and a different kernel. */
 const convolutionLab: SceneFactory = (g) => {
-  const img = (c: number, r: number) => {
-    const x = c / g.cols - 0.5;
-    const y = (r * g.aspect) / g.cols - 0.25;
-    const disc = Math.hypot(x + 0.15, y) < 0.18 ? 0.8 : 0;
-    const box = Math.abs(x - 0.22) < 0.12 && Math.abs(y + 0.02) < 0.14 ? 0.55 : 0;
-    return Math.max(disc, box, 0.12);
-  };
-  const edge = (c: number, r: number) => {
-    const gx = img(c + 1, r) - img(c - 1, r);
-    const gy = img(c, r + 1) - img(c, r - 1);
-    return Math.min(1, Math.hypot(gx, gy) * 1.6);
-  };
+  const label = new TextScreen(g, 1);
+  type Img = (c: number, r: number) => number;
+  const images: Img[] = [
+    (c, r) => {
+      const x = c / g.cols - 0.5;
+      const y = (r * g.aspect) / g.cols - 0.25;
+      const disc = Math.hypot(x + 0.15, y) < 0.18 ? 0.8 : 0;
+      const box = Math.abs(x - 0.22) < 0.12 && Math.abs(y + 0.02) < 0.14 ? 0.55 : 0;
+      return Math.max(disc, box, 0.12);
+    },
+    (c, r) => ((Math.floor(c / 4) + Math.floor(r / 2)) % 2 ? 0.75 : 0.12),
+    (c, r) => {
+      const x = c / g.cols - 0.5;
+      const y = (r * g.aspect) / g.cols - 0.3;
+      const ring = Math.abs(Math.hypot(x, y) - 0.2) < 0.05 ? 0.85 : 0;
+      return Math.max(ring, 0.1 + 0.25 * (c / g.cols));
+    },
+  ];
+  type Kernel = { name: string; apply: (img: Img, c: number, r: number) => number };
+  const kernels: Kernel[] = [
+    { name: "edge", apply: (img, c, r) => Math.min(1, Math.hypot(img(c + 1, r) - img(c - 1, r), img(c, r + 1) - img(c, r - 1)) * 1.6) },
+    {
+      name: "blur",
+      apply: (img, c, r) => {
+        let s2 = 0;
+        for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) s2 += img(c + dc, r + dr);
+        return s2 / 9;
+      },
+    },
+    {
+      name: "sharpen",
+      apply: (img, c, r) =>
+        Math.max(0, Math.min(1, 5 * img(c, r) - img(c + 1, r) - img(c - 1, r) - img(c, r + 1) - img(c, r - 1))),
+    },
+  ];
+  const PASS = (g.cols * g.rows) / 60 + 1.5;
   let t = 0;
+  let index = 0;
   return {
     step(dt) {
       t += dt;
+      index = cycle(t, kernels.length, PASS).index;
+      label.lines = [{ text: `kernel: ${kernels[index].name}`, hue: 45, v: 0.9 }];
     },
     sample(c, r, out) {
       out.ch = null;
-      const total = g.cols * g.rows;
-      const pos = Math.floor((t * 60) % (total + 40));
+      const img = images[index];
+      const kernel = kernels[index];
+      const pos = Math.floor((t % PASS) * 60);
       const wr = Math.floor(pos / g.cols);
       const wc = pos % g.cols;
-      const done = r < wr || (r === wr && c < wc);
       const inWindow = Math.abs(r - wr) <= 1 && Math.abs(c - wc) <= 1;
       if (inWindow) {
         out.v = 1;
@@ -427,8 +545,14 @@ const convolutionLab: SceneFactory = (g) => {
         out.ch = r === wr && c === wc ? "▣" : "□";
         return;
       }
+      if (r === 0 && c < 18) {
+        label.sample(c, r, out);
+        if (out.ch) return;
+      }
+      const done = r < wr || (r === wr && c < wc);
       if (done) {
-        out.v = edge(c, r) > 0.1 ? 0.95 : 0.05;
+        const v = kernel.apply(img, c, r);
+        out.v = kernel.name === "edge" && v < 0.1 ? 0.04 : v;
         out.hue = 175;
       } else {
         out.v = img(c, r);

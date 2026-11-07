@@ -7,6 +7,8 @@ interface Props {
   title: React.ReactNode;
   count: string;
   defaultOpen?: boolean;
+  /** Shown under the header whether the group is open or closed. */
+  strip?: React.ReactNode;
   children: React.ReactNode;
 }
 
@@ -15,6 +17,7 @@ export default function AccordionGroup({
   title,
   count,
   defaultOpen = false,
+  strip,
   children,
 }: Props) {
   const btnRef = useRef<HTMLButtonElement>(null);
@@ -50,6 +53,7 @@ export default function AccordionGroup({
         <span className="dashed-rule" />
         <span className="sec-count">{count}</span>
       </button>
+      {strip}
       <div className="acc-body">{children}</div>
     </section>
   );

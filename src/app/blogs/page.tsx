@@ -9,6 +9,9 @@ import {
 } from "@/lib/blog";
 import LangPicker from "./components/LangPicker";
 import AccordionGroup from "./components/AccordionGroup";
+import PostSigil from "./components/PostSigil";
+import SeriesChain from "./components/SeriesChain";
+import { buildSigil } from "@/lib/blog-sigil";
 import { buildStaticPageMetadata } from "@/lib/social-metadata";
 
 export const metadata: Metadata = buildStaticPageMetadata("blogs");
@@ -47,6 +50,11 @@ export default function BlogIndex() {
           }
           count={`${String(s.posts.length).padStart(2, "0")} ENTRIES`}
           defaultOpen={i === 0}
+          strip={
+            <SeriesChain
+              parts={[...new Set(s.posts.map((p) => p.seriesOrder ?? 0))].sort((a, b) => a - b)}
+            />
+          }
         >
           <div className="series-list">
             {s.posts.map((p) => (
@@ -54,8 +62,10 @@ export default function BlogIndex() {
                 key={p.slug}
                 className="series-entry"
                 data-post-lang={p.lang}
+                data-part={p.seriesOrder ?? 0}
                 lang={p.lang}
               >
+                <PostSigil sigil={buildSigil(p.body)} />
                 <Link
                   href={`/blogs/${p.slug}`}
                   className="series-entry-cover"
@@ -100,6 +110,7 @@ export default function BlogIndex() {
               data-post-lang={p.lang}
               lang={p.lang}
             >
+              <PostSigil sigil={buildSigil(p.body)} />
               <span className="date">{formatDate(p.date, p.lang)}</span>
               <div>
                 <h3>{p.title}</h3>

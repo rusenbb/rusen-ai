@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { getResolvedTheme, THEME_EVENT } from "../theme";
 import type { CellOut } from "./scene-kit";
+import { glyphKey, glyphStyle } from "./ink";
 import { createScene } from "./scenes";
 
 const RAMP = " .:-=+*#%@";
@@ -57,25 +58,13 @@ export default function AsciiCover({ scene, className }: Props) {
     let dark = getResolvedTheme() === "dark";
 
     const fillFor = (hue: number, v: number) => {
-      const hq = Math.round(hue / 6) % 60;
-      const vq = Math.min(15, Math.round(v * 15));
-      const key = hq * 16 + vq;
-      let s = styleCache.get(key);
-      if (!s) {
-        const alpha = 0.25 + (vq / 15) * 0.75;
-        if (dark) {
-          // Dark screen: glyphs glow, brighter cells are lighter.
-          s = `hsla(${hq * 6}, 78%, ${32 + vq * 3.6}%, ${alpha})`;
-        } else if (vq >= 11) {
-          // Paper: only the brightest cells keep the scene's hue, as a spot ink.
-          s = `hsla(${hq * 6}, 72%, 36%, ${alpha})`;
-        } else {
-          // Everything else is printed in the page's own ink colour.
-          s = `rgba(28, 26, 22, ${0.12 + (vq / 15) * 0.6})`;
-        }
-        styleCache.set(key, s);
+      const key = glyphKey(hue, v);
+      let style = styleCache.get(key);
+      if (!style) {
+        style = glyphStyle(Math.round(hue / 6) * 6, v, dark);
+        styleCache.set(key, style);
       }
-      return s;
+      return style;
     };
 
     const layout = () => {

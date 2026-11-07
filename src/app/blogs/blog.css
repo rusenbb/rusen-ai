@@ -457,7 +457,7 @@ html { scroll-behavior: smooth; }
   color: var(--foreground);
 }
 .acc-body { display: none; padding: 0 0 1.5rem; }
-.acc-toggle[aria-expanded="true"] + .acc-body { display: block; }
+.acc-toggle[aria-expanded="true"] ~ .acc-body { display: block; }
 
 .series-blurb {
   color: var(--muted);
@@ -491,6 +491,56 @@ html { scroll-behavior: smooth; }
   font-size: 0;
 }
 .series-entry:last-child { border-bottom: none; }
+
+/* Post sigil: the rhythm of the post's sentences, drawn as ASCII. */
+.post-sigil {
+  width: 84px;
+  height: 63px;
+  flex-shrink: 0;
+  display: block;
+}
+.series-entry { padding-right: 104px; }
+/* Doubled class beats the generic `.series-entry > *` stacking rule below. */
+.series-entry > .post-sigil.post-sigil {
+  position: absolute;
+  right: 0;
+  top: 1rem;
+}
+.standalone-entry > .post-sigil { align-self: center; }
+@media (max-width: 560px) {
+  .post-sigil { width: 60px; height: 45px; }
+  .series-entry { padding-right: 72px; }
+  .standalone-entry > .post-sigil { display: none; }
+}
+
+/* Series chain: the parts as linked nodes under the series header. */
+.series-chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  row-gap: 0.25rem;
+  margin: -0.35rem 0 0.9rem 1.6rem;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  color: var(--sub);
+}
+.series-chain__link { opacity: 0.5; padding: 0 0.35rem; }
+.series-chain__node {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: color 0.15s ease;
+}
+.series-chain__node[data-latest="true"] .series-chain__dot {
+  color: var(--signal);
+  animation: signal-blip 1.5s ease-in-out infinite;
+}
+.series-chain__node[data-active="true"] { color: var(--foreground); }
+.series-chain__node[data-active="true"] .series-chain__dot { color: var(--signal); }
+@media (prefers-reduced-motion: reduce) {
+  .series-chain__node[data-latest="true"] .series-chain__dot { animation: none; }
+}
 .series-entry::before {
   content: '';
   position: absolute;

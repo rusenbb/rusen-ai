@@ -118,27 +118,38 @@ const fireflies: SceneFactory = (g, rand) => {
   };
 };
 
-/** Clustered points rotating in 3D: an embedding space seen from outside. */
+/** Clustered points rotating in 3D: an embedding space seen from outside.
+ *  Every few seconds a new space is drawn with a different number of
+ *  clusters, as if a different set of texts had been embedded. */
 const embeddings: SceneFactory = (g, rand) => {
-  const hues = [190, 320, 45, 140];
-  const pts: { x: number; y: number; z: number; hue: number }[] = [];
-  hues.forEach((hue, k) => {
-    const a = (k / hues.length) * TAU;
-    const cx = Math.cos(a) * 0.55;
-    const cz = Math.sin(a) * 0.55;
-    const cy = (k % 2 ? 0.25 : -0.25);
-    for (let i = 0; i < 34; i++) {
-      const gauss = () => (rand() + rand() + rand() - 1.5) * 0.28;
-      pts.push({ x: cx + gauss(), y: cy + gauss(), z: cz + gauss(), hue });
+  const palette = [190, 320, 45, 140, 260];
+  type Pt = { x: number; y: number; z: number; hue: number };
+  const makeSpace = (k: number): Pt[] => {
+    const pts: Pt[] = [];
+    for (let j = 0; j < k; j++) {
+      const a = (j / k) * TAU + rand();
+      const cx = Math.cos(a) * 0.55;
+      const cz = Math.sin(a) * 0.55;
+      const cy = (rand() - 0.5) * 0.7;
+      const spread = 0.18 + rand() * 0.14;
+      for (let i = 0; i < Math.round(130 / k); i++) {
+        const gauss = () => (rand() + rand() + rand() - 1.5) * spread;
+        pts.push({ x: cx + gauss(), y: cy + gauss(), z: cz + gauss(), hue: palette[j % palette.length] });
+      }
     }
-  });
+    return pts;
+  };
+  const spaces = [4, 3, 5].map(makeSpace);
   const buf = new TrailBuffer(g);
   const h = g.rows * g.aspect;
   let angle = 0;
+  let t = 0;
 
   return {
     step(dt) {
+      t += dt;
       angle += dt * 0.35;
+      const pts = spaces[Math.floor(t / 7) % spaces.length];
       buf.decay(0.72);
       const ca = Math.cos(angle);
       const sa = Math.sin(angle);
@@ -154,29 +165,36 @@ const embeddings: SceneFactory = (g, rand) => {
   };
 };
 
-/** Epicycles: a few rotating arms whose tip draws a closed curve. */
+/** Epicycles: rotating arms whose tip draws a closed curve. Each drawing
+ *  uses a different set of harmonics, so a new shape appears every two
+ *  turns. */
 const fourier: SceneFactory = (g) => {
-  const terms = [
-    { k: 1, r: 1 },
-    { k: -2, r: 0.42 },
-    { k: 3, r: 0.24 },
-    { k: -5, r: 0.12 },
-    { k: 7, r: 0.07 },
+  const shapes = [
+    [{ k: 1, r: 1 }, { k: -2, r: 0.42 }, { k: 3, r: 0.24 }, { k: -5, r: 0.12 }, { k: 7, r: 0.07 }],
+    [{ k: 1, r: 1 }, { k: -4, r: 0.38 }, { k: 6, r: 0.12 }],
+    [{ k: 1, r: 0.8 }, { k: 2, r: 0.55 }, { k: -3, r: 0.3 }, { k: 5, r: 0.1 }],
   ];
   const trail = new TrailBuffer(g);
   const arms = new TrailBuffer(g);
   const h = g.rows * g.aspect;
   const scale = Math.min(g.cols * 0.3, h * 0.3);
+  const TURNS_PER_SHAPE = 2;
   let t = 0;
+  let current = -1;
 
   return {
     step(dt) {
       t += dt * 0.32;
-      trail.decay(0.992);
+      const index = Math.floor(t / TURNS_PER_SHAPE) % shapes.length;
+      if (index !== current) {
+        current = index;
+        trail.decay(0);
+      }
+      trail.decay(0.995);
       arms.decay(0);
       let x = g.cols / 2;
       let y = h / 2;
-      for (const term of terms) {
+      for (const term of shapes[index]) {
         const a = term.k * t * TAU;
         const nx = x + Math.cos(a) * term.r * scale;
         const ny = y + Math.sin(a) * term.r * scale;
