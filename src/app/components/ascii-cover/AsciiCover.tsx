@@ -10,8 +10,7 @@ const RAMP = " .:-=+*#%@";
 const CELL_W = 7;
 const CELL_H = 12;
 const FONT_PX = 11;
-const IDLE_FPS = 18;
-const HOVER_FPS = 40;
+const HOVER_FPS = 30;
 // Simulated seconds rendered before the first paint, so covers never start
 // on an empty or freshly seeded frame.
 const WARMUP_S = 6;
@@ -29,9 +28,9 @@ function hashSeed(s: string): number {
 }
 
 /**
- * A small canvas that renders a live ASCII simulation. It animates only
- * while on screen, speeds up while its card is hovered, brightens cells
- * near the pointer, and draws one still frame under reduced motion.
+ * A small canvas that renders a live ASCII simulation. At rest it shows a
+ * still frame; it plays only while its card is hovered (and on screen),
+ * brightening cells near the pointer. Reduced motion keeps it still.
  */
 export default function AsciiCover({ scene, className }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -116,8 +115,10 @@ export default function AsciiCover({ scene, className }: Props) {
 
     const frame = (now: number) => {
       raf = 0;
-      if (!visible || reduced.matches || document.hidden) return;
-      const interval = 1000 / (hovered ? HOVER_FPS : IDLE_FPS);
+      // Motion only while the card is hovered; otherwise the cover holds
+      // its last frame, so a page of covers stays calm.
+      if (!visible || !hovered || reduced.matches || document.hidden) return;
+      const interval = 1000 / HOVER_FPS;
       if (now - last >= interval) {
         const dt = Math.min(0.1, last ? (now - last) / 1000 : interval / 1000);
         last = now;
@@ -129,7 +130,7 @@ export default function AsciiCover({ scene, className }: Props) {
     };
 
     const wake = () => {
-      if (!raf && visible && !reduced.matches && !document.hidden) {
+      if (!raf && visible && hovered && !reduced.matches && !document.hidden) {
         last = 0;
         raf = requestAnimationFrame(frame);
       }
@@ -152,11 +153,13 @@ export default function AsciiCover({ scene, className }: Props) {
 
     const onEnter = () => {
       hovered = true;
+      wake();
     };
     const onLeave = () => {
       hovered = false;
       pointer = null;
-      if (reduced.matches) draw();
+      // Repaint without the pointer glow; the frame then stays put.
+      draw();
     };
     const onMove = (e: PointerEvent) => {
       const rect = canvas.getBoundingClientRect();
