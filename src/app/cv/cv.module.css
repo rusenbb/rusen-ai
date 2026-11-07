@@ -1197,3 +1197,18 @@
   font-size: 0.9rem;
   line-height: 1.6;
 }
+
+/* Anchor the head as a band between two rules: a strong rule on top (as
+   on blog section heads) and a hairline below, with the links resting on
+   it, so the head reads as one block without returning to a boxed panel. */
+.hero {
+  border-top: 2px solid var(--cborder-strong);
+  border-bottom: 1px solid var(--cborder);
+  padding: 1.75rem 0 1.5rem;
+}
+.heroMain {
+  align-items: center;
+}
+.heroLinks {
+  margin-top: 1.75rem;
+}
