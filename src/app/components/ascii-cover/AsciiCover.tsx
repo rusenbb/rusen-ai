@@ -11,6 +11,8 @@ const CELL_W = 7;
 const CELL_H = 12;
 const FONT_PX = 11;
 const HOVER_FPS = 30;
+// How strongly cells near the pointer brighten (1 = full).
+const POINTER_GLOW = 0.7;
 // On touch screens a tap on the cover plays it for this long.
 const TAP_PLAY_MS = 6000;
 // Fired when a cover starts playing from a tap, so the others stop.
@@ -111,7 +113,7 @@ export default function AsciiCover({ scene, className }: Props) {
           if (pointer) {
             const dx = (c * CELL_W + offX - pointer.x) / 46;
             const dy = (r * CELL_H + offY - pointer.y) / 46;
-            v = Math.min(1, v + Math.exp(-(dx * dx + dy * dy)) * (0.25 + v * 0.6));
+            v = Math.min(1, v + Math.exp(-(dx * dx + dy * dy)) * (0.25 + v * 0.6) * POINTER_GLOW);
           }
           if (v < 0.04) continue;
           const ch = cell.ch ?? RAMP[Math.min(RAMP.length - 1, Math.ceil(v * (RAMP.length - 1)))];
