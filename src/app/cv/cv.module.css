@@ -1198,23 +1198,41 @@
   line-height: 1.6;
 }
 
-/* Portrait sits to the left of the name block, sized to it, so photo and
-   name read as one profile group instead of a photo floating in a corner. */
+/* Portrait sits to the left of the name block, sized to that block's
+   height (kicker top to location bottom: 9.45rem on desktop), so photo and
+   name read as one aligned profile group. */
 .heroMain {
   flex-direction: row-reverse;
   justify-content: flex-end;
-  align-items: center;
+  align-items: flex-start;
   gap: 1.75rem;
 }
 .heroMeta {
-  align-items: flex-start;
+  flex: none;
 }
 .portrait {
-  width: 136px;
-  height: 136px;
+  width: 9.45rem;
+  height: 9.45rem;
 }
+/* On phones the name wraps and the block grows taller than a side photo
+   can match, so the photo moves above the name, left-aligned. */
 @media (max-width: 768px) {
-  .heroMain { flex-direction: row-reverse; justify-content: flex-end; align-items: center; gap: 1rem; }
-  .heroMeta { align-items: flex-start; text-align: left; }
-  .portrait { width: 84px; height: 84px; }
+  .heroMain { flex-direction: column-reverse; align-items: flex-start; gap: 1rem; }
+  .heroMeta { text-align: left; }
+  .portrait { width: 96px; height: 96px; }
+}
+
+/* Short rows (languages, interests) need no rules; spacing separates them.
+   The footer drops its rule and the bar between its links. */
+.interestCard,
+.hobbiesGrid .interestCard {
+  border-bottom: none;
+  padding: 0.6rem 0;
+}
+.footerLine,
+.footerDivider {
+  display: none;
+}
+.footerLinks {
+  gap: 1.5rem;
 }
