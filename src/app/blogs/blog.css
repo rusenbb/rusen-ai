@@ -384,7 +384,7 @@ html { scroll-behavior: smooth; }
   border: 1px solid var(--line);
   padding: 0 1.5rem 1rem;
 }
-.idx-content-panel > .acc:first-child {
+.idx-content-panel > .idx-section:first-child {
   margin-top: 0;
   border-top: none;
 }
@@ -403,29 +403,21 @@ html { scroll-behavior: smooth; }
   max-width: 65ch;
 }
 
-/* Renamed from .group to avoid collision with Tailwind's `group` utility,
-   which the ThemeToggle uses and which is everywhere across the site. */
-.acc { border-top: 1px solid var(--line-strong); margin-top: 1rem; }
-.acc-toggle {
-  width: 100%;
-  background: transparent;
-  border: none;
+.idx-section { border-top: 1px solid var(--line-strong); margin-top: 1rem; }
+.idx-section-head {
   padding: 1.25rem 0 1.25rem 0.25rem;
   display: flex;
   align-items: center;
   gap: 1rem;
-  cursor: pointer;
   color: inherit;
-  text-align: left;
-  font-family: inherit;
 }
-.acc-toggle .sec-num {
+.idx-section-head .sec-num {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 0.78rem;
   letter-spacing: 0.2em;
   color: var(--sub);
 }
-.acc-toggle .sec-title {
+.idx-section-head .sec-title {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 0.95rem;
   font-weight: 700;
@@ -433,31 +425,19 @@ html { scroll-behavior: smooth; }
   text-transform: uppercase;
   margin: 0;
 }
-.acc-toggle .dashed-rule {
+.idx-section-head .dashed-rule {
   flex: 1;
   height: 1px;
   opacity: 0.3;
   background: repeating-linear-gradient(90deg, var(--line-strong) 0 6px, transparent 6px 10px);
 }
-.acc-toggle .sec-count {
+.idx-section-head .sec-count {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 0.7rem;
   letter-spacing: 0.14em;
   color: var(--sub);
 }
-.acc-toggle .chevron {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  color: var(--sub);
-  font-size: 0.9rem;
-  transition: transform 0.2s ease;
-  display: inline-block;
-}
-.acc-toggle[aria-expanded="true"] .chevron {
-  transform: rotate(90deg);
-  color: var(--foreground);
-}
-.acc-body { display: none; padding: 0 0 1.5rem; }
-.acc-toggle[aria-expanded="true"] ~ .acc-body { display: block; }
+.idx-section-body { padding: 0 0 1.5rem; }
 
 .series-blurb {
   color: var(--muted);
@@ -791,8 +771,8 @@ html { scroll-behavior: smooth; }
 .series-intro .meta .dot { color: var(--sub); }
 
 @media (max-width: 480px) {
-  .acc-toggle { display: grid; grid-template-columns: auto auto minmax(0, 1fr); gap: 0.65rem; }
-  .acc-toggle .sec-title { overflow-wrap: anywhere; letter-spacing: 0.1em; }
-  .acc-toggle .dashed-rule { display: none; }
-  .acc-toggle .sec-count { grid-column: 3; }
+  .idx-section-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.65rem; }
+  .idx-section-head .sec-title { overflow-wrap: anywhere; letter-spacing: 0.1em; }
+  .idx-section-head .dashed-rule { display: none; }
+  .idx-section-head .sec-count { grid-column: 2; }
 }

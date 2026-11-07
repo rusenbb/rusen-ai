@@ -66,11 +66,10 @@ test("blog sections fit a narrow phone screen", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 720 });
   await page.goto("/blogs/");
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
-  const heading = page.locator(".acc-toggle").first();
-  await heading.click();
-  await expect(heading).toHaveAttribute("aria-expanded", "false");
-  await heading.click();
-  await expect(heading).toHaveAttribute("aria-expanded", "true");
+  // Every section is open: series entries and standalone entries both show.
+  await expect(page.locator(".idx-section")).not.toHaveCount(0);
+  await expect(page.locator(".series-entry:visible").first()).toBeVisible();
+  await expect(page.locator(".standalone-entry:visible").first()).toBeVisible();
 });
 
 test("blog language filter applies after client-side navigation into the blog", async ({ page }) => {

@@ -10,26 +10,13 @@ import {
   subscribeBgToggle,
 } from "./backgroundToggle";
 
-// Index pages where the full ambient noise field and DATA pulse are welcome.
-// Dense content pages keep only on-demand click ripples, avoiding a continuous
-// animation behind material meant for reading or interaction.
-const NOISE_PATHS: ReadonlySet<string> = new Set([
-  "/",
-  "/demos",
-  "/nerdy-stuff",
-  "/bulletin",
-  "/blogs",
-]);
-
-// Path prefixes that should also get the full noise field - covers dynamic
-// listing-style routes like /blogs/tag/[tag] and /blogs/series/[id].
-const NOISE_PREFIXES: readonly string[] = ["/blogs/tag", "/blogs/series"];
-
-// A single post (/blogs/<slug>) is for reading: no background at all.
-// Listing routes under /blogs keep it.
-function isBlogPost(path: string): boolean {
-  const m = /^\/blogs\/([^/]+)$/.exec(path);
-  return m !== null && m[1] !== "tag" && m[1] !== "series";
+/** The ambient ASCII field belongs to the home page only; every other page
+ *  keeps a plain background so its own content (live covers, posts, photos)
+ *  is the focus. The 404 page keeps its "404" field. */
+export function hasBackground(pathname: string | null, notFound: boolean): boolean {
+  // Next can yield both "/demos" and "/demos/"; normalize before comparing.
+  const normalized = (pathname ?? "/").replace(/\/+$/, "") || "/";
+  return notFound || normalized === "/";
 }
 
 export default function DataBackground() {
@@ -57,25 +44,7 @@ export default function DataBackground() {
     return () => observer.disconnect();
   }, []);
 
-  // Next can yield both "/demos" and "/demos/"; normalize before lookup.
-  const normalized = (pathname ?? "/").replace(/\/+$/, "") || "/";
+  if (disabled || !hasBackground(pathname, notFoundActive)) return null;
 
-  if (disabled) return null;
-  if (
-    normalized === "/embedding-explorer" ||
-    normalized === "/game-of-life" ||
-    normalized.startsWith("/game-of-life/") ||
-    (isBlogPost(normalized) && !notFoundActive)
-  ) {
-    return null;
-  }
-  const noise =
-    notFoundActive ||
-    NOISE_PATHS.has(normalized) ||
-    NOISE_PREFIXES.some((p) => normalized.startsWith(p + "/"));
-
-  // The DATA pulse echoes the home hero; elsewhere the field stays wordless.
-  const word = notFoundActive ? "404" : normalized === "/" ? "DATA" : "";
-
-  return <AsciiDataBackground noise={noise} word={word} />;
+  return <AsciiDataBackground noise word={notFoundActive ? "404" : "DATA"} />;
 }

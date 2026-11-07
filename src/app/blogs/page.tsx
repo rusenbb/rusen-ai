@@ -8,7 +8,7 @@ import {
   readUnit,
 } from "@/lib/blog";
 import LangPicker from "./components/LangPicker";
-import AccordionGroup from "./components/AccordionGroup";
+import BlogSection from "./components/BlogSection";
 import PostSigil from "./components/PostSigil";
 import SeriesChain from "./components/SeriesChain";
 import { buildSigil } from "@/lib/blog-sigil";
@@ -29,8 +29,7 @@ export default function BlogIndex() {
         <h1>Essays, organised by argument.</h1>
         <p className="lede">
           Most of what I write builds on what came before. Posts are grouped
-          into running series, with standalone pieces in their own section. Tap
-          any section header to expand it.
+          into running series, with standalone pieces in their own section.
         </p>
         <div style={{ marginTop: "1.5rem" }}>
           <LangPicker />
@@ -39,7 +38,7 @@ export default function BlogIndex() {
 
       <div className="idx-content-panel">
       {series.map((s, i) => (
-        <AccordionGroup
+        <BlogSection
           key={s.id}
           num={`${String(i + 1).padStart(2, "0")} //`}
           title={
@@ -49,7 +48,6 @@ export default function BlogIndex() {
             </>
           }
           count={`${String(s.posts.length).padStart(2, "0")} ENTRIES`}
-          defaultOpen={i === 0}
           strip={
             <SeriesChain
               parts={[...new Set(s.posts.map((p) => p.seriesOrder ?? 0))].sort((a, b) => a - b)}
@@ -87,11 +85,11 @@ export default function BlogIndex() {
               </div>
             ))}
           </div>
-        </AccordionGroup>
+        </BlogSection>
       ))}
 
       {standalone.length > 0 && (
-        <AccordionGroup
+        <BlogSection
           num={`${String(series.length + 1).padStart(2, "0")} //`}
           title={
             <>
@@ -100,7 +98,6 @@ export default function BlogIndex() {
             </>
           }
           count={`${String(standalone.length).padStart(2, "0")} ENTRIES`}
-          defaultOpen={series.length === 0}
         >
           {standalone.map((p) => (
             <Link
@@ -122,7 +119,7 @@ export default function BlogIndex() {
               </span>
             </Link>
           ))}
-        </AccordionGroup>
+        </BlogSection>
       )}
       </div>
 

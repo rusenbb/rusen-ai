@@ -9,14 +9,19 @@ import {
   setBgDisabled,
   subscribeBgToggle,
 } from "./backgroundToggle";
+import { hasBackground } from "./DataBackground";
 
 export default function BgToggle() {
-  const scope = getBackgroundScope(usePathname());
+  const pathname = usePathname();
+  const scope = getBackgroundScope(pathname);
   const disabled = useSyncExternalStore<boolean>(
     subscribeBgToggle,
     () => isBgDisabled(scope),
     () => isBgDisabledByDefault(scope),
   );
+
+  // Only the home page has a background to switch (404 is not a route here).
+  if (!hasBackground(pathname, false)) return null;
 
   const onClick = () => setBgDisabled(!disabled, scope);
   const aria = disabled ? "Enable background animation" : "Disable background animation";

@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 
 /**
- * The parts of a series as a chain, visible even while the series is
- * collapsed. The newest part pulses; hovering an entry lights its node.
+ * The parts of a series as a chain under the series header. The newest
+ * part pulses; hovering an entry lights its node.
  */
 export default function SeriesChain({ parts }: { parts: number[] }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -12,7 +12,7 @@ export default function SeriesChain({ parts }: { parts: number[] }) {
   const latest = parts[parts.length - 1];
 
   useEffect(() => {
-    const section = ref.current?.closest(".acc");
+    const section = ref.current?.closest(".idx-section");
     if (!section) return;
     const onOver = (e: Event) => {
       const entry = (e.target as Element).closest<HTMLElement>("[data-part]");
