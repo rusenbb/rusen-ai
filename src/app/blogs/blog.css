@@ -102,6 +102,16 @@ html[data-blog-lang="tr"] [data-tag-lang="en"]:not([data-blog-force-lang] *) {
 .prompt-line .p { color: var(--signal); font-weight: 600; }
 .prompt-line .c { color: var(--foreground); }
 
+.copy-md {
+  font: inherit;
+  color: var(--foreground);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+.copy-md:hover { color: var(--signal); }
+
 .ascii-frame {
   border: 1px solid var(--line-strong);
   margin: 1.5rem 0 2.5rem;

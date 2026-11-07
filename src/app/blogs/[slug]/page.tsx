@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import CopyMarkdown from "../components/CopyMarkdown";
+import { postMarkdown } from "@/lib/blog-markdown";
 import { compileMDX } from "next-mdx-remote/rsc";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
@@ -172,6 +174,10 @@ export default async function PostPage({
             <dd>
               {post.readingMinutes} {readUnit(post.lang)} · {post.wordCount.toLocaleString()}{" "}
               {post.lang === "tr" ? "kelime" : "words"}
+            </dd>
+            <dt>Source</dt>
+            <dd>
+              <CopyMarkdown markdown={postMarkdown(post)} lang={post.lang} />
             </dd>
             <dt>Lang</dt>
             <dd>
