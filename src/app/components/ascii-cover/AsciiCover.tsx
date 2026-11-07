@@ -11,6 +11,10 @@ const CELL_W = 7;
 const CELL_H = 12;
 const FONT_PX = 11;
 const HOVER_FPS = 30;
+// On touch screens a tap on the cover plays it for this long.
+const TAP_PLAY_MS = 6000;
+// Fired when a cover starts playing from a tap, so the others stop.
+const PLAY_EVENT = "ascii-cover-play";
 // Simulated seconds rendered before the first paint, so covers never start
 // on an empty or freshly seeded frame.
 const WARMUP_S = 6;
@@ -29,8 +33,9 @@ function hashSeed(s: string): number {
 
 /**
  * A small canvas that renders a live ASCII simulation. At rest it shows a
- * still frame; it plays only while its card is hovered (and on screen),
- * brightening cells near the pointer. Reduced motion keeps it still.
+ * still frame; it plays while its card is hovered, or on touch screens for
+ * a few seconds after a tap on the cover (one cover at a time). Cells near
+ * the pointer brighten. Reduced motion keeps it still.
  */
 export default function AsciiCover({ scene, className }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -53,6 +58,9 @@ export default function AsciiCover({ scene, className }: Props) {
     let last = 0;
     let visible = false;
     let hovered = false;
+    let tapped = false;
+    let tapTimer = 0;
+    const playing = () => hovered || tapped;
     let pointer: { x: number; y: number } | null = null;
     let dark = getResolvedTheme() === "dark";
 
@@ -117,7 +125,7 @@ export default function AsciiCover({ scene, className }: Props) {
       raf = 0;
       // Motion only while the card is hovered; otherwise the cover holds
       // its last frame, so a page of covers stays calm.
-      if (!visible || !hovered || reduced.matches || document.hidden) return;
+      if (!visible || !playing() || reduced.matches || document.hidden) return;
       const interval = 1000 / HOVER_FPS;
       if (now - last >= interval) {
         const dt = Math.min(0.1, last ? (now - last) / 1000 : interval / 1000);
@@ -130,7 +138,7 @@ export default function AsciiCover({ scene, className }: Props) {
     };
 
     const wake = () => {
-      if (!raf && visible && hovered && !reduced.matches && !document.hidden) {
+      if (!raf && visible && playing() && !reduced.matches && !document.hidden) {
         last = 0;
         raf = requestAnimationFrame(frame);
       }
@@ -151,17 +159,41 @@ export default function AsciiCover({ scene, className }: Props) {
     });
     ro.observe(canvas);
 
-    const onEnter = () => {
+    const stopTap = () => {
+      tapped = false;
+      window.clearTimeout(tapTimer);
+    };
+    // Touch: the card is a link, so a tap on the cover plays it instead of
+    // navigating; a tap on the card's text still opens the page.
+    const onTap = (e: MouseEvent) => {
+      if (!window.matchMedia("(hover: none)").matches) return;
+      e.preventDefault();
+      if (tapped) {
+        stopTap();
+        return;
+      }
+      window.dispatchEvent(new CustomEvent(PLAY_EVENT, { detail: canvas }));
+      tapped = true;
+      tapTimer = window.setTimeout(stopTap, TAP_PLAY_MS);
+      wake();
+    };
+    const onOtherPlay = (e: Event) => {
+      if ((e as CustomEvent).detail !== canvas) stopTap();
+    };
+    const onEnter = (e: PointerEvent) => {
+      if (e.pointerType === "touch") return;
       hovered = true;
       wake();
     };
-    const onLeave = () => {
+    const onLeave = (e: PointerEvent) => {
+      if (e.pointerType === "touch") return;
       hovered = false;
       pointer = null;
       // Repaint without the pointer glow; the frame then stays put.
       draw();
     };
     const onMove = (e: PointerEvent) => {
+      if (e.pointerType === "touch") return;
       const rect = canvas.getBoundingClientRect();
       pointer = { x: e.clientX - rect.left, y: e.clientY - rect.top };
       if (reduced.matches) draw();
@@ -178,6 +210,8 @@ export default function AsciiCover({ scene, className }: Props) {
     };
 
     host.addEventListener("pointerenter", onEnter);
+    canvas.addEventListener("click", onTap);
+    window.addEventListener(PLAY_EVENT, onOtherPlay);
     host.addEventListener("pointerleave", onLeave);
     host.addEventListener("pointermove", onMove);
     document.addEventListener("visibilitychange", onVisibility);
@@ -189,7 +223,10 @@ export default function AsciiCover({ scene, className }: Props) {
       cancelAnimationFrame(raf);
       io.disconnect();
       ro.disconnect();
+      stopTap();
       host.removeEventListener("pointerenter", onEnter);
+      canvas.removeEventListener("click", onTap);
+      window.removeEventListener(PLAY_EVENT, onOtherPlay);
       host.removeEventListener("pointerleave", onLeave);
       host.removeEventListener("pointermove", onMove);
       document.removeEventListener("visibilitychange", onVisibility);

@@ -7,6 +7,7 @@ describe("AsciiCover motion", () => {
   const frames = new Map<number, FrameRequestCallback>();
   let nextId = 1;
   let observe: ((entries: { isIntersecting: boolean }[]) => void) | null = null;
+  let touchScreen = false;
 
   beforeEach(() => {
     frames.clear();
@@ -28,7 +29,12 @@ describe("AsciiCover motion", () => {
       return id;
     }));
     vi.stubGlobal("cancelAnimationFrame", vi.fn((id: number) => frames.delete(id)));
-    vi.stubGlobal("matchMedia", vi.fn(() => ({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() })));
+    touchScreen = false;
+    vi.stubGlobal("matchMedia", vi.fn((query: string) => ({
+      matches: query === "(hover: none)" && touchScreen,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })));
     vi.spyOn(HTMLCanvasElement.prototype, "getBoundingClientRect").mockReturnValue({ width: 350, height: 150, left: 0, top: 0 } as DOMRect);
     vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
       clearRect: vi.fn(),
@@ -64,5 +70,23 @@ describe("AsciiCover motion", () => {
       cb(100);
     });
     expect(frames.size).toBe(0);
+  });
+
+  it("on a touch screen, a tap on the cover plays it instead of opening the link", () => {
+    touchScreen = true;
+    const { container } = render(
+      <a className="term-card" href="/somewhere">
+        <AsciiCover scene="game-of-life" />
+      </a>,
+    );
+    act(() => observe?.([{ isIntersecting: true }]));
+    const canvas = container.querySelector("canvas") as HTMLCanvasElement;
+    let navigated = true;
+    act(() => {
+      navigated = fireEvent.click(canvas);
+    });
+    // fireEvent returns false when the default action was prevented.
+    expect(navigated).toBe(false);
+    expect(frames.size).toBe(1);
   });
 });
