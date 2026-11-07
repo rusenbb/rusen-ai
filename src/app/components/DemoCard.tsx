@@ -1,4 +1,5 @@
 import Link from "next/link";
+import AsciiCover from "./ascii-cover/AsciiCover";
 
 interface DemoCardProps {
   title: string;
@@ -6,14 +7,21 @@ interface DemoCardProps {
   href: string;
   tags?: string[];
   status?: "live" | "coming-soon";
+  /** Scene id for a live ASCII cover above the text. */
+  cover?: string;
 }
 
-export default function DemoCard({ title, description, href, tags = [], status = "coming-soon" }: DemoCardProps) {
+export default function DemoCard({ title, description, href, tags = [], status = "coming-soon", cover }: DemoCardProps) {
   const isLive = status === "live";
   const mutedContent = isLive ? "" : "opacity-70";
 
   const content = (
     <>
+      {cover && (
+        <div className="term-cover">
+          <AsciiCover scene={cover} className="term-cover__canvas" />
+        </div>
+      )}
       <div className="flex items-start justify-between gap-3 mb-2">
         <h3 className={`font-semibold text-base sm:text-lg ${isLive ? "group-hover:opacity-80" : mutedContent} transition`}>{title}</h3>
         {status === "coming-soon" && (
@@ -22,15 +30,9 @@ export default function DemoCard({ title, description, href, tags = [], status =
       </div>
       <p className={`text-neutral-700 dark:text-neutral-400 text-sm leading-relaxed mb-3 ${mutedContent}`}>{description}</p>
       {tags.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-3">
-          {tags.map((tag) => (
-            <span key={tag} className={`term-tag ${mutedContent}`}>
-              {tag}
-            </span>
-          ))}
-        </div>
+        <p className={`term-tags ${mutedContent}`}>{tags.slice(0, 3).join(" · ")}</p>
       )}
-      {isLive && (
+      {isLive && !cover && (
         <div className="term-status">
           <span className="signal-blip" aria-hidden="true" />
           LIVE
