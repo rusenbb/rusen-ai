@@ -25,6 +25,13 @@ const NOISE_PATHS: ReadonlySet<string> = new Set([
 // listing-style routes like /blogs/tag/[tag] and /blogs/series/[id].
 const NOISE_PREFIXES: readonly string[] = ["/blogs/tag", "/blogs/series"];
 
+// A single post (/blogs/<slug>) is for reading: no background at all.
+// Listing routes under /blogs keep it.
+function isBlogPost(path: string): boolean {
+  const m = /^\/blogs\/([^/]+)$/.exec(path);
+  return m !== null && m[1] !== "tag" && m[1] !== "series";
+}
+
 export default function DataBackground() {
   const pathname = usePathname();
   const scope = getBackgroundScope(pathname);
@@ -50,21 +57,25 @@ export default function DataBackground() {
     return () => observer.disconnect();
   }, []);
 
+  // Next can yield both "/demos" and "/demos/"; normalize before lookup.
+  const normalized = (pathname ?? "/").replace(/\/+$/, "") || "/";
+
   if (disabled) return null;
   if (
-    pathname === "/embedding-explorer" ||
-    pathname === "/game-of-life" ||
-    pathname?.startsWith("/game-of-life/")
+    normalized === "/embedding-explorer" ||
+    normalized === "/game-of-life" ||
+    normalized.startsWith("/game-of-life/") ||
+    (isBlogPost(normalized) && !notFoundActive)
   ) {
     return null;
   }
-
-  // Next can yield both "/demos" and "/demos/"; normalize before lookup.
-  const normalized = (pathname ?? "/").replace(/\/+$/, "") || "/";
   const noise =
     notFoundActive ||
     NOISE_PATHS.has(normalized) ||
     NOISE_PREFIXES.some((p) => normalized.startsWith(p + "/"));
 
-  return <AsciiDataBackground noise={noise} word={notFoundActive ? "404" : "DATA"} />;
+  // The DATA pulse echoes the home hero; elsewhere the field stays wordless.
+  const word = notFoundActive ? "404" : normalized === "/" ? "DATA" : "";
+
+  return <AsciiDataBackground noise={noise} word={word} />;
 }

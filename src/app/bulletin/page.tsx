@@ -24,6 +24,7 @@ export default function BulletinPage() {
             href={getProjectPath(project)}
             tags={project.tags}
             status={project.status}
+            cover={project.id}
           />
         ))}
       </div>
