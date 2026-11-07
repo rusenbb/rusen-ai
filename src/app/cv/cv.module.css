@@ -987,3 +987,295 @@
 
 .interestsHeader { flex-wrap: wrap; }
 .interestsHeader .interestLink { margin-top: 0; white-space: nowrap; }
+
+/* ========================================
+   DOCUMENT LAYOUT
+   The CV reads like a printed page: entries are rows separated by a hairline,
+   not boxed cards; notes are upright body text; nothing lifts on hover. The
+   experience timeline already used this shape, so every section now matches.
+   ======================================== */
+
+.educationList,
+.publicationsList,
+.projectsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.educationCard,
+.projectCard {
+  border: none;
+  border-bottom: 1px solid var(--cborder);
+  background: none;
+  padding: 0 0 1.25rem;
+  margin-bottom: 1.25rem;
+}
+.educationCard:last-child,
+.projectCard:last-child,
+.timelineItem:last-child .timelineCard {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+.educationCard:hover,
+.projectCard:hover,
+.interestCard:hover {
+  transform: none;
+}
+
+.projectCardHeader {
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 0.5rem;
+}
+
+.eduNote {
+  font-style: normal;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--ctext-muted);
+  margin: 0.5rem 0 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.projectDesc {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 0.6rem;
+}
+
+/* Tags as one quiet line, like the site's cards. */
+.projectTags {
+  gap: 0.35rem 0.9rem;
+  margin-bottom: 0.6rem;
+}
+.projectTag {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--ctext-sub);
+  font-size: 0.72rem;
+}
+
+/* Titles that link get a quiet underline instead of a heavy rule. */
+.descLink {
+  border-bottom: none;
+  text-decoration: underline;
+  text-decoration-color: var(--cborder-strong);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25em;
+}
+.descLink:hover {
+  background: none;
+  color: var(--ctext);
+  text-decoration-color: var(--ctext);
+}
+
+/* Hero: the same page-head language as the rest of the site (outlined
+   kicker, name, muted lede), not a framed panel with a button bar. */
+.hero {
+  border: none;
+  background: none;
+  margin-bottom: 3rem;
+}
+.heroMain {
+  padding: 0;
+  border-bottom: none;
+}
+.heroLabel {
+  background: none;
+  color: var(--ctext-muted);
+  border: 1px solid var(--cborder);
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  padding: 0.3rem 0.55rem;
+  text-transform: uppercase;
+}
+.heroName {
+  font-family: var(--font-sans);
+  font-size: clamp(2rem, 6vw, 2.75rem);
+  letter-spacing: -0.02em;
+  margin-bottom: 0.5rem;
+}
+.heroRole {
+  font-size: 0.95rem;
+}
+.portrait {
+  width: 120px;
+  height: 120px;
+  border-color: var(--cborder);
+}
+.heroBio {
+  padding: 1.25rem 0 0;
+  border-bottom: none;
+  background: none;
+}
+.heroBio p {
+  max-width: 65ch;
+}
+.heroLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+.heroLinks .linkBtn,
+.heroLinks .printBtn,
+.heroLinks .localeBtn {
+  flex: none;
+  min-width: 0;
+  padding: 0.45rem 0.8rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  background: none;
+  border: 1px solid var(--cborder);
+}
+.heroLinks .linkBtn:hover,
+.heroLinks .printBtn:hover,
+.heroLinks .localeBtn:hover {
+  background: none;
+  color: var(--ctext);
+  border-color: var(--cborder-strong);
+}
+.heroLinks .dropdown,
+.heroLinks .langDropdown {
+  flex: none;
+  min-width: 0;
+  border: none;
+}
+@media (max-width: 768px) {
+  .heroLinks .linkBtn { padding: 0.45rem 0.7rem; font-size: 0.7rem; }
+  .portrait { width: 84px; height: 84px; }
+}
+
+/* Section heads read "01 // TITLE -----", as on the index pages. */
+.sectionNumber {
+  background: none;
+  color: var(--ctext-sub);
+  padding: 0;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+}
+.sectionNumber::after {
+  content: " //";
+}
+.sectionIcon {
+  display: none;
+}
+.sectionTitle {
+  font-size: 0.95rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.sectionLine {
+  height: 1px;
+}
+
+/* Languages and interests: unboxed rows in a two-column grid. */
+.interestsGrid,
+.hobbiesGrid {
+  gap: 0 2rem;
+}
+.interestCard,
+.hobbiesGrid .interestCard {
+  border: none;
+  border-bottom: 1px solid var(--cborder);
+  background: none;
+  padding: 0.85rem 0;
+}
+.hobbiesGrid .interestIcon {
+  font-size: 1.25rem;
+  color: var(--ctext-sub);
+}
+.hobbiesGrid .interestTitle {
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
+}
+.interestDesc,
+.hobbiesGrid .interestDesc {
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+/* Portrait sits to the left of the name block, sized to that block's
+   height (kicker top to location bottom: 9.45rem on desktop), so photo and
+   name read as one aligned profile group. */
+.heroMain {
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: 1.75rem;
+}
+.heroMeta {
+  flex: none;
+}
+.portrait {
+  width: 9.45rem;
+  height: 9.45rem;
+}
+/* On phones the name wraps and the block grows taller than a side photo
+   can match, so the photo moves above the name, left-aligned. */
+@media (max-width: 768px) {
+  .heroMain { flex-direction: column-reverse; align-items: flex-start; gap: 1rem; }
+  .heroMeta { text-align: left; }
+  .portrait { width: 96px; height: 96px; }
+}
+
+/* Short rows (languages, interests) need no rules; spacing separates them.
+   The footer drops its rule and the bar between its links. */
+.interestCard,
+.hobbiesGrid .interestCard {
+  border-bottom: none;
+  padding: 0.6rem 0;
+}
+.footerLine,
+.footerDivider {
+  display: none;
+}
+.footerLinks {
+  gap: 1.5rem;
+}
+
+/* Dropdown menus sized to the small link buttons: a compact list under the
+   trigger, left-aligned text, the current choice marked by a dot and full
+   text colour instead of an inverted block. */
+.heroLinks .dropdownPanel,
+.heroLinks .langDropdown .dropdownPanel {
+  top: calc(100% + 4px);
+  left: 0;
+  right: auto;
+  min-width: 100%;
+  width: max-content;
+  padding: 0.25rem 0;
+  background: var(--cbg);
+  border: 1px solid var(--cborder);
+}
+.heroLinks .dropdownItem {
+  justify-content: flex-start;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  color: var(--ctext-sub);
+  background: none;
+  border-bottom: none;
+}
+.heroLinks .dropdownItem::before {
+  content: "";
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 50%;
+  flex: none;
+}
+.heroLinks .dropdownItem:hover {
+  background: var(--csurface);
+  color: var(--ctext);
+}
+.heroLinks .dropdownItemActive {
+  background: none;
+  color: var(--ctext);
+}
+.heroLinks .dropdownItemActive::before {
+  background: var(--caccent);
+}

@@ -24,6 +24,7 @@ export default function NerdyStuffPage() {
             href={getProjectPath(project)}
             tags={project.tags}
             status={project.status}
+            cover={project.id}
           />
         ))}
       </div>

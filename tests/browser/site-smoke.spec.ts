@@ -66,11 +66,10 @@ test("blog sections fit a narrow phone screen", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 720 });
   await page.goto("/blogs/");
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
-  const heading = page.locator(".acc-toggle").first();
-  await heading.click();
-  await expect(heading).toHaveAttribute("aria-expanded", "false");
-  await heading.click();
-  await expect(heading).toHaveAttribute("aria-expanded", "true");
+  // All three layers show without a click: latest, series shelf, archive.
+  await expect(page.locator(".latest-entry:visible").first()).toBeVisible();
+  await expect(page.locator(".series-card").first()).toBeVisible();
+  await expect(page.locator(".archive-row:visible").first()).toBeVisible();
 });
 
 test("blog language filter applies after client-side navigation into the blog", async ({ page }) => {
@@ -82,8 +81,8 @@ test("blog language filter applies after client-side navigation into the blog", 
   await expect(page).toHaveURL(/\/blogs\/$/);
   expect(await page.evaluate(() => (window as Window & { clientNavMarker?: boolean }).clientNavMarker)).toBe(true);
   await expect(page.locator("html")).toHaveAttribute("data-blog-lang", "tr");
-  await expect(page.locator('.series-entry[data-post-lang="tr"]').first()).toBeVisible();
-  await expect(page.locator('.series-entry[data-post-lang="en"]').first()).toBeHidden();
+  await expect(page.locator('.latest-list[data-post-lang="tr"] .latest-entry').first()).toBeVisible();
+  await expect(page.locator('.latest-list[data-post-lang="en"] .latest-entry').first()).toBeHidden();
 });
 
 test("a single-language tag page lists its posts when the other language is selected", async ({ page }) => {

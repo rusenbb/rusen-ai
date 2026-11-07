@@ -16,7 +16,7 @@
     "dev": "next dev",
     "prebuild": "node scripts/copy-steering-runtime.mjs && npm run content:check && npm run social:verify",
     "build": "next build",
-    "postbuild": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/social-verify-export.ts",
+    "postbuild": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/social-verify-export.ts && tsx scripts/blog-md-export.ts",
     "start": "serve out",
     "lint": "eslint",
     "social:create": "./bin/social-create",
