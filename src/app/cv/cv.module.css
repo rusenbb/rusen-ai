@@ -1071,3 +1071,129 @@
   color: var(--ctext);
   text-decoration-color: var(--ctext);
 }
+
+/* Hero: the same page-head language as the rest of the site (outlined
+   kicker, name, muted lede), not a framed panel with a button bar. */
+.hero {
+  border: none;
+  background: none;
+  margin-bottom: 3rem;
+}
+.heroMain {
+  padding: 0;
+  border-bottom: none;
+}
+.heroLabel {
+  background: none;
+  color: var(--ctext-muted);
+  border: 1px solid var(--cborder);
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  padding: 0.3rem 0.55rem;
+  text-transform: uppercase;
+}
+.heroName {
+  font-family: var(--font-sans);
+  font-size: clamp(2rem, 6vw, 2.75rem);
+  letter-spacing: -0.02em;
+  margin-bottom: 0.5rem;
+}
+.heroRole {
+  font-size: 0.95rem;
+}
+.portrait {
+  width: 120px;
+  height: 120px;
+  border-color: var(--cborder);
+}
+.heroBio {
+  padding: 1.25rem 0 0;
+  border-bottom: none;
+  background: none;
+}
+.heroBio p {
+  max-width: 65ch;
+}
+.heroLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+.heroLinks .linkBtn,
+.heroLinks .printBtn,
+.heroLinks .localeBtn {
+  flex: none;
+  min-width: 0;
+  padding: 0.45rem 0.8rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  background: none;
+  border: 1px solid var(--cborder);
+}
+.heroLinks .linkBtn:hover,
+.heroLinks .printBtn:hover,
+.heroLinks .localeBtn:hover {
+  background: none;
+  color: var(--ctext);
+  border-color: var(--cborder-strong);
+}
+.heroLinks .dropdown,
+.heroLinks .langDropdown {
+  flex: none;
+  min-width: 0;
+  border: none;
+}
+@media (max-width: 768px) {
+  .heroLinks .linkBtn { padding: 0.45rem 0.7rem; font-size: 0.7rem; }
+  .portrait { width: 84px; height: 84px; }
+}
+
+/* Section heads read "01 // TITLE -----", as on the index pages. */
+.sectionNumber {
+  background: none;
+  color: var(--ctext-sub);
+  padding: 0;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+}
+.sectionNumber::after {
+  content: " //";
+}
+.sectionIcon {
+  display: none;
+}
+.sectionTitle {
+  font-size: 0.95rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.sectionLine {
+  height: 1px;
+}
+
+/* Languages and interests: unboxed rows in a two-column grid. */
+.interestsGrid,
+.hobbiesGrid {
+  gap: 0 2rem;
+}
+.interestCard,
+.hobbiesGrid .interestCard {
+  border: none;
+  border-bottom: 1px solid var(--cborder);
+  background: none;
+  padding: 0.85rem 0;
+}
+.hobbiesGrid .interestIcon {
+  font-size: 1.25rem;
+  color: var(--ctext-sub);
+}
+.hobbiesGrid .interestTitle {
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
+}
+.interestDesc,
+.hobbiesGrid .interestDesc {
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
