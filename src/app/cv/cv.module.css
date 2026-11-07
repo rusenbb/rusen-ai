@@ -1236,3 +1236,46 @@
 .footerLinks {
   gap: 1.5rem;
 }
+
+/* Dropdown menus sized to the small link buttons: a compact list under the
+   trigger, left-aligned text, the current choice marked by a dot and full
+   text colour instead of an inverted block. */
+.heroLinks .dropdownPanel,
+.heroLinks .langDropdown .dropdownPanel {
+  top: calc(100% + 4px);
+  left: 0;
+  right: auto;
+  min-width: 100%;
+  width: max-content;
+  padding: 0.25rem 0;
+  background: var(--cbg);
+  border: 1px solid var(--cborder);
+}
+.heroLinks .dropdownItem {
+  justify-content: flex-start;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  color: var(--ctext-sub);
+  background: none;
+  border-bottom: none;
+}
+.heroLinks .dropdownItem::before {
+  content: "";
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 50%;
+  flex: none;
+}
+.heroLinks .dropdownItem:hover {
+  background: var(--csurface);
+  color: var(--ctext);
+}
+.heroLinks .dropdownItemActive {
+  background: none;
+  color: var(--ctext);
+}
+.heroLinks .dropdownItemActive::before {
+  background: var(--caccent);
+}
