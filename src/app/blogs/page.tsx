@@ -12,6 +12,7 @@ import {
 import { buildSigil } from "@/lib/blog-sigil";
 import LangPicker from "./components/LangPicker";
 import BlogSection from "./components/BlogSection";
+import PostRow from "./components/PostRow";
 import PostSigil from "./components/PostSigil";
 import { buildStaticPageMetadata } from "@/lib/social-metadata";
 
@@ -53,17 +54,15 @@ export default function BlogIndex() {
             {byLang(lang)
               .slice(0, LATEST_COUNT)
               .map((p) => (
-                <Link key={p.slug} href={`/blogs/${p.slug}`} className="latest-entry">
-                  <PostSigil sigil={buildSigil(p.body)} />
-                  <div>
-                    <span className="entry-meta">
-                      {formatDate(p.date, lang)} · {p.readingMinutes} {readUnit(lang)}
-                      {p.seriesId && ` · ${seriesTitle.get(p.seriesId)?.[lang]}`}
-                    </span>
-                    <h3>{p.title}</h3>
-                    <p>{p.description}</p>
-                  </div>
-                </Link>
+                <PostRow
+                  key={p.slug}
+                  post={p}
+                  meta={[
+                    formatDate(p.date, lang),
+                    `${p.readingMinutes} ${readUnit(lang)}`,
+                    ...(p.seriesId ? [seriesTitle.get(p.seriesId)?.[lang] ?? ""] : []),
+                  ].join(" · ")}
+                />
               ))}
           </div>
         ))}

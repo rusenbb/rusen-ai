@@ -431,3 +431,86 @@
     font-size: 1.75rem;
   }
 }
+
+/* ========================================
+   PAGE LANGUAGE
+   The project head matches the rest of the site (outlined kicker, title,
+   muted lede, quiet meta lines, small outlined links) instead of a framed
+   panel with inverted label, boxed chips and a button bar. Feature cards
+   become unboxed rows; nothing lifts on hover.
+   ======================================== */
+
+.hero {
+  border: none;
+  background: none;
+}
+.heroMain {
+  padding: 0;
+  border-bottom: none;
+}
+.heroLabel {
+  background: none;
+  color: var(--bul-text-muted);
+  border: 1px solid var(--bul-border);
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  padding: 0.3rem 0.55rem;
+}
+.heroTitle {
+  font-family: var(--bul-font-sans);
+  letter-spacing: -0.02em;
+}
+.subtitleIndicator {
+  display: none;
+}
+.heroTech {
+  padding: 1.25rem 0 0;
+  border-bottom: none;
+  background: none;
+  gap: 0.25rem 0.9rem;
+}
+.techChip {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--bul-text-sub);
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+}
+.heroLinks {
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+.heroLinks .linkBtn {
+  flex: none;
+  min-width: 0;
+  padding: 0.45rem 0.8rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  background: none;
+  border: 1px solid var(--bul-border);
+}
+.heroLinks .linkBtn:hover {
+  background: none;
+  color: var(--bul-text);
+  border-color: var(--bul-border-strong);
+}
+
+.sectionTitle {
+  font-size: 0.95rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.card {
+  border: none;
+  background: none;
+  padding: 0.75rem 0;
+}
+.card:hover {
+  transform: none;
+}
+
+.footerLine {
+  display: none;
+}
