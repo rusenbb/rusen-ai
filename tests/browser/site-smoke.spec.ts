@@ -67,7 +67,7 @@ test("blog sections fit a narrow phone screen", async ({ page }) => {
   await page.goto("/blogs/");
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
   // All three layers show without a click: latest, series shelf, archive.
-  await expect(page.locator(".latest-entry:visible").first()).toBeVisible();
+  await expect(page.locator(".post-row:visible").first()).toBeVisible();
   await expect(page.locator(".series-card").first()).toBeVisible();
   await expect(page.locator(".archive-row:visible").first()).toBeVisible();
 });
@@ -81,15 +81,15 @@ test("blog language filter applies after client-side navigation into the blog", 
   await expect(page).toHaveURL(/\/blogs\/$/);
   expect(await page.evaluate(() => (window as Window & { clientNavMarker?: boolean }).clientNavMarker)).toBe(true);
   await expect(page.locator("html")).toHaveAttribute("data-blog-lang", "tr");
-  await expect(page.locator('.latest-list[data-post-lang="tr"] .latest-entry').first()).toBeVisible();
-  await expect(page.locator('.latest-list[data-post-lang="en"] .latest-entry').first()).toBeHidden();
+  await expect(page.locator('.latest-list[data-post-lang="tr"] .post-row').first()).toBeVisible();
+  await expect(page.locator('.latest-list[data-post-lang="en"] .post-row').first()).toBeHidden();
 });
 
 test("a single-language tag page lists its posts when the other language is selected", async ({ page }) => {
   await page.addInitScript(() => window.localStorage.setItem("blogLang", "tr"));
   await page.goto("/blogs/tag/human/");
   await expect(page.locator("html")).toHaveAttribute("data-blog-lang", "tr");
-  await expect(page.locator('.entry-row[data-post-lang="en"]').first()).toBeVisible();
+  await expect(page.locator('.post-row[data-post-lang="en"]').first()).toBeVisible();
   await expect(page.locator('.tag-strip a[data-tag-lang="en"]').first()).toBeVisible();
 });
 

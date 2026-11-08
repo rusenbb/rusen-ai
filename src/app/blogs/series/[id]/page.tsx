@@ -4,11 +4,11 @@ import { notFound } from "next/navigation";
 import {
   getAllSeries,
   getSeriesById,
-  getTranslation,
   formatDate,
   readUnit,
 } from "@/lib/blog";
 import LangPicker from "../../components/LangPicker";
+import PostRow from "../../components/PostRow";
 import {
   blogSeriesImagePath,
   buildSocialMetadata,
@@ -53,7 +53,7 @@ export default async function SeriesPage({
 
   return (
     <div className="blog-shell" data-no-ripple>
-      <div className="series-intro">
+      <div className="idx-head">
         <span className="blog-kicker">Series</span>
         <h1>
           <span data-post-lang="en" lang="en">{series.title.en}</span>
@@ -97,44 +97,20 @@ export default async function SeriesPage({
         </div>
       </div>
 
-      <div className="series-list">
-        {series.posts
+      <div className="post-list">
+        {[...series.posts]
           .sort((a, b) => (a.seriesOrder ?? 0) - (b.seriesOrder ?? 0))
-          .map((p) => {
-            const sib = getTranslation(p);
-            return (
-              <div
-                key={p.slug}
-                className="series-entry"
-                data-post-lang={p.lang}
-                lang={p.lang}
-              >
-                <Link
-                  href={`/blogs/${p.slug}`}
-                  className="series-entry-cover"
-                  aria-label={p.title}
-                >
-                  {p.title}
-                </Link>
-                <span className="part">
-                  {p.lang === "tr" ? "Bölüm" : "Part"}{" "}
-                  {String(p.seriesOrder ?? 0).padStart(2, "0")} ·{" "}
-                  {formatDate(p.date, p.lang)} · {p.readingMinutes}{" "}
-                  {readUnit(p.lang)}
-                </span>
-                <h3>{p.title}</h3>
-                <p className="desc">{p.description}</p>
-                <div className="meta">
-                  <span className="lang-badge">{p.lang.toUpperCase()}</span>
-                  {sib && (
-                    <Link href={`/blogs/${sib.slug}`} className="sib">
-                      ⇄ {sib.lang.toUpperCase()}
-                    </Link>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+          .map((p) => (
+            <PostRow
+              key={p.slug}
+              post={p}
+              meta={[
+                `${p.lang === "tr" ? "Bölüm" : "Part"} ${String(p.seriesOrder ?? 0).padStart(2, "0")}`,
+                formatDate(p.date, p.lang),
+                `${p.readingMinutes} ${readUnit(p.lang)}`,
+              ].join(" · ")}
+            />
+          ))}
       </div>
     </div>
   );
