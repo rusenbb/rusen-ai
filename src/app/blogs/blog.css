@@ -70,16 +70,6 @@ html[data-blog-lang="tr"] [data-tag-lang="en"]:not([data-blog-force-lang] *) {
   border-color: var(--line-strong);
 }
 
-.lang-badge {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 0.6rem;
-  letter-spacing: 0.16em;
-  color: var(--muted);
-  text-transform: uppercase;
-  padding: 0.15rem 0.4rem;
-  border: 1px solid var(--line);
-  white-space: nowrap;
-}
 
 /* ============================================================
    POST PAGE - operator's log style
@@ -406,8 +396,8 @@ html { scroll-behavior: smooth; }
   margin-bottom: 0.3rem;
 }
 
-/* 01 Latest: the newest posts, sigil beside each. */
-.latest-entry {
+/* A post row (index, series and tag pages): sigil beside meta, title, description. */
+.post-row {
   display: grid;
   grid-template-columns: 84px minmax(0, 1fr);
   gap: 1.25rem;
@@ -417,11 +407,11 @@ html { scroll-behavior: smooth; }
   color: inherit;
   text-decoration: none;
 }
-.latest-entry:last-child { border-bottom: none; }
-.latest-entry .post-sigil { width: 84px; height: 63px; }
-.latest-entry h3 { font-size: 1.2rem; font-weight: 600; margin: 0 0 0.35rem; line-height: 1.3; }
-.latest-entry p { color: var(--muted); font-size: 0.92rem; margin: 0; max-width: 62ch; }
-.latest-entry:hover h3 { text-decoration: underline; text-underline-offset: 0.25em; text-decoration-thickness: 1px; }
+.post-row:last-child { border-bottom: none; }
+.post-row .post-sigil { width: 84px; height: 63px; }
+.post-row h3 { font-size: 1.2rem; font-weight: 600; margin: 0 0 0.35rem; line-height: 1.3; }
+.post-row p { color: var(--muted); font-size: 0.92rem; margin: 0; max-width: 62ch; }
+.post-row:hover h3 { text-decoration: underline; text-underline-offset: 0.25em; text-decoration-thickness: 1px; }
 
 /* 02 Series: one card per series; its parts' sigils form the chain. */
 .series-shelf {
@@ -493,8 +483,8 @@ html { scroll-behavior: smooth; }
 }
 
 @media (max-width: 640px) {
-  .latest-entry { grid-template-columns: 60px minmax(0, 1fr); gap: 0.9rem; }
-  .latest-entry .post-sigil { width: 60px; height: 45px; }
+  .post-row { grid-template-columns: 60px minmax(0, 1fr); gap: 0.9rem; }
+  .post-row .post-sigil { width: 60px; height: 45px; }
   .archive-year { grid-template-columns: minmax(0, 1fr); gap: 0.25rem; }
   .archive-row { grid-template-columns: 32px minmax(0, 1fr); row-gap: 0.15rem; }
   .archive-row .post-sigil { grid-row: span 2; }
@@ -558,270 +548,14 @@ html { scroll-behavior: smooth; }
   font-size: 0.95rem;
 }
 
-.series-list {
-  border-left: 1px solid var(--line-strong);
-  padding-left: 1.5rem;
-  margin-left: 0.35rem;
-  position: relative;
-}
-.series-entry {
-  display: block;
-  text-decoration: none;
-  color: inherit;
-  padding: 1rem 0;
-  border-bottom: 1px dashed var(--line);
-  position: relative;
-}
-/* Cover-link: sits over the whole .series-entry to make the card clickable.
-   z-index: 1 puts it above the visible siblings (which are at z-index: 0). */
-.series-entry-cover {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  overflow: hidden;
-  text-indent: -9999px;
-  font-size: 0;
-}
-.series-entry:last-child { border-bottom: none; }
-
-
-.series-entry::before {
-  content: '';
-  position: absolute;
-  left: -1.875rem;
-  top: 1.5rem;
-  width: 0.7rem;
-  height: 1px;
-  background: var(--line-strong);
-}
-.series-entry .part {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 0.68rem;
-  letter-spacing: 0.14em;
-  color: var(--sub);
-  text-transform: uppercase;
-  margin-bottom: 0.25rem;
-  display: block;
-}
-.series-entry h3 {
-  font-size: 1.2rem;
-  font-weight: 600;
-  margin: 0 0 0.35rem;
-  letter-spacing: -0.005em;
-  line-height: 1.3;
-}
-.series-entry .desc {
-  color: var(--muted);
-  font-size: 0.92rem;
-  margin: 0 0 0.5rem;
-  max-width: 62ch;
-}
-.series-entry .meta {
-  display: flex;
-  gap: 0.55rem;
-  align-items: center;
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 0.68rem;
-  letter-spacing: 0.12em;
-  color: var(--sub);
-  text-transform: uppercase;
-}
-.series-entry .meta .dot {
-  width: 2px;
-  height: 2px;
-  border-radius: 50%;
-  background: currentColor;
-}
-.series-entry:hover h3 {
-  text-decoration: underline;
-  text-underline-offset: 0.25em;
-  text-decoration-thickness: 1px;
-}
-/* Visible children sit below the cover-link. The cover catches clicks. */
-.series-entry > *:not(.series-entry-cover) {
-  position: relative;
-  z-index: 0;
-}
-
-.standalone-entry {
-  display: flex;
-  gap: 1.5rem;
-  padding: 1rem 0;
-  border-bottom: 1px dashed var(--line);
-  text-decoration: none;
-  color: inherit;
-  align-items: baseline;
-}
-.standalone-entry:last-child { border-bottom: none; }
-.standalone-entry .date {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 0.78rem;
-  color: var(--sub);
-  white-space: nowrap;
-  min-width: 90px;
-}
-.standalone-entry h3 {
-  margin: 0 0 0.2rem;
-  font-size: 1.1rem;
-  font-weight: 600;
-}
-.standalone-entry p {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.9rem;
-  max-width: 62ch;
-}
-.standalone-entry:hover h3 {
-  text-decoration: underline;
-  text-underline-offset: 0.25em;
-}
-.standalone-entry .right {
-  margin-left: auto;
-  display: flex;
-  gap: 0.55rem;
-  align-items: center;
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 0.68rem;
-  letter-spacing: 0.12em;
-  color: var(--sub);
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
 /* ============================================================
-   TAG PAGE
+   TAG AND SERIES PAGES
+   Same page head and post rows as the index; no panels or chips.
    ============================================================ */
 
-.tag-strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  padding: 1rem 0 1.5rem;
-  border-bottom: 1px solid var(--line);
-  margin-bottom: 2rem;
-}
-.tag-strip a {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 0.68rem;
-  letter-spacing: 0.1em;
-  color: var(--muted);
-  text-transform: uppercase;
-  text-decoration: none;
-  padding: 0.35rem 0.6rem;
-  border: 1px solid var(--line);
-}
-.tag-strip a:hover {
-  border-color: var(--line-strong);
-  color: var(--foreground);
-}
-.tag-strip a.is-active {
-  background: var(--line-strong);
-  color: var(--background);
-  border-color: var(--line-strong);
-}
-.tag-strip a .count {
-  margin-left: 0.35rem;
-  color: var(--sub);
-  font-size: 0.58rem;
-}
-.tag-strip a.is-active .count {
-  color: color-mix(in oklab, var(--background) 70%, transparent);
-}
+.post-list { margin-top: 0.5rem; }
 
-.tag-header {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-.tag-header h1 {
-  font-size: 2.4rem;
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.02em;
-  margin: 0;
-}
-.tag-header h1 .hash {
-  color: var(--sub);
-  font-weight: 400;
-}
-.tag-header .count {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 0.75rem;
-  letter-spacing: 0.14em;
-  color: var(--muted);
-  text-transform: uppercase;
-}
-
-.entries {
-  display: grid;
-  gap: 0;
-  border-top: 1px solid var(--line-strong);
-}
-.entry-row {
-  display: grid;
-  grid-template-columns: 110px 1fr auto;
-  gap: 1.25rem;
-  padding: 1rem 0.25rem;
-  text-decoration: none;
-  color: inherit;
-  border-bottom: 1px dashed var(--line);
-  align-items: baseline;
-}
-.entry-row .date {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 0.8rem;
-  color: var(--sub);
-  padding-top: 0.15rem;
-}
-.entry-row .body h3 {
-  margin: 0 0 0.25rem;
-  font-size: 1.1rem;
-  font-weight: 500;
-  line-height: 1.3;
-}
-.entry-row .body .desc {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.9rem;
-  max-width: 54ch;
-}
-.entry-row .body .meta {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 0.62rem;
-  letter-spacing: 0.14em;
-  color: var(--sub);
-  text-transform: uppercase;
-  margin-top: 0.35rem;
-}
-.entry-row:hover .body h3 {
-  text-decoration: underline;
-  text-underline-offset: 0.3em;
-}
-
-@media (max-width: 540px) {
-  .entry-row { grid-template-columns: 1fr; gap: 0.35rem; }
-}
-
-/* ============================================================
-   SERIES PAGE - timeline + intro slot
-   ============================================================ */
-
-.series-intro {
-  border: 1px solid var(--line);
-  padding: 1.5rem 1.5rem;
-  margin-bottom: 2rem;
-  background: color-mix(in oklab, var(--surface) 88%, transparent);
-}
-.series-intro h1 {
-  font-size: 2rem;
-  font-weight: 700;
-  margin: 0 0 0.6rem;
-  letter-spacing: -0.01em;
-}
-.series-intro .meta {
+.idx-head .meta {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 0.72rem;
   letter-spacing: 0.14em;
@@ -829,10 +563,50 @@ html { scroll-behavior: smooth; }
   text-transform: uppercase;
   margin-top: 1rem;
   display: flex;
-  gap: 1.5rem;
+  gap: 1rem;
   flex-wrap: wrap;
 }
-.series-intro .meta .dot { color: var(--sub); }
+.idx-head .meta a { color: var(--foreground); }
+
+.tag-header {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.tag-header h1 { margin: 0; }
+.tag-header h1 .hash { color: var(--sub); font-weight: 400; }
+.tag-header .count {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+/* Other tags as one quiet line of links; the current tag in full text colour. */
+.tag-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.1rem;
+  margin: 0 0 2rem;
+}
+.tag-strip a {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: var(--sub);
+  text-transform: lowercase;
+  text-decoration: none;
+}
+.tag-strip a:hover { color: var(--foreground); }
+.tag-strip a.is-active {
+  color: var(--foreground);
+  text-decoration: underline;
+  text-underline-offset: 0.3em;
+}
+.tag-strip a .count { margin-left: 0.25rem; opacity: 0.7; }
 
 @media (max-width: 480px) {
   .idx-section-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.65rem; }

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import {
+  getAllSeries,
   getAllTags,
   getPostsByTag,
   formatDate,
@@ -10,6 +11,7 @@ import {
   tagDisplay,
 } from "@/lib/blog";
 import LangPicker from "../../components/LangPicker";
+import PostRow from "../../components/PostRow";
 import {
   blogTagImagePath,
   buildSocialMetadata,
@@ -71,6 +73,7 @@ export default async function TagPage({
     .sort((a, b) => b.date.localeCompare(a.date));
 
   const displayTag = matching[0].tag;
+  const seriesTitles = new Map(getAllSeries().map((s) => [s.id, s.title]));
 
   // A single-language tag is scoped locally rather than mutating the persistent
   // document preference, so leaving the route restores the user's filter.
@@ -85,37 +88,19 @@ export default async function TagPage({
       data-no-ripple
       data-blog-force-lang={forceLang ?? undefined}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.5rem" }}>
-        <span
-          style={{
-            fontFamily: "var(--font-geist-mono), monospace",
-            fontSize: "0.78rem",
-            letterSpacing: "0.2em",
-            color: "var(--sub)",
-          }}
-        >
-          {"// TAGS"}
-        </span>
-        <span
-          style={{
-            fontFamily: "var(--font-geist-mono), monospace",
-            fontSize: "0.95rem",
-            fontWeight: 700,
-            letterSpacing: "0.18em",
-            textTransform: "uppercase",
-          }}
-        >
-          Browse by tag
-        </span>
-        <span
-          style={{
-            flex: 1,
-            height: "1px",
-            opacity: 0.3,
-            background:
-              "repeating-linear-gradient(90deg, var(--line-strong) 0 6px, transparent 6px 10px)",
-          }}
-        />
+      <div className="idx-head">
+        <span className="blog-kicker">Tag</span>
+        <div className="tag-header">
+          <h1>
+            <span className="hash">#</span>
+            {tagDisplay(displayTag)}
+          </h1>
+          <span className="count">
+            {String(posts.length).padStart(2, "0")}{" "}
+            {posts.length === 1 ? "essay" : "essays"}
+          </span>
+        </div>
+        <LangPicker available={availableLangs} forced={forceLang ?? undefined} />
       </div>
 
       <div className="tag-strip">
@@ -136,40 +121,19 @@ export default async function TagPage({
         })}
       </div>
 
-      <div className="tag-header">
-        <h1>
-          <span className="hash">#</span>
-          {tagDisplay(displayTag)}
-        </h1>
-        <span className="count">
-          {String(posts.length).padStart(2, "0")}{" "}
-          {posts.length === 1 ? "essay" : "essays"}
-        </span>
-        <LangPicker available={availableLangs} forced={forceLang ?? undefined} />
-      </div>
-
-      <div className="entries">
+      <div className="post-list">
         {posts.map((p) => (
-          <Link
+          <PostRow
             key={p.slug}
-            href={`/blogs/${p.slug}`}
-            className="entry-row"
-            data-post-lang={p.lang}
-            lang={p.lang}
-          >
-            <span className="date">{formatDate(p.date, p.lang)}</span>
-            <div className="body">
-              <h3>{p.title}</h3>
-              <p className="desc">{p.description}</p>
-              <div className="meta">
-                {p.seriesId
-                  ? `Series · part ${String(p.seriesOrder ?? 0).padStart(2, "0")}`
-                  : "Standalone"}{" "}
-                · {p.readingMinutes} {readUnit(p.lang)}
-              </div>
-            </div>
-            <span className="lang-badge">{p.lang.toUpperCase()}</span>
-          </Link>
+            post={p}
+            meta={[
+              formatDate(p.date, p.lang),
+              `${p.readingMinutes} ${readUnit(p.lang)}`,
+              ...(p.seriesId
+                ? [`${seriesTitles.get(p.seriesId)?.[p.lang] ?? ""} · ${p.lang === "tr" ? "Bölüm" : "Part"} ${String(p.seriesOrder ?? 0).padStart(2, "0")}`]
+                : []),
+            ].join(" · ")}
+          />
         ))}
       </div>
     </div>
