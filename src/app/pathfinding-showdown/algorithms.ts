@@ -1,3 +1,5 @@
+import { createSeededRandom } from "@/lib/random";
+
 export type Cell = { row: number; col: number };
 
 export type Terrain = "empty" | "wall" | "mud";
@@ -56,7 +58,7 @@ export interface SearchTrace extends SearchResult {
 }
 
 export interface PathfindingPreset {
-  id: "mud-shortcut" | "open-field" | "blocked-line";
+  id: "mud-shortcut" | "open-field" | "blocked-line" | "maze" | "no-route";
   label: string;
   description: string;
   lesson: string;
@@ -316,6 +318,72 @@ function createBlockedLineGrid(): PathGrid {
   return grid;
 }
 
+const MAZE_SEED = 7;
+const MAZE_LOOPS = 14;
+
+/**
+ * Depth-first maze on odd cells, then a few extra openings so more than one route exists.
+ * A fixed seed keeps the race the same on every visit.
+ */
+function createMazeGrid(): PathGrid {
+  const rows = 17;
+  const cols = 29;
+  const grid = createEmptyGrid(rows, cols, { row: 1, col: 1 }, { row: rows - 2, col: cols - 2 });
+  const random = createSeededRandom(MAZE_SEED);
+  grid.cells = grid.cells.map((row) => row.map(() => "wall" as Terrain));
+
+  const stack: Cell[] = [{ row: 1, col: 1 }];
+  grid.cells[1][1] = "empty";
+  while (stack.length > 0) {
+    const current = stack[stack.length - 1];
+    const options = CARDINAL_STEPS.map((step) => ({
+      next: { row: current.row + step.row * 2, col: current.col + step.col * 2 },
+      between: { row: current.row + step.row, col: current.col + step.col },
+    })).filter(
+      ({ next }) =>
+        next.row > 0 && next.row < rows - 1 && next.col > 0 && next.col < cols - 1 && grid.cells[next.row][next.col] === "wall",
+    );
+    if (options.length === 0) {
+      stack.pop();
+      continue;
+    }
+    const { next, between } = options[Math.floor(random() * options.length)];
+    grid.cells[between.row][between.col] = "empty";
+    grid.cells[next.row][next.col] = "empty";
+    stack.push(next);
+  }
+
+  // Knock out interior walls that separate two corridors in a straight line.
+  let opened = 0;
+  while (opened < MAZE_LOOPS) {
+    const row = 1 + Math.floor(random() * (rows - 2));
+    const col = 1 + Math.floor(random() * (cols - 2));
+    if (grid.cells[row][col] !== "wall") continue;
+    const horizontal = grid.cells[row][col - 1] === "empty" && grid.cells[row][col + 1] === "empty" && grid.cells[row - 1][col] === "wall" && grid.cells[row + 1][col] === "wall";
+    const vertical = grid.cells[row - 1][col] === "empty" && grid.cells[row + 1][col] === "empty" && grid.cells[row][col - 1] === "wall" && grid.cells[row][col + 1] === "wall";
+    if (!horizontal && !vertical) continue;
+    grid.cells[row][col] = "empty";
+    opened += 1;
+  }
+
+  return grid;
+}
+
+/** The goal sits in a sealed room, so every solver has to rule out the whole reachable map. */
+function createNoRouteGrid(): PathGrid {
+  const grid = createEmptyGrid(9, 15, { row: 4, col: 1 }, { row: 4, col: 12 });
+
+  for (let col = 10; col <= 14; col += 1) {
+    grid.cells[2][col] = "wall";
+    grid.cells[6][col] = "wall";
+  }
+  for (let row = 2; row <= 6; row += 1) {
+    grid.cells[row][10] = "wall";
+  }
+
+  return grid;
+}
+
 export const PATHFINDING_PRESETS: PathfindingPreset[] = [
   {
     id: "mud-shortcut",
@@ -340,6 +408,21 @@ export const PATHFINDING_PRESETS: PathfindingPreset[] = [
     lesson:
       "A goal-distance hint is guidance, not x-ray vision. Every solver must discover the opening before it can finish the detour.",
     createGrid: createBlockedLineGrid,
+  },
+  {
+    id: "maze",
+    label: "Maze",
+    description: "A 17 by 29 maze with a few loops, so more than one route exists.",
+    lesson:
+      "In corridors the straight-line hint often points at a dead end. Greedy follows it and settles for a longer route; A* still finds the shortest one.",
+    createGrid: createMazeGrid,
+  },
+  {
+    id: "no-route",
+    label: "No route",
+    description: "The goal sits in a sealed room.",
+    lesson: "To say there is no route, every solver has to check every cell it can reach.",
+    createGrid: createNoRouteGrid,
   },
 ];
 
