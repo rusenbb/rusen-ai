@@ -49,8 +49,17 @@ export function useClipSeg(): UseClipSeg {
         const tf = await import("@huggingface/transformers");
         tf.env.allowLocalModels = false;
         tf.env.useBrowserCache = true;
-        const progress_callback = ((p: { progress?: number }) => {
-          if (p.progress !== undefined) setProgress(Math.round(p.progress));
+        // Three loaders report files separately; sum them so the bar tracks the whole download.
+        const files: Record<string, { loaded: number; total: number }> = {};
+        let shown = 0;
+        const progress_callback = ((p: { status?: string; file?: string; loaded?: number; total?: number }) => {
+          if (p.status !== "progress" || !p.file) return;
+          files[p.file] = { loaded: p.loaded ?? 0, total: p.total ?? 0 };
+          const all = Object.values(files);
+          const total = all.reduce((sum, f) => sum + f.total, 0);
+          const loaded = all.reduce((sum, f) => sum + f.loaded, 0);
+          if (total) shown = Math.max(shown, Math.round((loaded / total) * 100));
+          setProgress(shown);
         }) as unknown as Parameters<typeof tf.AutoTokenizer.from_pretrained>[1] extends infer O
           ? O extends { progress_callback?: infer C }
             ? C

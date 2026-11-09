@@ -1,32 +1,28 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import Image from "next/image";
+import { Button, Chip, DemoHeader, DemoPage, Details } from "@/components/ui";
 import { DEMO_IMAGES } from "@/lib/demoImages";
 import { useVisionClassifier, type VisionResult } from "./hooks/useVisionClassifier";
 import { useClipSeg, type AttentionMask } from "./hooks/useClipSeg";
 import HeatmapCanvas from "./components/HeatmapCanvas";
 import FullAttentionPanel from "./components/FullAttentionPanel";
 
-const PRESET_LABELS = [
-  "a photo of a cat",
-  "a photo of a dog",
-  "a photo of a bird",
-  "a photo of a person",
-  "a photo of food",
-  "a photo of a car",
-  "a photo of a building",
-  "a photo of a flower",
-];
+const SAMPLES = DEMO_IMAGES.filter((image) => image.suggestedLabels).slice(0, 5);
+const FIRST = SAMPLES[0];
+const FALLBACK_LABELS = ["a photo of a dog", "a photo of a cat", "a photo of a person", "a photo of food"];
+const MIN_LABELS = 2;
+const kicker = "font-mono text-[0.7rem] uppercase tracking-[0.08em] text-[var(--sub)]";
 
 export default function VisionAnythingPage() {
-  const { isLoading, loadProgress, status, error, classify } = useVisionClassifier();
+  const { isLoading, loadProgress, error, classify } = useVisionClassifier();
   const clipSeg = useClipSeg();
 
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string>(FIRST.url);
   const [imageAspect, setImageAspect] = useState(4 / 3);
-  const [labels, setLabels] = useState<string[]>(PRESET_LABELS);
-  const [labelInput, setLabelInput] = useState<string>("");
+  const [labels, setLabels] = useState<string[]>(FIRST.suggestedLabels ?? FALLBACK_LABELS);
+  const [labelInput, setLabelInput] = useState("");
   const [results, setResults] = useState<VisionResult[] | null>(null);
   const [isClassifying, setIsClassifying] = useState(false);
   const [classifyError, setClassifyError] = useState<string | null>(null);
@@ -41,9 +37,7 @@ export default function VisionAnythingPage() {
   // Revoke object URLs to avoid memory leaks
   useEffect(() => {
     return () => {
-      if (imageUrl?.startsWith("blob:")) {
-        URL.revokeObjectURL(imageUrl);
-      }
+      if (imageUrl.startsWith("blob:")) URL.revokeObjectURL(imageUrl);
     };
   }, [imageUrl]);
 
@@ -66,11 +60,8 @@ export default function VisionAnythingPage() {
   const handleFile = useCallback(
     (file: File) => {
       if (!file.type.startsWith("image/")) return;
-      const url = URL.createObjectURL(file);
-      setImageUrl(url);
+      setImageUrl(URL.createObjectURL(file));
       clearResults();
-      // Reset suggested labels back to preset when uploading something new.
-      setLabels(PRESET_LABELS);
     },
     [clearResults],
   );
@@ -80,47 +71,27 @@ export default function VisionAnythingPage() {
       setImageUrl(url);
       clearResults();
       const sample = DEMO_IMAGES.find((d) => d.url === url);
-      if (sample?.suggestedLabels) {
-        setLabels(sample.suggestedLabels);
-      }
+      if (sample?.suggestedLabels) setLabels(sample.suggestedLabels);
     },
     [clearResults],
   );
 
-  const handleAddLabel = useCallback(() => {
+  const handleAddLabel = (event: FormEvent) => {
+    event.preventDefault();
     const trimmed = labelInput.trim();
-    if (!trimmed) return;
-    if (labels.includes(trimmed)) return;
+    if (!trimmed || labels.includes(trimmed)) return;
     setLabels((prev) => [...prev, trimmed]);
     clearResults();
     setLabelInput("");
-  }, [labelInput, labels, clearResults]);
+  };
 
-  const handleRemoveLabel = useCallback((index: number) => {
+  const handleRemoveLabel = (index: number) => {
     setLabels((prev) => prev.filter((_, i) => i !== index));
     clearResults();
-  }, [clearResults]);
-
-  const handleClassify = useCallback(async () => {
-    if (!imageUrl || labels.length < 2) return;
-    const request = ++classificationRequest.current;
-    setIsClassifying(true);
-    setClassifyError(null);
-    clearAttention();
-    try {
-      const out = await classify(imageUrl, labels);
-      if (request !== classificationRequest.current) return;
-      setResults(out);
-    } catch (err) {
-      if (request === classificationRequest.current) setClassifyError(err instanceof Error ? err.message : "Classification failed");
-    } finally {
-      if (request === classificationRequest.current) setIsClassifying(false);
-    }
-  }, [imageUrl, labels, classify, clearAttention]);
+  };
 
   const showAttentionFor = useCallback(
     async (label: string) => {
-      if (!imageUrl) return;
       const request = ++attentionRequest.current;
       setAttentionBusy(true);
       setAttentionLabel(label);
@@ -130,7 +101,7 @@ export default function VisionAnythingPage() {
         setAttentionMask(mask);
       } catch (err) {
         if (request !== attentionRequest.current) return;
-        setClassifyError(err instanceof Error ? err.message : "Attention failed");
+        setClassifyError(err instanceof Error ? err.message : "The map failed");
         setAttentionMask(null);
       } finally {
         if (request === attentionRequest.current) setAttentionBusy(false);
@@ -139,58 +110,49 @@ export default function VisionAnythingPage() {
     [imageUrl, clipSeg],
   );
 
+  const handleClassify = useCallback(async () => {
+    if (labels.length < MIN_LABELS) return;
+    const request = ++classificationRequest.current;
+    setIsClassifying(true);
+    setClassifyError(null);
+    clearAttention();
+    try {
+      const out = await classify(imageUrl, labels);
+      if (request !== classificationRequest.current) return;
+      setResults(out);
+      setIsClassifying(false);
+      // The map for the winning label is the payoff, so it follows on its own.
+      if (out[0]) void showAttentionFor(out[0].label);
+    } catch (err) {
+      if (request === classificationRequest.current) {
+        setClassifyError(err instanceof Error ? err.message : "Classification failed");
+        setIsClassifying(false);
+      }
+    }
+  }, [imageUrl, labels, classify, clearAttention, showAttentionFor]);
+
   const top = results?.[0];
-  const max = results ? Math.max(...results.map((r) => r.score), 1e-6) : 1;
+  const busy = isClassifying || isLoading;
+
+  let mapNote: string | null = null;
+  if (attentionBusy) {
+    mapNote =
+      clipSeg.status === "loading"
+        ? `Downloading the map model · ${clipSeg.progress}%`
+        : `Finding "${attentionLabel}" in the image`;
+  } else if (attentionMask && attentionLabel) {
+    mapNote = `Where the model sees "${attentionLabel}"`;
+  }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 sm:py-12">
-      <div className="mb-8">
-        <p className="text-xs font-mono tracking-[0.18em] text-neutral-500 dark:text-neutral-500 mb-2">
-          COMPUTER VISION / ZERO-SHOT
-        </p>
-        <h1 className="text-3xl sm:text-4xl font-bold mb-3">Vision Anything</h1>
-        <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 max-w-2xl text-pretty">
-          Drop an image, type the labels you care about, and a CLIP-class model ranks them in your browser.
-          Then enter <em>segmentation maps</em> to inspect each label&apos;s per-pixel relevance map. No backend.
-        </p>
-      </div>
+    <DemoPage>
+      <DemoHeader
+        eyebrow="Zero-shot image classification"
+        title="Vision Anything"
+        description="Name what might be in the photo; a CLIP model ranks the labels and shows where it sees each one."
+      />
 
-      {/* Model status strip */}
-      <div className="mb-6">
-        {status === "loading" && (
-          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 p-3 bg-neutral-50/60 dark:bg-neutral-900/60">
-            <div className="flex items-center justify-between text-xs font-mono text-neutral-600 dark:text-neutral-400">
-              <span>Loading CLIP model · first run only · cached after</span>
-              <span>{loadProgress}%</span>
-            </div>
-            <div className="mt-2 h-1 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-cyan-500 transition-all"
-                style={{ width: `${loadProgress}%` }}
-              />
-            </div>
-          </div>
-        )}
-        {status === "ready" && (
-          <div className="text-xs font-mono text-green-600 dark:text-green-400">
-            CLIP ready{clipSeg.status === "ready" && " · CLIPSeg ready"}
-            {clipSeg.status === "loading" && ` · loading attention model… ${clipSeg.progress}%`}
-          </div>
-        )}
-        {error && (
-          <div className="rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-3 text-sm text-red-700 dark:text-red-300">
-            {error}
-          </div>
-        )}
-        {clipSeg.error && (
-          <div className="mt-2 rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-3 text-sm text-red-700 dark:text-red-300">
-            Attention model: {clipSeg.error}
-          </div>
-        )}
-      </div>
-
-      {/* Segmentation maps panel - when active, takes over above the regular layout. */}
-      {fullAttention && imageUrl && results && results.length >= 1 && (
+      {fullAttention && results && results.length > 0 && (
         <FullAttentionPanel
           imageUrl={imageUrl}
           imageAspect={imageAspect}
@@ -201,11 +163,42 @@ export default function VisionAnythingPage() {
         />
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left: image */}
-        <div className="space-y-3">
-          <label
-            htmlFor="vision-file"
+      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+        <div className="min-w-0">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            {SAMPLES.map((img) => (
+              <button
+                key={img.url}
+                type="button"
+                onClick={() => pickSampleImage(img.url)}
+                aria-pressed={imageUrl === img.url}
+                aria-label={img.alt}
+                className={`shrink-0 cursor-pointer border p-0.5 transition-colors ${
+                  imageUrl === img.url ? "border-[var(--line-strong)]" : "border-[var(--line)] hover:border-[var(--line-strong)]"
+                }`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={img.url} alt="" className="block h-10 w-14 object-cover sm:h-12 sm:w-[4.5rem]" />
+              </button>
+            ))}
+            <Button size="sm" className="ml-1" onClick={() => fileInputRef.current?.click()}>
+              Upload
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              aria-label="Upload your own image"
+              className="sr-only"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleFile(file);
+                e.target.value = "";
+              }}
+            />
+          </div>
+
+          <div
             onDragOver={(e) => {
               e.preventDefault();
               e.dataTransfer.dropEffect = "copy";
@@ -215,249 +208,105 @@ export default function VisionAnythingPage() {
               const file = e.dataTransfer.files?.[0];
               if (file) handleFile(file);
             }}
-            className="block aspect-[4/3] w-full rounded-xl border-2 border-dashed border-neutral-300 dark:border-neutral-700 hover:border-cyan-400 dark:hover:border-cyan-500 transition cursor-pointer relative overflow-hidden bg-neutral-50/50 dark:bg-neutral-900/50"
+            className="relative mx-auto aspect-[4/3] w-full overflow-hidden border border-[var(--line)] bg-[var(--surface)] lg:max-w-[calc((100svh-22rem)*4/3)]"
           >
-            {imageUrl ? (
-              <Image
-                src={imageUrl}
-                alt="Uploaded"
-                fill
-                className="object-contain"
-                onLoad={(event) => setImageAspect(event.currentTarget.naturalWidth / event.currentTarget.naturalHeight)}
-                unoptimized
-              />
-            ) : (
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-neutral-500 dark:text-neutral-400 text-sm">
-                <span className="text-3xl mb-2">⌘</span>
-                <span className="font-medium">Drop an image, or click to upload</span>
-                <span className="mt-1 text-xs text-neutral-400">PNG · JPG · WebP</span>
-              </div>
-            )}
-            {imageUrl && attentionMask && !fullAttention && (
-              <HeatmapCanvas mask={attentionMask} imageAspect={imageAspect} palette="cyan" blend="screen" />
-            )}
-            {imageUrl && attentionBusy && !fullAttention && (
-              <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
-                <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px]" />
-                <div className="relative flex items-center gap-2.5 rounded-lg border border-cyan-500/40 bg-neutral-900/95 px-3.5 py-2.5 text-xs font-mono text-white shadow-xl">
-                  <span className="relative inline-flex h-2 w-2">
-                    <span className="absolute inset-0 rounded-full bg-cyan-400 animate-ping" />
-                    <span className="relative inline-block h-2 w-2 rounded-full bg-cyan-400" />
-                  </span>
-                  <span>
-                    {clipSeg.status === "loading"
-                      ? `Loading attention model · ${clipSeg.progress}%`
-                      : `Computing attention${attentionLabel ? ` for "${attentionLabel}"` : "…"}`}
-                  </span>
-                </div>
-              </div>
-            )}
-            <input
-              id="vision-file"
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) handleFile(file);
-              }}
+            <Image
+              src={imageUrl}
+              alt="Image to classify"
+              fill
+              priority
+              className="object-contain"
+              onLoad={(event) => setImageAspect(event.currentTarget.naturalWidth / event.currentTarget.naturalHeight)}
+              unoptimized
             />
-          </label>
-
-          {/* Sample images */}
-          <div>
-            <h3 className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500 dark:text-neutral-400">
-              Try a sample
-            </h3>
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {DEMO_IMAGES.map((img) => {
-                const isActive = imageUrl === img.url;
-                return (
-                  <button
-                    key={img.url}
-                    onClick={() => pickSampleImage(img.url)}
-                    className={`shrink-0 overflow-hidden rounded-lg border-2 transition-all ${
-                      isActive
-                        ? "border-cyan-500 ring-2 ring-cyan-500/20"
-                        : "border-transparent hover:border-neutral-300 dark:hover:border-neutral-600"
-                    }`}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={img.url}
-                      alt={img.alt}
-                      className="h-14 w-20 object-cover sm:h-16 sm:w-24"
-                      loading="lazy"
-                    />
-                  </button>
-                );
-              })}
-            </div>
+            {attentionMask && !fullAttention && <HeatmapCanvas mask={attentionMask} imageAspect={imageAspect} />}
           </div>
-
-          {imageUrl && (
-            <div className="flex items-center gap-3 text-xs flex-wrap">
-              <button
-                type="button"
-                onClick={() => {
-                  setImageUrl(null);
-                  clearResults();
-                  if (fileInputRef.current) fileInputRef.current.value = "";
-                }}
-                className="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200 underline underline-offset-2"
-              >
-                Clear image
-              </button>
-              {attentionMask && !fullAttention && (
-                <button
-                  type="button"
-                  onClick={clearAttention}
-                  className="text-cyan-600 dark:text-cyan-400 hover:opacity-80 underline underline-offset-2"
-                >
-                  Hide map
-                </button>
-              )}
-              {attentionLabel && !fullAttention && (
-                <span className="font-mono text-neutral-500">
-                  Segmenting: {attentionLabel}
-                </span>
-              )}
-            </div>
-          )}
+          <div className="mt-2 flex min-h-[1.75rem] flex-wrap items-center justify-between gap-2">
+            <p aria-live="polite" className={kicker}>
+              {mapNote ?? "Drop an image here or pick one above"}
+            </p>
+            {results && attentionMask && !fullAttention && (
+              <Button variant="ghost" size="sm" onClick={() => setFullAttention(true)}>
+                All maps
+              </Button>
+            )}
+          </div>
         </div>
 
-        {/* Right: labels + classify + results */}
-        <div className="space-y-5">
+        <div className="min-w-0 space-y-6">
           <div>
-            <h2 className="text-sm font-semibold mb-2 text-neutral-800 dark:text-neutral-200">Labels</h2>
-            <p className="text-xs text-neutral-500 mb-3">
-              CLIP works best with full prompts. Try <span className="font-mono">&quot;a photo of a&quot;</span> prefixes.
-            </p>
-            <div className="flex flex-wrap gap-2 mb-3">
+            <p className={`mb-2 ${kicker}`}>Labels</p>
+            <div className="flex flex-wrap items-center gap-2">
               {labels.map((label, i) => (
-                <span
-                  key={`${label}-${i}`}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-neutral-300 dark:border-neutral-700 px-3 py-1 text-xs font-mono"
+                <Chip
+                  key={label}
+                  onRemove={() => handleRemoveLabel(i)}
+                  disabled={busy || labels.length <= MIN_LABELS}
                 >
                   {label}
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveLabel(i)}
-                    className="text-neutral-400 hover:text-red-500"
-                    aria-label={`Remove ${label}`}
-                  >
-                    ×
-                  </button>
-                </span>
+                </Chip>
               ))}
-            </div>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                aria-label="New image classification label"
-                value={labelInput}
-                onChange={(e) => setLabelInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleAddLabel();
-                  }
-                }}
-                placeholder="add a label, press Enter"
-                className="min-w-0 flex-1 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 text-sm font-mono"
-              />
-              <button
-                type="button"
-                onClick={handleAddLabel}
-                className="px-3 py-2 text-sm font-mono rounded-md border border-neutral-300 dark:border-neutral-700 hover:border-neutral-500 transition"
-              >
-                Add
-              </button>
+              <form onSubmit={handleAddLabel} className="flex">
+                <input
+                  aria-label="New image classification label"
+                  value={labelInput}
+                  onChange={(e) => setLabelInput(e.target.value)}
+                  placeholder="+ a photo of a…"
+                  disabled={busy}
+                  className="w-40 border-b border-dashed border-[var(--line-strong)] bg-transparent px-1 py-1 font-mono text-[0.75rem] focus:outline-none disabled:opacity-50"
+                />
+              </form>
             </div>
           </div>
 
-          <button
-            type="button"
+          <Button
+            variant="primary"
+            size="lg"
             onClick={handleClassify}
-            disabled={!imageUrl || labels.length < 2 || isClassifying || isLoading}
-            className="w-full px-4 py-3 rounded-lg bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-medium text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition"
+            loading={busy}
+            disabled={labels.length < MIN_LABELS}
           >
-            {isLoading ? `Loading model… ${loadProgress}%` : isClassifying ? "Classifying…" : "Classify"}
-          </button>
+            {isLoading ? `Downloading the model · ${loadProgress}%` : isClassifying ? "Classifying" : "Classify"}
+          </Button>
 
-          {classifyError && (
-            <div className="rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-3 text-sm text-red-700 dark:text-red-300">
-              {classifyError}
-            </div>
+          {(classifyError || error || clipSeg.error) && (
+            <p role="alert" className="border-l-2 border-[var(--line-strong)] pl-3 text-sm text-[var(--muted)]">
+              {classifyError || error || clipSeg.error}
+            </p>
           )}
 
-          {results && results.length > 0 && (
-            <div className="space-y-3">
-              <div className="flex items-baseline justify-between gap-3 flex-wrap">
-                <h2 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">
-                  Results
-                  {top && (
-                    <span className="ml-2 text-xs font-mono text-neutral-500">
-                      best: {top.label} ({(top.score * 100).toFixed(1)}%)
-                    </span>
-                  )}
-                </h2>
-                <button
-                  type="button"
-                  onClick={() => setFullAttention(true)}
-                  disabled={fullAttention}
-                  className="text-[11px] font-mono uppercase tracking-[0.18em] text-cyan-600 dark:text-cyan-400 hover:opacity-80 disabled:opacity-50"
-                >
-                  ⛶ Enter segmentation maps
-                </button>
-              </div>
-              <p className="text-[11px] text-neutral-500">
-                Click any label below to overlay its heatmap on the image, or open
-                <em> segmentation maps </em>
-                for a side-by-side of every label, an averaged saliency map, alpha-controlled
-                inspection, and a heatmap-only view.
-              </p>
-              <ul className="space-y-1.5">
+          {top && results ? (
+            <div aria-live="polite">
+              <p className={kicker}>Best fit</p>
+              <p className="mt-1 text-3xl font-semibold first-letter:uppercase sm:text-4xl">{top.label}</p>
+              <ul className="mt-5 space-y-1">
                 {results.map((r) => {
-                  const pct = (r.score / max) * 100;
-                  const isTop = r === top;
-                  const isActive = attentionLabel === r.label;
+                  const active = attentionLabel === r.label;
                   return (
-                    <li key={r.label} className="space-y-1">
+                    <li key={r.label}>
                       <button
                         type="button"
                         onClick={() => showAttentionFor(r.label)}
                         disabled={attentionBusy}
-                        className="w-full text-left group disabled:opacity-60"
+                        aria-pressed={active}
+                        className="group w-full cursor-pointer py-1 text-left disabled:cursor-wait"
                       >
-                        <div className="flex items-baseline justify-between text-xs font-mono">
+                        <div className="mb-1 flex justify-between gap-3 text-sm">
                           <span
                             className={
-                              isActive
-                                ? "text-cyan-600 dark:text-cyan-400 font-semibold underline underline-offset-2"
-                                : isTop
-                                  ? "text-cyan-600 dark:text-cyan-400 font-semibold"
-                                  : "text-neutral-700 dark:text-neutral-300 group-hover:text-cyan-500"
+                              active
+                                ? "text-[var(--foreground)] underline underline-offset-4"
+                                : "text-[var(--muted)] group-hover:text-[var(--foreground)]"
                             }
                           >
                             {r.label}
-                            {attentionBusy && isActive && (
-                              clipSeg.status === "loading"
-                                ? ` · loading model ${clipSeg.progress}%`
-                                : " · computing…"
-                            )}
                           </span>
-                          <span className="text-neutral-500 tabular-nums">
-                            {(r.score * 100).toFixed(2)}%
-                          </span>
+                          <span className="font-mono tabular-nums">{(r.score * 100).toFixed(1)}%</span>
                         </div>
-                        <div className="h-1.5 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden">
+                        <div className="h-1.5 w-full bg-[var(--line)]">
                           <div
-                            className={`h-full transition-all ${
-                              isTop ? "bg-cyan-500" : "bg-neutral-400 dark:bg-neutral-600"
-                            }`}
-                            style={{ width: `${pct}%` }}
+                            className={`h-1.5 transition-all duration-500 ${r === top ? "bg-accent" : "bg-[var(--sub)]"}`}
+                            style={{ width: `${r.score * 100}%` }}
                           />
                         </div>
                       </button>
@@ -465,19 +314,29 @@ export default function VisionAnythingPage() {
                   );
                 })}
               </ul>
+              <p className={`mt-3 ${kicker}`}>Click a label to see its map</p>
             </div>
+          ) : (
+            !busy && (
+              <p className="text-sm text-[var(--muted)]">
+                Press Classify. The first run downloads the ranking model, then the map model.
+              </p>
+            )
           )}
+
+          <Details summary="Models and tips">
+            <p>
+              Ranking uses CLIP (Xenova/clip-vit-base-patch16, about 155 MB): it scores how well the image matches each
+              label, and the scores add up to 100%. The map uses CLIPSeg (Xenova/clipseg-rd64-refined, about 140 MB), a
+              small decoder on top of CLIP that gives each pixel a 0 to 1 match score for one label. Both run on
+              WebAssembly in this tab and stay cached after the first download.
+            </p>
+            <p className="mt-3">
+              CLIP ranks full captions better than single words, so write labels like &quot;a photo of a wolf&quot;.
+            </p>
+          </Details>
         </div>
       </div>
-
-      <div className="mt-10 text-xs text-neutral-500 leading-relaxed max-w-3xl">
-        <p>
-          Classification uses <code className="font-mono text-[11px]">clip-vit-base-patch16</code>{" "}
-          (~150 MB). The attention map uses <code className="font-mono text-[11px]">clipseg-rd64-refined</code>{" "}
-          (~140 MB), a small Transformer decoder bolted on top of CLIP that turns a text prompt into a
-          per-pixel probability map. Both run via WebAssembly and cache after the first load.
-        </p>
-      </div>
-    </div>
+    </DemoPage>
   );
 }
