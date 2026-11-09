@@ -68,8 +68,9 @@ function PatchGrid({ matrix, label }: { matrix: Matrix; label: string }) {
             return (
               <div
                 key={`${rowIndex}:${columnIndex}`}
-                className={`grid aspect-square place-items-center font-mono text-sm tabular-nums ${grey > 140 ? "text-neutral-950" : "text-white"}`}
-                style={{ backgroundColor: `rgb(${grey} ${grey} ${grey})` }}
+                className="grid aspect-square place-items-center font-mono text-sm tabular-nums"
+                // Data scale, not a theme colour: the cell shows the pixel's own grey, with black or white text for contrast.
+                style={{ backgroundColor: `rgb(${grey} ${grey} ${grey})`, color: grey > 140 ? "rgb(0 0 0)" : "rgb(255 255 255)" }}
               >
                 {format(value)}
               </div>
