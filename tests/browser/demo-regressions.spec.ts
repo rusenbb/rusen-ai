@@ -49,6 +49,7 @@ test("Outguess explains Frequency using its actual counts and next-key probabili
   await page.keyboard.press("j");
   await expect(page.getByLabel("Next-key probabilities")).toContainText("92.9%");
   await expect(page.getByText("Next guess:")).toContainText("Frequency");
+  await page.locator("summary", { hasText: "How it reads you" }).click();
   await page.getByText("Counts behind the prediction", { exact: true }).click();
   await expect(page.getByText("Whole session: F 25 · J 1", { exact: true })).toBeVisible();
 });
