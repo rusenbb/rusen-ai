@@ -290,10 +290,6 @@ export function getPrevNextInSeries(
   };
 }
 
-export function getStandalonePosts(): Post[] {
-  return getAllPosts().filter((p) => !p.seriesId);
-}
-
 /**
  * Latest posts, deduped by translationKey (so EN+TR of the same essay don't
  * both surface). When a post has a translation, the preferred-language version

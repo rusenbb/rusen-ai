@@ -1,8 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   BG_DISABLED_KEY,
-  PHOTO_BG_DISABLED_KEY,
-  getBackgroundScope,
   isBgDisabled,
   setBgDisabled,
 } from "./backgroundToggle";
@@ -26,20 +24,12 @@ describe("background preferences", () => {
     vi.unstubAllGlobals();
   });
 
-  it("defaults the photo archive off without changing the global preference", () => {
-    expect(getBackgroundScope("/photos")).toBe("photos");
-    expect(isBgDisabled("photos")).toBe(true);
-    expect(isBgDisabled("global")).toBe(false);
-    expect(window.localStorage.getItem(BG_DISABLED_KEY)).toBeNull();
-    expect(window.localStorage.getItem(PHOTO_BG_DISABLED_KEY)).toBeNull();
-  });
-
-  it("lets the photo background be enabled independently", () => {
-    setBgDisabled(false, "photos");
-
-    expect(isBgDisabled("photos")).toBe(false);
-    expect(isBgDisabled("global")).toBe(false);
-    expect(window.localStorage.getItem(PHOTO_BG_DISABLED_KEY)).toBe("0");
+  it("defaults on and stores only a disabled choice", () => {
+    expect(isBgDisabled()).toBe(false);
+    setBgDisabled(true);
+    expect(isBgDisabled()).toBe(true);
+    expect(window.localStorage.getItem(BG_DISABLED_KEY)).toBe("1");
+    setBgDisabled(false);
     expect(window.localStorage.getItem(BG_DISABLED_KEY)).toBeNull();
   });
 
@@ -50,9 +40,8 @@ describe("background preferences", () => {
       removeItem: () => { throw new DOMException("Blocked", "SecurityError"); },
     });
 
-    expect(isBgDisabled("global")).toBe(false);
-    expect(isBgDisabled("photos")).toBe(true);
-    expect(() => setBgDisabled(true, "global")).not.toThrow();
-    expect(isBgDisabled("global")).toBe(true);
+    expect(isBgDisabled()).toBe(false);
+    expect(() => setBgDisabled(true)).not.toThrow();
+    expect(isBgDisabled()).toBe(true);
   });
 });
