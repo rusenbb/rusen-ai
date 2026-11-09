@@ -215,8 +215,8 @@
     "slug": "pathfinding-showdown",
     "collection": "demos",
     "status": "live",
-    "summary": "Step through every frontier decision as BFS, Dijkstra, greedy best-first, and A* search the same terrain.",
-    "description": "Interactive pathfinding trace with a scrubber, visible frontier, decision reasons, and compact final comparison.",
+    "summary": "BFS, Dijkstra, greedy best-first and A* race across the same terrain, then step through any search one decision at a time.",
+    "description": "Side-by-side pathfinding race with a step-by-step inspector, visible frontier and decision reasons.",
     "tags": [
       "Algorithms",
       "A*",
@@ -242,8 +242,8 @@
     "slug": "pulse-board",
     "collection": "demos",
     "status": "live",
-    "summary": "Live dashboard with real-time WebSocket crypto prices, Chainlink oracle, earthquakes, weather, and more.",
-    "description": "Live multi-signal dashboard (crypto, weather, quakes, etc.).",
+    "summary": "Four live public feeds: crypto trades over WebSocket, the space station's position, earthquakes and Wikipedia edits.",
+    "description": "Live board for crypto trades, ISS position, USGS earthquakes and Wikipedia edits.",
     "tags": [
       "WebSocket",
       "Blockchain",
@@ -258,7 +258,7 @@
     ],
     "tech": [
       "WebSockets",
-      "Chainlink",
+      "Server-Sent Events",
       "Public APIs"
     ],
     "order": 60,
