@@ -12,10 +12,10 @@ Edit `src/content/projects.json`, then run `npm run projects:docs`.
 | Classify Anything | `live` | `/classify-anything` | Zero-shot classification for English text. Define your own classes, paste a short excerpt, get predictions. |
 | Segment Anything | `live` | `/segment-anything` | Click any object in an image to instantly segment it. SAM 2.1 running entirely in your browser via WebAssembly. |
 | Vision Anything | `live` | `/vision-anything` | Zero-shot image classification. Drop an image, type the labels you care about, see how a CLIP-class model ranks them. |
-| Curve Fitter | `live` | `/curve-fitter` | Scrub real gradient updates, then inspect how tanh turns straight hidden scores into bounded gates that combine into nonlinear shapes. |
+| Curve Fitter | `live` | `/curve-fitter` | Scrub real gradient updates and watch a straight line and a polynomial fit the same noisy points, then compare them on held-out data. |
 | Convolution Lab | `live` | `/convolution-lab` | Run editable kernels over real RGB or B/W photos, move a receptive field, and inspect the exact pixels behind each feature response. |
 | Sampling Lab | `live` | `/sampling-lab` | Change the sample rate and watch different waves pass through the same measurements. Explore aliasing and the Nyquist boundary. |
-| Decision Boundary | `live` | `/decision-boundary` | Inspect nearest-neighbor votes, add examples, and reshape a classifier's decision boundary on moons, rings, and XOR. |
+| Decision Boundary | `live` | `/decision-boundary` | Drop points and compare how nearest neighbours, a linear network and a tanh network split moons, rings and XOR. |
 | Pathfinding Showdown | `live` | `/pathfinding-showdown` | BFS, Dijkstra, greedy best-first and A* race across the same terrain, then step through any search one decision at a time. |
 | Pulse Board | `live` | `/pulse-board` | Four live public feeds: crypto trades over WebSocket, the space station's position, earthquakes and Wikipedia edits. |
 | RL-Arena | `live` | `/adaptive-arena` | Fight trained bots in a full 30x30 tactical arena with checkpoint-based difficulties. |

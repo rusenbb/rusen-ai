@@ -1,29 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Button, DemoHeader, DemoPage, Details, Segmented, Slider, Stat } from "@/components/ui";
 
 import {
-  classificationAccuracy,
-  classificationAccuracyWithHiddenCount,
-  createClassificationDataset,
   createPolynomialTrainingTrace,
   createRegressionDataset,
-  createTinyNetworkTrainingTrace,
   evaluatePolynomial,
-  inspectHiddenLayer,
   meanSquaredError,
-  predictTinyNetwork,
-  predictTinyNetworkWithHiddenCount,
-  type ClassificationKind,
-  type ClassificationPoint,
   type CurveKind,
   type RegressionPoint,
-  type TinyNetwork,
 } from "./math";
-
-type Section = "nonlinearity" | "regression";
 
 const MAX_EPOCHS = 1000;
 const PLAYBACK_STEP = 25;
@@ -32,15 +20,6 @@ const PLAYBACK_INTERVAL = 90;
 const REGRESSION_START_EPOCH = 30;
 
 const LABEL = "font-mono text-[0.7rem] uppercase tracking-[0.08em] text-[var(--sub)]";
-const SECTIONS = [
-  { value: "nonlinearity", label: "Linear vs tanh" },
-  { value: "regression", label: "Curve fit" },
-] as const;
-const CLASSIFICATION_OPTIONS = [
-  { value: "xor", label: "XOR" },
-  { value: "circles", label: "Circles" },
-  { value: "line", label: "Line" },
-] as const;
 const CURVE_OPTIONS = [
   { value: "arc", label: "Arc" },
   { value: "wave", label: "Wave" },
@@ -52,9 +31,6 @@ const REGRESSION_VIEWPORTS: Record<CurveKind, { minY: number; maxY: number }> = 
 };
 
 const svg = (value: number) => value.toFixed(3);
-/** Opaque mix of a colour into the surface, so overlapping cells never show seams. */
-const tint = (colour: string, amount: number) => `color-mix(in srgb, ${colour} ${amount.toFixed(1)}%, var(--surface))`;
-const percent = (value: number) => `${(value * 100).toFixed(1)}%`;
 
 function pathFromSamples(
   samples: Array<{ x: number; y: number }>,
@@ -66,20 +42,11 @@ function pathFromSamples(
     .join(" ");
 }
 
-/** Epoch state with play, pause and scrub. `autoplay` runs the trace once on arrival unless motion is reduced. */
-function useEpochPlayback(maxEpoch: number, initialEpoch: number, autoplay = false) {
+/** Epoch state with play, pause and scrub. */
+function useEpochPlayback(maxEpoch: number, initialEpoch: number) {
   const [epoch, setEpoch] = useState(initialEpoch);
   const [requestedPlayback, setRequestedPlayback] = useState(false);
   const isPlaying = requestedPlayback && epoch < maxEpoch;
-
-  useEffect(() => {
-    if (!autoplay) return undefined;
-    const timer = window.setTimeout(() => {
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) setEpoch(maxEpoch);
-      else setRequestedPlayback(true);
-    }, 0);
-    return () => window.clearTimeout(timer);
-  }, [autoplay, maxEpoch]);
 
   useEffect(() => {
     if (!isPlaying) return undefined;
@@ -233,134 +200,11 @@ function RegressionChart({
   );
 }
 
-const GRID = 26;
-
-function DecisionMap({
-  network,
-  points,
-  label,
-  hiddenCount,
-}: {
-  network: TinyNetwork;
-  points: ClassificationPoint[];
-  label: string;
-  hiddenCount?: number;
-}) {
-  const cells = useMemo(
-    () =>
-      Array.from({ length: GRID * GRID }, (_, index) => {
-        const row = Math.floor(index / GRID);
-        const column = index % GRID;
-        const x = -1 + ((column + 0.5) / GRID) * 2;
-        const y = 1 - ((row + 0.5) / GRID) * 2;
-        return {
-          row,
-          column,
-          probability:
-            hiddenCount === undefined
-              ? predictTinyNetwork(network, { x, y })
-              : predictTinyNetworkWithHiddenCount(network, { x, y }, hiddenCount),
-        };
-      }),
-    [hiddenCount, network],
-  );
-
-  return (
-    <svg viewBox="0 0 100 100" className="block aspect-square w-full border border-[var(--line)] bg-[var(--surface)]" role="img" aria-label={`${label} decision map`}>
-      {cells.map((cell) => (
-        <rect
-          key={`${cell.row}-${cell.column}`}
-          x={svg((cell.column / GRID) * 100)}
-          y={svg((cell.row / GRID) * 100)}
-          width={svg(100 / GRID + 0.05)}
-          height={svg(100 / GRID + 0.05)}
-          shapeRendering="crispEdges"
-          style={{ fill: tint(cell.probability >= 0.5 ? "var(--accent)" : "var(--accent-2)", 8 + Math.abs(cell.probability - 0.5) * 50) }}
-        />
-      ))}
-      {points.map((point, index) => {
-        const heldOut = index % 5 === 0;
-        return (
-          <circle
-            key={index}
-            cx={svg((point.x + 1) * 50)}
-            cy={svg((1 - point.y) * 50)}
-            r={heldOut ? "1.6" : "1.25"}
-            fill={heldOut ? "none" : point.label === 1 ? "var(--accent)" : "var(--accent-2)"}
-            stroke={heldOut ? "var(--foreground)" : "var(--surface)"}
-            strokeWidth="0.5"
-          />
-        );
-      })}
-    </svg>
-  );
-}
-
-function HiddenGateMap({ network, gateIndex, transformed }: { network: TinyNetwork; gateIndex: number; transformed: boolean }) {
-  const { cells, low, high } = useMemo(() => {
-    const samples = Array.from({ length: 24 * 24 }, (_, index) => {
-      const row = Math.floor(index / 24);
-      const column = index % 24;
-      const x = -1 + ((column + 0.5) / 24) * 2;
-      const y = 1 - ((row + 0.5) / 24) * 2;
-      const values = inspectHiddenLayer(network, { x, y });
-      const raw = transformed ? values.activations[gateIndex] ?? 0 : values.preActivations[gateIndex] ?? 0;
-      return { row, column, raw };
-    });
-    const raws = samples.map((sample) => sample.raw);
-    // The raw score is unbounded, so it gets its own linear scale: the largest magnitude on the grid is full colour.
-    const scale = transformed ? 1 : Math.max(...raws.map(Math.abs), 1e-9);
-    return {
-      cells: samples.map((sample) => ({ ...sample, value: sample.raw / scale })),
-      low: Math.min(...raws),
-      high: Math.max(...raws),
-    };
-  }, [gateIndex, network, transformed]);
-
-  return (
-    <>
-      <svg viewBox="0 0 100 100" className="block aspect-square w-full border border-[var(--line)] bg-[var(--surface)]" role="img" aria-label={transformed ? "Hidden unit after tanh" : "Hidden unit before tanh"}>
-        {cells.map((cell) => (
-          <rect
-            key={`${cell.row}-${cell.column}`}
-            x={svg((cell.column / 24) * 100)}
-            y={svg((cell.row / 24) * 100)}
-            width={svg(100 / 24 + 0.05)}
-            height={svg(100 / 24 + 0.05)}
-            shapeRendering="crispEdges"
-            style={{ fill: tint(cell.value >= 0 ? "var(--accent)" : "var(--accent-2)", Math.abs(cell.value) * 75) }}
-          />
-        ))}
-      </svg>
-      <p className={`mt-1.5 tabular-nums ${LABEL}`}>
-        {low.toFixed(1)} to {high.toFixed(1)}
-      </p>
-    </>
-  );
-}
-
-function MapColumn({ title, accuracy, children }: { title: string; accuracy: number; children: ReactNode }) {
-  return (
-    <figure className="min-w-0">
-      <figcaption className="mb-2 flex flex-wrap items-baseline justify-between gap-x-3">
-        <span className={LABEL}>{title}</span>
-        <span className="text-2xl font-semibold tabular-nums text-[var(--foreground)] sm:text-3xl">{percent(accuracy)}</span>
-      </figcaption>
-      {children}
-    </figure>
-  );
-}
-
 export default function CurveFitterPage() {
-  const [section, setSection] = useState<Section>("nonlinearity");
   const [curveKind, setCurveKind] = useState<CurveKind>("arc");
   const [sampleCount, setSampleCount] = useState(34);
   const [noise, setNoise] = useState(0.18);
   const [degree, setDegree] = useState(2);
-  const [classificationKind, setClassificationKind] = useState<ClassificationKind>("xor");
-  const [selectedGate, setSelectedGate] = useState(0);
-  const [combinedGateCount, setCombinedGateCount] = useState(5);
-  const networkPlayback = useEpochPlayback(MAX_EPOCHS, 0, true);
   const regressionPlayback = useEpochPlayback(MAX_EPOCHS, REGRESSION_START_EPOCH);
 
   const regressionPoints = useMemo(() => createRegressionDataset(curveKind, sampleCount, noise), [curveKind, sampleCount, noise]);
@@ -374,139 +218,21 @@ export default function CurveFitterPage() {
   const linearFit = linearTrainingTrace[regressionPlayback.epoch];
   const polynomialFit = polynomialTrainingTrace[regressionPlayback.epoch];
 
-  const classificationPoints = useMemo(() => createClassificationDataset(classificationKind), [classificationKind]);
-  const classificationTrain = useMemo(() => classificationPoints.filter((_, index) => index % 5 !== 0), [classificationPoints]);
-  const classificationTest = useMemo(() => classificationPoints.filter((_, index) => index % 5 === 0), [classificationPoints]);
-  const linearNetworkTrace = useMemo(
-    () => createTinyNetworkTrainingTrace(classificationTrain, "linear", { epochs: MAX_EPOCHS }),
-    [classificationTrain],
-  );
-  const tanhNetworkTrace = useMemo(
-    () => createTinyNetworkTrainingTrace(classificationTrain, "tanh", { epochs: MAX_EPOCHS }),
-    [classificationTrain],
-  );
-  const linearNetwork = linearNetworkTrace[networkPlayback.epoch];
-  const tanhNetwork = tanhNetworkTrace[networkPlayback.epoch];
-
   return (
     <DemoPage>
       <DemoHeader
-        eyebrow="Neural networks"
+        eyebrow="Gradient descent"
         title="Curve Fitter"
-        description="Two tiny networks learn XOR from the same start, and only the one with tanh can bend its boundary to solve it."
+        description="A straight line and a polynomial learn the same noisy points step by step; the outlined points show which one fits data it never saw."
       />
 
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <Segmented
-          label="View"
-          options={SECTIONS}
-          value={section}
-          onChange={(next) => {
-            networkPlayback.pause();
-            regressionPlayback.pause();
-            setSection(next);
-          }}
-        />
-        {section === "nonlinearity" ? (
-          <Segmented label="Dataset" options={CLASSIFICATION_OPTIONS} value={classificationKind} onChange={setClassificationKind} />
-        ) : (
-          <Segmented label="Curve" options={CURVE_OPTIONS} value={curveKind} onChange={setCurveKind} />
-        )}
+      <div className="mb-4">
+        <Segmented label="Curve" options={CURVE_OPTIONS} value={curveKind} onChange={setCurveKind} />
       </div>
 
-      {section === "nonlinearity" ? (
-        <>
-          <div className="mx-auto" style={{ maxWidth: "max(22rem, calc(200svh - 62rem))" }}>
-            <div className="grid grid-cols-2 gap-3 sm:gap-6">
-              <MapColumn title="Linear hidden layer" accuracy={classificationAccuracy(linearNetwork, classificationTrain)}>
-                <DecisionMap network={linearNetwork} points={classificationPoints} label="Linear hidden layer" />
-              </MapColumn>
-              <MapColumn title="tanh hidden layer" accuracy={classificationAccuracy(tanhNetwork, classificationTrain)}>
-                <DecisionMap network={tanhNetwork} points={classificationPoints} label="tanh hidden layer" />
-              </MapColumn>
-            </div>
-            <p className={`mt-2 ${LABEL}`}>
-              Training accuracy · filled points train, {classificationTest.length} outlined points are held out
-            </p>
-            <div className="mt-5">
-              <EpochScrubber
-                epoch={networkPlayback.epoch}
-                maxEpoch={MAX_EPOCHS}
-                isPlaying={networkPlayback.isPlaying}
-                onToggle={networkPlayback.toggle}
-                onScrub={networkPlayback.scrub}
-              />
-            </div>
-          </div>
-
-          <Details summary="Inside the tanh network" className="mt-8">
-            <div className="space-y-8">
-              <p>
-                Both networks have 2 inputs, 5 hidden units and 1 output, and start from the same weights. A stack of
-                linear layers is still one straight cut: σ(W₂(W₁x + b₁) + b₂). The tanh network computes
-                σ(W₂ tanh(W₁x + b₁) + b₂), so each hidden unit becomes a soft on or off region. Held-out accuracy at this
-                step: linear {percent(classificationAccuracy(linearNetwork, classificationTest))}, tanh{" "}
-                {percent(classificationAccuracy(tanhNetwork, classificationTest))}.
-              </p>
-              <LossTrace
-                title="Cross-entropy loss"
-                epoch={networkPlayback.epoch}
-                series={[
-                  { label: "linear", values: linearNetworkTrace.map((network) => network.loss), stroke: "var(--accent-2)" },
-                  { label: "tanh", values: tanhNetworkTrace.map((network) => network.loss), stroke: "var(--accent)" },
-                ]}
-              />
-              <div>
-                <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                  <span className={LABEL}>One hidden unit, before and after tanh</span>
-                  <Segmented
-                    label="Hidden unit"
-                    options={tanhNetwork.w1.map((_, index) => ({ value: String(index), label: `Unit ${index + 1}` }))}
-                    value={String(selectedGate)}
-                    onChange={(value) => setSelectedGate(Number(value))}
-                  />
-                </div>
-                <div className="grid max-w-xl grid-cols-2 gap-4">
-                  <figure>
-                    <figcaption className={`mb-2 ${LABEL}`}>Before: a straight ramp</figcaption>
-                    <HiddenGateMap network={tanhNetwork} gateIndex={selectedGate} transformed={false} />
-                  </figure>
-                  <figure>
-                    <figcaption className={`mb-2 ${LABEL}`}>After tanh: flat at ±1</figcaption>
-                    <HiddenGateMap network={tanhNetwork} gateIndex={selectedGate} transformed />
-                  </figure>
-                </div>
-              </div>
-              <div className="grid max-w-xl gap-4 sm:grid-cols-[1fr_14rem] sm:items-end">
-                <div className="space-y-4">
-                  <Slider
-                    label="Hidden units in the vote"
-                    min={1}
-                    max={tanhNetwork.w1.length}
-                    value={combinedGateCount}
-                    display={`${combinedGateCount} / ${tanhNetwork.w1.length}`}
-                    onChange={setCombinedGateCount}
-                  />
-                  <Stat
-                    label="Training accuracy"
-                    value={percent(classificationAccuracyWithHiddenCount(tanhNetwork, classificationTrain, combinedGateCount))}
-                    note={`The trained tanh network using only its first ${combinedGateCount} hidden unit${combinedGateCount === 1 ? "" : "s"}.`}
-                  />
-                </div>
-                <DecisionMap
-                  network={tanhNetwork}
-                  points={classificationPoints}
-                  label={`tanh network with ${combinedGateCount} hidden units`}
-                  hiddenCount={combinedGateCount}
-                />
-              </div>
-            </div>
-          </Details>
-        </>
-      ) : (
-        <>
           <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_18rem]">
-            <div className="min-w-0 space-y-5">
+            {/* The chart is 1.6:1, so cap its width to keep the Play control in the first screen. */}
+            <div className="min-w-0 space-y-5" style={{ maxWidth: "max(20rem, calc((100svh - 28rem) * 1.6))" }}>
               <RegressionChart curveKind={curveKind} points={regressionPoints} linear={linearFit.coefficients} polynomial={polynomialFit.coefficients} degree={degree} />
               <EpochScrubber
                 epoch={regressionPlayback.epoch}
@@ -547,8 +273,6 @@ export default function CurveFitterPage() {
               </p>
             </div>
           </Details>
-        </>
-      )}
     </DemoPage>
   );
 }

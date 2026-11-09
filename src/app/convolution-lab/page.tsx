@@ -33,7 +33,7 @@ type EditableKernel = KernelPreset | "custom";
 
 const PHOTO_SOURCES = [
   { label: "City street", url: "/demo-images/street.jpg" },
-  { label: "Cat fur", url: "/demo-images/beach.jpg" },
+  { label: "Cat fur", url: "/demo-images/cat-nose.jpg" },
   { label: "Coffee", url: "/demo-images/food.jpg" },
   { label: "Portrait", url: "/demo-images/portrait.jpg" },
 ] as const;
