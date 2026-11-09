@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { getResolvedTheme } from "./theme";
+import { Spinner } from "@/components/ui";
 
 // Speed slider space retained for the Oimo speed mapping curve.
 const DEFAULT_SPEED = 0.3;
@@ -874,8 +875,8 @@ export default function GameOfLifeExperience() {
       {/* Loading indicator */}
       {!clearBgMode && !loaded && !initError && (
         <div className="fixed inset-0 z-[5] flex items-center justify-center pointer-events-none">
-          <div className="inline-flex items-center gap-3 rounded-lg border border-neutral-800/70 bg-neutral-950/72 px-4 py-2 text-sm font-medium tracking-wide text-neutral-50 shadow-lg backdrop-blur-[6px]">
-            <span className="w-4 h-4 border-2 border-neutral-200/80 border-t-transparent rounded-full animate-spin" />
+          <div className="inline-flex items-center gap-3 rounded-lg border border-line bg-surface/90 px-4 py-2 text-sm font-medium tracking-wide text-foreground shadow-lg backdrop-blur-[6px]">
+            <Spinner size="sm" color="currentColor" />
             <span>Initializing Life...</span>
           </div>
         </div>
@@ -883,31 +884,31 @@ export default function GameOfLifeExperience() {
 
       {/* Init error indicator */}
       {initError && (
-        <div className="fixed bottom-4 left-4 z-[60] text-[10px] text-neutral-700 dark:text-neutral-300 bg-white/88 dark:bg-neutral-900/80 border border-neutral-300 dark:border-neutral-700 rounded px-2 py-1 shadow-sm backdrop-blur pointer-events-none">
+        <div className="fixed bottom-4 left-4 z-[60] text-[10px] text-foreground bg-surface/80 border border-line rounded px-2 py-1 shadow-sm backdrop-blur pointer-events-none">
           Life background unavailable: {initError}
         </div>
       )}
 
       {loaded && !initError && showHelp && (
-        <div className="fixed inset-0 z-[70] bg-black/30 backdrop-blur-[1px] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[70] bg-background/60 backdrop-blur-[1px] flex items-center justify-center p-4">
           <div
             data-bg-nav-ignore
-            className="w-full max-w-md rounded-lg border border-neutral-300/70 dark:border-neutral-700/70 bg-white/94 dark:bg-neutral-900/94 shadow-2xl"
+            className="w-full max-w-md rounded-lg border border-line bg-surface/94 shadow-2xl"
           >
-            <div className="flex items-center justify-between px-3 py-2 border-b border-neutral-300/60 dark:border-neutral-700/60">
-              <div className="text-xs font-mono text-neutral-700 dark:text-neutral-200">
+            <div className="flex items-center justify-between px-3 py-2 border-b border-line">
+              <div className="text-xs font-mono text-foreground">
                 bg-help
               </div>
               <button
                 type="button"
                 onClick={() => setShowHelp(false)}
-                className="w-6 h-6 rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                className="w-6 h-6 rounded border border-line text-foreground hover:bg-foreground/5"
                 aria-label="Close help"
               >
                 ×
               </button>
             </div>
-            <div className="px-3 py-3 text-[11px] leading-relaxed text-neutral-700 dark:text-neutral-200 space-y-1">
+            <div className="px-3 py-3 text-[11px] leading-relaxed text-foreground space-y-1">
               <div>Mode: BG Nav {bgNavMode ? "On" : "Off"}</div>
               <div>Trackpad: scroll/pinch = zoom</div>
               <div>Pan: click + drag</div>
