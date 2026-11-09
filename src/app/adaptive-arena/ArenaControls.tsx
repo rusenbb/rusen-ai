@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { AbilityAction, MoveAction } from "./game";
-import { ABILITY_BUTTONS, CONTROL_BUTTONS, getKeycapClass } from "./presentation";
+import { ABILITY_BUTTONS, CONTROL_BUTTONS } from "./presentation";
 
 function HoldButton({ children, label, disabled, onPress, onRelease }: {
   children: ReactNode;
@@ -32,7 +32,7 @@ function HoldButton({ children, label, disabled, onPress, onRelease }: {
       aria-label={label}
       aria-pressed={pressed}
       disabled={disabled}
-      className={`touch-none select-none rounded-2xl border px-2 py-3 text-center focus-visible:outline-2 focus-visible:outline-cyan-300 disabled:opacity-40 ${pressed ? "border-cyan-300 bg-cyan-300/15 text-cyan-100" : getKeycapClass()}`}
+      className={`touch-none select-none border px-2 py-3 text-center font-mono focus-visible:outline-2 focus-visible:outline-[var(--foreground)] disabled:opacity-40 ${pressed ? "border-[var(--line-strong)] bg-[var(--line-strong)] text-[var(--background)]" : "border-[var(--line)] text-[var(--foreground)]"}`}
       onPointerDown={(event) => {
         if (event.button !== 0) return;
         event.preventDefault();
@@ -84,7 +84,6 @@ export function ArenaControls({ disabled, onMove, onAbility, compact = false }: 
 }) {
   return (
     <div className={`grid ${compact ? "gap-2 sm:grid-cols-2" : "gap-4"}`}>
-      {!compact && <p className="text-xs text-neutral-400">Hold a direction to move. Tap an ability, or use the keyboard shortcuts.</p>}
       <div className={`grid gap-2 ${compact ? "grid-cols-4" : "grid-cols-3"}`}>
         {(compact ? CONTROL_BUTTONS : [null, CONTROL_BUTTONS[0], null, CONTROL_BUTTONS[2], CONTROL_BUTTONS[1], CONTROL_BUTTONS[3]]).map((button, index) => button ? (
           <HoldButton key={button.action} label={button.action.replace("-", " ")} disabled={disabled} onPress={() => onMove(button.action, true)} onRelease={() => onMove(button.action, false)}>
@@ -96,7 +95,7 @@ export function ArenaControls({ disabled, onMove, onAbility, compact = false }: 
         {ABILITY_BUTTONS.map((button) => (
           <HoldButton key={button.action} label={button.label} disabled={disabled} onPress={() => onAbility(button.action)}>
             <span className="block text-xs font-semibold uppercase tracking-[0.12em]">{button.label}</span>
-            <span className="mt-1 block text-[10px] text-neutral-400">{button.hint}</span>
+            <span className="mt-1 block text-[0.65rem] text-[var(--sub)]">{button.hint}</span>
           </HoldButton>
         ))}
       </div>
