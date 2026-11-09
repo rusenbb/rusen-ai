@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 
-import { Button, DemoFootnote, DemoHeader, DemoPage, DemoPanel } from "@/components/ui";
+import { Button, DemoHeader, DemoPage, Details, Segmented, Slider, Stat } from "@/components/ui";
 
 import {
   classificationAccuracy,
@@ -17,40 +17,44 @@ import {
   predictTinyNetwork,
   predictTinyNetworkWithHiddenCount,
   type ClassificationKind,
+  type ClassificationPoint,
   type CurveKind,
   type RegressionPoint,
   type TinyNetwork,
 } from "./math";
 
-type Section = "regression" | "nonlinearity";
+type Section = "nonlinearity" | "regression";
 
-const REGRESSION_MAX_EPOCHS = 1000;
-const NETWORK_MAX_EPOCHS = 1000;
+const MAX_EPOCHS = 1000;
 const PLAYBACK_STEP = 25;
 const PLAYBACK_INTERVAL = 90;
+/** Regression converges in under 100 updates; open part-way so the fit is visibly underway. */
+const REGRESSION_START_EPOCH = 30;
 
-const CURVE_OPTIONS: Array<{ id: CurveKind; label: string; detail: string }> = [
-  { id: "arc", label: "Parabolic arc", detail: "A curved, non-periodic relationship." },
-  { id: "wave", label: "Wavy signal", detail: "A smooth periodic signal with light deterministic noise." },
-];
-
-const CLASSIFICATION_OPTIONS: Array<{ id: ClassificationKind; label: string; detail: string }> = [
-  { id: "xor", label: "XOR", detail: "Diagonal corners share a class." },
-  { id: "circles", label: "Circles", detail: "One class encloses the other." },
-  { id: "line", label: "Line", detail: "A sanity check where a straight boundary is enough." },
-];
+const LABEL = "font-mono text-[0.7rem] uppercase tracking-[0.08em] text-[var(--sub)]";
+const SECTIONS = [
+  { value: "nonlinearity", label: "Linear vs tanh" },
+  { value: "regression", label: "Curve fit" },
+] as const;
+const CLASSIFICATION_OPTIONS = [
+  { value: "xor", label: "XOR" },
+  { value: "circles", label: "Circles" },
+  { value: "line", label: "Line" },
+] as const;
+const CURVE_OPTIONS = [
+  { value: "arc", label: "Arc" },
+  { value: "wave", label: "Wave" },
+] as const;
 
 const REGRESSION_VIEWPORTS: Record<CurveKind, { minY: number; maxY: number }> = {
   wave: { minY: -0.9, maxY: 0.9 },
   arc: { minY: -0.75, maxY: 1.25 },
 };
 
-interface LossSeries {
-  label: string;
-  values: number[];
-  stroke: string;
-  dot: string;
-}
+const svg = (value: number) => value.toFixed(3);
+/** Opaque mix of a colour into the surface, so overlapping cells never show seams. */
+const tint = (colour: string, amount: number) => `color-mix(in srgb, ${colour} ${amount.toFixed(1)}%, var(--surface))`;
+const percent = (value: number) => `${(value * 100).toFixed(1)}%`;
 
 function pathFromSamples(
   samples: Array<{ x: number; y: number }>,
@@ -62,34 +66,32 @@ function pathFromSamples(
     .join(" ");
 }
 
-function useEpochPlayback(maxEpoch: number, initialEpoch: number) {
+/** Epoch state with play, pause and scrub. `autoplay` runs the trace once on arrival unless motion is reduced. */
+function useEpochPlayback(maxEpoch: number, initialEpoch: number, autoplay = false) {
   const [epoch, setEpoch] = useState(initialEpoch);
   const [requestedPlayback, setRequestedPlayback] = useState(false);
   const isPlaying = requestedPlayback && epoch < maxEpoch;
 
   useEffect(() => {
-    if (!isPlaying) return undefined;
+    if (!autoplay) return undefined;
+    const timer = window.setTimeout(() => {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) setEpoch(maxEpoch);
+      else setRequestedPlayback(true);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [autoplay, maxEpoch]);
 
+  useEffect(() => {
+    if (!isPlaying) return undefined;
     const timer = window.setTimeout(() => {
       setEpoch((current) => Math.min(maxEpoch, current + PLAYBACK_STEP));
     }, PLAYBACK_INTERVAL);
-
     return () => window.clearTimeout(timer);
   }, [epoch, isPlaying, maxEpoch]);
 
   const scrub = (nextEpoch: number) => {
     setRequestedPlayback(false);
     setEpoch(Math.max(0, Math.min(maxEpoch, Math.floor(nextEpoch))));
-  };
-
-  const reset = () => {
-    setRequestedPlayback(false);
-    setEpoch(0);
-  };
-
-  const step = () => {
-    setRequestedPlayback(false);
-    setEpoch((current) => Math.min(maxEpoch, current + PLAYBACK_STEP));
   };
 
   const toggle = () => {
@@ -103,59 +105,44 @@ function useEpochPlayback(maxEpoch: number, initialEpoch: number) {
 
   const pause = () => setRequestedPlayback(false);
 
-  return { epoch, isPlaying, pause, reset, scrub, step, toggle };
+  return { epoch, isPlaying, pause, scrub, toggle };
 }
 
 function EpochScrubber({
-  label,
   epoch,
   maxEpoch,
   isPlaying,
-  onReset,
-  onStep,
   onToggle,
   onScrub,
 }: {
-  label: string;
   epoch: number;
   maxEpoch: number;
   isPlaying: boolean;
-  onReset: () => void;
-  onStep: () => void;
   onToggle: () => void;
   onScrub: (epoch: number) => void;
 }) {
   return (
-    <div className="border-t border-[var(--line)] pt-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-neutral-500">{label}</p>
-          <p className="mt-1 text-sm font-semibold tabular-nums">epoch {epoch.toLocaleString()} of {maxEpoch.toLocaleString()}</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button type="button" size="sm" variant="ghost" onClick={onReset}>Reset</Button>
-          <Button type="button" size="sm" variant="primary" onClick={onToggle}>{isPlaying ? "Pause" : epoch >= maxEpoch ? "Replay" : "Play"}</Button>
-          <Button type="button" size="sm" variant="secondary" onClick={onStep}>Step {PLAYBACK_STEP}</Button>
-        </div>
-      </div>
-      <label className="mt-4 block">
-        <span className="sr-only">{label} epoch</span>
-        <input
-          aria-label={`${label} epoch`}
-          className="w-full accent-foreground"
-          type="range"
-          min="0"
-          max={maxEpoch}
-          step="1"
-          value={epoch}
-          onChange={(event) => onScrub(Number(event.target.value))}
-        />
-      </label>
-      <div className="mt-1 flex justify-between font-mono text-[10px] uppercase tracking-[0.12em] text-neutral-500">
-        <span>start</span><span>scrub the real updates</span><span>budget</span>
-      </div>
+    <div className="flex items-center gap-4">
+      <Button type="button" size="sm" variant="primary" className="w-24 shrink-0" onClick={onToggle}>
+        {isPlaying ? "Pause" : epoch >= maxEpoch ? "Replay" : "Play"}
+      </Button>
+      <Slider
+        className="flex-1"
+        label="Training step"
+        min={0}
+        max={maxEpoch}
+        value={epoch}
+        display={`${epoch.toLocaleString("en-US")} / ${maxEpoch.toLocaleString("en-US")}`}
+        onChange={onScrub}
+      />
     </div>
   );
+}
+
+interface LossSeries {
+  label: string;
+  values: number[];
+  stroke: string;
 }
 
 function LossTrace({ title, series, epoch }: { title: string; series: LossSeries[]; epoch: number }) {
@@ -170,41 +157,27 @@ function LossTrace({ title, series, epoch }: { title: string; series: LossSeries
   const toX = (value: number) => (lastEpoch === 0 ? 0 : (value / lastEpoch) * 100);
 
   return (
-    <div className="border-t border-[var(--line)] pt-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-neutral-500">{title}</p>
-        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs tabular-nums text-neutral-600 dark:text-neutral-400">
+    <div>
+      <div className="flex flex-wrap items-baseline justify-between gap-3">
+        <p className={LABEL}>{title}, log scale</p>
+        <div className="flex flex-wrap gap-x-4 font-mono text-xs tabular-nums">
           {series.map((item) => (
-            <span key={item.label} className="flex items-center gap-1.5">
-              <i className={`size-2 rounded-full ${item.dot}`} />
+            <span key={item.label} style={{ color: item.stroke }}>
               {item.label} {item.values[Math.min(safeEpoch, item.values.length - 1)].toFixed(3)}
             </span>
           ))}
         </div>
       </div>
-      <svg viewBox="0 0 100 32" preserveAspectRatio="none" className="mt-2 block h-16 w-full" role="img" aria-label={`${title}. The vertical marker shows epoch ${safeEpoch}.`}>
-        <title>{title}</title>
-        <line x1="0" x2="100" y1="28" y2="28" stroke="currentColor" strokeOpacity="0.12" strokeWidth="0.5" />
+      <svg viewBox="0 0 100 32" preserveAspectRatio="none" className="mt-2 block h-16 w-full" role="img" aria-label={`${title}. The marker shows step ${safeEpoch}.`}>
+        <line x1="0" x2="100" y1="28" y2="28" stroke="var(--line)" strokeWidth="0.5" />
         {series.map((item) => {
           const path = sampledIndices
             .map((sampleEpoch, index) => `${index === 0 ? "M" : "L"}${toX(sampleEpoch).toFixed(3)},${toY(item.values[Math.min(sampleEpoch, item.values.length - 1)]).toFixed(3)}`)
             .join(" ");
-          return <path key={item.label} d={path} fill="none" stroke={item.stroke} strokeWidth="1.2" strokeLinecap="round" />;
+          return <path key={item.label} d={path} fill="none" stroke={item.stroke} strokeWidth="1.2" vectorEffect="non-scaling-stroke" />;
         })}
-        <line x1={toX(safeEpoch)} x2={toX(safeEpoch)} y1="2" y2="29" stroke="currentColor" strokeOpacity="0.55" strokeWidth="0.6" strokeDasharray="1.5 1.5" />
-        {series.map((item) => (
-          <circle
-            key={`${item.label}-marker`}
-            cx={toX(safeEpoch)}
-            cy={toY(item.values[Math.min(safeEpoch, item.values.length - 1)])}
-            r="1.5"
-            fill={item.stroke}
-            stroke="var(--background)"
-            strokeWidth="0.7"
-          />
-        ))}
+        <line x1={toX(safeEpoch)} x2={toX(safeEpoch)} y1="2" y2="29" stroke="var(--foreground)" strokeOpacity="0.5" strokeWidth="1" vectorEffect="non-scaling-stroke" strokeDasharray="2 2" />
       </svg>
-      <p className="mt-1 text-xs text-neutral-500">Each line is a real loss history. The marker follows the scrubber.</p>
     </div>
   );
 }
@@ -224,43 +197,43 @@ function RegressionChart({
 }) {
   const samples = Array.from({ length: 100 }, (_, index) => ({ x: -1.2 + (index / 99) * 2.4 }));
   const { minY, maxY } = REGRESSION_VIEWPORTS[curveKind];
-  const toX = (value: number) => ((value + 1.2) / 2.4) * 100;
+  const toX = (value: number) => ((value + 1.2) / 2.4) * 160;
   const toY = (value: number) => 100 - ((value - minY) / (maxY - minY)) * 100;
-  const svg = (value: number) => value.toFixed(3);
   const linearPath = pathFromSamples(samples.map((sample) => ({ ...sample, y: evaluatePolynomial(linear, sample.x) })), toX, toY);
   const polynomialPath = pathFromSamples(samples.map((sample) => ({ ...sample, y: evaluatePolynomial(polynomial, sample.x) })), toX, toY);
 
   return (
-    <div className="overflow-hidden border border-[var(--line)] bg-[#0c1117] shadow-[0_18px_50px_rgba(2,8,23,0.18)]">
-      <svg viewBox="0 0 100 100" className="block aspect-[16/10] w-full" role="img" aria-label="Regression data with the current linear and polynomial fits">
-        <title>Current linear and polynomial fits</title>
+    <div className="border border-[var(--line)] bg-[var(--surface)]">
+      <div className={`flex flex-wrap gap-x-4 gap-y-1 px-3 pt-2 ${LABEL}`}>
+        <span style={{ color: "var(--accent-2)" }}>— straight line</span>
+        <span style={{ color: "var(--accent)" }}>— degree {degree}</span>
+        <span>● training</span>
+        <span>○ held out</span>
+      </div>
+      <svg viewBox="0 0 160 100" className="block w-full" role="img" aria-label={`Regression data with the current straight-line and degree ${degree} fits`}>
         {Array.from({ length: 5 }, (_, index) => (
-          <line key={index} x1="0" x2="100" y1={svg((index + 1) * (100 / 6))} y2={svg((index + 1) * (100 / 6))} stroke="white" strokeOpacity="0.10" strokeWidth="0.25" />
+          <line key={index} x1="0" x2="160" y1={svg((index + 1) * (100 / 6))} y2={svg((index + 1) * (100 / 6))} stroke="var(--line)" strokeWidth="0.25" />
         ))}
-        <line x1={svg(toX(0))} x2={svg(toX(0))} y1="0" y2="100" stroke="white" strokeOpacity="0.16" strokeWidth="0.35" />
-        <path d={linearPath} fill="none" stroke="#fbbf24" strokeWidth="1.25" strokeLinecap="round" />
-        <path d={polynomialPath} fill="none" stroke="#22d3ee" strokeWidth="1.25" strokeLinecap="round" />
+        <line x1={svg(toX(0))} x2={svg(toX(0))} y1="0" y2="100" stroke="var(--line)" strokeWidth="0.35" />
+        <path d={linearPath} fill="none" stroke="var(--accent-2)" strokeWidth="1" strokeLinecap="round" />
+        <path d={polynomialPath} fill="none" stroke="var(--accent)" strokeWidth="1" strokeLinecap="round" />
         {points.map((point, index) => (
           <circle
             key={`${point.x}-${index}`}
             cx={svg(toX(point.x))}
             cy={svg(toY(point.y))}
-            r={point.split === "train" ? "1.35" : "1.65"}
-            fill={point.split === "train" ? "#f8fafc" : "transparent"}
-            stroke={point.split === "train" ? "#f8fafc" : "#fb7185"}
-            strokeWidth="0.7"
+            r={point.split === "train" ? "1.1" : "1.4"}
+            fill={point.split === "train" ? "var(--foreground)" : "none"}
+            stroke="var(--foreground)"
+            strokeWidth="0.5"
           />
         ))}
       </svg>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-white/10 bg-black/35 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.11em] text-white/75">
-        <span className="flex items-center gap-1.5"><i className="h-0.5 w-3 bg-amber-300" />linear</span>
-        <span className="flex items-center gap-1.5"><i className="h-0.5 w-3 bg-cyan-300" />degree {degree}</span>
-        <span className="flex items-center gap-1.5"><i className="size-2 rounded-full bg-white" />train</span>
-        <span className="flex items-center gap-1.5"><i className="size-2 rounded-full border border-rose-400" />held out</span>
-      </div>
     </div>
   );
 }
+
+const GRID = 26;
 
 function DecisionMap({
   network,
@@ -269,54 +242,61 @@ function DecisionMap({
   hiddenCount,
 }: {
   network: TinyNetwork;
-  points: ReturnType<typeof createClassificationDataset>;
+  points: ClassificationPoint[];
   label: string;
   hiddenCount?: number;
 }) {
   const cells = useMemo(
     () =>
-      Array.from({ length: 26 * 26 }, (_, index) => {
-        const row = Math.floor(index / 26);
-        const column = index % 26;
-        const x = -1 + ((column + 0.5) / 26) * 2;
-        const y = 1 - ((row + 0.5) / 26) * 2;
+      Array.from({ length: GRID * GRID }, (_, index) => {
+        const row = Math.floor(index / GRID);
+        const column = index % GRID;
+        const x = -1 + ((column + 0.5) / GRID) * 2;
+        const y = 1 - ((row + 0.5) / GRID) * 2;
         return {
           row,
           column,
-          probability: hiddenCount === undefined
-            ? predictTinyNetwork(network, { x, y })
-            : predictTinyNetworkWithHiddenCount(network, { x, y }, hiddenCount),
+          probability:
+            hiddenCount === undefined
+              ? predictTinyNetwork(network, { x, y })
+              : predictTinyNetworkWithHiddenCount(network, { x, y }, hiddenCount),
         };
       }),
     [hiddenCount, network],
   );
-  const svg = (value: number) => value.toFixed(3);
 
   return (
-    <div className="overflow-hidden border border-[var(--line)] bg-[#0c1117]">
-      <svg viewBox="0 0 100 100" className="block aspect-square w-full" role="img" aria-label={`${label} decision boundary`}>
-        <title>{label} decision boundary</title>
-        {cells.map((cell) => {
-          const cyan = cell.probability >= 0.5;
-          return <rect key={`${cell.row}-${cell.column}`} x={svg((cell.column / 26) * 100)} y={svg((cell.row / 26) * 100)} width={svg(100 / 26 + 0.05)} height={svg(100 / 26 + 0.05)} fill={cyan ? "#22d3ee" : "#f59e0b"} opacity={svg(0.16 + Math.abs(cell.probability - 0.5) * 0.55)} />;
-        })}
-        {points.map((point, index) => (
-          <circle key={index} cx={svg((point.x + 1) * 50)} cy={svg((1 - point.y) * 50)} r={index % 5 === 0 ? "1.7" : "1.25"} fill={index % 5 === 0 ? "none" : point.label === 1 ? "#67e8f9" : "#fcd34d"} stroke={index % 5 === 0 ? "#f8fafc" : "#0c1117"} strokeWidth="0.6" />
-        ))}
-      </svg>
-    </div>
+    <svg viewBox="0 0 100 100" className="block aspect-square w-full border border-[var(--line)] bg-[var(--surface)]" role="img" aria-label={`${label} decision map`}>
+      {cells.map((cell) => (
+        <rect
+          key={`${cell.row}-${cell.column}`}
+          x={svg((cell.column / GRID) * 100)}
+          y={svg((cell.row / GRID) * 100)}
+          width={svg(100 / GRID + 0.05)}
+          height={svg(100 / GRID + 0.05)}
+          shapeRendering="crispEdges"
+          style={{ fill: tint(cell.probability >= 0.5 ? "var(--accent)" : "var(--accent-2)", 8 + Math.abs(cell.probability - 0.5) * 50) }}
+        />
+      ))}
+      {points.map((point, index) => {
+        const heldOut = index % 5 === 0;
+        return (
+          <circle
+            key={index}
+            cx={svg((point.x + 1) * 50)}
+            cy={svg((1 - point.y) * 50)}
+            r={heldOut ? "1.6" : "1.25"}
+            fill={heldOut ? "none" : point.label === 1 ? "var(--accent)" : "var(--accent-2)"}
+            stroke={heldOut ? "var(--foreground)" : "var(--surface)"}
+            strokeWidth="0.5"
+          />
+        );
+      })}
+    </svg>
   );
 }
 
-function HiddenGateMap({
-  network,
-  gateIndex,
-  transformed,
-}: {
-  network: TinyNetwork;
-  gateIndex: number;
-  transformed: boolean;
-}) {
+function HiddenGateMap({ network, gateIndex, transformed }: { network: TinyNetwork; gateIndex: number; transformed: boolean }) {
   const cells = useMemo(
     () =>
       Array.from({ length: 24 * 24 }, (_, index) => {
@@ -326,69 +306,44 @@ function HiddenGateMap({
         const y = 1 - ((row + 0.5) / 24) * 2;
         const values = inspectHiddenLayer(network, { x, y });
         const raw = values.preActivations[gateIndex] ?? 0;
+        // The raw score is unbounded; squash it only for display so its sign and slope stay visible.
         const value = transformed ? values.activations[gateIndex] ?? 0 : Math.tanh(raw / 1.5);
         return { row, column, value };
       }),
     [gateIndex, network, transformed],
   );
-  const svg = (value: number) => value.toFixed(3);
 
   return (
-    <div className="overflow-hidden border border-[var(--line)] bg-[#0c1117]">
-      <svg viewBox="0 0 100 100" className="block aspect-square w-full" role="img" aria-label={transformed ? "Tanh-bounded hidden gate" : "Raw linear hidden score"}>
-        <title>{transformed ? "tanh-bounded hidden gate" : "raw linear hidden score"}</title>
-        {cells.map((cell) => {
-          const positive = cell.value >= 0;
-          return (
-            <rect
-              key={`${cell.row}-${cell.column}`}
-              x={svg((cell.column / 24) * 100)}
-              y={svg((cell.row / 24) * 100)}
-              width={svg(100 / 24 + 0.05)}
-              height={svg(100 / 24 + 0.05)}
-              fill={positive ? "#22d3ee" : "#fb7185"}
-              opacity={svg(0.12 + Math.abs(cell.value) * 0.78)}
-            />
-          );
-        })}
-      </svg>
-    </div>
-  );
-}
-
-function TanhTransferCurve() {
-  const samples = Array.from({ length: 81 }, (_, index) => {
-    const x = -3 + (index / 80) * 6;
-    return { x, y: Math.tanh(x) };
-  });
-  const toX = (value: number) => ((value + 3) / 6) * 100;
-  const toY = (value: number) => 50 - value * 38;
-  const path = pathFromSamples(samples, toX, toY);
-
-  return (
-    <svg viewBox="0 0 100 100" className="block w-full" role="img" aria-label="The tanh transfer curve limits any score to the range minus one through one">
-      <title>tanh turns an unbounded score into a bounded gate</title>
-      <line x1="0" x2="100" y1="50" y2="50" stroke="white" strokeOpacity="0.18" strokeWidth="0.45" />
-      <line x1="50" x2="50" y1="8" y2="92" stroke="white" strokeOpacity="0.18" strokeWidth="0.45" />
-      <path d={path} fill="none" stroke="#22d3ee" strokeWidth="2.2" strokeLinecap="round" />
-      <text x="4" y="14" fill="white" fillOpacity="0.62" fontSize="7">+1 ceiling</text>
-      <text x="4" y="92" fill="white" fillOpacity="0.62" fontSize="7">−1 floor</text>
-      <text x="67" y="57" fill="white" fillOpacity="0.72" fontSize="7">raw score z</text>
+    <svg viewBox="0 0 100 100" className="block aspect-square w-full border border-[var(--line)] bg-[var(--surface)]" role="img" aria-label={transformed ? "Hidden unit after tanh" : "Hidden unit before tanh"}>
+      {cells.map((cell) => (
+        <rect
+          key={`${cell.row}-${cell.column}`}
+          x={svg((cell.column / 24) * 100)}
+          y={svg((cell.row / 24) * 100)}
+          width={svg(100 / 24 + 0.05)}
+          height={svg(100 / 24 + 0.05)}
+          shapeRendering="crispEdges"
+          style={{ fill: tint(cell.value >= 0 ? "var(--accent)" : "var(--accent-2)", Math.abs(cell.value) * 75) }}
+        />
+      ))}
     </svg>
   );
 }
 
-function ErrorStat({ label, value, accent }: { label: string; value: number; accent: string }) {
+function MapColumn({ title, accuracy, children }: { title: string; accuracy: number; children: ReactNode }) {
   return (
-    <div className="border border-[var(--line)] p-3">
-      <p className="text-xs text-neutral-500">{label}</p>
-      <p className={`mt-1 font-mono text-xl font-bold tabular-nums ${accent}`}>{value.toFixed(4)}</p>
-    </div>
+    <figure className="min-w-0">
+      <figcaption className="mb-2 flex flex-wrap items-baseline justify-between gap-x-3">
+        <span className={LABEL}>{title}</span>
+        <span className="text-2xl font-semibold tabular-nums text-[var(--foreground)] sm:text-3xl">{percent(accuracy)}</span>
+      </figcaption>
+      {children}
+    </figure>
   );
 }
 
 export default function CurveFitterPage() {
-  const [section, setSection] = useState<Section>("regression");
+  const [section, setSection] = useState<Section>("nonlinearity");
   const [curveKind, setCurveKind] = useState<CurveKind>("arc");
   const [sampleCount, setSampleCount] = useState(34);
   const [noise, setNoise] = useState(0.18);
@@ -396,205 +351,195 @@ export default function CurveFitterPage() {
   const [classificationKind, setClassificationKind] = useState<ClassificationKind>("xor");
   const [selectedGate, setSelectedGate] = useState(0);
   const [combinedGateCount, setCombinedGateCount] = useState(5);
-  const regressionPlayback = useEpochPlayback(REGRESSION_MAX_EPOCHS, 0);
-  const networkPlayback = useEpochPlayback(NETWORK_MAX_EPOCHS, 500);
+  const networkPlayback = useEpochPlayback(MAX_EPOCHS, 0, true);
+  const regressionPlayback = useEpochPlayback(MAX_EPOCHS, REGRESSION_START_EPOCH);
 
   const regressionPoints = useMemo(() => createRegressionDataset(curveKind, sampleCount, noise), [curveKind, sampleCount, noise]);
   const trainPoints = useMemo(() => regressionPoints.filter((point) => point.split === "train"), [regressionPoints]);
   const testPoints = useMemo(() => regressionPoints.filter((point) => point.split === "test"), [regressionPoints]);
-  const linearTrainingTrace = useMemo(
-    () => createPolynomialTrainingTrace(trainPoints, 1, { epochs: REGRESSION_MAX_EPOCHS }),
-    [trainPoints],
-  );
+  const linearTrainingTrace = useMemo(() => createPolynomialTrainingTrace(trainPoints, 1, { epochs: MAX_EPOCHS }), [trainPoints]);
   const polynomialTrainingTrace = useMemo(
-    () => createPolynomialTrainingTrace(trainPoints, degree, { epochs: REGRESSION_MAX_EPOCHS }),
+    () => createPolynomialTrainingTrace(trainPoints, degree, { epochs: MAX_EPOCHS }),
     [degree, trainPoints],
   );
   const linearFit = linearTrainingTrace[regressionPlayback.epoch];
   const polynomialFit = polynomialTrainingTrace[regressionPlayback.epoch];
-  const regressionMetrics = useMemo(
-    () => ({
-      linearTrain: linearFit.loss,
-      linearTest: meanSquaredError(testPoints, linearFit.coefficients),
-      polynomialTrain: polynomialFit.loss,
-      polynomialTest: meanSquaredError(testPoints, polynomialFit.coefficients),
-    }),
-    [linearFit, polynomialFit, testPoints],
-  );
 
   const classificationPoints = useMemo(() => createClassificationDataset(classificationKind), [classificationKind]);
   const classificationTrain = useMemo(() => classificationPoints.filter((_, index) => index % 5 !== 0), [classificationPoints]);
   const classificationTest = useMemo(() => classificationPoints.filter((_, index) => index % 5 === 0), [classificationPoints]);
   const linearNetworkTrace = useMemo(
-    () => createTinyNetworkTrainingTrace(classificationTrain, "linear", { epochs: NETWORK_MAX_EPOCHS }),
+    () => createTinyNetworkTrainingTrace(classificationTrain, "linear", { epochs: MAX_EPOCHS }),
     [classificationTrain],
   );
   const tanhNetworkTrace = useMemo(
-    () => createTinyNetworkTrainingTrace(classificationTrain, "tanh", { epochs: NETWORK_MAX_EPOCHS }),
+    () => createTinyNetworkTrainingTrace(classificationTrain, "tanh", { epochs: MAX_EPOCHS }),
     [classificationTrain],
   );
   const linearNetwork = linearNetworkTrace[networkPlayback.epoch];
-  const nonlinearNetwork = tanhNetworkTrace[networkPlayback.epoch];
-  const linearAccuracy = classificationAccuracy(linearNetwork, classificationTrain);
-  const combinedGateAccuracy = classificationAccuracyWithHiddenCount(nonlinearNetwork, classificationTrain, combinedGateCount);
+  const tanhNetwork = tanhNetworkTrace[networkPlayback.epoch];
 
   return (
-    <DemoPage width="2xl">
+    <DemoPage>
       <DemoHeader
-        eyebrow="Learning systems / fit versus represent"
+        eyebrow="Neural networks"
         title="Curve Fitter"
-        description="A model does not jump to its answer. Scrub through the real updates to see how a curve settles, and why an activation lets the same tiny network bend a boundary."
-        actions={
-          <div className="flex gap-2">
-            <Button size="sm" variant={section === "regression" ? "primary" : "secondary"} onClick={() => { networkPlayback.pause(); setSection("regression"); }}>Regression</Button>
-            <Button size="sm" variant={section === "nonlinearity" ? "primary" : "secondary"} onClick={() => { regressionPlayback.pause(); setSection("nonlinearity"); }}>Nonlinearity</Button>
-          </div>
-        }
+        description="Two tiny networks learn XOR from the same start, and only the one with tanh can bend its boundary to solve it."
       />
 
-      {section === "regression" ? (
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(20rem,0.8fr)]">
-          <DemoPanel title="Watch two hypotheses learn" description="Both models see the white training dots. Outlined dots stay hidden from fitting and test whether the curve learned something useful.">
-            <div className="space-y-4">
-              <RegressionChart curveKind={curveKind} points={regressionPoints} linear={linearFit.coefficients} polynomial={polynomialFit.coefficients} degree={degree} />
-              <EpochScrubber
-                label="Fit progress"
-                epoch={regressionPlayback.epoch}
-                maxEpoch={REGRESSION_MAX_EPOCHS}
-                isPlaying={regressionPlayback.isPlaying}
-                onReset={regressionPlayback.reset}
-                onStep={regressionPlayback.step}
-                onToggle={regressionPlayback.toggle}
-                onScrub={regressionPlayback.scrub}
-              />
-              <LossTrace
-                title="Training loss"
-                epoch={regressionPlayback.epoch}
-                series={[
-                  { label: "linear", values: linearTrainingTrace.map((state) => state.loss), stroke: "#fbbf24", dot: "bg-amber-300" },
-                  { label: `degree ${degree}`, values: polynomialTrainingTrace.map((state) => state.loss), stroke: "#22d3ee", dot: "bg-cyan-300" },
-                ]}
-              />
-            </div>
-          </DemoPanel>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <Segmented
+          label="View"
+          options={SECTIONS}
+          value={section}
+          onChange={(next) => {
+            networkPlayback.pause();
+            regressionPlayback.pause();
+            setSection(next);
+          }}
+        />
+        {section === "nonlinearity" ? (
+          <Segmented label="Dataset" options={CLASSIFICATION_OPTIONS} value={classificationKind} onChange={setClassificationKind} />
+        ) : (
+          <Segmented label="Curve" options={CURVE_OPTIONS} value={curveKind} onChange={setCurveKind} />
+        )}
+      </div>
 
-          <DemoPanel title="Change the hypothesis" description="Degree adds coefficients. The epoch stays put when you change it, so you can compare how much each hypothesis learned with the same budget.">
-            <div className="space-y-5">
-              <div className="flex flex-wrap gap-2">
-                {CURVE_OPTIONS.map((option) => (
-                  <Button key={option.id} size="sm" variant={curveKind === option.id ? "primary" : "secondary"} onClick={() => setCurveKind(option.id)} title={option.detail}>{option.label}</Button>
-                ))}
-              </div>
-              <label className="block text-sm">Examples: {sampleCount}<input aria-label="Regression example count" type="range" min="15" max="80" step="1" value={sampleCount} onChange={(event) => setSampleCount(Number(event.target.value))} className="mt-2 w-full" /></label>
-              <label className="block text-sm">Noise amplitude: {noise.toFixed(2)}<input aria-label="Regression noise" type="range" min="0" max="1" step="0.02" value={noise} onChange={(event) => setNoise(Number(event.target.value))} className="mt-2 w-full" /></label>
-              <label className="block border-y border-[var(--line)] py-4">
-                <span className="flex items-baseline justify-between font-mono text-xs uppercase tracking-[0.13em]"><span>Polynomial degree</span><strong className="text-lg">{degree}</strong></span>
-                <input aria-label="Polynomial degree" className="mt-3 w-full accent-foreground" type="range" min="2" max="8" value={degree} onChange={(event) => setDegree(Number(event.target.value))} />
-                <p className="mt-2 text-xs leading-relaxed text-neutral-500">degree {degree} learns {degree + 1} coefficients. More flexibility can reduce training loss without improving held-out loss.</p>
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="border border-[var(--line)] p-3"><p className="text-xs text-neutral-500">linear now</p><p data-allow-select className="mt-2 font-mono text-xs leading-relaxed">y = {linearFit.coefficients[0].toFixed(2)} {linearFit.coefficients[1] >= 0 ? "+" : "−"} {Math.abs(linearFit.coefficients[1]).toFixed(2)}x</p></div>
-                <div className="border border-[var(--line)] p-3"><p className="text-xs text-neutral-500">polynomial now</p><p data-allow-select className="mt-2 font-mono text-xs leading-relaxed">{degree + 1} changing coefficients</p><p className="mt-1 text-xs text-neutral-500">gradient descent, not a jump to the answer</p></div>
-              </div>
-              <div className="grid grid-cols-2 gap-3 border-t border-[var(--line)] pt-5">
-                <ErrorStat label="Linear / held out" value={regressionMetrics.linearTest} accent="text-amber-600 dark:text-amber-300" />
-                <ErrorStat label={`Degree ${degree} / held out`} value={regressionMetrics.polynomialTest} accent="text-cyan-700 dark:text-cyan-300" />
-              </div>
-            </div>
-          </DemoPanel>
-        </div>
-      ) : (
+      {section === "nonlinearity" ? (
         <>
-          <DemoPanel title="See the break in linearity" description="Both models have the same 2 to 5 to 1 shape and begin from the same deterministic weights. The only change is that cyan runs each hidden score through tanh before the final vote.">
-            <div className="space-y-5">
-              <div className="flex flex-wrap gap-2">
-                {CLASSIFICATION_OPTIONS.map((option) => (
-                  <Button key={option.id} size="sm" variant={classificationKind === option.id ? "primary" : "secondary"} onClick={() => setClassificationKind(option.id)} title={option.detail}>{option.label}</Button>
-                ))}
-              </div>
-              <p className="max-w-3xl text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
-                {classificationKind === "xor" ? "XOR needs two diagonal islands. A stack of linear layers still collapses to one straight cut, but several tanh gates can carve separate islands." : classificationKind === "circles" ? "The inner class needs a boundary that wraps around it. A line cannot close that loop, while tanh gates can combine into one." : "This is the control case: a straight boundary is enough, so the extra flexibility should not be necessary."}
-              </p>
-              <div className="border border-[var(--line)] p-3 text-sm">Outlined points are held out; filled points are used for training ({classificationTrain.length} train / {classificationTest.length} test). Full-model test accuracy: linear {(classificationAccuracy(linearNetwork, classificationTest) * 100).toFixed(1)}% · tanh {(classificationAccuracy(nonlinearNetwork, classificationTest) * 100).toFixed(1)}%. Scores below are training accuracy.</div>
+          <div className="mx-auto" style={{ maxWidth: "max(22rem, calc(200svh - 62rem))" }}>
+            <div className="grid grid-cols-2 gap-3 sm:gap-6">
+              <MapColumn title="Linear hidden layer" accuracy={classificationAccuracy(linearNetwork, classificationTrain)}>
+                <DecisionMap network={linearNetwork} points={classificationPoints} label="Linear hidden layer" />
+              </MapColumn>
+              <MapColumn title="tanh hidden layer" accuracy={classificationAccuracy(tanhNetwork, classificationTrain)}>
+                <DecisionMap network={tanhNetwork} points={classificationPoints} label="tanh hidden layer" />
+              </MapColumn>
+            </div>
+            <p className={`mt-2 ${LABEL}`}>
+              Training accuracy · filled points train, {classificationTest.length} outlined points are held out
+            </p>
+            <div className="mt-5">
               <EpochScrubber
-                label="Shared training progress, reset to replay from zero"
                 epoch={networkPlayback.epoch}
-                maxEpoch={NETWORK_MAX_EPOCHS}
+                maxEpoch={MAX_EPOCHS}
                 isPlaying={networkPlayback.isPlaying}
-                onReset={networkPlayback.reset}
-                onStep={networkPlayback.step}
                 onToggle={networkPlayback.toggle}
                 onScrub={networkPlayback.scrub}
               />
+            </div>
+          </div>
+
+          <Details summary="Inside the tanh network" className="mt-8">
+            <div className="space-y-8">
+              <p>
+                Both networks have 2 inputs, 5 hidden units and 1 output, and start from the same weights. A stack of
+                linear layers is still one straight cut: σ(W₂(W₁x + b₁) + b₂). The tanh network computes
+                σ(W₂ tanh(W₁x + b₁) + b₂), so each hidden unit becomes a soft on or off region. Held-out accuracy at this
+                step: linear {percent(classificationAccuracy(linearNetwork, classificationTest))}, tanh{" "}
+                {percent(classificationAccuracy(tanhNetwork, classificationTest))}.
+              </p>
               <LossTrace
                 title="Cross-entropy loss"
                 epoch={networkPlayback.epoch}
                 series={[
-                  { label: "linear", values: linearNetworkTrace.map((network) => network.loss), stroke: "#fbbf24", dot: "bg-amber-300" },
-                  { label: "tanh", values: tanhNetworkTrace.map((network) => network.loss), stroke: "#22d3ee", dot: "bg-cyan-300" },
+                  { label: "linear", values: linearNetworkTrace.map((network) => network.loss), stroke: "var(--accent-2)" },
+                  { label: "tanh", values: tanhNetworkTrace.map((network) => network.loss), stroke: "var(--accent)" },
                 ]}
               />
+              <div>
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                  <span className={LABEL}>One hidden unit, before and after tanh</span>
+                  <Segmented
+                    label="Hidden unit"
+                    options={tanhNetwork.w1.map((_, index) => ({ value: String(index), label: `Unit ${index + 1}` }))}
+                    value={String(selectedGate)}
+                    onChange={(value) => setSelectedGate(Number(value))}
+                  />
+                </div>
+                <div className="grid max-w-xl grid-cols-2 gap-4">
+                  <figure>
+                    <figcaption className={`mb-2 ${LABEL}`}>Before: a straight ramp</figcaption>
+                    <HiddenGateMap network={tanhNetwork} gateIndex={selectedGate} transformed={false} />
+                  </figure>
+                  <figure>
+                    <figcaption className={`mb-2 ${LABEL}`}>After tanh: flat at ±1</figcaption>
+                    <HiddenGateMap network={tanhNetwork} gateIndex={selectedGate} transformed />
+                  </figure>
+                </div>
+              </div>
+              <div className="grid max-w-xl gap-4 sm:grid-cols-[1fr_14rem] sm:items-end">
+                <div className="space-y-4">
+                  <Slider
+                    label="Hidden units in the vote"
+                    min={1}
+                    max={tanhNetwork.w1.length}
+                    value={combinedGateCount}
+                    display={`${combinedGateCount} / ${tanhNetwork.w1.length}`}
+                    onChange={setCombinedGateCount}
+                  />
+                  <Stat
+                    label="Training accuracy"
+                    value={percent(classificationAccuracyWithHiddenCount(tanhNetwork, classificationTrain, combinedGateCount))}
+                    note={`The trained tanh network using only its first ${combinedGateCount} hidden unit${combinedGateCount === 1 ? "" : "s"}.`}
+                  />
+                </div>
+                <DecisionMap
+                  network={tanhNetwork}
+                  points={classificationPoints}
+                  label={`tanh network with ${combinedGateCount} hidden units`}
+                  hiddenCount={combinedGateCount}
+                />
+              </div>
             </div>
-          </DemoPanel>
-
-          <section className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,0.85fr)_minmax(20rem,1.3fr)_minmax(0,0.85fr)]" aria-labelledby="network-boundaries">
-            <DemoPanel title="No tanh: still one cut" description="Five affine hidden scores followed by another affine layer are algebraically still one straight decision boundary.">
-              <div className="space-y-4">
-                <DecisionMap network={linearNetwork} points={classificationPoints} label="Linear hidden-layer model" />
-                <div className="flex items-end justify-between border-t border-[var(--line)] pt-3"><span className="text-xs text-neutral-500">training accuracy at this epoch</span><strong className="font-mono text-2xl tabular-nums text-amber-600 dark:text-amber-300">{(linearAccuracy * 100).toFixed(1)}%</strong></div>
+          </Details>
+        </>
+      ) : (
+        <>
+          <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_18rem]">
+            <div className="min-w-0 space-y-5">
+              <RegressionChart curveKind={curveKind} points={regressionPoints} linear={linearFit.coefficients} polynomial={polynomialFit.coefficients} degree={degree} />
+              <EpochScrubber
+                epoch={regressionPlayback.epoch}
+                maxEpoch={MAX_EPOCHS}
+                isPlaying={regressionPlayback.isPlaying}
+                onToggle={regressionPlayback.toggle}
+                onScrub={regressionPlayback.scrub}
+              />
+            </div>
+            <aside className="space-y-7">
+              <Slider label="Polynomial degree" min={2} max={8} value={degree} onChange={setDegree} />
+              <p className={LABEL}>Error on held-out points</p>
+              <div className="grid grid-cols-2 gap-4">
+                <Stat label="Straight line" value={meanSquaredError(testPoints, linearFit.coefficients).toFixed(4)} />
+                <Stat label={`Degree ${degree}`} value={meanSquaredError(testPoints, polynomialFit.coefficients).toFixed(4)} />
               </div>
-            </DemoPanel>
-
-            <DemoPanel title="One learned score becomes a bounded gate" description="Choose a hidden unit. Before tanh it is a straight ramp across the input plane. After tanh, its output saturates near plus or minus one, so multiple gates can combine into shapes a line cannot make.">
-              <div className="space-y-4">
-                <div className="flex flex-wrap gap-2" role="group" aria-label="Inspect a learned tanh gate">
-                  {nonlinearNetwork.w1.map((_, index) => (
-                    <Button key={index} type="button" size="sm" variant={selectedGate === index ? "primary" : "secondary"} onClick={() => setSelectedGate(index)}>gate {index + 1}</Button>
-                  ))}
-                </div>
-                <div className="grid gap-3 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
-                  <div>
-                    <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.13em] text-rose-500">raw score z</p>
-                    <HiddenGateMap network={nonlinearNetwork} gateIndex={selectedGate} transformed={false} />
-                  </div>
-                  <div className="hidden font-mono text-xl text-neutral-500 sm:block">→</div>
-                  <div>
-                    <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.13em] text-cyan-500">tanh(z), bounded gate</p>
-                    <HiddenGateMap network={nonlinearNetwork} gateIndex={selectedGate} transformed />
-                  </div>
-                </div>
-                <div className="border-t border-[var(--line)] pt-3">
-                  <p className="font-mono text-[10px] uppercase tracking-[0.13em] text-neutral-500">What tanh physically changes</p>
-                  <div className="mt-2 grid gap-3 sm:grid-cols-[minmax(0,1fr)_10rem] sm:items-center">
-                    <p className="text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">The raw score can grow without limit. tanh compresses it to the range minus one through one, turning this straight ramp into a soft on or off feature that can be mixed with other gates.</p>
-                    <TanhTransferCurve />
-                  </div>
-                </div>
+            </aside>
+          </div>
+          <Details summary="Advanced" className="mt-8">
+            <div className="space-y-6">
+              <div className="grid gap-6 sm:grid-cols-2">
+                <Slider label="Examples" min={15} max={80} value={sampleCount} onChange={setSampleCount} />
+                <Slider label="Noise" min={0} max={1} step={0.02} value={noise} display={noise.toFixed(2)} onChange={setNoise} />
               </div>
-            </DemoPanel>
-
-            <DemoPanel title="Tanh gates combine into shape" description="Use the dial to add actual learned hidden gates into the final vote. At five gates, the model uses its full learned representation.">
-              <div className="space-y-4">
-                <DecisionMap network={nonlinearNetwork} points={classificationPoints} label={`${combinedGateCount} learned tanh gates combined`} hiddenCount={combinedGateCount} />
-                <label className="block border-t border-[var(--line)] pt-3">
-                  <span className="flex items-baseline justify-between font-mono text-xs uppercase tracking-[0.13em]"><span>Gates combined</span><strong className="text-lg text-cyan-700 dark:text-cyan-300">{combinedGateCount} / {nonlinearNetwork.w1.length}</strong></span>
-                  <input aria-label="Number of learned tanh gates combined" className="mt-3 w-full accent-cyan-500" type="range" min="1" max={nonlinearNetwork.w1.length} step="1" value={combinedGateCount} onChange={(event) => setCombinedGateCount(Number(event.target.value))} />
-                  <p className="mt-2 text-xs leading-relaxed text-neutral-500">This is not a separate model: it is the current tanh network with the first {combinedGateCount} learned hidden gates included in its final score.</p>
-                </label>
-                <div className="flex items-end justify-between border-t border-[var(--line)] pt-3"><span className="text-xs text-neutral-500">training accuracy with {combinedGateCount} gate{combinedGateCount === 1 ? "" : "s"}</span><strong className="font-mono text-2xl tabular-nums text-cyan-700 dark:text-cyan-300">{(combinedGateAccuracy * 100).toFixed(1)}%</strong></div>
-              </div>
-            </DemoPanel>
-          </section>
-
-          <details className="mt-5 border border-[var(--line)] p-4">
-            <summary className="cursor-pointer font-mono text-xs font-bold uppercase tracking-[0.13em]">Inspect the one changed ingredient</summary>
-            <p data-allow-select className="mt-3 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">A linear stack remains linear: σ(W₂(W₁x + b₁) + b₂). Adding tanh changes the representation: σ(W₂ tanh(W₁x + b₁) + b₂). The center panel shows that transformation for one learned hidden unit; the right panel shows the real learned gates being combined.</p>
-          </details>
+              <LossTrace
+                title="Training loss"
+                epoch={regressionPlayback.epoch}
+                series={[
+                  { label: "straight line", values: linearTrainingTrace.map((state) => state.loss), stroke: "var(--accent-2)" },
+                  { label: `degree ${degree}`, values: polynomialTrainingTrace.map((state) => state.loss), stroke: "var(--accent)" },
+                ]}
+              />
+              <p>
+                Both fits use batch gradient descent on the filled points; one step is one update. Degree {degree} learns{" "}
+                {degree + 1} coefficients. More flexibility can lower training loss without lowering held-out error. The
+                straight line is now y = {linearFit.coefficients[0].toFixed(2)} {linearFit.coefficients[1] >= 0 ? "+" : "−"}{" "}
+                {Math.abs(linearFit.coefficients[1]).toFixed(2)}x.
+              </p>
+            </div>
+          </Details>
         </>
       )}
-      <DemoFootnote>
-        Every frame is computed in this browser from deterministic data and real batch-gradient updates. The displayed accuracy is a geometry illustration, not a production generalization claim.
-      </DemoFootnote>
     </DemoPage>
   );
 }
