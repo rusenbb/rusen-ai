@@ -1,35 +1,37 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+import { Button, Chip, DemoHeader, DemoPage, Details, Segmented, Stat } from "@/components/ui";
+
+import { ArenaControls } from "./ArenaControls";
+import { ADAPTIVE_ARENA_CHECKPOINTS } from "./checkpoints.generated";
+import { chooseAction, createDQNAgent, deserializeDQNWeights, forward } from "./dqn";
 import {
-  BOT_ACCENT,
+  ACTIONS,
   BOT_CONFIG,
   BOT_DIFFICULTIES,
+  MAX_HEALTH,
+  ROUND_TICKS,
   TICK_MS,
   advanceMatch,
   buildArenaMap,
   createArenaNavigator,
   createInitialMatch,
   createPlayerModel,
+  encodeState,
+  encodeStateAsPlayer,
   getDifficultyConfig,
   type AbilityAction,
   type ArenaAction,
   type BotBrain,
   type BotDifficulty,
   type DQNCheckpointAsset,
-  type DQNCheckpointManifest,
   type MatchState,
   type MoveAction,
 } from "./game";
-import { createDQNAgent, deserializeDQNWeights } from "./dqn";
-import { ADAPTIVE_ARENA_CHECKPOINTS } from "./checkpoints.generated";
-import { drawArena } from "./rendering";
-import { ArenaControls } from "./ArenaControls";
-import {
-  ARENA_LEGEND,
-  FullscreenCornersIcon,
-  StatBlock,
-} from "./presentation";
+import { ACTION_NAMES, FullscreenCornersIcon } from "./presentation";
+import { drawArena, type ArenaLabels } from "./rendering";
 
 type ControlState = {
   move: MoveAction | null;
@@ -37,7 +39,13 @@ type ControlState = {
   abilityTicksLeft: number;
 };
 
+/** "demo": both sides are driven by the checkpoint until the visitor starts. "play": the visitor controls the left fighter. */
+type Mode = "demo" | "play";
+
 const ABILITY_BUFFER_TICKS = 3;
+const LABEL = "font-mono text-[0.7rem] uppercase tracking-[0.08em] text-[var(--sub)]";
+const PLAY_LABELS: ArenaLabels = { player: "You", bot: "Bot" };
+const DEMO_LABELS: ArenaLabels = { player: "Bot A", bot: "Bot B" };
 
 const MOVE_KEYS: Record<string, MoveAction> = {
   ArrowUp: "move-up",
@@ -55,6 +63,13 @@ const ABILITY_KEYS: Record<string, AbilityAction> = {
   k: "guard",
   l: "dash",
 };
+
+const OUTCOME_WORDS = { player: "won", bot: "lost", draw: "drew" } as const;
+
+const TRAINING_RANGE = (() => {
+  const rounds = ADAPTIVE_ARENA_CHECKPOINTS.map((entry) => entry.trainingRounds);
+  return `${Math.min(...rounds).toLocaleString("en-US")} to ${Math.max(...rounds).toLocaleString("en-US")}`;
+})();
 
 function createCheckpointBrain(asset: DQNCheckpointAsset): BotBrain {
   const agent = createDQNAgent({
@@ -74,166 +89,146 @@ function createCheckpointBrain(asset: DQNCheckpointAsset): BotBrain {
   return { kind: "dqn", agent };
 }
 
+function usePrefersReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setReduced(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+  return reduced;
+}
+
+function HealthBar({ label, health, color, align }: { label: string; health: number; color: string; align: "left" | "right" }) {
+  return (
+    <div className={`min-w-0 flex-1 ${align === "right" ? "text-right" : ""}`}>
+      <div className={`${LABEL} tabular-nums`}>
+        {label} {health}
+      </div>
+      <div className={`mt-1 flex h-1.5 bg-[var(--line)] ${align === "right" ? "justify-end" : ""}`}>
+        <div style={{ width: `${(health / MAX_HEALTH) * 100}%`, background: color }} />
+      </div>
+    </div>
+  );
+}
+
 export default function AdaptiveArenaPage() {
   const arena = useMemo(() => buildArenaMap(), []);
   const navigator = useMemo(() => createArenaNavigator(arena), [arena]);
+  const reducedMotion = usePrefersReducedMotion();
   const arenaPanelRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const controlsRef = useRef<ControlState>({
-    move: null,
-    ability: null,
-    abilityTicksLeft: 0,
-  });
+  const controlsRef = useRef<ControlState>({ move: null, ability: null, abilityTicksLeft: 0 });
   const pressedMovesRef = useRef<MoveAction[]>([]);
   const brainRef = useRef<BotBrain | null>(null);
   const playerModelRef = useRef(createPlayerModel());
-  const checkpointCacheRef = useRef<Map<string, DQNCheckpointAsset>>(new Map());
+  const checkpointCacheRef = useRef<Map<BotDifficulty, DQNCheckpointAsset>>(new Map());
 
-  const [selectedDifficulty, setSelectedDifficulty] =
-    useState<BotDifficulty>("medium");
-  const [autoRunRounds, setAutoRunRounds] = useState(false);
-  const [isRunning, setIsRunning] = useState(false);
+  const [difficulty, setDifficulty] = useState<BotDifficulty>("medium");
+  const [mode, setMode] = useState<Mode>("demo");
+  const [playRunning, setPlayRunning] = useState(false);
+  const [autoNextRound, setAutoNextRound] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [, setCanvasSize] = useState(0);
-  const [checkpointManifest, setCheckpointManifest] =
-    useState<DQNCheckpointManifest | null>(null);
+  const [redraw, setRedraw] = useState(0);
   const [checkpointLoading, setCheckpointLoading] = useState(true);
   const [checkpointError, setCheckpointError] = useState<string | null>(null);
-  const [match, setMatch] = useState<MatchState>(() =>
-    createInitialMatch(createPlayerModel()),
-  );
+  const [match, setMatch] = useState<MatchState>(() => createInitialMatch(createPlayerModel()));
 
-  const runtimeConfig = useMemo(
-    () => getDifficultyConfig(BOT_CONFIG, selectedDifficulty),
-    [selectedDifficulty],
-  );
-  const checkpointKey = selectedDifficulty;
+  const manifest = ADAPTIVE_ARENA_CHECKPOINTS.find((entry) => entry.difficulty === difficulty) ?? null;
+  const runtimeConfig = useMemo(() => getDifficultyConfig(BOT_CONFIG, difficulty), [difficulty]);
+  const ready = !checkpointLoading && !checkpointError;
+  const isRunning = ready && (mode === "demo" ? !reducedMotion : playRunning);
+  const labels = mode === "demo" ? DEMO_LABELS : PLAY_LABELS;
+
+  const clearControls = useCallback(() => {
+    pressedMovesRef.current = [];
+    controlsRef.current = { move: null, ability: null, abilityTicksLeft: 0 };
+  }, []);
+
+  const freshMatch = useCallback(() => {
+    playerModelRef.current = createPlayerModel();
+    clearControls();
+    setMatch(createInitialMatch(playerModelRef.current));
+  }, [clearControls]);
+
+  /** Leaves the demo (or restarts) and hands the left fighter to the visitor. */
+  const startPlaying = useCallback(() => {
+    if (!ready) return;
+    if (mode === "demo") {
+      setMode("play");
+      freshMatch();
+    }
+    setPlayRunning(true);
+  }, [freshMatch, mode, ready]);
 
   const resetSession = useCallback(() => {
-    const cached = checkpointCacheRef.current.get(checkpointKey);
-    if (!cached) return;
-    brainRef.current = createCheckpointBrain(cached);
-    playerModelRef.current = createPlayerModel();
-    const brain = brainRef.current;
-    const paramCount = brain.agent.config.layerSizes.reduce(
-      (acc, _, i, a) =>
-        i < a.length - 1 ? acc + a[i] * a[i + 1] + a[i + 1] : acc,
-      0,
-    );
-    setMatch({
-      ...createInitialMatch(playerModelRef.current),
-      qStateCount: paramCount,
-      explorationRate: runtimeConfig.epsilon,
-      statusMessage: checkpointManifest
-        ? `Loaded ${checkpointManifest.label} checkpoint.`
-        : "Checkpoint ready.",
-    });
-    controlsRef.current = { move: null, ability: null, abilityTicksLeft: 0 };
-    pressedMovesRef.current = [];
-    setIsRunning(false);
-  }, [checkpointKey, checkpointManifest, runtimeConfig.epsilon]);
+    setPlayRunning(false);
+    setMode("play");
+    freshMatch();
+  }, [freshMatch]);
 
   useEffect(() => {
     let cancelled = false;
-
-    const loadCheckpoint = async () => {
+    const load = async () => {
       setCheckpointLoading(true);
       setCheckpointError(null);
-
-      const manifest =
-        ADAPTIVE_ARENA_CHECKPOINTS.find(
-          (entry) => entry.difficulty === selectedDifficulty,
-        ) ?? null;
-
+      setPlayRunning(false);
       if (!manifest) {
-        if (!cancelled) {
-          setCheckpointManifest(null);
-          setCheckpointError(
-            "Missing checkpoint manifest for the selected seed.",
-          );
-          setCheckpointLoading(false);
-        }
+        setCheckpointError("Missing checkpoint for this difficulty.");
+        setCheckpointLoading(false);
         return;
       }
-
       try {
-        const cached = checkpointCacheRef.current.get(checkpointKey);
-        let asset: DQNCheckpointAsset;
-
-        if (cached) {
-          asset = cached;
-        } else {
-          asset = await fetch(manifest.assetPath).then(async (response) => {
-            if (!response.ok) {
-              throw new Error(
-                `Failed to load checkpoint asset: ${response.status}`,
-              );
-            }
-
-            return (await response.json()) as DQNCheckpointAsset;
-          });
-          checkpointCacheRef.current.set(checkpointKey, asset);
+        let asset = checkpointCacheRef.current.get(difficulty);
+        if (!asset) {
+          const response = await fetch(manifest.assetPath);
+          if (!response.ok) throw new Error(`The checkpoint did not load (HTTP ${response.status}).`);
+          asset = (await response.json()) as DQNCheckpointAsset;
+          checkpointCacheRef.current.set(difficulty, asset);
         }
-
         if (cancelled) return;
-
         brainRef.current = createCheckpointBrain(asset);
-
-        setCheckpointManifest(manifest);
-        playerModelRef.current = createPlayerModel();
-        setMatch({
-          ...createInitialMatch(playerModelRef.current),
-          qStateCount: manifest.parameterCount,
-          explorationRate: runtimeConfig.epsilon,
-          statusMessage: `Loaded ${manifest.label} checkpoint.`,
-        });
-        controlsRef.current = {
-          move: null,
-          ability: null,
-          abilityTicksLeft: 0,
-        };
-        pressedMovesRef.current = [];
-        setIsRunning(false);
+        freshMatch();
       } catch (error) {
-        if (cancelled) return;
-        setCheckpointManifest(manifest);
-        setCheckpointError(
-          error instanceof Error ? error.message : "Failed to load checkpoint.",
-        );
+        if (!cancelled) setCheckpointError(error instanceof Error ? error.message : "The checkpoint did not load.");
       } finally {
-        if (!cancelled) {
-          setCheckpointLoading(false);
-        }
+        if (!cancelled) setCheckpointLoading(false);
       }
     };
-
-    void loadCheckpoint();
-
+    void load();
     return () => {
       cancelled = true;
     };
-  }, [checkpointKey, runtimeConfig.epsilon, selectedDifficulty]);
+  }, [difficulty, freshMatch, manifest]);
 
+  // Game loop. In the demo the left fighter uses the same checkpoint from its own side, as in self-play training.
   useEffect(() => {
     if (!isRunning) return;
-
     const interval = window.setInterval(() => {
       const brain = brainRef.current;
       if (!brain) return;
       setMatch((current) => {
-        const controls = controlsRef.current;
-        const ability = controls.ability;
-        const moveIntent = controls.move;
-        const playerAction: ArenaAction = ability ?? moveIntent ?? "hold";
-        if (ability) {
-          controls.abilityTicksLeft -= 1;
-          if (controls.abilityTicksLeft <= 0) {
-            controls.ability = null;
-            controls.abilityTicksLeft = 0;
+        let playerAction: ArenaAction;
+        let moveIntent: MoveAction | null = null;
+        if (mode === "demo") {
+          const state = encodeStateAsPlayer(current, arena, "balanced", navigator);
+          playerAction = ACTIONS[chooseAction(brain.agent.policy, state, runtimeConfig.epsilon).actionIndex];
+        } else {
+          const controls = controlsRef.current;
+          const ability = controls.ability;
+          moveIntent = controls.move;
+          playerAction = ability ?? moveIntent ?? "hold";
+          if (ability) {
+            controls.abilityTicksLeft -= 1;
+            if (controls.abilityTicksLeft <= 0) {
+              controls.ability = null;
+              controls.abilityTicksLeft = 0;
+            }
           }
         }
-
-        const nextMatch = advanceMatch({
+        const next = advanceMatch({
           match: current,
           arena,
           navigator,
@@ -244,101 +239,88 @@ export default function AdaptiveArenaPage() {
           playerAction,
           playerMoveIntent: moveIntent,
         });
-
-        if (
-          current.phase === "live" &&
-          nextMatch.phase === "intermission" &&
-          !autoRunRounds
-        ) {
-          window.setTimeout(() => setIsRunning(false), 0);
+        if (mode === "play" && !autoNextRound && current.phase === "live" && next.phase === "intermission") {
+          window.setTimeout(() => setPlayRunning(false), 0);
         }
-
-        return nextMatch;
+        return next;
       });
     }, TICK_MS);
-
     return () => window.clearInterval(interval);
-  }, [arena, autoRunRounds, isRunning, navigator, runtimeConfig]);
+  }, [arena, autoNextRound, isRunning, mode, navigator, runtimeConfig]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas) drawArena(canvas, arena, match, labels);
+  }, [arena, match, labels, redraw]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    drawArena(canvas, arena, match, BOT_ACCENT);
-  }, [arena, match]);
-
-  // Re-draw at native resolution when canvas container resizes
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const observer = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (!entry) return;
-      setCanvasSize(entry.contentRect.width);
-    });
+    const bump = () => setRedraw((value) => value + 1);
+    const observer = new ResizeObserver(bump);
     observer.observe(canvas);
-    return () => observer.disconnect();
+    window.addEventListener("rusen-theme-change", bump);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("rusen-theme-change", bump);
+    };
   }, []);
 
   useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(document.fullscreenElement === arenaPanelRef.current);
-    };
-
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
-    return () =>
-      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    const onChange = () => setIsFullscreen(document.fullscreenElement === arenaPanelRef.current);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
   }, []);
 
   const setActiveMove = useCallback((action: MoveAction, active: boolean) => {
     const current = pressedMovesRef.current;
-
     if (active) {
-      if (!current.includes(action)) {
-        pressedMovesRef.current = [...current, action];
-      }
+      if (!current.includes(action)) pressedMovesRef.current = [...current, action];
     } else {
       pressedMovesRef.current = current.filter((entry) => entry !== action);
     }
+    controlsRef.current.move = pressedMovesRef.current.at(-1) ?? null;
+  }, []);
 
-    const nextMove = pressedMovesRef.current.at(-1) ?? null;
-    controlsRef.current.move = nextMove;
+  const triggerAbility = useCallback((ability: AbilityAction) => {
+    controlsRef.current.ability = ability;
+    controlsRef.current.abilityTicksLeft = ABILITY_BUFFER_TICKS;
   }, []);
 
   useEffect(() => {
-    const clearControls = () => {
-      pressedMovesRef.current = [];
-      controlsRef.current = { move: null, ability: null, abilityTicksLeft: 0 };
-    };
     const handleKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
       if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
-      if (checkpointLoading || checkpointError) return;
+      if (!ready || event.metaKey || event.ctrlKey || event.altKey) return;
+      const move = MOVE_KEYS[event.key] ?? MOVE_KEYS[event.key.toLowerCase()];
+      const ability = ABILITY_KEYS[event.key] ?? ABILITY_KEYS[event.key.toLowerCase()];
+
       if (event.key === " ") {
-        if (target?.closest("button")) return;
+        if (target?.closest("button, summary")) return;
         event.preventDefault();
         if (event.repeat) return;
-        setIsRunning((current) => !current);
+        if (mode === "demo" || !playRunning) startPlaying();
+        else setPlayRunning(false);
         return;
       }
-      if (!isRunning) return;
-
-      const move = MOVE_KEYS[event.key] ?? MOVE_KEYS[event.key.toLowerCase()];
+      // Any printable key, arrow or Enter starts a match from the demo.
+      if (mode === "demo") {
+        if (target?.closest("button, a, summary")) return;
+        if (event.key.length !== 1 && !event.key.startsWith("Arrow") && event.key !== "Enter") return;
+        event.preventDefault();
+        startPlaying();
+        if (move) setActiveMove(move, true);
+        return;
+      }
+      if (!playRunning) return;
       if (move) {
         event.preventDefault();
         setActiveMove(move, true);
-        return;
-      }
-
-      const ability =
-        ABILITY_KEYS[event.key] ?? ABILITY_KEYS[event.key.toLowerCase()];
-      if (ability) {
+      } else if (ability) {
         event.preventDefault();
-        controlsRef.current.ability = ability;
-        controlsRef.current.abilityTicksLeft = ABILITY_BUFFER_TICKS;
+        triggerAbility(ability);
       }
     };
-
     const handleKeyUp = (event: KeyboardEvent) => {
       const move = MOVE_KEYS[event.key] ?? MOVE_KEYS[event.key.toLowerCase()];
       if (move) {
@@ -346,361 +328,236 @@ export default function AdaptiveArenaPage() {
         setActiveMove(move, false);
       }
     };
-
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
     window.addEventListener("blur", clearControls);
-
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("blur", clearControls);
       clearControls();
     };
-  }, [setActiveMove, checkpointLoading, checkpointError, isRunning]);
+  }, [clearControls, mode, playRunning, ready, setActiveMove, startPlaying, triggerAbility]);
 
   const toggleFullscreen = useCallback(async () => {
     const panel = arenaPanelRef.current;
     if (!panel) return;
-
-    if (document.fullscreenElement === panel) {
-      await document.exitFullscreen();
-      return;
-    }
-
-    await panel.requestFullscreen();
+    if (document.fullscreenElement === panel) await document.exitFullscreen();
+    else await panel.requestFullscreen();
   }, []);
 
-  const primaryActionLabel =
-    match.phase === "intermission"
-      ? autoRunRounds
-        ? "Continue"
-        : "Start Next Round"
-      : "Start Match";
-  const arenaMaxWidth = isFullscreen
-    ? "min(calc(100vw - 2rem), calc(100vh - 10rem))"
-    : "min(100%, calc(100vh - 12rem), 1080px)";
+  // The bot's view of this exact position: one network score per action, the highest is what it will pick
+  // unless it explores at random.
+  const scores = useMemo(() => {
+    const brain = brainRef.current;
+    if (!brain || checkpointLoading) return null;
+    const values = Array.from(forward(brain.agent.policy, encodeState(match, arena, match.predictedHabit, navigator)));
+    const min = Math.min(...values);
+    const span = Math.max(...values) - min || 1;
+    const best = values.indexOf(Math.max(...values));
+    return { values: values.map((value) => (value - min) / span), best };
+  }, [arena, checkpointLoading, match, navigator]);
+
+  const notStarted = match.phase === "live" && match.timer === ROUND_TICKS && match.round === 1;
+  const primaryLabel =
+    mode === "demo" || notStarted ? "Start Match" : playRunning ? "Pause" : match.phase === "intermission" ? "Next round" : "Resume";
+  const onPrimary = () => (mode === "play" && playRunning ? setPlayRunning(false) : startPlaying());
+  const controlsDisabled = mode !== "play" || !playRunning || !ready;
+
+  let overlay: { title: string; hint: string } | null = null;
+  if (checkpointError) overlay = { title: "The bot did not load", hint: checkpointError };
+  else if (checkpointLoading) overlay = { title: "Loading the bot", hint: `${manifest?.label ?? ""} checkpoint` };
+  else if (mode === "demo") overlay = { title: "Press any key or tap to play", hint: reducedMotion ? "" : "Two copies of the bot are playing each other" };
+  else if (!playRunning && match.phase === "live")
+    overlay = notStarted ? { title: "Press any key or tap to play", hint: "" } : { title: "Paused", hint: "Press Space to resume" };
+
+  const primaryButtons = (className = "") => (
+    <div className={`flex-wrap gap-2 ${className}`}>
+      <Button size="sm" variant="primary" onClick={onPrimary} disabled={!ready}>
+        {primaryLabel}
+      </Button>
+      <Button size="sm" variant="ghost" onClick={resetSession} disabled={!ready}>
+        Reset
+      </Button>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen py-6 text-neutral-900 dark:text-neutral-100 sm:py-8">
-      <div className="mx-auto max-w-[1500px] px-4 py-8 sm:px-6 lg:px-8">
-        <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(103,232,249,0.12),transparent_28%),radial-gradient(circle_at_top_right,rgba(249,115,22,0.14),transparent_26%),linear-gradient(135deg,#05070a_0%,#0a1118_48%,#070b10_100%)] p-5 sm:p-8">
-          <div
-            className="pointer-events-none absolute inset-0 opacity-25"
-            style={{
-              backgroundImage:
-                "linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px)",
-              backgroundSize: "48px 48px",
-              maskImage:
-                "linear-gradient(to bottom, rgba(0,0,0,1), rgba(0,0,0,0.15))",
+    <DemoPage width="2xl">
+      <DemoHeader
+        className="sm:mb-6"
+        eyebrow="Reinforcement learning"
+        title="RL-Arena"
+        description="Beat a bot trained by reinforcement learning. Move with WASD or the arrows, attack with J, guard with K, dash with L."
+      />
+
+      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_19rem]">
+        <div
+          ref={arenaPanelRef}
+          className={isFullscreen ? "flex h-screen flex-col justify-center gap-2 overflow-auto bg-[var(--background)] p-3" : "min-w-0"}
+        >
+          <div className="mx-auto w-full" style={{ maxWidth: isFullscreen ? "min(100%, calc(100svh - 13rem))" : "min(100%, max(18rem, calc(100svh - 21rem)))" }}>
+            <div className="mb-2 flex items-end gap-4">
+              <HealthBar label={labels.player} health={match.player.health} color="var(--accent)" align="left" />
+              <div className={`${LABEL} shrink-0 tabular-nums`}>
+                Round {match.round} · {match.timer.toString().padStart(3, "0")}
+              </div>
+              <HealthBar label={labels.bot} health={match.bot.health} color="var(--accent-2)" align="right" />
+            </div>
+            <div className="relative">
+              <canvas
+                ref={canvasRef}
+                role="img"
+                aria-label={`Arena. You: (${match.player.position.x}, ${match.player.position.y}), health ${match.player.health}. Bot: (${match.bot.position.x}, ${match.bot.position.y}), health ${match.bot.health}.`}
+                className="block aspect-square w-full border border-[var(--line)]"
+                onPointerDown={() => {
+                  if (mode === "demo" || (!playRunning && match.phase === "live")) startPlaying();
+                }}
+              />
+              {overlay ? (
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  aria-hidden
+                  onClick={startPlaying}
+                  className={`absolute inset-x-0 flex cursor-pointer flex-col items-center justify-center gap-1 px-4 text-center ${
+                    mode === "demo" ? "bottom-0 border-t border-[var(--line)] bg-[color-mix(in_srgb,var(--surface)_88%,transparent)] py-4" : "inset-y-0 bg-[color-mix(in_srgb,var(--surface)_70%,transparent)]"
+                  }`}
+                >
+                  <span className="text-lg font-semibold sm:text-2xl">{overlay.title}</span>
+                  {overlay.hint ? <span className="text-sm text-[var(--muted)]">{overlay.hint}</span> : null}
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => void toggleFullscreen()}
+                className="absolute right-2 top-2 border border-[var(--line)] bg-[var(--surface)] p-1.5 text-[var(--muted)] hover:text-[var(--foreground)]"
+                aria-label={isFullscreen ? "Exit fullscreen" : "Go fullscreen"}
+                title={isFullscreen ? "Exit fullscreen" : "Go fullscreen"}
+              >
+                <FullscreenCornersIcon />
+              </button>
+            </div>
+            <div className={`mt-2 flex flex-wrap gap-x-5 gap-y-1 ${LABEL}`}>
+              <span>+ health · ◆ energy</span>
+              <span className="inline-flex items-center gap-1.5">
+                <i className="size-2.5" style={{ background: "color-mix(in srgb, var(--accent) 16%, var(--surface))", outline: "1px solid var(--line)" }} />
+                cover, less damage
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <i className="size-2.5" style={{ background: "color-mix(in srgb, var(--accent-2) 22%, var(--surface))", outline: "1px solid var(--line)" }} />
+                hazard, burns health
+              </span>
+            </div>
+          </div>
+
+          <div className={`mx-auto mt-4 w-full max-w-md ${isFullscreen ? "" : "lg:hidden"}`}>
+            {primaryButtons("mb-3 flex")}
+            <ArenaControls compact disabled={controlsDisabled} onMove={setActiveMove} onAbility={triggerAbility} />
+          </div>
+        </div>
+
+        <aside className="space-y-6">
+          <Segmented
+            label="Difficulty"
+            options={BOT_DIFFICULTIES.map((entry) => ({ value: entry.id, label: entry.label }))}
+            value={difficulty}
+            onChange={(next) => {
+              setDifficulty(next);
+              if (mode === "play") setPlayRunning(false);
             }}
           />
 
-          <div className="relative flex flex-col gap-5">
-            <header className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-              <div>
-                <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.24em] text-neutral-400">
-                  Reinforcement Learning / 30x30 Tactical Arena
-                </div>
-                <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:gap-4">
-                  <h1 className="text-4xl font-semibold tracking-[0.02em] text-neutral-50">
-                    RL-Arena
-                  </h1>
-                  <p className="max-w-xl text-sm leading-6 text-neutral-400">
-                    Fight checkpoint-trained bots across four difficulty levels
-                    in a tight tactical arena.
-                  </p>
-                </div>
-              </div>
-            </header>
-
-            <details className="my-4 rounded-xl border border-white/10 p-4 text-sm text-neutral-300">
-              <summary className="cursor-pointer">Checkpoint provenance and evaluation</summary>
-              <dl className="mt-3 grid gap-2"><dt>Training revision</dt><dd className="break-all font-mono">{checkpointManifest?.provenance?.trainerCommit ?? "Unknown for this historical checkpoint"}</dd><dt>Environment version</dt><dd>{checkpointManifest?.provenance?.environmentVersion ?? "Historical version not recorded"}</dd><dt>Evaluation conditions</dt><dd>{checkpointManifest?.provenance?.evaluation ?? "Historical opponent pool and sampling seed were not preserved. The recorded win rate is not a human-opponent benchmark."}</dd><dt>Recorded evaluation</dt><dd>{checkpointManifest ? checkpointManifest.stats.botWins + " bot wins / " + checkpointManifest.stats.rounds + " rounds" : "Loading checkpoint"}</dd></dl>
-              <p className="mt-3 text-xs text-neutral-400">Current code parity checks compare 25 controlled transitions: neutral habit, no manual dash direction, and a matched 100-tick clock. Training uses 100 ticks; interactive rounds use 180. Existing weights are retained, not retrained or retrospectively assigned a source version.</p>
-            </details>
-            <section className="space-y-4">
-              <div
-                ref={arenaPanelRef}
-                className={`overflow-hidden ${isFullscreen ? "h-screen bg-[#05070a]" : "rounded-[28px] border border-white/10 bg-[#04080d]/80 shadow-[0_24px_90px_rgba(0,0,0,0.45)]"}`}
-              >
-                <div
-                  className={`${isFullscreen ? "block" : "grid xl:grid-cols-[minmax(0,1fr)_360px]"}`}
-                >
-                  <div
-                    className={`relative ${isFullscreen ? "p-2" : "border-b border-white/10 p-4 sm:p-5 xl:border-b-0 xl:border-r xl:border-white/10"}`}
-                  >
-                    {isFullscreen && (
-                      <div className="absolute left-3 top-3 z-10 flex w-32 flex-col gap-2 sm:left-6 sm:top-6 sm:w-40">
-                        <button
-                          type="button"
-                          onClick={() => setIsRunning((current) => !current)}
-                          disabled={checkpointLoading || Boolean(checkpointError)}
-                          className="rounded-full border border-white/10 bg-[#02060b]/80 px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-neutral-100 backdrop-blur transition hover:bg-[#0a1118] sm:px-4 sm:text-[11px] sm:tracking-[0.22em]"
-                        >
-                          {isRunning ? "Pause" : primaryActionLabel}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setAutoRunRounds((current) => !current)
-                          }
-                          className={`rounded-full border px-3 py-2 text-[10px] uppercase tracking-[0.18em] backdrop-blur transition sm:px-4 sm:text-[11px] sm:tracking-[0.22em] ${
-                            autoRunRounds
-                              ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-200"
-                              : "border-white/10 bg-[#02060b]/80 text-neutral-200 hover:bg-[#0a1118]"
-                          }`}
-                        >
-                          {autoRunRounds ? "Auto-run On" : "Auto-run Off"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={resetSession}
-                          disabled={checkpointLoading}
-                          className="rounded-full border border-white/10 bg-[#02060b]/80 px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-neutral-200 backdrop-blur transition hover:bg-[#0a1118] sm:px-4 sm:text-[11px] sm:tracking-[0.22em]"
-                        >
-                          Reset
-                        </button>
-                      </div>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => void toggleFullscreen()}
-                      className="absolute right-3 top-3 z-10 inline-flex items-center justify-center rounded-full border border-white/10 bg-[#02060b]/80 p-2 text-neutral-200 backdrop-blur transition hover:bg-[#0a1118] sm:right-6 sm:top-6"
-                      aria-label={
-                        isFullscreen ? "Exit fullscreen" : "Go fullscreen"
-                      }
-                      title={isFullscreen ? "Exit fullscreen" : "Go fullscreen"}
-                    >
-                      <FullscreenCornersIcon />
-                    </button>
-                    <div
-                      className={`${isFullscreen ? "flex h-[calc(100vh-10rem)] items-center justify-center" : ""}`}
-                    >
-                      <div
-                        className="mx-auto w-full"
-                        style={{ maxWidth: arenaMaxWidth }}
-                      >
-                        <canvas
-                          ref={canvasRef}
-                          role="img"
-                          aria-label={`Arena. You: (${match.player.position.x}, ${match.player.position.y}), health ${match.player.health}. Bot: (${match.bot.position.x}, ${match.bot.position.y}), health ${match.bot.health}.`}
-                          className={`aspect-square w-full bg-[#020407] ${isFullscreen ? "" : "rounded-[22px] border border-white/10"}`}
-                        />
-                      </div>
-                    </div>
-                    {isFullscreen && (
-                      <div className="mx-auto mt-2 max-w-2xl rounded-2xl border border-white/10 bg-[#02060b] p-2">
-                        <ArenaControls
-                          compact
-                          disabled={!isRunning || checkpointLoading || Boolean(checkpointError)}
-                          onMove={setActiveMove}
-                          onAbility={(ability) => {
-                            controlsRef.current.ability = ability;
-                            controlsRef.current.abilityTicksLeft = ABILITY_BUFFER_TICKS;
-                          }}
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  {!isFullscreen && (
-                    <aside className="flex flex-col gap-3 bg-black/10 p-4">
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setIsRunning((current) => !current)}
-                          disabled={
-                            checkpointLoading || Boolean(checkpointError)
-                          }
-                          className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[11px] uppercase tracking-[0.22em] text-neutral-100 transition hover:bg-white/10"
-                        >
-                          {isRunning ? "Pause" : primaryActionLabel}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setAutoRunRounds((current) => !current)
-                          }
-                          className={`rounded-full border px-4 py-2 text-[11px] uppercase tracking-[0.22em] transition ${
-                            autoRunRounds
-                              ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-200"
-                              : "border-white/10 bg-white/5 text-neutral-200 hover:bg-white/10"
-                          }`}
-                        >
-                          {autoRunRounds ? "Auto-run On" : "Auto-run Off"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={resetSession}
-                          disabled={checkpointLoading}
-                          className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[11px] uppercase tracking-[0.22em] text-neutral-200 transition hover:bg-white/10"
-                        >
-                          Reset
-                        </button>
-                      </div>
-
-                      <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-3">
-                        <div className="mb-2 text-[10px] uppercase tracking-[0.24em] text-neutral-500">
-                          Difficulty
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {BOT_DIFFICULTIES.map((difficulty) => {
-                            const active = difficulty.id === selectedDifficulty;
-                            return (
-                              <button
-                                key={difficulty.id}
-                                type="button"
-                                onClick={() =>
-                                  setSelectedDifficulty(difficulty.id)
-                                }
-                                className={`rounded-full border px-3 py-2 text-[11px] uppercase tracking-[0.18em] transition ${
-                                  active
-                                    ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-200"
-                                    : "border-white/8 bg-black/20 text-neutral-300 hover:border-white/16 hover:bg-white/[0.05]"
-                                }`}
-                                title={difficulty.summary}
-                              >
-                                {difficulty.label}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-3">
-                        <div className="mb-2 text-[10px] uppercase tracking-[0.24em] text-neutral-500">
-                          Legend
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {ARENA_LEGEND.map((item) => (
-                            <div key={item.label} className="group relative">
-                              <div className="flex items-center gap-2 rounded-full border border-white/8 bg-black/20 px-3 py-2 text-[11px] text-neutral-300">
-                                <span
-                                  className={`h-2.5 w-2.5 rounded-full ${item.swatch}`}
-                                />
-                                <span className="font-medium text-neutral-100">
-                                  {item.label}
-                                </span>
-                              </div>
-                              <div className="pointer-events-none absolute right-0 top-full z-20 mt-2 w-56 rounded-2xl border border-white/10 bg-[#02060b]/95 px-3 py-2 text-xs leading-5 text-neutral-300 opacity-0 shadow-[0_12px_32px_rgba(0,0,0,0.45)] transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
-                                {item.detail}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                        <div className="mb-3 text-[10px] uppercase tracking-[0.24em] text-neutral-500">
-                          Controls
-                        </div>
-                        <ArenaControls
-                          disabled={!isRunning || checkpointLoading || Boolean(checkpointError)}
-                          onMove={setActiveMove}
-                          onAbility={(ability) => {
-                            controlsRef.current.ability = ability;
-                            controlsRef.current.abilityTicksLeft = ABILITY_BUFFER_TICKS;
-                          }}
-                        />
-                      </div>
-
-                    </aside>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid gap-4">
-                <div className="rounded-[24px] border border-white/10 bg-white/[0.04] p-4 sm:p-5">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <h2 className="text-sm uppercase tracking-[0.24em] text-neutral-500">
-                        Round Ledger
-                      </h2>
-                      <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-neutral-300">
-                        Round {match.round.toString().padStart(2, "0")}
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={resetSession}
-                      disabled={checkpointLoading}
-                      className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[11px] uppercase tracking-[0.22em] text-neutral-200 transition hover:bg-white/10"
-                    >
-                      Reset Session
-                    </button>
-                  </div>
-                  <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-neutral-200">
-                    <div className="break-words leading-6">
-                      {match.statusMessage}
-                    </div>
-                  </div>
-                  <div className="mt-4 grid grid-cols-3 gap-3">
-                    <StatBlock
-                      label="You"
-                      value={match.scoreboard.player.toString()}
-                      tone="#67e8f9"
-                    />
-                    <StatBlock
-                      label="Bot"
-                      value={match.scoreboard.bot.toString()}
-                      tone={BOT_ACCENT}
-                    />
-                    <StatBlock
-                      label="Draw"
-                      value={match.scoreboard.draw.toString()}
-                    />
-                  </div>
-                  <div className="mt-4 space-y-2">
-                    {match.roundHistory.length === 0 ? (
-                      <div className="rounded-2xl border border-dashed border-white/10 px-4 py-6 text-sm text-neutral-400">
-                        No finished rounds yet. The first few rounds are where
-                        exploration is most visible.
-                      </div>
-                    ) : (
-                      match.roundHistory.map((entry) => (
-                        <div
-                          key={entry.round}
-                          className="rounded-2xl border border-white/8 bg-black/20 px-4 py-3 text-sm text-neutral-300"
-                        >
-                          <div className="flex items-center justify-between gap-3">
-                            <span className="text-[10px] uppercase tracking-[0.22em] text-neutral-500">
-                              Round {entry.round}
-                            </span>
-                            <span
-                              className={`rounded-full px-2 py-1 text-[10px] uppercase tracking-[0.18em] ${
-                                entry.outcome === "player"
-                                  ? "bg-cyan-400/10 text-cyan-200"
-                                  : entry.outcome === "bot"
-                                    ? "text-white"
-                                    : "bg-white/10 text-neutral-300"
-                              }`}
-                              style={
-                                entry.outcome === "bot"
-                                  ? {
-                                      backgroundColor: `${BOT_ACCENT}1f`,
-                                      color: BOT_ACCENT,
-                                    }
-                                  : undefined
-                              }
-                            >
-                              {entry.outcome}
-                            </span>
-                          </div>
-                          <div className="mt-2 text-xs text-neutral-400">
-                            you {entry.playerHealth} hp / bot {entry.botHealth}{" "}
-                            hp
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              </div>
-            </section>
+          <div aria-live="off">
+            <Stat
+              size="lg"
+              label={mode === "demo" ? "Bot B's top choice" : "Bot's top choice"}
+              value={scores ? ACTION_NAMES[ACTIONS[scores.best]] : "--"}
+              note={
+                match.lastDecisionMode === "explore"
+                  ? `Last step it tried a random move: ${ACTION_NAMES[match.botIntent]}.`
+                  : "Its network scores every move for this position."
+              }
+            />
+            {scores ? (
+              <ol className="mt-3 space-y-1" aria-label="Bot's score for each move">
+                {ACTIONS.map((action, index) => (
+                  <li key={action} className="grid grid-cols-[4rem_minmax(0,1fr)] items-center gap-2">
+                    <span className={LABEL}>{ACTION_NAMES[action]}</span>
+                    <span className="h-2 bg-[var(--line)]">
+                      <span
+                        className="block h-full"
+                        style={{
+                          width: `${Math.max(2, scores.values[index] * 100)}%`,
+                          background: index === scores.best ? "var(--accent-2)" : "var(--sub)",
+                          opacity: index === scores.best ? 1 : 0.45,
+                        }}
+                      />
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            ) : null}
           </div>
-        </div>
+
+          <div className="space-y-3">
+            {isFullscreen ? null : primaryButtons("hidden lg:flex")}
+            <Chip selected={autoNextRound} onClick={() => setAutoNextRound((value) => !value)}>
+              Next round starts by itself
+            </Chip>
+          </div>
+
+          {mode === "play" ? (
+            <div>
+              <div className="grid grid-cols-3 gap-3">
+                <Stat label="You" value={match.scoreboard.player} />
+                <Stat label="Bot" value={match.scoreboard.bot} />
+                <Stat label="Draw" value={match.scoreboard.draw} />
+              </div>
+              {match.roundHistory.length ? (
+                <ol className="mt-3 text-sm text-[var(--muted)]">
+                  {match.roundHistory.slice(0, 3).map((entry) => (
+                    <li key={entry.round} className="border-t border-[var(--line)] py-1.5">
+                      Round {entry.round}: you {OUTCOME_WORDS[entry.outcome]}, {entry.playerHealth} hp to {entry.botHealth}
+                    </li>
+                  ))}
+                </ol>
+              ) : null}
+            </div>
+          ) : null}
+        </aside>
       </div>
-    </div>
+
+      <Details summary="About the bots" className="mt-10">
+        <p>
+          Each difficulty is a separate DQN checkpoint ({manifest?.parameterCount.toLocaleString("en-US") ?? "--"} weights) trained by
+          self-play for {TRAINING_RANGE} rounds. The bots do not learn while you play. You win a round by knocking the bot out or by
+          having more health when the timer ends.
+        </p>
+        {manifest ? (
+          <dl className="mt-3 grid gap-x-4 gap-y-1 sm:grid-cols-[12rem_minmax(0,1fr)]">
+            <dt className={LABEL}>{manifest.label} evaluation</dt>
+            <dd>
+              {manifest.stats.botWins} wins, {manifest.stats.playerWins} losses and {manifest.stats.draws} draws in {manifest.stats.rounds} rounds
+              against an opponent pool of other bots, not against people
+            </dd>
+            <dt className={LABEL}>Training revision</dt>
+            <dd className="break-all font-mono">{manifest.provenance?.trainerCommit ?? "Not recorded for this checkpoint"}</dd>
+            <dt className={LABEL}>Environment version</dt>
+            <dd>{manifest.provenance?.environmentVersion ?? "Not recorded for this checkpoint"}</dd>
+            {manifest.provenance?.evaluation ? (
+              <>
+                <dt className={LABEL}>Evaluation conditions</dt>
+                <dd>{manifest.provenance.evaluation}</dd>
+              </>
+            ) : null}
+          </dl>
+        ) : null}
+        <p className="mt-3 text-xs">
+          Parity checks compare 25 controlled transitions between the training and browser code on a matched 100-tick clock. Training rounds
+          last 100 ticks; rounds here last {ROUND_TICKS}.
+        </p>
+      </Details>
+    </DemoPage>
   );
 }

@@ -7,17 +7,17 @@ export function WhyPanelDiscrete({ why, symbolLabels, predictorLabel }: {
   symbolLabels: string[];
   predictorLabel: string;
 }) {
-  if (!why) return <p className="text-xs text-neutral-500">Play 20 trials in this scoring mode to inspect its leading predictor.</p>;
+  if (!why) return <p className="text-xs">After 20 presses, this shows how the leading predictor makes its guess.</p>;
   return (
     <div className="space-y-3">
-      <p className="text-xs text-neutral-600 dark:text-neutral-400">{why.rule}</p>
+      <p className="text-xs">{why.rule}</p>
       <p className="text-xs">Next guess: <strong>{symbolLabels[why.prediction.argmax]}</strong> ({predictorLabel})</p>
       <ul aria-label="Next-key probabilities" className="space-y-2">
         {why.prediction.pmf.map((probability, index) => (
           <li key={index} className="flex items-center gap-2 font-mono text-xs">
             <span className="w-8">{symbolLabels[index]}</span>
-            <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-sm bg-neutral-200 dark:bg-neutral-800">
-              <div className="h-full bg-cyan-500" style={{ width: `${probability * 100}%` }} />
+            <div className="h-1.5 min-w-0 flex-1 overflow-hidden bg-[var(--line)]">
+              <div className="h-full bg-[var(--accent)]" style={{ width: `${probability * 100}%` }} />
             </div>
             <span className="w-16 text-right tabular-nums">{(probability * 100).toFixed(1)}%</span>
           </li>
