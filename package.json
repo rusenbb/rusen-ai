@@ -59,6 +59,7 @@
     "rehype-slug": "^6.0.0",
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
+    "shaders": "4.0.0",
     "shiki": "^4.0.2",
     "tiktoken": "^1.0.22",
     "umap-js": "^1.4.0",
