@@ -303,7 +303,7 @@ export default function ConvolutionLabPage() {
   ];
 
   return (
-    <DemoPage width="2xl">
+    <DemoPage>
       <DemoHeader
         eyebrow="Convolution"
         title="Convolution Lab"

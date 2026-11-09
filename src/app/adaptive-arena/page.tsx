@@ -383,7 +383,7 @@ export default function AdaptiveArenaPage() {
   );
 
   return (
-    <DemoPage width="2xl">
+    <DemoPage>
       <DemoHeader
         className="sm:mb-6"
         eyebrow="Reinforcement learning"

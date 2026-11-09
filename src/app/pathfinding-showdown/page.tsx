@@ -287,7 +287,7 @@ export default function PathfindingShowdownPage() {
   if (scenarioId === "custom") scenarioOptions.push({ value: "custom", label: "Your map" });
 
   return (
-    <DemoPage width="2xl">
+    <DemoPage>
       <DemoHeader
         eyebrow="Search algorithms"
         title="Pathfinding Showdown"

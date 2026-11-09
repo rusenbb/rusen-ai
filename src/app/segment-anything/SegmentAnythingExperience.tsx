@@ -186,7 +186,7 @@ export default function SegmentAnythingExperience() {
       : null;
 
   return (
-    <DemoPage width="2xl">
+    <DemoPage>
       <DemoHeader
         eyebrow="Image segmentation"
         title="Segment Anything"

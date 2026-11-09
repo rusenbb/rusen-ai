@@ -16,8 +16,8 @@ Edit `src/content/projects.json`, then run `npm run projects:docs`.
 | Convolution Lab | `live` | `/convolution-lab` | Run editable kernels over real RGB or B/W photos, move a receptive field, and inspect the exact pixels behind each feature response. |
 | Sampling Lab | `live` | `/sampling-lab` | Change the sample rate and watch different waves pass through the same measurements. Explore aliasing and the Nyquist boundary. |
 | Decision Boundary | `live` | `/decision-boundary` | Inspect nearest-neighbor votes, add examples, and reshape a classifier's decision boundary on moons, rings, and XOR. |
-| Pathfinding Showdown | `live` | `/pathfinding-showdown` | Step through every frontier decision as BFS, Dijkstra, greedy best-first, and A* search the same terrain. |
-| Pulse Board | `live` | `/pulse-board` | Live dashboard with real-time WebSocket crypto prices, Chainlink oracle, earthquakes, weather, and more. |
+| Pathfinding Showdown | `live` | `/pathfinding-showdown` | BFS, Dijkstra, greedy best-first and A* race across the same terrain, then step through any search one decision at a time. |
+| Pulse Board | `live` | `/pulse-board` | Four live public feeds: crypto trades over WebSocket, the space station's position, earthquakes and Wikipedia edits. |
 | RL-Arena | `live` | `/adaptive-arena` | Fight trained bots in a full 30x30 tactical arena with checkpoint-based difficulties. |
 | Outguess | `live` | `/outguess` | Try to be unpredictable. Small sequence models learn your patterns, with separate blind and hint-visible scores. |
 | Video Volume | `live` | `/video-volume` | Explore eight real videos as space-time volumes, with pre-analyzed AI masks, 12 fps sampling, and fullscreen orbit controls. |

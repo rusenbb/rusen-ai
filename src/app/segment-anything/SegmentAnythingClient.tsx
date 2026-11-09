@@ -6,7 +6,7 @@ import { DemoHeader, DemoPage } from "@/components/ui";
 const SegmentAnythingExperience = dynamic(() => import("./SegmentAnythingExperience"), {
   ssr: false,
   loading: () => (
-    <DemoPage width="2xl">
+    <DemoPage>
       <DemoHeader eyebrow="Image segmentation" title="Segment Anything" />
     </DemoPage>
   ),
