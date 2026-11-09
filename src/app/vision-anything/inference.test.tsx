@@ -62,7 +62,7 @@ describe("vision inference lifecycle", () => {
     render(<VisionAnythingPage />);
     fireEvent.click(screen.getByRole("button", { name: "Classify" }));
     expect(classify).toHaveBeenCalledWith("/demo-images/dog.jpg", expect.arrayContaining(["a photo of a dog"]));
-    fireEvent.click(screen.getByRole("button", { name: "Street" }));
+    fireEvent.click(screen.getByRole("button", { name: "City street" }));
     await act(async () => resolve([{ label: "stale-dog-prediction", score: 0.9 }]));
     expect(screen.queryByText("stale-dog-prediction")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Classify" })).toBeEnabled();
