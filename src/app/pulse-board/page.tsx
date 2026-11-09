@@ -2,9 +2,11 @@
 
 import { DemoHeader, DemoPage } from "@/components/ui";
 
-import { CryptoHero, IssFeed, QuakeFeed, SOURCES, WikiFeed } from "./widgets";
+import { CryptoHero, IssFeed, LiveMap, QuakeFeed, SOURCES, WikiFeed, useIss, useQuakes } from "./widgets";
 
 export default function PulseBoardPage() {
+  const iss = useIss();
+  const quakes = useQuakes();
   return (
     <DemoPage>
       <DemoHeader
@@ -15,9 +17,13 @@ export default function PulseBoardPage() {
 
       <CryptoHero />
 
-      <div className="mt-10 grid gap-8 border-t border-[var(--line)] pt-6 md:grid-cols-3">
-        <IssFeed />
-        <QuakeFeed />
+      <div className="mt-10 border-t border-[var(--line)] pt-6">
+        <LiveMap iss={iss} feed={quakes} />
+      </div>
+
+      <div className="mt-8 grid gap-8 md:grid-cols-3">
+        <IssFeed iss={iss} />
+        <QuakeFeed feed={quakes} />
         <WikiFeed />
       </div>
 

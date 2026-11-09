@@ -262,23 +262,46 @@ export function CryptoHero() {
   );
 }
 
-export function IssFeed() {
-  const [position, setPosition] = useState<{ lat: number; lon: number; altitude: number; velocity: number } | null>(null);
-  const [error, setError] = useState(false);
+interface IssPosition {
+  lat: number;
+  lon: number;
+  altitude: number;
+  velocity: number;
+}
+
+interface IssState {
+  position: IssPosition | null;
+  /** Positions seen since the page opened, oldest first. */
+  trail: Array<{ lat: number; lon: number }>;
+  error: boolean;
+}
+
+const ISS_TRAIL = 360;
+
+export function useIss(): IssState {
+  const [state, setState] = useState<IssState>({ position: null, trail: [], error: false });
 
   const fetchIss = useCallback(async (signal: AbortSignal) => {
     try {
       const response = await fetchPublic("https://api.wheretheiss.at/v1/satellites/25544", { signal });
       if (!response.ok) throw new Error(String(response.status));
       const data = await response.json();
-      setPosition({ lat: data.latitude, lon: data.longitude, altitude: Math.round(data.altitude), velocity: Math.round(data.velocity) });
-      setError(false);
+      const position = { lat: data.latitude, lon: data.longitude, altitude: Math.round(data.altitude), velocity: Math.round(data.velocity) };
+      setState((current) => ({
+        position,
+        trail: [...current.trail.slice(1 - ISS_TRAIL), { lat: position.lat, lon: position.lon }],
+        error: false,
+      }));
     } catch {
-      if (!signal.aborted) setError(true);
+      if (!signal.aborted) setState((current) => ({ ...current, error: true }));
     }
   }, []);
   useVisiblePolling(fetchIss, 5000);
+  return state;
+}
 
+export function IssFeed({ iss }: { iss: IssState }) {
+  const { position, error } = iss;
   return (
     <section aria-label="International Space Station" className="min-w-0">
       <p className={LABEL}>Space station, every 5 s</p>
@@ -306,34 +329,51 @@ interface Quake {
   place: string;
   time: number;
   url: string;
+  lat: number;
+  lon: number;
 }
 
-export function QuakeFeed() {
-  const [quakes, setQuakes] = useState<Quake[] | null>(null);
-  const [error, setError] = useState(false);
-  const now = useNow(30000);
+interface QuakeState {
+  quakes: Quake[] | null;
+  error: boolean;
+}
+
+export function useQuakes(): QuakeState {
+  const [state, setState] = useState<QuakeState>({ quakes: null, error: false });
 
   const fetchQuakes = useCallback(async (signal: AbortSignal) => {
     try {
       const response = await fetchPublic("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson", { signal });
       if (!response.ok) throw new Error(String(response.status));
       const data = await response.json();
-      setQuakes(
-        (data.features as Array<{ id: string; properties: { mag: number; place: string; time: number; url: string } }>).map((feature) => ({
+      const features = data.features as Array<{
+        id: string;
+        geometry: { coordinates: [number, number, number] };
+        properties: { mag: number; place: string; time: number; url: string };
+      }>;
+      setState({
+        quakes: features.map((feature) => ({
           id: feature.id,
           magnitude: feature.properties.mag,
           place: feature.properties.place,
           time: feature.properties.time,
           url: feature.properties.url,
+          lon: feature.geometry.coordinates[0],
+          lat: feature.geometry.coordinates[1],
         })),
-      );
-      setError(false);
+        error: false,
+      });
     } catch {
-      if (!signal.aborted) setError(true);
+      if (!signal.aborted) setState((current) => ({ ...current, error: true }));
     }
   }, []);
   useVisiblePolling(fetchQuakes, 300000);
+  return state;
+}
 
+export function QuakeFeed({ feed }: { feed: QuakeState }) {
+  const { quakes, error } = feed;
+  const now = useNow(30000);
   const strongest = quakes?.reduce<Quake | null>((best, quake) => (!best || quake.magnitude > best.magnitude ? quake : best), null);
 
   return (
@@ -363,6 +403,92 @@ export function QuakeFeed() {
         <p className="mt-2 text-sm text-[var(--muted)]">{error ? "USGS did not answer. Retrying in a few minutes." : "Loading the USGS feed"}</p>
       )}
     </section>
+  );
+}
+
+// The land file is an equirectangular map from 80°N to 60°S; dots use the same coordinates.
+const MAP_TOP = 80;
+const MAP_HEIGHT = 140;
+const mapX = (lon: number) => lon + 180;
+const mapY = (lat: number) => MAP_TOP - lat;
+
+/** Splits the trail where it wraps from +180° to -180° so no line crosses the whole map. */
+function trailSegments(trail: Array<{ lat: number; lon: number }>): string[] {
+  const segments: string[] = [];
+  let current = "";
+  trail.forEach((point, index) => {
+    const wrapped = index > 0 && Math.abs(point.lon - trail[index - 1].lon) > 180;
+    if (wrapped && current) {
+      segments.push(current);
+      current = "";
+    }
+    current += `${current ? "L" : "M"}${mapX(point.lon).toFixed(2)} ${mapY(point.lat).toFixed(2)}`;
+  });
+  if (current) segments.push(current);
+  return segments;
+}
+
+export function LiveMap({ iss, feed }: { iss: IssState; feed: QuakeState }) {
+  const position = iss.position;
+  return (
+    <figure className="min-w-0">
+      <div className="relative w-full" style={{ aspectRatio: `360 / ${MAP_HEIGHT}` }}>
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-[var(--line-strong)] opacity-30"
+          style={{
+            maskImage: "url(/images/pulse-board/land-110m.svg)",
+            WebkitMaskImage: "url(/images/pulse-board/land-110m.svg)",
+            maskSize: "100% 100%",
+            WebkitMaskSize: "100% 100%",
+          }}
+        />
+        <svg
+          viewBox={`0 0 360 ${MAP_HEIGHT}`}
+          preserveAspectRatio="none"
+          className="absolute inset-0 h-full w-full overflow-visible"
+          role="img"
+          aria-label={
+            position
+              ? `World map with the space station near ${issRegion(position.lat, position.lon)} and ${feed.quakes?.length ?? 0} earthquakes from the past day`
+              : "World map of the past day's earthquakes"
+          }
+        >
+          {feed.quakes?.map((quake) => (
+            <circle
+              key={quake.id}
+              cx={mapX(quake.lon)}
+              cy={mapY(quake.lat)}
+              r={0.35 + Math.max(0, quake.magnitude - 2.5) * 0.45}
+              fill="var(--accent-2)"
+              fillOpacity="0.35"
+              stroke="var(--accent-2)"
+              strokeWidth="0.25"
+              vectorEffect="non-scaling-stroke"
+            />
+          ))}
+          {trailSegments(iss.trail).map((d, index) => (
+            <path key={index} d={d} fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeOpacity="0.7" vectorEffect="non-scaling-stroke" />
+          ))}
+          {position ? (
+            <g>
+              <circle cx={mapX(position.lon)} cy={mapY(position.lat)} r="3.2" fill="var(--accent)" fillOpacity="0.18" />
+              <circle cx={mapX(position.lon)} cy={mapY(position.lat)} r="1.3" fill="var(--accent)" />
+            </g>
+          ) : null}
+        </svg>
+      </div>
+      <figcaption className={`mt-2 flex flex-wrap gap-x-5 gap-y-1 ${LABEL}`}>
+        <span className="inline-flex items-center gap-1.5">
+          <i className="size-2 rounded-full bg-accent" />
+          Space station and its path since you opened the page
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <i className="size-2 rounded-full bg-accent-2 opacity-60" />
+          Earthquakes, past day, larger is stronger
+        </span>
+      </figcaption>
+    </figure>
   );
 }
 
@@ -443,4 +569,5 @@ export const SOURCES = [
   { label: "Where the ISS at?", href: "https://wheretheiss.at/w/developer" },
   { label: "USGS", href: "https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php" },
   { label: "Wikimedia EventStreams", href: "https://stream.wikimedia.org/?doc" },
+  { label: "Natural Earth", href: "https://www.naturalearthdata.com/" },
 ] as const;

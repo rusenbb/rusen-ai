@@ -46,6 +46,8 @@ const ABILITY_BUFFER_TICKS = 3;
 const LABEL = "font-mono text-[0.7rem] uppercase tracking-[0.08em] text-[var(--sub)]";
 const PLAY_LABELS: ArenaLabels = { player: "You", bot: "Bot" };
 const DEMO_LABELS: ArenaLabels = { player: "Bot A", bot: "Bot B" };
+/** The attract demo uses a stronger checkpoint: Medium against itself mostly ends in draws. */
+const DEMO_DIFFICULTY: BotDifficulty = "hard";
 
 const MOVE_KEYS: Record<string, MoveAction> = {
   ArrowUp: "move-up",
@@ -135,9 +137,11 @@ export default function AdaptiveArenaPage() {
   const [checkpointLoading, setCheckpointLoading] = useState(true);
   const [checkpointError, setCheckpointError] = useState<string | null>(null);
   const [match, setMatch] = useState<MatchState>(() => createInitialMatch(createPlayerModel()));
+  const startAfterLoadRef = useRef(false);
 
-  const manifest = ADAPTIVE_ARENA_CHECKPOINTS.find((entry) => entry.difficulty === difficulty) ?? null;
-  const runtimeConfig = useMemo(() => getDifficultyConfig(BOT_CONFIG, difficulty), [difficulty]);
+  const activeDifficulty = mode === "demo" ? DEMO_DIFFICULTY : difficulty;
+  const manifest = ADAPTIVE_ARENA_CHECKPOINTS.find((entry) => entry.difficulty === activeDifficulty) ?? null;
+  const runtimeConfig = useMemo(() => getDifficultyConfig(BOT_CONFIG, activeDifficulty), [activeDifficulty]);
   const ready = !checkpointLoading && !checkpointError;
   const isRunning = ready && (mode === "demo" ? !reducedMotion : playRunning);
   const labels = mode === "demo" ? DEMO_LABELS : PLAY_LABELS;
@@ -159,9 +163,11 @@ export default function AdaptiveArenaPage() {
     if (mode === "demo") {
       setMode("play");
       freshMatch();
+      // Leaving the demo may swap the checkpoint; start once the visitor's one is loaded.
+      startAfterLoadRef.current = difficulty !== DEMO_DIFFICULTY;
     }
     setPlayRunning(true);
-  }, [freshMatch, mode, ready]);
+  }, [difficulty, freshMatch, mode, ready]);
 
   const resetSession = useCallback(() => {
     setPlayRunning(false);
@@ -181,16 +187,20 @@ export default function AdaptiveArenaPage() {
         return;
       }
       try {
-        let asset = checkpointCacheRef.current.get(difficulty);
+        let asset = checkpointCacheRef.current.get(activeDifficulty);
         if (!asset) {
           const response = await fetch(manifest.assetPath);
           if (!response.ok) throw new Error(`The checkpoint did not load (HTTP ${response.status}).`);
           asset = (await response.json()) as DQNCheckpointAsset;
-          checkpointCacheRef.current.set(difficulty, asset);
+          checkpointCacheRef.current.set(activeDifficulty, asset);
         }
         if (cancelled) return;
         brainRef.current = createCheckpointBrain(asset);
         freshMatch();
+        if (startAfterLoadRef.current) {
+          startAfterLoadRef.current = false;
+          setPlayRunning(true);
+        }
       } catch (error) {
         if (!cancelled) setCheckpointError(error instanceof Error ? error.message : "The checkpoint did not load.");
       } finally {
@@ -201,7 +211,7 @@ export default function AdaptiveArenaPage() {
     return () => {
       cancelled = true;
     };
-  }, [difficulty, freshMatch, manifest]);
+  }, [activeDifficulty, freshMatch, manifest]);
 
   // Game loop. In the demo the left fighter uses the same checkpoint from its own side, as in self-play training.
   useEffect(() => {
@@ -367,7 +377,7 @@ export default function AdaptiveArenaPage() {
   let overlay: { title: string; hint: string } | null = null;
   if (checkpointError) overlay = { title: "The bot did not load", hint: checkpointError };
   else if (checkpointLoading) overlay = { title: "Loading the bot", hint: `${manifest?.label ?? ""} checkpoint` };
-  else if (mode === "demo") overlay = { title: "Press any key or tap to play", hint: reducedMotion ? "" : "Two copies of the bot are playing each other" };
+  else if (mode === "demo") overlay = { title: "Press any key or tap to play", hint: reducedMotion ? "" : "Two copies of the Hard bot are playing each other" };
   else if (!playRunning && match.phase === "live")
     overlay = notStarted ? { title: "Press any key or tap to play", hint: "" } : { title: "Paused", hint: "Press Space to resume" };
 

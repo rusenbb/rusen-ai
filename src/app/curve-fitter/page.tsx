@@ -297,36 +297,45 @@ function DecisionMap({
 }
 
 function HiddenGateMap({ network, gateIndex, transformed }: { network: TinyNetwork; gateIndex: number; transformed: boolean }) {
-  const cells = useMemo(
-    () =>
-      Array.from({ length: 24 * 24 }, (_, index) => {
-        const row = Math.floor(index / 24);
-        const column = index % 24;
-        const x = -1 + ((column + 0.5) / 24) * 2;
-        const y = 1 - ((row + 0.5) / 24) * 2;
-        const values = inspectHiddenLayer(network, { x, y });
-        const raw = values.preActivations[gateIndex] ?? 0;
-        // The raw score is unbounded; squash it only for display so its sign and slope stay visible.
-        const value = transformed ? values.activations[gateIndex] ?? 0 : Math.tanh(raw / 1.5);
-        return { row, column, value };
-      }),
-    [gateIndex, network, transformed],
-  );
+  const { cells, low, high } = useMemo(() => {
+    const samples = Array.from({ length: 24 * 24 }, (_, index) => {
+      const row = Math.floor(index / 24);
+      const column = index % 24;
+      const x = -1 + ((column + 0.5) / 24) * 2;
+      const y = 1 - ((row + 0.5) / 24) * 2;
+      const values = inspectHiddenLayer(network, { x, y });
+      const raw = transformed ? values.activations[gateIndex] ?? 0 : values.preActivations[gateIndex] ?? 0;
+      return { row, column, raw };
+    });
+    const raws = samples.map((sample) => sample.raw);
+    // The raw score is unbounded, so it gets its own linear scale: the largest magnitude on the grid is full colour.
+    const scale = transformed ? 1 : Math.max(...raws.map(Math.abs), 1e-9);
+    return {
+      cells: samples.map((sample) => ({ ...sample, value: sample.raw / scale })),
+      low: Math.min(...raws),
+      high: Math.max(...raws),
+    };
+  }, [gateIndex, network, transformed]);
 
   return (
-    <svg viewBox="0 0 100 100" className="block aspect-square w-full border border-[var(--line)] bg-[var(--surface)]" role="img" aria-label={transformed ? "Hidden unit after tanh" : "Hidden unit before tanh"}>
-      {cells.map((cell) => (
-        <rect
-          key={`${cell.row}-${cell.column}`}
-          x={svg((cell.column / 24) * 100)}
-          y={svg((cell.row / 24) * 100)}
-          width={svg(100 / 24 + 0.05)}
-          height={svg(100 / 24 + 0.05)}
-          shapeRendering="crispEdges"
-          style={{ fill: tint(cell.value >= 0 ? "var(--accent)" : "var(--accent-2)", Math.abs(cell.value) * 75) }}
-        />
-      ))}
-    </svg>
+    <>
+      <svg viewBox="0 0 100 100" className="block aspect-square w-full border border-[var(--line)] bg-[var(--surface)]" role="img" aria-label={transformed ? "Hidden unit after tanh" : "Hidden unit before tanh"}>
+        {cells.map((cell) => (
+          <rect
+            key={`${cell.row}-${cell.column}`}
+            x={svg((cell.column / 24) * 100)}
+            y={svg((cell.row / 24) * 100)}
+            width={svg(100 / 24 + 0.05)}
+            height={svg(100 / 24 + 0.05)}
+            shapeRendering="crispEdges"
+            style={{ fill: tint(cell.value >= 0 ? "var(--accent)" : "var(--accent-2)", Math.abs(cell.value) * 75) }}
+          />
+        ))}
+      </svg>
+      <p className={`mt-1.5 tabular-nums ${LABEL}`}>
+        {low.toFixed(1)} to {high.toFixed(1)}
+      </p>
+    </>
   );
 }
 

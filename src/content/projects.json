@@ -246,7 +246,7 @@
     "description": "Live board for crypto trades, ISS position, USGS earthquakes and Wikipedia edits.",
     "tags": [
       "WebSocket",
-      "Blockchain",
+      "Live data",
       "Real-time"
     ],
     "domains": [
