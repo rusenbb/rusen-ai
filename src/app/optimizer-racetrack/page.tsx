@@ -230,7 +230,7 @@ export default function OptimizerRacetrackPage() {
   };
 
   return (
-    <DemoPage width="2xl">
+    <DemoPage>
       <DemoHeader
         eyebrow="Optimization / terrain versus update rules"
         title="Optimizer Racetrack"

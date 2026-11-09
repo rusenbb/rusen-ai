@@ -1398,61 +1398,6 @@ function concludeRound(
   };
 }
 
-/**
- * Scripted rush-and-fight opponent for offline training.
- * Always approaches the bot, attacks when in range, occasionally guards or grabs pickups.
- * @param epsilon probability of random action (controls difficulty)
- */
-export function chooseScriptedAction(
-  match: MatchState,
-  arena: ArenaTile[][],
-  epsilon: number,
-  navigator?: ArenaNavigator,
-): ArenaAction {
-  if (match.phase !== "live") return "hold";
-
-  if (Math.random() < epsilon) {
-    return ACTIONS[Math.floor(Math.random() * ACTIONS.length)];
-  }
-
-  const opp = match.player; // scripted opponent plays as "player"
-  const bot = match.bot;
-
-  // Attack if in range
-  if (canAttack(arena, opp, bot)) {
-    // Small chance to guard instead of always attacking
-    if (Math.random() < 0.12) return "guard";
-    return "attack";
-  }
-
-  // Grab a nearby pickup if health is low or pickup is very close
-  const pickup = getNearestActivePickup(opp.position, match.pickups);
-  if (pickup) {
-    const pickupDist = manhattan(opp.position, pickup.position);
-    const botDist = manhattan(opp.position, bot.position);
-    if ((opp.health < 50 && pickupDist < botDist) || pickupDist <= 2) {
-      return getPathDirectionToward(
-        arena,
-        opp.position,
-        pickup.position,
-        navigator,
-      );
-    }
-  }
-
-  // Dash toward bot if we have energy and are far
-  if (
-    opp.energy >= 1 &&
-    manhattan(opp.position, bot.position) > 5 &&
-    Math.random() < 0.3
-  ) {
-    return "dash";
-  }
-
-  // Move toward bot
-  return getPathDirectionToward(arena, opp.position, bot.position, navigator);
-}
-
 export function createInitialMatch(
   playerModel: PlayerModel,
   maxRoundTicks?: number,

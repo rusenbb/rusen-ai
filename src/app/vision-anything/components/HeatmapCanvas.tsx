@@ -1,17 +1,15 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { AttentionMask } from "../hooks/useClipSeg";
 import { containedImageStyle } from "../maps";
 
 type Props = {
   mask: AttentionMask;
-  /** "viridis" gives the classic blue-green-yellow scientific gradient.
-   *  "cyan" is the original cyan-magenta glow used in screen blend.   */
-  palette?: "viridis" | "cyan";
-  /** Compositing mode: "screen" produces a translucent glow on top of an
-   *  image; "alpha" paints the heatmap as an opaque image. */
-  blend?: "screen" | "alpha";
+  /** "viridis" is the blue-green-yellow scientific gradient; "accent" tints by the theme accent. */
+  palette?: "viridis" | "accent";
+  /** "overlay": translucent tint on top of the photo; "alpha": an opaque heatmap image. */
+  blend?: "overlay" | "alpha";
   className?: string;
   imageAspect?: number;
 };
@@ -40,22 +38,32 @@ function viridisColor(v: number): [number, number, number] {
   return stops[stops.length - 1][1];
 }
 
-function cyanColor(v: number): [number, number, number] {
-  return [
-    Math.round(34 + v * 222),
-    Math.round(211 - v * 100),
-    Math.round(238 - v * 60),
-  ];
+/** The theme's accent colour as RGB, read from the CSS token. */
+function accentRgb(): [number, number, number] {
+  const probe = document.createElement("canvas").getContext("2d");
+  const value = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim();
+  if (!probe || !value) return [34, 211, 238];
+  probe.fillStyle = value;
+  const hex = String(probe.fillStyle);
+  const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
+  return m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : [34, 211, 238];
 }
 
 export default function HeatmapCanvas({
   mask,
-  palette = "cyan",
-  blend = "screen",
+  palette = "accent",
+  blend = "overlay",
   className,
   imageAspect,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [themeKey, setThemeKey] = useState(0);
+
+  useEffect(() => {
+    const redraw = () => setThemeKey((k) => k + 1);
+    window.addEventListener("rusen-theme-change", redraw);
+    return () => window.removeEventListener("rusen-theme-change", redraw);
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -65,7 +73,8 @@ export default function HeatmapCanvas({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     const img = ctx.createImageData(mask.width, mask.height);
-    const colorFor = palette === "viridis" ? viridisColor : cyanColor;
+    const accent = accentRgb();
+    const colorFor = palette === "viridis" ? viridisColor : () => accent;
     for (let i = 0; i < mask.data.length; i++) {
       const v = mask.data[i];
       const j = i * 4;
@@ -73,20 +82,18 @@ export default function HeatmapCanvas({
       img.data[j] = r;
       img.data[j + 1] = g;
       img.data[j + 2] = b;
-      // Screen blend: alpha derived from intensity so dim regions stay
-      // transparent. Alpha mode: nearly opaque so it reads as a stand-alone
-      // image, but still skip the very darkest pixels.
-      img.data[j + 3] =
-        blend === "screen" ? Math.round(v * v * 230) : Math.round(40 + v * 215);
+      // Overlay: alpha grows with the score so weak regions stay clear.
+      // Alpha mode: nearly opaque so it reads as a stand-alone image.
+      img.data[j + 3] = blend === "overlay" ? Math.round(v * v * 190) : Math.round(40 + v * 215);
     }
     ctx.putImageData(img, 0, 0);
-  }, [mask, palette, blend]);
+  }, [mask, palette, blend, themeKey]);
 
   return (
     <canvas
       ref={canvasRef}
       className={className ?? "absolute inset-0 w-full h-full pointer-events-none"}
-      style={{ mixBlendMode: blend === "screen" ? "screen" : "normal", ...(imageAspect ? containedImageStyle(imageAspect) : {}) }}
+      style={imageAspect ? containedImageStyle(imageAspect) : undefined}
     />
   );
 }

@@ -1,1671 +1,573 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+import { Stat } from "@/components/ui";
+
 import {
-  SiBitcoin,
-  SiEthereum,
-  SiSolana,
-  SiBinance,
-  SiRipple,
-  SiDogecoin,
-  SiCardano,
-} from "react-icons/si";
-import { Card as SharedCard } from "@/components/ui";
+  COINS,
+  formatPrice,
+  isReadableEdit,
+  issRegion,
+  mergeTrade,
+  parseKlines,
+  timeAgo,
+  wikiLabel,
+  type CoinSymbol,
+  type MinutePoint,
+  type WikiChange,
+} from "./feeds";
 import { fetchPublic, useVisiblePolling } from "./polling";
 
-// Types
-interface WeatherData {
-  temperature: number;
-  windspeed: number;
-  weathercode: number;
-  is_day: number;
+const LABEL = "font-mono text-[0.7rem] uppercase tracking-[0.08em] text-[var(--sub)]";
+const FLUSH_MS = 250;
+const STALE_MS = 15000;
+const HERO: CoinSymbol = "btc";
+
+function useNow(intervalMs = 1000): number {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), intervalMs);
+    return () => window.clearInterval(timer);
+  }, [intervalMs]);
+  return now;
 }
 
-interface HNStory {
-  id: number;
-  title: string;
-  score: number;
-  url?: string;
+function prefersReducedMotion(): boolean {
+  return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-interface Earthquake {
+function formatChange(change: number | null | undefined): string {
+  if (change == null) return "";
+  return `${change >= 0 ? "+" : "−"}${Math.abs(change).toFixed(2)}%`;
+}
+
+function Sparkline({ series }: { series: MinutePoint[] }) {
+  if (series.length < 2) {
+    return <div className="h-40 border-y border-[var(--line)] sm:h-48" aria-hidden />;
+  }
+  const prices = series.map((point) => point.price);
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  const span = max - min || 1;
+  const first = series[0].minute;
+  const width = 600;
+  const height = 160;
+  const points = series.map((point) => [
+    ((point.minute - first) / Math.max(1, series.at(-1)!.minute - first)) * width,
+    height - 8 - ((point.price - min) / span) * (height - 16),
+  ]);
+  const line = points.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`).join(" ");
+  const [lastX, lastY] = points.at(-1)!;
+  return (
+    <figure className="min-w-0">
+      <div className="relative">
+        <svg
+          viewBox={`0 0 ${width} ${height}`}
+          preserveAspectRatio="none"
+          className="block h-40 w-full overflow-visible border-y border-[var(--line)] sm:h-48"
+          role="img"
+          aria-label={`Bitcoin price over the last ${series.length} minutes, from ${formatPrice(min)} to ${formatPrice(max)} dollars`}
+        >
+          <path d={`${line} L${width} ${height} L0 ${height} Z`} fill="var(--accent)" opacity="0.08" />
+          <path d={line} fill="none" stroke="var(--accent)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+          <line x1={lastX} x2={lastX} y1={0} y2={height} stroke="var(--line)" vectorEffect="non-scaling-stroke" />
+        </svg>
+        <span
+          className="absolute size-2 -translate-x-1/2 -translate-y-1/2 bg-[var(--accent)]"
+          style={{ left: `${(lastX / width) * 100}%`, top: `${(lastY / height) * 100}%` }}
+          aria-hidden
+        />
+        <span className={`absolute left-0 top-1 ${LABEL}`}>${formatPrice(max)}</span>
+        <span className={`absolute bottom-1 left-0 ${LABEL}`}>${formatPrice(min)}</span>
+      </div>
+      <figcaption className={`mt-1 flex justify-between ${LABEL}`}>
+        <span>{series.length} min ago</span>
+        <span>now</span>
+      </figcaption>
+    </figure>
+  );
+}
+
+/** Binance trade stream for eight coins, flushed to React four times a second. */
+export function CryptoHero() {
+  const [prices, setPrices] = useState<Partial<Record<CoinSymbol, number>>>({});
+  const [changes, setChanges] = useState<Partial<Record<CoinSymbol, number | null>>>({});
+  const [series, setSeries] = useState<MinutePoint[]>([]);
+  const [lastTradeAt, setLastTradeAt] = useState<number | null>(null);
+  const now = useNow();
+  const pending = useRef(new Map<CoinSymbol, { price: number; time: number }>());
+  const shown = useRef<Partial<Record<CoinSymbol, number>>>({});
+  const priceEls = useRef(new Map<CoinSymbol, HTMLElement>());
+
+  useEffect(() => {
+    let stopped = false;
+    let attempts = 0;
+    let retry: ReturnType<typeof setTimeout> | undefined;
+    let socket: WebSocket | null = null;
+    const streams = COINS.map((coin) => `${coin.pair.toLowerCase()}@trade`).join("/");
+    const bySymbol = new Map(COINS.map((coin) => [coin.pair, coin.sym]));
+
+    const connect = () => {
+      if (stopped || document.hidden) return;
+      const ws = new WebSocket(`wss://stream.binance.com:9443/stream?streams=${streams}`);
+      socket = ws;
+      ws.onmessage = (event) => {
+        if (socket !== ws) return;
+        try {
+          const { data } = JSON.parse(event.data);
+          const sym = bySymbol.get(data?.s);
+          const price = Number(data?.p);
+          if (!sym || !Number.isFinite(price) || price <= 0) return;
+          attempts = 0;
+          pending.current.set(sym, { price, time: Number(data.T) || Date.now() });
+        } catch {
+          /* Ignore malformed frames; the stale notice covers a dead stream. */
+        }
+      };
+      ws.onerror = () => ws.close();
+      ws.onclose = () => {
+        if (socket !== ws || stopped) return;
+        socket = null;
+        if (!document.hidden) retry = setTimeout(connect, Math.min(30000, 1000 * 2 ** Math.min(attempts++, 5)));
+      };
+    };
+    const onVisibility = () => {
+      clearTimeout(retry);
+      const ws = socket;
+      socket = null;
+      ws?.close();
+      if (!document.hidden) connect();
+    };
+
+    const flush = window.setInterval(() => {
+      if (pending.current.size === 0) return;
+      const batch = new Map(pending.current);
+      pending.current.clear();
+      const reduce = prefersReducedMotion();
+      for (const [sym, { price }] of batch) {
+        const before = shown.current[sym];
+        const element = priceEls.current.get(sym);
+        if (!reduce && element && before && before !== price && element.animate) {
+          const flash = price > before ? "var(--accent)" : "var(--accent-2)";
+          element.animate([{ color: flash }, { color: "var(--foreground)" }], { duration: 700, easing: "ease-out" });
+        }
+        shown.current[sym] = price;
+      }
+      setPrices({ ...shown.current });
+      setLastTradeAt(Date.now());
+      const hero = batch.get(HERO);
+      if (hero) setSeries((previous) => mergeTrade(previous, hero.time, hero.price));
+    }, FLUSH_MS);
+
+    connect();
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      stopped = true;
+      clearTimeout(retry);
+      window.clearInterval(flush);
+      socket?.close();
+      socket = null;
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, []);
+
+  // One hour of one-minute closes so the line is there before the first trade arrives.
+  useEffect(() => {
+    const controller = new AbortController();
+    const pair = COINS.find((coin) => coin.sym === HERO)!.pair;
+    fetchPublic(`https://api.binance.com/api/v3/klines?symbol=${pair}&interval=1m&limit=60`, { signal: controller.signal })
+      .then((response) => (response.ok ? response.json() : []))
+      .then((rows) => {
+        const history = parseKlines(rows);
+        setSeries((live) => {
+          let merged = history;
+          for (const point of live) merged = mergeTrade(merged, point.minute * 60000, point.price);
+          return merged;
+        });
+      })
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, []);
+
+  const fetchChanges = useCallback(async (signal: AbortSignal) => {
+    try {
+      const ids = COINS.map((coin) => coin.cgId).join(",");
+      const response = await fetchPublic(
+        `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`,
+        { signal },
+      );
+      if (!response.ok) return;
+      const data = await response.json();
+      setChanges(Object.fromEntries(COINS.map((coin) => [coin.sym, data[coin.cgId]?.usd_24h_change ?? null])));
+    } catch {
+      /* Keep the last known changes. */
+    }
+  }, []);
+  useVisiblePolling(fetchChanges, 60000);
+
+  const hero = COINS.find((coin) => coin.sym === HERO)!;
+  const status =
+    lastTradeAt === null
+      ? "Connecting to the trade stream"
+      : now - lastTradeAt > STALE_MS
+        ? "No trades for a while, reconnecting"
+        : "Every trade, as it happens";
+  const setPriceEl = (sym: CoinSymbol) => (element: HTMLElement | null) => {
+    if (element) priceEls.current.set(sym, element);
+    else priceEls.current.delete(sym);
+  };
+
+  return (
+    <section aria-label="Crypto prices" className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_19rem]">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <p className={LABEL}>
+            {hero.name} · BTC/USDT
+          </p>
+          <p role="status" className={LABEL}>
+            {status}
+          </p>
+        </div>
+        <div className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+          <span ref={setPriceEl(hero.sym)} className="font-mono text-5xl font-semibold tabular-nums sm:text-6xl">
+            {prices[hero.sym] ? `$${formatPrice(prices[hero.sym]!)}` : "--"}
+          </span>
+          {changes[hero.sym] != null ? (
+            <span className="font-mono text-sm tabular-nums text-[var(--muted)]">{formatChange(changes[hero.sym])} in 24h</span>
+          ) : null}
+        </div>
+        <div className="mt-5">
+          <Sparkline series={series} />
+        </div>
+      </div>
+
+      <table className="w-full self-start border-collapse text-sm">
+        <caption className={`pb-2 text-left ${LABEL}`}>Other coins, USD</caption>
+        <tbody className="font-mono tabular-nums">
+          {COINS.filter((coin) => coin.sym !== HERO).map((coin) => (
+            <tr key={coin.sym} className="border-t border-[var(--line)]">
+              <th scope="row" className="py-2 pr-3 text-left font-normal">
+                {coin.name}
+              </th>
+              <td className="py-2 pr-3 text-right">
+                <span ref={setPriceEl(coin.sym)}>{prices[coin.sym] ? `$${formatPrice(prices[coin.sym]!)}` : "--"}</span>
+              </td>
+              <td className="w-20 py-2 text-right text-xs text-[var(--sub)]">{formatChange(changes[coin.sym])}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
+  );
+}
+
+interface IssPosition {
+  lat: number;
+  lon: number;
+  altitude: number;
+  velocity: number;
+}
+
+interface IssState {
+  position: IssPosition | null;
+  /** Positions seen since the page opened, oldest first. */
+  trail: Array<{ lat: number; lon: number }>;
+  error: boolean;
+}
+
+const ISS_TRAIL = 360;
+
+export function useIss(): IssState {
+  const [state, setState] = useState<IssState>({ position: null, trail: [], error: false });
+
+  const fetchIss = useCallback(async (signal: AbortSignal) => {
+    try {
+      const response = await fetchPublic("https://api.wheretheiss.at/v1/satellites/25544", { signal });
+      if (!response.ok) throw new Error(String(response.status));
+      const data = await response.json();
+      const position = { lat: data.latitude, lon: data.longitude, altitude: Math.round(data.altitude), velocity: Math.round(data.velocity) };
+      setState((current) => ({
+        position,
+        trail: [...current.trail.slice(1 - ISS_TRAIL), { lat: position.lat, lon: position.lon }],
+        error: false,
+      }));
+    } catch {
+      if (!signal.aborted) setState((current) => ({ ...current, error: true }));
+    }
+  }, []);
+  useVisiblePolling(fetchIss, 5000);
+  return state;
+}
+
+export function IssFeed({ iss }: { iss: IssState }) {
+  const { position, error } = iss;
+  return (
+    <section aria-label="International Space Station" className="min-w-0">
+      <p className={LABEL}>Space station, every 5 s</p>
+      {position ? (
+        <>
+          <p className="mt-2 text-2xl font-semibold">{issRegion(position.lat, position.lon)}</p>
+          <p className="mt-1 font-mono text-sm tabular-nums text-[var(--muted)]">
+            {position.lat.toFixed(2)}°, {position.lon.toFixed(2)}°
+          </p>
+          <div className="mt-4 grid grid-cols-2 gap-4">
+            <Stat label="Altitude" value={`${position.altitude} km`} />
+            <Stat label="Speed" value={`${position.velocity.toLocaleString("en-US")} km/h`} />
+          </div>
+        </>
+      ) : (
+        <p className="mt-2 text-sm text-[var(--muted)]">{error ? "The position service did not answer. Retrying." : "Locating the station"}</p>
+      )}
+    </section>
+  );
+}
+
+interface Quake {
   id: string;
   magnitude: number;
   place: string;
   time: number;
   url: string;
+  lat: number;
+  lon: number;
 }
 
-interface GithubRepo {
-  rank: number;
-  name: string;
-  fullName: string;
-  url: string;
-  description: string;
-  language: string;
-  stars: number;
-  forks: number;
-  todayStars: number;
+interface QuakeState {
+  quakes: Quake[] | null;
+  error: boolean;
 }
 
-interface Clock {
-  city: string;
-  timezone: string;
-  flag: string;
-}
+export function useQuakes(): QuakeState {
+  const [state, setState] = useState<QuakeState>({ quakes: null, error: false });
 
-// City data for weather
-const CITIES = [
-  { name: "New York", lat: 40.7128, lon: -74.006 },
-  { name: "London", lat: 51.5074, lon: -0.1278 },
-  { name: "Tokyo", lat: 35.6762, lon: 139.6503 },
-  { name: "Sydney", lat: -33.8688, lon: 151.2093 },
-  { name: "Istanbul", lat: 41.0082, lon: 28.9784 },
-];
-
-// World clocks config
-const CLOCKS: Clock[] = [
-  { city: "New York", timezone: "America/New_York", flag: "US" },
-  { city: "London", timezone: "Europe/London", flag: "GB" },
-  { city: "Istanbul", timezone: "Europe/Istanbul", flag: "TR" },
-  { city: "Tokyo", timezone: "Asia/Tokyo", flag: "JP" },
-  { city: "Sydney", timezone: "Australia/Sydney", flag: "AU" },
-];
-
-// Weather code descriptions
-const WEATHER_CODES: Record<number, { desc: string; icon: string }> = {
-  0: { desc: "Clear", icon: "sun" },
-  1: { desc: "Mostly Clear", icon: "sun" },
-  2: { desc: "Partly Cloudy", icon: "cloud-sun" },
-  3: { desc: "Overcast", icon: "cloud" },
-  45: { desc: "Foggy", icon: "cloud" },
-  48: { desc: "Icy Fog", icon: "cloud" },
-  51: { desc: "Light Drizzle", icon: "rain" },
-  53: { desc: "Drizzle", icon: "rain" },
-  55: { desc: "Heavy Drizzle", icon: "rain" },
-  61: { desc: "Light Rain", icon: "rain" },
-  63: { desc: "Rain", icon: "rain" },
-  65: { desc: "Heavy Rain", icon: "rain" },
-  71: { desc: "Light Snow", icon: "snow" },
-  73: { desc: "Snow", icon: "snow" },
-  75: { desc: "Heavy Snow", icon: "snow" },
-  80: { desc: "Showers", icon: "rain" },
-  81: { desc: "Heavy Showers", icon: "rain" },
-  82: { desc: "Violent Showers", icon: "rain" },
-  95: { desc: "Thunderstorm", icon: "storm" },
-  96: { desc: "Hail Storm", icon: "storm" },
-  99: { desc: "Heavy Hail", icon: "storm" },
-};
-
-// Weather icon component
-function WeatherIcon({ code }: { code: number; isDay: boolean }) {
-  const weather = WEATHER_CODES[code] || { desc: "Unknown", icon: "cloud" };
-  const iconType = weather.icon;
-
-  if (iconType === "sun") {
-    return (
-      <svg className="w-12 h-12 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="5" />
-        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" strokeWidth="2" fill="none" />
-      </svg>
-    );
-  }
-  if (iconType === "cloud-sun") {
-    return (
-      <svg className="w-12 h-12 text-neutral-400" fill="currentColor" viewBox="0 0 24 24">
-        <circle cx="8" cy="6" r="3" className="text-yellow-500" fill="currentColor" />
-        <path d="M18 10h-1.26A5 5 0 0 0 8 10.5 3.5 3.5 0 1 0 6.5 17H18a3 3 0 1 0 0-6z" />
-      </svg>
-    );
-  }
-  if (iconType === "rain") {
-    return (
-      <svg className="w-12 h-12 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M20 17h-1.26A5 5 0 0 0 10 17.5 3.5 3.5 0 1 0 8.5 11H20a3 3 0 1 1 0 6z" className="text-neutral-400" fill="currentColor" />
-        <path d="M8 19v2M12 19v2M16 19v2" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" />
-      </svg>
-    );
-  }
-  if (iconType === "snow") {
-    return (
-      <svg className="w-12 h-12 text-blue-200" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M20 15h-1.26A5 5 0 0 0 10 15.5 3.5 3.5 0 1 0 8.5 9H20a3 3 0 1 1 0 6z" className="text-neutral-400" fill="currentColor" />
-        <circle cx="8" cy="19" r="1" />
-        <circle cx="12" cy="20" r="1" />
-        <circle cx="16" cy="19" r="1" />
-      </svg>
-    );
-  }
-  if (iconType === "storm") {
-    return (
-      <svg className="w-12 h-12 text-yellow-400" viewBox="0 0 24 24">
-        <path d="M20 15h-1.26A5 5 0 0 0 10 15.5 3.5 3.5 0 1 0 8.5 9H20a3 3 0 1 1 0 6z" className="text-neutral-500" fill="currentColor" />
-        <path d="M13 12l-2 5h3l-2 5" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    );
-  }
-  // Default cloud
-  return (
-    <svg className="w-12 h-12 text-neutral-400" fill="currentColor" viewBox="0 0 24 24">
-      <path d="M20 17h-1.26A5 5 0 0 0 10 17.5 3.5 3.5 0 1 0 8.5 11H20a3 3 0 1 1 0 6z" />
-    </svg>
-  );
-}
-
-// Card wrapper component
-function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return (
-    <SharedCard padding="lg" className={`h-full ${className}`}>
-      {children}
-    </SharedCard>
-  );
-}
-
-// Loading skeleton
-function Skeleton({ className = "" }: { className?: string }) {
-  return (
-    <div className={`animate-pulse bg-neutral-200 dark:bg-neutral-800 rounded ${className}`} />
-  );
-}
-
-// Live badge component for real-time widgets
-function LiveBadge({ connected, updateCount }: { connected: boolean; updateCount?: number }) {
-  if (!connected) {
-    return <span className="text-xs text-neutral-500">Connecting...</span>;
-  }
-  return (
-    <div className="flex items-center gap-2">
-      <span className="relative flex h-2 w-2">
-        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-      </span>
-      <span className="text-xs text-green-600 dark:text-green-400">LIVE</span>
-      {updateCount !== undefined && (
-        <>
-          <span className="text-xs text-neutral-400">|</span>
-          <span className="text-xs text-neutral-500">{updateCount.toLocaleString()} updates</span>
-        </>
-      )}
-    </div>
-  );
-}
-
-// Relative time helper
-function formatTimeAgo(date: Date | null, nowMs: number): string {
-  if (!date) return "";
-  const seconds = Math.max(0, Math.floor((nowMs - date.getTime()) / 1000));
-  if (seconds < 60) return `${seconds}s ago`;
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-  return `${Math.floor(seconds / 3600)}h ago`;
-}
-
-// Widget order for animations and keyboard navigation
-export const WIDGET_ORDER = [
-  "crypto-hub",
-  "github-activity",
-  "rocket-launches",
-  "wikipedia-live",
-  "fx-pulse",
-  "world-clocks",
-  "weather",
-  "iss-tracker",
-  "earthquake",
-  "github-trending",
-  "hacker-news",
-] as const;
-
-function useRelativeTimeTicker(intervalMs = 1000): number {
-  const [nowMs, setNowMs] = useState(() => Date.now());
-
-  useEffect(() => {
-    const interval = window.setInterval(() => {
-      setNowMs(Date.now());
-    }, intervalMs);
-
-    return () => window.clearInterval(interval);
-  }, [intervalMs]);
-
-  return nowMs;
-}
-
-// Keyboard shortcuts modal
-export function ShortcutsModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const dialogRef = useRef<HTMLDivElement>(null);
-  const closeRef = useRef<HTMLButtonElement>(null);
-  const previousFocusRef = useRef<HTMLElement | null>(null);
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    previousFocusRef.current = document.activeElement as HTMLElement | null;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    closeRef.current?.focus();
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        onClose();
-        return;
-      }
-      if (event.key !== "Tab") return;
-
-      const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
-      );
-      if (!focusable?.length) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = previousOverflow;
-      previousFocusRef.current?.focus();
-    };
-  }, [isOpen, onClose]);
-
-  if (!isOpen) return null;
-
-  const shortcuts = [
-    { key: "?", description: "Show this help" },
-    { key: "R", description: "Refresh page" },
-    { key: "1-9", description: "Jump to widget" },
-    { key: "Esc", description: "Close modal" },
-  ];
-
-  const widgetNames = [
-    "Crypto Hub", "GitHub Activity", "Rocket Launches", "Wikipedia Live",
-    "FX Pulse", "World Clocks", "Weather", "ISS Tracker", "Earthquakes"
-  ];
-
-  return (
-    <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-      onClick={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
-      <div
-        ref={dialogRef}
-        className="bg-white dark:bg-neutral-900 rounded-lg p-6 max-w-md w-full shadow-xl border border-neutral-200 dark:border-neutral-800"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="pulse-shortcuts-title"
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h2 id="pulse-shortcuts-title" className="text-lg font-semibold">Keyboard Shortcuts</h2>
-          <button
-            ref={closeRef}
-            type="button"
-            onClick={onClose}
-            className="inline-flex min-h-11 min-w-11 items-center justify-center text-neutral-600 hover:text-neutral-800 dark:text-neutral-300 dark:hover:text-neutral-100"
-            aria-label="Close keyboard shortcuts"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <div className="space-y-2 mb-4">
-          {shortcuts.map(({ key, description }) => (
-            <div key={key} className="flex items-center justify-between">
-              <span className="text-sm text-neutral-600 dark:text-neutral-400">{description}</span>
-              <kbd className="px-2 py-1 bg-neutral-100 dark:bg-neutral-800 rounded text-xs font-mono">
-                {key}
-              </kbd>
-            </div>
-          ))}
-        </div>
-
-        <div className="border-t border-neutral-200 dark:border-neutral-700 pt-4">
-          <p className="text-xs text-neutral-500 mb-2">Widget Numbers:</p>
-          <div className="grid grid-cols-2 gap-1 text-xs">
-            {widgetNames.map((name, i) => (
-              <div key={name} className="flex items-center gap-1 text-neutral-500">
-                <kbd className="px-1 bg-neutral-100 dark:bg-neutral-800 rounded font-mono">{i + 1}</kbd>
-                <span className="truncate">{name}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// World Clocks Widget
-function WorldClocksWidget() {
-  const [times, setTimes] = useState<Record<string, { time: string; date: string }>>({});
-
-  useEffect(() => {
-    const updateTimes = () => {
-      const newTimes: Record<string, { time: string; date: string }> = {};
-      CLOCKS.forEach((clock) => {
-        const now = new Date();
-        const timeStr = now.toLocaleTimeString("en-US", {
-          timeZone: clock.timezone,
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: false,
-        });
-        const dateStr = now.toLocaleDateString("en-US", {
-          timeZone: clock.timezone,
-          weekday: "short",
-          month: "short",
-          day: "numeric",
-        });
-        newTimes[clock.city] = { time: timeStr, date: dateStr };
-      });
-      setTimes(newTimes);
-    };
-
-    updateTimes();
-    const interval = setInterval(updateTimes, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <Card>
-      <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-        <span className="text-xl">&#128336;</span> World Clocks
-      </h2>
-      <div className="space-y-3">
-        {CLOCKS.map((clock) => (
-          <div key={clock.city} className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-sm">{clock.flag}</span>
-              <span className="text-sm text-neutral-600 dark:text-neutral-400">{clock.city}</span>
-            </div>
-            <div className="text-right">
-              <div className="font-mono text-lg font-semibold">{times[clock.city]?.time || "--:--:--"}</div>
-              <div className="text-xs text-neutral-500">{times[clock.city]?.date || "---"}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </Card>
-  );
-}
-
-// Crypto Hub - Real-time streaming prices for 8 coins via Binance WebSocket.
-type CoinSymbol = "btc" | "eth" | "sol" | "bnb" | "xrp" | "doge" | "ada" | "avax";
-
-type CoinIconProps = { className?: string; style?: React.CSSProperties };
-
-const COINS: ReadonlyArray<{
-  sym: CoinSymbol;
-  stream: string;
-  name: string;
-  Icon: React.ComponentType<CoinIconProps>;
-  color: string;
-  cgId: string;
-}> = [
-  { sym: "btc", stream: "btcusdt@trade", name: "Bitcoin", Icon: SiBitcoin, color: "#F7931A", cgId: "bitcoin" },
-  { sym: "eth", stream: "ethusdt@trade", name: "Ethereum", Icon: SiEthereum, color: "#627EEA", cgId: "ethereum" },
-  { sym: "sol", stream: "solusdt@trade", name: "Solana", Icon: SiSolana, color: "#9945FF", cgId: "solana" },
-  { sym: "bnb", stream: "bnbusdt@trade", name: "BNB", Icon: SiBinance, color: "#F3BA2F", cgId: "binancecoin" },
-  { sym: "xrp", stream: "xrpusdt@trade", name: "XRP", Icon: SiRipple, color: "#23292F", cgId: "ripple" },
-  { sym: "doge", stream: "dogeusdt@trade", name: "Dogecoin", Icon: SiDogecoin, color: "#C2A633", cgId: "dogecoin" },
-  { sym: "ada", stream: "adausdt@trade", name: "Cardano", Icon: SiCardano, color: "#0033AD", cgId: "cardano" },
-  // Avalanche has no react-icons/si entry; reuse the Solana-style block with a placeholder glyph.
-  { sym: "avax", stream: "avaxusdt@trade", name: "Avalanche", Icon: AvalancheGlyph, color: "#E84142", cgId: "avalanche-2" },
-];
-
-function AvalancheGlyph({ className = "", style }: CoinIconProps) {
-  return (
-    <svg viewBox="0 0 32 32" className={className} style={style} aria-hidden>
-      <circle cx="16" cy="16" r="16" fill="#E84142" />
-      <path
-        d="M10.4 22.5h-3l5.85-10.4h3zM18.5 22.5l-3.6-6.4h3l3.6 6.4z"
-        fill="#fff"
-      />
-    </svg>
-  );
-}
-
-type PriceState = { price: number; prevPrice: number };
-type ChangeState = number | null;
-
-function CryptoHubWidget() {
-  const [prices, setPrices] = useState<Record<CoinSymbol, PriceState>>(() => {
-    const init = {} as Record<CoinSymbol, PriceState>;
-    COINS.forEach((c) => {
-      init[c.sym] = { price: 0, prevPrice: 0 };
-    });
-    return init;
-  });
-  const [changes, setChanges] = useState<Record<CoinSymbol, ChangeState>>(() => {
-    const init = {} as Record<CoinSymbol, ChangeState>;
-    COINS.forEach((c) => {
-      init[c.sym] = null;
-    });
-    return init;
-  });
-  const [wsConnected, setWsConnected] = useState(false);
-  const [updateCount, setUpdateCount] = useState(0);
-  const wsRef = useRef<WebSocket | null>(null);
-
-  const [lastPriceAt, setLastPriceAt] = useState<number | null>(null);
-  const priceNow = useRelativeTimeTicker();
-  useEffect(() => {
-    let stopped = false;
-    let attempts = 0;
-    let retry: ReturnType<typeof setTimeout>;
-    const streamPath = COINS.map((coin) => coin.stream).join("/");
-    const streamToSym = new Map(COINS.map((coin) => [coin.stream, coin.sym]));
-    const connect = () => {
-      if (stopped || document.hidden) return;
-      const ws = new WebSocket("wss://stream.binance.com:9443/stream?streams=" + streamPath);
-      wsRef.current = ws;
-      ws.onopen = () => { if (wsRef.current === ws) setWsConnected(true); };
-      ws.onmessage = (event) => {
-        if (wsRef.current !== ws || stopped) return;
-        try {
-          const message = JSON.parse(event.data);
-          const sym = streamToSym.get(message.stream);
-          const price = Number(message.data?.p);
-          if (!sym || !Number.isFinite(price) || price <= 0) return;
-          attempts = 0;
-          setPrices((previous) => ({ ...previous, [sym]: { price, prevPrice: previous[sym].price || price } }));
-          setLastPriceAt(Date.now()); setUpdateCount((count) => count + 1);
-        } catch { /* Ignore malformed frames; freshness still expires. */ }
-      };
-      ws.onerror = () => ws.close();
-      ws.onclose = () => {
-        if (wsRef.current !== ws || stopped) return;
-        setWsConnected(false);
-        if (!document.hidden) retry = setTimeout(connect, Math.min(30000, 1000 * 2 ** Math.min(attempts++, 5)));
-      };
-    };
-    const visibility = () => {
-      clearTimeout(retry);
-      const ws = wsRef.current; wsRef.current = null; ws?.close(); setWsConnected(false);
-      if (!document.hidden) connect();
-    };
-    connect(); document.addEventListener("visibilitychange", visibility);
-    return () => { stopped = true; clearTimeout(retry); wsRef.current?.close(); document.removeEventListener("visibilitychange", visibility); };
-  }, []);
-
-  // 24h change for all 8 coins from CoinGecko (single call, polled every 60s).
-  const fetchChanges = useCallback(async () => {
+  const fetchQuakes = useCallback(async (signal: AbortSignal) => {
     try {
-      const ids = COINS.map((c) => c.cgId).join(",");
-      const res = await fetchPublic(
-        `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`,
-      );
-      if (!res.ok) return;
-      const data = await res.json();
-      const next = {} as Record<CoinSymbol, ChangeState>;
-      COINS.forEach((c) => {
-        next[c.sym] = data[c.cgId]?.usd_24h_change ?? null;
-      });
-      setChanges(next);
-    } catch {
-      // Leave previous changes intact on failure.
-    }
-  }, []);
-
-  useVisiblePolling(fetchChanges, 60000);
-
-  const formatPrice = (price: number) => {
-    if (price === 0) return "--";
-    if (price >= 1000) {
-      return price.toLocaleString("en-US", { maximumFractionDigits: 0 });
-    }
-    if (price >= 1) {
-      return price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    }
-    return price.toLocaleString("en-US", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
-  };
-
-  const formatChange = (change: number) => {
-    const sign = change >= 0 ? "+" : "";
-    return `${sign}${change.toFixed(2)}%`;
-  };
-
-  const getPriceColor = (current: number, prev: number) => {
-    if (current === prev || prev === 0) return "";
-    return current > prev ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400";
-  };
-
-  return (
-    <Card className="col-span-1 md:col-span-2 lg:col-span-3">
-      <p role="status" className="mb-3 text-xs text-neutral-500">{lastPriceAt === null ? "Waiting for a price update" : priceNow - lastPriceAt > 15000 ? "Prices are stale · reconnecting when visible" : "Last price " + Math.max(0, Math.round((priceNow - lastPriceAt) / 1000)) + "s ago"}</p>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold flex items-center gap-2">
-          <span className="text-xl">&#9889;</span> Crypto Hub
-        </h2>
-        <LiveBadge connected={wsConnected} updateCount={updateCount} />
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        {COINS.map(({ sym, name, Icon, color }) => {
-          const p = prices[sym];
-          const ch = changes[sym];
-          return (
-            <div
-              key={sym}
-              className="rounded-lg border border-neutral-200/70 bg-white p-3 shadow-sm dark:border-neutral-700/70 dark:bg-neutral-900/80"
-            >
-              <div className="mb-2 flex min-w-0 items-start gap-2">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-neutral-100 dark:bg-neutral-800">
-                  <Icon className="h-5 w-5" style={{ color }} />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-semibold leading-tight text-neutral-950 dark:text-neutral-50">
-                    {name}
-                  </span>
-                  <span className="mt-0.5 block font-mono text-[10px] uppercase tracking-[0.18em] text-neutral-500 dark:text-neutral-400">
-                    {sym}
-                  </span>
-                </span>
-              </div>
-              <div className={`font-mono text-base font-bold truncate ${getPriceColor(p.price, p.prevPrice)}`}>
-                ${formatPrice(p.price)}
-              </div>
-              {ch != null && (
-                <div className={`text-xs ${ch >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
-                  {formatChange(ch)} <span className="text-neutral-400">24h</span>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </Card>
-  );
-}
-
-// Weather Widget
-function WeatherWidget() {
-  const [selectedCity, setSelectedCity] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("pulse-weather-city");
-      if (saved) {
-        const found = CITIES.find(c => c.name === saved);
-        if (found) return found;
-      }
-    }
-    return CITIES[0];
-  });
-  const [weather, setWeather] = useState<WeatherData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [lastFetched, setLastFetched] = useState<Date | null>(null);
-  const nowMs = useRelativeTimeTicker();
-
-  const weatherRequest = useRef(0);
-  const fetchWeather = useCallback(async (signal: AbortSignal) => {
-    const request = ++weatherRequest.current;
-    setLoading(true);
-    try {
-      const res = await fetchPublic(
-        `https://api.open-meteo.com/v1/forecast?latitude=${selectedCity.lat}&longitude=${selectedCity.lon}&current_weather=true`, { signal }
-      );
-      if (request !== weatherRequest.current || signal.aborted) return;
-      if (res.ok) {
-        const data = await res.json();
-        if (request !== weatherRequest.current || signal.aborted) return;
-        setWeather(data.current_weather);
-        setLastFetched(new Date());
-        setError(null);
-      } else {
-        setError("Failed to fetch weather");
-      }
-    } catch {
-      if (!signal.aborted && request === weatherRequest.current) setError("Failed to fetch weather");
-    } finally {
-      if (!signal.aborted && request === weatherRequest.current) setLoading(false);
-    }
-  }, [selectedCity]);
-
-  useVisiblePolling(fetchWeather, 300000);
-
-  const weatherInfo = weather ? WEATHER_CODES[weather.weathercode] || { desc: "Unknown", icon: "cloud" } : null;
-
-  return (
-    <Card>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold flex items-center gap-2">
-          <span className="text-xl">&#9728;&#65039;</span> Weather
-        </h2>
-        {lastFetched && (
-          <span className="text-xs text-neutral-500">{formatTimeAgo(lastFetched, nowMs)}</span>
-        )}
-      </div>
-      <select
-        aria-label="Weather city"
-        value={selectedCity.name}
-        onChange={(e) => {
-          const city = CITIES.find((c) => c.name === e.target.value);
-          if (city) {
-            weatherRequest.current++;
-            setWeather(null);
-            setLastFetched(null);
-            setLoading(true);
-            setSelectedCity(city);
-            localStorage.setItem("pulse-weather-city", city.name);
-          }
-        }}
-        className="w-full mb-4 p-2 border border-neutral-200 dark:border-neutral-700 rounded bg-white dark:bg-neutral-900 text-sm"
-      >
-        {CITIES.map((city) => (
-          <option key={city.name} value={city.name}>
-            {city.name}
-          </option>
-        ))}
-      </select>
-
-      {loading ? (
-        <div className="flex items-center gap-4">
-          <Skeleton className="w-12 h-12 rounded" />
-          <div>
-            <Skeleton className="h-8 w-20 mb-2" />
-            <Skeleton className="h-4 w-24" />
-          </div>
-        </div>
-      ) : error ? (
-        <p className="text-red-500 text-sm">{error}</p>
-      ) : weather ? (
-        <div className="flex items-center gap-4">
-          <WeatherIcon code={weather.weathercode} isDay={weather.is_day === 1} />
-          <div>
-            <div className="text-3xl font-bold">{Math.round(weather.temperature)}°C</div>
-            <div className="text-sm text-neutral-500">{weatherInfo?.desc}</div>
-            <div className="text-xs text-neutral-400 mt-1">
-              Wind: {weather.windspeed} km/h
-            </div>
-          </div>
-        </div>
-      ) : null}
-    </Card>
-  );
-}
-
-// Hacker News Widget
-function HackerNewsWidget() {
-  const [stories, setStories] = useState<HNStory[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchStories = useCallback(async () => {
-    try {
-      const res = await fetchPublic("https://hacker-news.firebaseio.com/v0/topstories.json");
-      if (!res.ok) throw new Error("Failed to fetch");
-
-      const ids: number[] = await res.json();
-      const top5 = ids.slice(0, 5);
-
-      const storyPromises = top5.map((id) =>
-        fetchPublic(`https://hacker-news.firebaseio.com/v0/item/${id}.json`).then((r) => r.json())
-      );
-
-      const fetchedStories = await Promise.all(storyPromises);
-      setStories(fetchedStories);
-      setError(null);
-    } catch {
-      setError("Failed to fetch Hacker News");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useVisiblePolling(fetchStories, 300000);
-
-  return (
-    <Card>
-      <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-        <span className="text-xl text-orange-500">Y</span> Hacker News
-      </h2>
-      {loading ? (
-        <div className="space-y-3">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <Skeleton key={i} className="h-4 w-full" />
-          ))}
-        </div>
-      ) : error ? (
-        <p className="text-red-500 text-sm">{error}</p>
-      ) : (
-        <div className="space-y-3">
-          {stories.map((story, idx) => (
-            <div key={story.id} className="flex gap-2">
-              <span className="text-neutral-400 text-sm w-4">{idx + 1}.</span>
-              <div className="flex-1 min-w-0">
-                <a
-                  href={story.url || `https://news.ycombinator.com/item?id=${story.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm hover:underline line-clamp-2"
-                >
-                  {story.title}
-                </a>
-                <div className="text-xs text-neutral-500 mt-0.5">
-                  {story.score} points
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </Card>
-  );
-}
-
-// Earthquake Monitor Widget
-function EarthquakeWidget() {
-  const [quakes, setQuakes] = useState<Earthquake[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const nowMs = useRelativeTimeTicker();
-
-  const fetchQuakes = useCallback(async () => {
-    try {
-      // USGS API - significant earthquakes in the past day
-      const res = await fetchPublic(
-        "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson"
-      );
-      if (!res.ok) throw new Error("Failed to fetch");
-
-      const data = await res.json();
-      const earthquakes: Earthquake[] = data.features.slice(0, 5).map((f: { id: string; properties: { mag: number; place: string; time: number; url: string } }) => ({
-        id: f.id,
-        magnitude: f.properties.mag,
-        place: f.properties.place,
-        time: f.properties.time,
-        url: f.properties.url,
-      }));
-
-      setQuakes(earthquakes);
-      setError(null);
-    } catch {
-      setError("Failed to fetch earthquake data");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useVisiblePolling(fetchQuakes, 300000);
-
-  const getMagnitudeColor = (mag: number) => {
-    if (mag >= 6) return "bg-red-500";
-    if (mag >= 5) return "bg-orange-500";
-    if (mag >= 4) return "bg-yellow-500";
-    return "bg-green-500";
-  };
-
-  const timeAgo = (timestamp: number) => {
-    const seconds = Math.max(0, Math.floor((nowMs - timestamp) / 1000));
-    if (seconds < 60) return `${seconds}s ago`;
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes}m ago`;
-    const hours = Math.floor(minutes / 60);
-    return `${hours}h ago`;
-  };
-
-  return (
-    <Card>
-      <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-        <span className="text-xl">&#127759;</span> Earthquake Monitor
-      </h2>
-      {loading ? (
-        <div className="space-y-3">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <Skeleton key={i} className="h-4 w-full" />
-          ))}
-        </div>
-      ) : error ? (
-        <p className="text-red-500 text-sm">{error}</p>
-      ) : quakes.length === 0 ? (
-        <p className="text-neutral-500 text-sm">No significant earthquakes in the last 24h</p>
-      ) : (
-        <div className="space-y-3">
-          {quakes.map((quake) => (
-            <a
-              key={quake.id}
-              href={quake.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-start gap-2 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 -mx-2 px-2 py-1 rounded transition"
-            >
-              <span className={`${getMagnitudeColor(quake.magnitude)} text-white text-xs font-bold px-1.5 py-0.5 rounded min-w-[2.5rem] text-center`}>
-                {quake.magnitude.toFixed(1)}
-              </span>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm line-clamp-1">{quake.place}</div>
-                <div className="text-xs text-neutral-500">{timeAgo(quake.time)}</div>
-              </div>
-            </a>
-          ))}
-        </div>
-      )}
-      <a
-        href="https://earthquake.usgs.gov/earthquakes/map/"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-xs text-neutral-500 hover:underline mt-3 inline-block"
-      >
-        USGS Earthquake Map &#8594;
-      </a>
-    </Card>
-  );
-}
-
-// GitHub Trending Widget
-function GithubTrendingWidget() {
-  const [repos, setRepos] = useState<GithubRepo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchTrending = useCallback(async () => {
-    try {
-      // Using GitHub search API to find trending repos (sorted by stars, created in last week)
-      const oneWeekAgo = new Date();
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-      const dateStr = oneWeekAgo.toISOString().split("T")[0];
-
-      const res = await fetchPublic(
-        `https://api.github.com/search/repositories?q=created:>${dateStr}&sort=stars&order=desc&per_page=5`
-      );
-
-      if (!res.ok) throw new Error("Failed to fetch");
-
-      const data = await res.json();
-      const trending: GithubRepo[] = data.items.map((repo: { id: number; name: string; full_name: string; html_url: string; description: string | null; language: string | null; stargazers_count: number; forks_count: number }, idx: number) => ({
-        rank: idx + 1,
-        name: repo.name,
-        fullName: repo.full_name,
-        url: repo.html_url,
-        description: repo.description || "",
-        language: repo.language || "Unknown",
-        stars: repo.stargazers_count,
-        forks: repo.forks_count,
-        todayStars: 0,
-      }));
-
-      setRepos(trending);
-      setError(null);
-    } catch {
-      setError("Failed to fetch GitHub trending");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useVisiblePolling(fetchTrending, 600000);
-
-  const formatStars = (stars: number) => {
-    if (stars >= 1000) return `${(stars / 1000).toFixed(1)}k`;
-    return stars.toString();
-  };
-
-  const getLanguageColor = (lang: string) => {
-    const colors: Record<string, string> = {
-      TypeScript: "bg-blue-500",
-      JavaScript: "bg-yellow-400",
-      Python: "bg-blue-400",
-      Rust: "bg-orange-500",
-      Go: "bg-cyan-500",
-      Java: "bg-red-500",
-      "C++": "bg-pink-500",
-      C: "bg-gray-500",
-      Ruby: "bg-red-600",
-      Swift: "bg-orange-400",
-    };
-    return colors[lang] || "bg-neutral-400";
-  };
-
-  return (
-    <Card>
-      <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-        </svg>
-        GitHub Trending
-      </h2>
-      {loading ? (
-        <div className="space-y-3">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <Skeleton key={i} className="h-4 w-full" />
-          ))}
-        </div>
-      ) : error ? (
-        <p className="text-red-500 text-sm">{error}</p>
-      ) : (
-        <div className="space-y-3">
-          {repos.map((repo) => (
-            <a
-              key={repo.fullName}
-              href={repo.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block hover:bg-neutral-50 dark:hover:bg-neutral-800/50 -mx-2 px-2 py-1 rounded transition"
-            >
-              <div className="flex items-center gap-2">
-                <span className={`w-2 h-2 rounded-full ${getLanguageColor(repo.language)}`} />
-                <span className="text-sm font-medium truncate">{repo.fullName}</span>
-              </div>
-              <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
-                <span className="flex items-center gap-1">
-                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/>
-                  </svg>
-                  {formatStars(repo.stars)}
-                </span>
-                <span>{repo.language}</span>
-              </div>
-            </a>
-          ))}
-        </div>
-      )}
-      <a
-        href="https://github.com/trending"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-xs text-neutral-500 hover:underline mt-3 inline-block"
-      >
-        View all trending &#8594;
-      </a>
-    </Card>
-  );
-}
-
-// Wikipedia Live Edits Widget - Real-time SSE stream
-function WikipediaLiveWidget() {
-  const [edits, setEdits] = useState<Array<{
-    id: string;
-    title: string;
-    user: string;
-    wiki: string;
-    timestamp: number;
-    type: string;
-  }>>([]);
-  const [connected, setConnected] = useState(false);
-  const [editCount, setEditCount] = useState(0);
-  const nowMs = useRelativeTimeTicker();
-
-  useEffect(() => {
-    // Wikimedia uses Server-Sent Events (SSE), not WebSocket
-    const eventSource = new EventSource("https://stream.wikimedia.org/v2/stream/recentchange");
-
-    eventSource.onopen = () => setConnected(true);
-    eventSource.onerror = () => setConnected(false);
-
-    eventSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        // Filter for article edits only (not talk pages, user pages, etc.)
-        if (data.type === "edit" && data.namespace === 0) {
-          const edit = {
-            id: `${data.id}-${Date.now()}`,
-            title: data.title,
-            user: data.user,
-            wiki: data.wiki,
-            timestamp: Date.now(),
-            type: data.type,
-          };
-          setEdits((prev) => [edit, ...prev].slice(0, 8));
-          setEditCount((c) => c + 1);
-        }
-      } catch {
-        // Skip malformed messages
-      }
-    };
-
-    return () => eventSource.close();
-  }, []);
-
-  const getWikiFlag = (wiki: string) => {
-    const flags: Record<string, string> = {
-      enwiki: "EN",
-      dewiki: "DE",
-      frwiki: "FR",
-      eswiki: "ES",
-      jawiki: "JP",
-      zhwiki: "CN",
-      ruwiki: "RU",
-      itwiki: "IT",
-      ptwiki: "PT",
-      plwiki: "PL",
-      nlwiki: "NL",
-      trwiki: "TR",
-    };
-    return flags[wiki] || wiki.replace("wiki", "").toUpperCase().slice(0, 2);
-  };
-
-  const timeAgo = (timestamp: number) => {
-    const seconds = Math.max(0, Math.floor((nowMs - timestamp) / 1000));
-    if (seconds < 60) return `${seconds}s`;
-    return `${Math.floor(seconds / 60)}m`;
-  };
-
-  return (
-    <Card className="col-span-1 md:col-span-2">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold flex items-center gap-2">
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12.09 13.119c-.936 1.932-2.217 4.548-2.853 5.728-.616 1.074-1.127.931-1.532.029-1.406-3.321-4.293-9.144-5.651-12.409-.251-.601-.441-.987-.619-1.139-.181-.15-.554-.24-1.122-.271C.103 5.033 0 4.982 0 4.898v-.455l.052-.045c.924-.005 5.401 0 5.401 0l.051.045v.434c0 .119-.075.176-.225.176l-.564.031c-.485.029-.727.164-.727.436 0 .135.053.33.166.601 1.082 2.646 4.818 10.521 4.818 10.521l.136.046 2.411-4.81-.482-1.067-1.658-3.264s-.318-.654-.428-.872c-.728-1.443-.712-1.518-1.447-1.617-.207-.023-.313-.05-.313-.149v-.468l.06-.045h4.292l.113.037v.451c0 .105-.076.15-.227.15l-.308.047c-.792.061-.661.381-.136 1.422l1.582 3.252 1.758-3.504c.293-.64.233-.801.111-.947-.07-.084-.305-.178-.705-.206l-.209-.021-.105-.037v-.46l.066-.051c.906.007 3.617.007 3.617.007l.076.051v.391c0 .143-.096.2-.289.2-.541.017-.801.082-1.099.469-.139.181-.347.573-.626 1.177l-2.479 5.168.441.896 3.156 6.074.135.046 4.766-10.418c.139-.317.211-.542.211-.657 0-.224-.169-.357-.509-.399l-.59-.053c-.143-.024-.219-.079-.219-.164v-.468l.061-.045h4.132l.06.045v.434c0 .119-.074.176-.221.176-.811.057-1.298.298-1.543.682-.264.404-.553.899-.867 1.488l-5.314 10.807c-.262.504-.604 1.064-.859 1.424-.257.356-.442.419-.763.321-.323-.094-.501-.406-.773-.828l-3.107-5.933z"/>
-          </svg>
-          Wikipedia Live
-        </h2>
-        <LiveBadge connected={connected} updateCount={editCount} />
-      </div>
-
-      <div className="space-y-2">
-        {edits.length === 0 ? (
-          <div className="text-sm text-neutral-500 text-center py-4">Waiting for edits...</div>
-        ) : (
-          edits.map((edit) => (
-            <div
-              key={edit.id}
-              className="flex items-center gap-2 text-sm py-1 border-b border-neutral-100 dark:border-neutral-800 last:border-0"
-            >
-              <span className="text-xs font-mono bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded">
-                {getWikiFlag(edit.wiki)}
-              </span>
-              <span className="flex-1 truncate">{edit.title}</span>
-              <span className="text-xs text-neutral-400">{timeAgo(edit.timestamp)}</span>
-            </div>
-          ))
-        )}
-      </div>
-
-      <a
-        href="https://en.wikipedia.org/wiki/Special:RecentChanges"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-xs text-neutral-500 hover:underline mt-3 inline-block"
-      >
-        View all changes &#8594;
-      </a>
-    </Card>
-  );
-}
-
-// FX Pulse Widget - major currency pairs vs USD, polled from frankfurter.app
-// (free ECB feed, CORS-friendly, no auth).
-type FxRate = {
-  code: string;
-  flag: string;
-  rate: number;
-  prev: number;
-};
-
-const FX_CODES = ["EUR", "GBP", "JPY", "CHF", "TRY", "CAD"] as const;
-const FX_FLAGS: Record<string, string> = {
-  EUR: "EU", GBP: "GB", JPY: "JP", CHF: "CH", TRY: "TR", CAD: "CA",
-};
-const FRANKFURTER_BASE_URL = "https://api.frankfurter.dev/v1/latest";
-const FX_FALLBACK_URL = "https://open.er-api.com/v6/latest/USD";
-type FxSource = "Frankfurter" | "ExchangeRate API";
-
-async function fetchFrankfurterRates(): Promise<{ date: Date; rates: Record<string, number>; source: FxSource }> {
-  const codes = FX_CODES.join(",");
-  const res = await fetchPublic(`${FRANKFURTER_BASE_URL}?base=USD&symbols=${codes}`);
-  if (!res.ok) throw new Error("Frankfurter fetch failed");
-  const data = await res.json();
-  return {
-    date: new Date(`${data.date}T00:00:00Z`),
-    rates: data.rates,
-    source: "Frankfurter",
-  };
-}
-
-async function fetchFallbackFxRates(): Promise<{ date: Date; rates: Record<string, number>; source: FxSource }> {
-  const res = await fetchPublic(FX_FALLBACK_URL);
-  if (!res.ok) throw new Error("Fallback FX fetch failed");
-  const data = await res.json();
-  if (data.result !== "success") throw new Error("Fallback FX response failed");
-  return {
-    date: new Date(data.time_last_update_utc),
-    rates: data.rates,
-    source: "ExchangeRate API",
-  };
-}
-
-function FxPulseWidget() {
-  const [rates, setRates] = useState<FxRate[]>([]);
-  const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
-  const [source, setSource] = useState<FxSource>("Frankfurter");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchRates = useCallback(async () => {
-    try {
-      let data: { date: Date; rates: Record<string, number>; source: FxSource };
-      try {
-        data = await fetchFrankfurterRates();
-      } catch {
-        data = await fetchFallbackFxRates();
-      }
-
-      setRates((prev) => {
-        const prevMap = new Map(prev.map((r) => [r.code, r.rate]));
-        return FX_CODES.map((code) => ({
-          code,
-          flag: FX_FLAGS[code],
-          rate: data.rates[code] ?? 0,
-          prev: prevMap.get(code) ?? data.rates[code] ?? 0,
-        }));
-      });
-      setUpdatedAt(data.date);
-      setSource(data.source);
-      setError(null);
-    } catch {
-      setError("FX feed unreachable");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useVisiblePolling(fetchRates, 10 * 60 * 1000);
-
-  const formatRate = (r: number) => {
-    if (r >= 100) return r.toFixed(2);
-    if (r >= 10) return r.toFixed(3);
-    return r.toFixed(4);
-  };
-
-  const colorFor = (curr: number, prev: number) => {
-    if (curr === prev) return "";
-    return curr > prev ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400";
-  };
-
-  return (
-    <Card>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold flex items-center gap-2">
-          <span className="text-xl">&#128181;</span> FX Pulse
-        </h2>
-        <LiveBadge connected={!loading && !error} />
-      </div>
-
-      {loading ? (
-        <div className="space-y-2">
-          <Skeleton className="h-8 w-full" />
-          <Skeleton className="h-8 w-full" />
-          <Skeleton className="h-8 w-full" />
-        </div>
-      ) : error ? (
-        <p className="text-red-500 text-sm">{error}</p>
-      ) : (
-        <div className="space-y-1.5">
-          {rates.map((r) => (
-            <div
-              key={r.code}
-              className="flex items-center justify-between py-1 border-b border-neutral-100 dark:border-neutral-800 last:border-0"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-mono bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded">
-                  {r.flag}
-                </span>
-                <span className="text-xs text-neutral-600 dark:text-neutral-400">USD/{r.code}</span>
-              </div>
-              <span className={`font-mono text-sm tabular-nums ${colorFor(r.rate, r.prev)}`}>
-                {formatRate(r.rate)}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {updatedAt && (
-        <p className="text-[10px] text-neutral-500 mt-3">
-          {source === "Frankfurter" ? "ECB reference rates" : "Fallback FX rates"} &middot;{" "}
-          {updatedAt.toLocaleDateString()}
-        </p>
-      )}
-
-      <a
-        href="https://www.frankfurter.dev/"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-xs text-neutral-500 hover:underline mt-1 inline-block"
-      >
-        frankfurter.dev &#8594;
-      </a>
-    </Card>
-  );
-}
-
-// ISS Tracker Widget - International Space Station position
-function ISSTrackerWidget() {
-  const [position, setPosition] = useState<{ lat: number; lon: number; altitude: number; velocity: number } | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchISS = useCallback(async () => {
-    try {
-      // Using wheretheiss.at API (CORS-friendly)
-      const res = await fetchPublic("https://api.wheretheiss.at/v1/satellites/25544");
-      if (!res.ok) throw new Error("Failed to fetch");
-
-      const data = await res.json();
-      setPosition({
-        lat: data.latitude,
-        lon: data.longitude,
-        altitude: Math.round(data.altitude),
-        velocity: Math.round(data.velocity),
-      });
-      setError(null);
-    } catch {
-      setError("Failed to fetch ISS position");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useVisiblePolling(fetchISS, 5000);
-
-  const getLocationDescription = (lat: number, lon: number) => {
-    const ns = lat >= 0 ? "N" : "S";
-    const ew = lon >= 0 ? "E" : "W";
-
-    // Rough geographic regions
-    if (lat > 60) return "Arctic Region";
-    if (lat < -60) return "Antarctic Region";
-    if (lon > -30 && lon < 60 && lat > 35 && lat < 70) return "Over Europe";
-    if (lon > -130 && lon < -60 && lat > 25 && lat < 50) return "Over North America";
-    if (lon > 60 && lon < 150 && lat > 0 && lat < 60) return "Over Asia";
-    if (lon > -80 && lon < -30 && lat > -60 && lat < 15) return "Over South America";
-    if (lon > 10 && lon < 55 && lat > -40 && lat < 40) return "Over Africa";
-    if (lon > 110 && lon < 180 && lat > -50 && lat < 0) return "Over Oceania";
-
-    // Check if over ocean
-    if ((lon > -80 && lon < 0) || (lon > -180 && lon < -100)) {
-      if (lat > 0) return "Over Atlantic Ocean";
-      return "Over Pacific Ocean";
-    }
-    if (lon > 20 && lon < 120 && lat < 30 && lat > -40) return "Over Indian Ocean";
-
-    return `${Math.abs(lat).toFixed(1)}°${ns}, ${Math.abs(lon).toFixed(1)}°${ew}`;
-  };
-
-  return (
-    <Card>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold flex items-center gap-2">
-          <span className="text-xl">&#128752;</span> ISS Tracker
-        </h2>
-        <LiveBadge connected={!loading && !error} />
-      </div>
-
-      {loading ? (
-        <div className="space-y-3">
-          <Skeleton className="h-8 w-full" />
-          <Skeleton className="h-4 w-3/4" />
-        </div>
-      ) : error ? (
-        <p className="text-red-500 text-sm">{error}</p>
-      ) : position ? (
-        <div>
-          <div className="text-2xl font-bold mb-1">
-            {getLocationDescription(position.lat, position.lon)}
-          </div>
-          <div className="text-sm text-neutral-500 mb-3">
-            {position.lat.toFixed(4)}°, {position.lon.toFixed(4)}°
-          </div>
-          <div className="grid grid-cols-2 gap-4 pt-3 border-t border-neutral-200 dark:border-neutral-700">
-            <div>
-              <div className="text-xs text-neutral-500">Altitude</div>
-              <div className="font-mono font-semibold">{position.altitude} km</div>
-            </div>
-            <div>
-              <div className="text-xs text-neutral-500">Velocity</div>
-              <div className="font-mono font-semibold">{position.velocity.toLocaleString()} km/h</div>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      <a
-        href="https://spotthestation.nasa.gov/"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-xs text-neutral-500 hover:underline mt-3 inline-block"
-      >
-        Spot the Station &#8594;
-      </a>
-    </Card>
-  );
-}
-
-// Rocket Launches Widget - Using Launch Library 2 API (TheSpaceDevs)
-function RocketLaunchesWidget() {
-  const [launches, setLaunches] = useState<Array<{
-    id: string;
-    name: string;
-    net: string;
-    provider: string;
-    rocket: string;
-    pad: string;
-    status: string;
-  }>>([]);
-  const [countdown, setCountdown] = useState<string>("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchLaunches = useCallback(async () => {
-    try {
-      const res = await fetchPublic(
-        "https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=5&mode=list"
-      );
-
-      if (!res.ok) throw new Error("API error");
-
-      const data = await res.json();
-      const upcoming = data.results.map((l: {
+      const response = await fetchPublic("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson", { signal });
+      if (!response.ok) throw new Error(String(response.status));
+      const data = await response.json();
+      const features = data.features as Array<{
         id: string;
-        name: string;
-        net: string;
-        launch_service_provider?: { name: string };
-        rocket?: { configuration?: { name: string } };
-        pad?: { name: string };
-        status?: { abbrev: string };
-      }) => ({
-        id: l.id,
-        name: l.name,
-        net: l.net,
-        provider: l.launch_service_provider?.name || "Unknown",
-        rocket: l.rocket?.configuration?.name || "Unknown",
-        pad: l.pad?.name || "Unknown",
-        status: l.status?.abbrev || "TBD",
-      }));
-
-      setLaunches(upcoming);
-      setError(null);
+        geometry: { coordinates: [number, number, number] };
+        properties: { mag: number; place: string; time: number; url: string };
+      }>;
+      setState({
+        quakes: features.map((feature) => ({
+          id: feature.id,
+          magnitude: feature.properties.mag,
+          place: feature.properties.place,
+          time: feature.properties.time,
+          url: feature.properties.url,
+          lon: feature.geometry.coordinates[0],
+          lat: feature.geometry.coordinates[1],
+        })),
+        error: false,
+      });
     } catch {
-      setError("Failed to fetch launch data");
-    } finally {
-      setLoading(false);
+      if (!signal.aborted) setState((current) => ({ ...current, error: true }));
     }
   }, []);
+  useVisiblePolling(fetchQuakes, 300000);
+  return state;
+}
 
-  useVisiblePolling(fetchLaunches, 300000);
-
-  // Countdown timer for next launch
-  useEffect(() => {
-    if (launches.length === 0) return;
-
-    const updateCountdown = () => {
-      const now = new Date();
-      const launchDate = new Date(launches[0].net);
-      const diff = launchDate.getTime() - now.getTime();
-
-      if (diff <= 0) {
-        setCountdown("LIFTOFF!");
-        return;
-      }
-
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-      if (days > 0) {
-        setCountdown(`${days}d ${hours}h ${minutes}m`);
-      } else {
-        setCountdown(`${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`);
-      }
-    };
-
-    updateCountdown();
-    const interval = setInterval(updateCountdown, 1000);
-    return () => clearInterval(interval);
-  }, [launches]);
-
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  };
-
-  const getProviderShort = (provider: string) => {
-    if (provider.includes("SpaceX")) return "SpaceX";
-    if (provider.includes("Rocket Lab")) return "RocketLab";
-    if (provider.includes("United Launch")) return "ULA";
-    if (provider.includes("ISRO")) return "ISRO";
-    if (provider.includes("CNSA") || provider.includes("China")) return "CNSA";
-    if (provider.includes("Roscosmos")) return "Russia";
-    if (provider.includes("Blue Origin")) return "BlueOrigin";
-    return provider.slice(0, 10);
-  };
+export function QuakeFeed({ feed }: { feed: QuakeState }) {
+  const { quakes, error } = feed;
+  const now = useNow(30000);
+  const strongest = quakes?.reduce<Quake | null>((best, quake) => (!best || quake.magnitude > best.magnitude ? quake : best), null);
 
   return (
-    <Card>
-      <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-        <span className="text-xl">&#128640;</span> Rocket Launches
-      </h2>
-
-      {loading ? (
-        <div className="space-y-3">
-          <Skeleton className="h-12 w-full" />
-          <Skeleton className="h-4 w-3/4" />
-        </div>
-      ) : error ? (
-        <p className="text-red-500 text-sm">{error}</p>
-      ) : launches.length > 0 ? (
+    <section aria-label="Earthquakes" className="min-w-0">
+      <p className={LABEL}>Earthquakes, magnitude 2.5+, past day</p>
+      {quakes ? (
         <>
-          <div className="mb-4 p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
-            <div className="text-xs text-neutral-500 mb-1">NEXT LAUNCH</div>
-            <div className="font-semibold mb-1 text-sm">{launches[0].name}</div>
-            <div className="text-2xl font-mono font-bold text-blue-600 dark:text-blue-400">
-              {countdown}
-            </div>
-            <div className="text-xs text-neutral-500 mt-1">
-              {getProviderShort(launches[0].provider)} • {formatDate(launches[0].net)}
-            </div>
-          </div>
-
-          <div className="text-xs text-neutral-500 mb-2">UPCOMING</div>
-          <div className="space-y-2">
-            {launches.slice(1, 5).map((launch) => (
-              <div key={launch.id} className="flex items-center justify-between text-sm">
-                <div className="flex-1 min-w-0">
-                  <div className="truncate text-xs">{launch.name}</div>
-                  <div className="text-xs text-neutral-400">{getProviderShort(launch.provider)}</div>
-                </div>
-                <span className="text-xs text-neutral-500 ml-2">{formatDate(launch.net)}</span>
-              </div>
+          <p className="mt-2 text-2xl font-semibold tabular-nums">{quakes.length} recorded</p>
+          {strongest ? (
+            <p className="mt-1 text-sm text-[var(--muted)]">
+              Strongest: M{strongest.magnitude.toFixed(1)}, {strongest.place}
+            </p>
+          ) : null}
+          <ul className="mt-4">
+            {quakes.slice(0, 4).map((quake) => (
+              <li key={quake.id} className="border-t border-[var(--line)]">
+                <a href={quake.url} target="_blank" rel="noopener noreferrer" className="flex items-baseline gap-3 py-1.5 text-sm hover:text-[var(--foreground)]">
+                  <span className="w-8 shrink-0 font-mono tabular-nums">{quake.magnitude.toFixed(1)}</span>
+                  <span className="min-w-0 flex-1 truncate text-[var(--muted)]">{quake.place}</span>
+                  <span className={`shrink-0 ${LABEL}`}>{timeAgo(quake.time, now)}</span>
+                </a>
+              </li>
             ))}
-          </div>
+          </ul>
         </>
       ) : (
-        <p className="text-neutral-500 text-sm">No upcoming launches</p>
+        <p className="mt-2 text-sm text-[var(--muted)]">{error ? "USGS did not answer. Retrying in a few minutes." : "Loading the USGS feed"}</p>
       )}
-
-      <a
-        href="https://www.spacelaunchnow.me/"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-xs text-neutral-500 hover:underline mt-3 inline-block"
-      >
-        Space Launch Now &#8594;
-      </a>
-    </Card>
+    </section>
   );
 }
 
-// GitHub Activity Widget - Real-time public events on GitHub
-function GitHubActivityWidget() {
-  const [events, setEvents] = useState<Array<{
-    id: string;
-    type: string;
-    actor: string;
-    repo: string;
-    timestamp: number;
-  }>>([]);
-  const [loading, setLoading] = useState(true);
-  const [lastFetch, setLastFetch] = useState<Date | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const seenIdsRef = useRef<Set<string>>(new Set());
-  const nowMs = useRelativeTimeTicker();
+// The land file is an equirectangular map from 80°N to 60°S; dots use the same coordinates.
+const MAP_TOP = 80;
+const MAP_HEIGHT = 140;
+const mapX = (lon: number) => lon + 180;
+const mapY = (lat: number) => MAP_TOP - lat;
 
-  const fetchEvents = useCallback(async () => {
-    try {
-      const res = await fetchPublic("https://api.github.com/events?per_page=30");
-      if (res.status === 403) {
-        setError("Rate limited");
-        return;
-      }
-      if (!res.ok) throw new Error("API error");
-
-      const data = await res.json();
-      const newEvents = data
-        .filter((e: { type: string }) =>
-          ["PushEvent", "CreateEvent", "PullRequestEvent", "IssuesEvent", "WatchEvent", "ForkEvent"].includes(e.type)
-        )
-        .slice(0, 10)
-        .map((e: { id: string; type: string; actor: { login: string }; repo: { name: string }; created_at: string }) => ({
-          id: e.id,
-          type: e.type,
-          actor: e.actor.login,
-          repo: e.repo.name,
-          timestamp: new Date(e.created_at).getTime(),
-        }));
-
-      // Track new events
-      newEvents.forEach((e: { id: string }) => seenIdsRef.current.add(e.id));
-
-      setEvents(newEvents);
-      setLastFetch(new Date());
-      setError(null);
-    } catch {
-      setError("Failed to fetch");
-    } finally {
-      setLoading(false);
+/** Splits the trail where it wraps from +180° to -180° so no line crosses the whole map. */
+function trailSegments(trail: Array<{ lat: number; lon: number }>): string[] {
+  const segments: string[] = [];
+  let current = "";
+  trail.forEach((point, index) => {
+    const wrapped = index > 0 && Math.abs(point.lon - trail[index - 1].lon) > 180;
+    if (wrapped && current) {
+      segments.push(current);
+      current = "";
     }
+    current += `${current ? "L" : "M"}${mapX(point.lon).toFixed(2)} ${mapY(point.lat).toFixed(2)}`;
+  });
+  if (current) segments.push(current);
+  return segments;
+}
+
+export function LiveMap({ iss, feed }: { iss: IssState; feed: QuakeState }) {
+  const position = iss.position;
+  return (
+    <figure className="min-w-0">
+      <div className="relative w-full" style={{ aspectRatio: `360 / ${MAP_HEIGHT}` }}>
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-[var(--line-strong)] opacity-30"
+          style={{
+            maskImage: "url(/images/pulse-board/land-110m.svg)",
+            WebkitMaskImage: "url(/images/pulse-board/land-110m.svg)",
+            maskSize: "100% 100%",
+            WebkitMaskSize: "100% 100%",
+          }}
+        />
+        <svg
+          viewBox={`0 0 360 ${MAP_HEIGHT}`}
+          preserveAspectRatio="none"
+          className="absolute inset-0 h-full w-full overflow-visible"
+          role="img"
+          aria-label={
+            position
+              ? `World map with the space station near ${issRegion(position.lat, position.lon)} and ${feed.quakes?.length ?? 0} earthquakes from the past day`
+              : "World map of the past day's earthquakes"
+          }
+        >
+          {feed.quakes?.map((quake) => (
+            <circle
+              key={quake.id}
+              cx={mapX(quake.lon)}
+              cy={mapY(quake.lat)}
+              r={0.35 + Math.max(0, quake.magnitude - 2.5) * 0.45}
+              fill="var(--accent-2)"
+              fillOpacity="0.35"
+              stroke="var(--accent-2)"
+              strokeWidth="0.25"
+              vectorEffect="non-scaling-stroke"
+            />
+          ))}
+          {trailSegments(iss.trail).map((d, index) => (
+            <path key={index} d={d} fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeOpacity="0.7" vectorEffect="non-scaling-stroke" />
+          ))}
+          {position ? (
+            <g>
+              <circle cx={mapX(position.lon)} cy={mapY(position.lat)} r="3.2" fill="var(--accent)" fillOpacity="0.18" />
+              <circle cx={mapX(position.lon)} cy={mapY(position.lat)} r="1.3" fill="var(--accent)" />
+            </g>
+          ) : null}
+        </svg>
+      </div>
+      <figcaption className={`mt-2 flex flex-wrap gap-x-5 gap-y-1 ${LABEL}`}>
+        <span className="inline-flex items-center gap-1.5">
+          <i className="size-2 rounded-full bg-accent" />
+          Space station and its path since you opened the page
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <i className="size-2 rounded-full bg-accent-2 opacity-60" />
+          Earthquakes, past day, larger is stronger
+        </span>
+      </figcaption>
+    </figure>
+  );
+}
+
+interface Edit {
+  id: string;
+  title: string;
+  wiki: string;
+  at: number;
+}
+
+const WIKI_ROWS = 6;
+const WIKI_STEP_MS = 900;
+
+/** Wikimedia's server-sent event stream. One recent edit joins the list each step so it stays readable. */
+export function WikiFeed() {
+  const [edits, setEdits] = useState<Edit[]>([]);
+  const latest = useRef<Edit | null>(null);
+  const now = useNow();
+
+  useEffect(() => {
+    let source: EventSource | null = null;
+    const open = () => {
+      if (document.hidden || source) return;
+      source = new EventSource("https://stream.wikimedia.org/v2/stream/recentchange");
+      source.onmessage = (event) => {
+        try {
+          const change = JSON.parse(event.data) as WikiChange & { id?: number };
+          if (!isReadableEdit(change)) return;
+          latest.current = { id: `${change.wiki}-${change.id ?? Date.now()}`, title: change.title!, wiki: wikiLabel(change.server_name!), at: Date.now() };
+        } catch {
+          /* Skip malformed events. */
+        }
+      };
+    };
+    const close = () => {
+      source?.close();
+      source = null;
+    };
+    const onVisibility = () => (document.hidden ? close() : open());
+    const step = window.setInterval(() => {
+      const edit = latest.current;
+      if (!edit) return;
+      latest.current = null;
+      setEdits((previous) => [edit, ...previous].slice(0, WIKI_ROWS));
+    }, WIKI_STEP_MS);
+    open();
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.clearInterval(step);
+      close();
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, []);
 
-  useVisiblePolling(fetchEvents, 60000);
-
-  const getEventIcon = (type: string) => {
-    switch (type) {
-      case "PushEvent": return { icon: "↑", color: "text-green-500", label: "push" };
-      case "PullRequestEvent": return { icon: "⇄", color: "text-purple-500", label: "PR" };
-      case "IssuesEvent": return { icon: "●", color: "text-red-500", label: "issue" };
-      case "CreateEvent": return { icon: "+", color: "text-blue-500", label: "create" };
-      case "WatchEvent": return { icon: "★", color: "text-yellow-500", label: "star" };
-      case "ForkEvent": return { icon: "⑂", color: "text-cyan-500", label: "fork" };
-      default: return { icon: "•", color: "text-neutral-400", label: type };
-    }
-  };
-
-  const timeAgo = (timestamp: number) => {
-    const seconds = Math.max(0, Math.floor((nowMs - timestamp) / 1000));
-    if (seconds < 60) return `${seconds}s`;
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
-    return `${Math.floor(seconds / 3600)}h`;
-  };
-
-  const truncateRepo = (repo: string) => {
-    if (repo.length > 30) return repo.slice(0, 27) + "...";
-    return repo;
-  };
-
-  const formatLastFetch = () => {
-    if (!lastFetch) return "";
-    const seconds = Math.max(0, Math.floor((nowMs - lastFetch.getTime()) / 1000));
-    if (seconds < 60) return `${seconds}s ago`;
-    return `${Math.floor(seconds / 60)}m ago`;
-  };
-
   return (
-    <Card className="col-span-1 md:col-span-2">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold flex items-center gap-2">
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-          </svg>
-          GitHub Activity
-        </h2>
-        <div className="flex items-center gap-2">
-          {error ? (
-            <span className="text-xs text-amber-500">{error}</span>
-          ) : (
-            <LiveBadge connected={!loading && !error} />
-          )}
-          {lastFetch && !error && (
-            <>
-              <span className="text-xs text-neutral-400">|</span>
-              <span className="text-xs text-neutral-500">{formatLastFetch()}</span>
-            </>
-          )}
-        </div>
-      </div>
-
-      <p className="text-xs text-neutral-500 mb-3">
-        Developers shipping code around the world
-      </p>
-
-      {loading ? (
-        <div className="space-y-2">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <Skeleton key={i} className="h-5 w-full" />
+    <section aria-label="Wikipedia edits" className="min-w-0">
+      <p className={LABEL}>Wikipedia edits, all languages</p>
+      {edits.length ? (
+        <ul className="mt-2">
+          {edits.map((edit) => (
+            <li key={edit.id} className="flex items-baseline gap-3 border-b border-[var(--line)] py-1.5 text-sm">
+              <span className="w-10 shrink-0 truncate font-mono text-[0.7rem] uppercase text-[var(--sub)]">{edit.wiki}</span>
+              <span className="min-w-0 flex-1 truncate">{edit.title}</span>
+              <span className={`shrink-0 ${LABEL}`}>{timeAgo(edit.at, now)}</span>
+            </li>
           ))}
-        </div>
+        </ul>
       ) : (
-        <div className="space-y-1.5">
-          {events.map((event) => {
-            const { icon, color, label } = getEventIcon(event.type);
-            return (
-              <div
-                key={event.id}
-                className="flex items-center gap-2 text-sm py-1 border-b border-neutral-100 dark:border-neutral-800 last:border-0"
-              >
-                <span className={`text-sm ${color}`} title={label}>{icon}</span>
-                <span className="text-xs text-neutral-500 w-16 truncate">{event.actor}</span>
-                <span className="flex-1 font-mono text-xs truncate">{truncateRepo(event.repo)}</span>
-                <span className="text-xs text-neutral-400">{timeAgo(event.timestamp)}</span>
-              </div>
-            );
-          })}
-        </div>
+        <p className="mt-2 text-sm text-[var(--muted)]">Waiting for the first edit</p>
       )}
-
-      <a
-        href="https://github.com/explore"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-xs text-neutral-500 hover:underline mt-3 inline-block"
-      >
-        Explore GitHub &#8594;
-      </a>
-    </Card>
+    </section>
   );
 }
 
-// Animated widget wrapper for staggered entrance
-export function AnimatedWidget({ children, index, id }: { children: React.ReactNode; index: number; id: string }) {
-  return (
-    <div
-      id={`widget-${id}`}
-      className="animate-fade-in-up h-full min-w-0"
-      style={{ animationDelay: `${index * 75}ms` }}
-    >
-      {children}
-    </div>
-  );
-}
-
-export const PULSE_WIDGETS = [
-  { id: "crypto-hub", component: <CryptoHubWidget /> },
-  { id: "github-activity", component: <GitHubActivityWidget /> },
-  { id: "rocket-launches", component: <RocketLaunchesWidget /> },
-  { id: "wikipedia-live", component: <WikipediaLiveWidget /> },
-  { id: "fx-pulse", component: <FxPulseWidget /> },
-  { id: "world-clocks", component: <WorldClocksWidget /> },
-  { id: "weather", component: <WeatherWidget /> },
-  { id: "iss-tracker", component: <ISSTrackerWidget /> },
-  { id: "earthquake", component: <EarthquakeWidget /> },
-  { id: "github-trending", component: <GithubTrendingWidget /> },
-  { id: "hacker-news", component: <HackerNewsWidget /> },
+export const SOURCES = [
+  { label: "Binance", href: "https://developers.binance.com/docs/binance-spot-api-docs/web-socket-streams" },
+  { label: "CoinGecko", href: "https://www.coingecko.com/en/api" },
+  { label: "Where the ISS at?", href: "https://wheretheiss.at/w/developer" },
+  { label: "USGS", href: "https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php" },
+  { label: "Wikimedia EventStreams", href: "https://stream.wikimedia.org/?doc" },
+  { label: "Natural Earth", href: "https://www.naturalearthdata.com/" },
 ] as const;

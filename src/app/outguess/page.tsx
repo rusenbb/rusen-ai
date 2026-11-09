@@ -2,13 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import {
-  DemoFootnote,
-  DemoHeader,
-  DemoPage,
-  DemoPanel,
-} from "@/components/ui";
+import { Button, DemoHeader, DemoPage, Details, Segmented } from "@/components/ui";
 
+import { AccuracyChart } from "./components/accuracy-chart";
 import { ArenaDiscrete } from "./components/arena-discrete";
 import { EntropyPlot } from "./components/entropy-plot";
 import { Leaderboard, type LeaderboardRow } from "./components/leaderboard";
@@ -23,7 +19,7 @@ import {
   makeAllDiscretePredictors,
   type DiscretePredictor,
 } from "./predictors/discrete";
-import { scoreDiscrete } from "./scoring";
+import { chanceOfAtLeast, scoreDiscrete } from "./scoring";
 
 const KEYS_2 = ["f", "j"];
 const KEYS_4 = ["w", "a", "s", "d"];
@@ -32,6 +28,9 @@ const LABELS_4 = ["W", "A", "S", "D"];
 const SESSION_TARGET = 200;
 const ENTROPY_WINDOW = 80;
 const WARMUP_TRIALS = 20;
+const SCORE_WINDOW = 50;
+/** Verdict threshold: chance of scoring this well by pure guessing. */
+const CLEAR_P = 0.05;
 
 export default function OutguessPage() {
   const [alphabet, setAlphabet] = useState<2 | 4>(2);
@@ -39,21 +38,11 @@ export default function OutguessPage() {
   return (
     <DemoPage>
       <DemoHeader
-        eyebrow="Prediction Game"
+        eyebrow="Prediction game"
         title="Outguess"
-        description="Try to be unpredictable. A tiny AI predicts your next key press by learning patterns in this session."
+        description="Tap the pads or press their keys, and try to be unpredictable. A small model guesses each press before you make it."
       />
-
-      <div className="mb-6 flex flex-wrap items-center gap-3">
-        <AlphabetPicker alphabet={alphabet} setAlphabet={setAlphabet} />
-      </div>
-
-      <Session key={`session-${alphabet}`} alphabet={alphabet} />
-
-      <DemoFootnote align="left">
-        <strong>Why this works.</strong> Markov and PPM predictors can learn repeated key-tapping patterns. This demo does not claim a population-wide accuracy. Hide the AI guess to play a fair test of your own randomness, and watch
-        the lifetime tally to see how the leading model is doing across the whole session.
-      </DemoFootnote>
+      <Session key={`session-${alphabet}`} alphabet={alphabet} setAlphabet={setAlphabet} />
     </DemoPage>
   );
 }
@@ -62,7 +51,7 @@ export default function OutguessPage() {
 // Session - the actual game. Remounts on alphabet change to reset cleanly.
 // ============================================================================
 
-function Session({ alphabet }: { alphabet: 2 | 4 }) {
+function Session({ alphabet, setAlphabet }: { alphabet: 2 | 4; setAlphabet: (alphabet: 2 | 4) => void }) {
   const [predictors] = useState<DiscretePredictor[]>(() =>
     makeAllDiscretePredictors(alphabet),
   );
@@ -108,31 +97,18 @@ function Session({ alphabet }: { alphabet: 2 | 4 }) {
 
   const leaderboardRows = useMemo<LeaderboardRow[]>(() => {
     const base = predictors.map((p) => {
-      const s = scoreDiscrete(scoredTrials, p.meta.id, alphabet, 50);
-      return {
-        meta: p.meta,
-        primary: s.accuracy,
-        primaryLabel: "acc",
-        secondary: s.bitsSaved,
-        secondaryLabel: "bits",
-        isLeader: false,
-        warmup: s.trials < WARMUP_TRIALS,
-      } satisfies LeaderboardRow;
+      const score = scoreDiscrete(scoredTrials, p.meta.id, alphabet, SCORE_WINDOW);
+      return { meta: p.meta, accuracy: score.accuracy, bitsSaved: score.bitsSaved, eligible: score.trials >= WARMUP_TRIALS };
     });
-    const eligible = base.filter((r) => !r.warmup);
-    const leader = eligible.reduce<LeaderboardRow | null>(
-      (best, r) => (best === null || r.primary > best.primary ? r : best),
-      null,
-    );
-    return base.map((r) => ({
-      ...r,
-      isLeader: leader !== null && r.meta.id === leader.meta.id,
-    }));
+    // A predictor can lead only after WARMUP_TRIALS scored presses.
+    const leader = base
+      .filter((row) => row.eligible)
+      .reduce<(typeof base)[number] | null>((best, row) => (best === null || row.accuracy > best.accuracy ? row : best), null);
+    return base.map(({ meta, accuracy, bitsSaved }) => ({ meta, accuracy, bitsSaved, isLeader: leader?.meta.id === meta.id }));
   }, [scoredTrials, alphabet, predictors]);
 
   const leaderId = leaderboardRows.find((r) => r.isLeader)?.meta.id ?? null;
   const leaderLabel = leaderboardRows.find((r) => r.isLeader)?.meta.label ?? "-";
-  const leaderAcc = leaderboardRows.find((r) => r.isLeader)?.primary ?? 0;
 
   // The predictor whose guess is shown in the arena. Falls back to first
   // non-random predictor pre-warmup so there is always a guess to show.
@@ -145,8 +121,6 @@ function Session({ alphabet }: { alphabet: 2 | 4 }) {
     );
   }, [predictors, leaderId]);
 
-  const arenaShownLabel =
-    predictors.find((p) => p.meta.id === arenaShownId)?.meta.label ?? "-";
 
   // Lifetime tally of the AI guess that was visibly shown at each press.
   // Aggregates across leader changes - counts what the user actually saw, not
@@ -203,52 +177,48 @@ function Session({ alphabet }: { alphabet: 2 | 4 }) {
   }, [trials]);
 
   const sessionDone = trials.length >= SESSION_TARGET;
-  const tallyPct = tally.total === 0 ? 0 : (tally.right / tally.total) * 100;
+  const chance = 1 / alphabet;
+  const chanceName = alphabet === 2 ? "Coin flip" : "Random guess";
+  const enoughForVerdict = tally.total >= WARMUP_TRIALS;
+  const beatsChance = enoughForVerdict && chanceOfAtLeast(tally.right, tally.total, chance) < CLEAR_P;
+  const verdict = !enoughForVerdict
+    ? `After ${WARMUP_TRIALS} presses this says whether the AI beats chance.`
+    : beatsChance
+      ? "Clearly better than chance. The AI has found a pattern in your presses."
+      : "Not clearly better than chance. So far you look unpredictable.";
+  const hitSeries = useMemo(() => scoredTrials.map((trial) => trial.shownGuess === trial.symbol), [scoredTrials]);
 
   return (
     <>
       <div className="mb-6 flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          onClick={handleReset}
-          className="rounded-md border border-[var(--line)] bg-[var(--surface)] px-3 py-1.5 font-mono text-xs uppercase tracking-[0.18em] text-neutral-600 transition hover:border-cyan-500/60 dark:text-neutral-400"
-        >
-          ↺ Reset
-        </button>
-        <HintToggle showHint={showHint} setShowHint={setShowHint} />
-        <p className="w-full text-xs text-neutral-500">Leaderboard and large tally show {showHint ? "hint-visible" : "blind"} trials only. Models learn from the whole session; these are separate score slices, not independent experiments.</p>
-        <div className="w-full flex flex-wrap gap-4 text-sm">{[false, true].map((hint) => { const slice = trials.filter((trial) => trial.hintShown === hint); const hits = slice.filter((trial) => trial.shownGuess === trial.symbol).length; return <span key={String(hint)}>{hint ? "Hint visible" : "Blind"}: {hits}/{slice.length} correct{slice.length ? " (" + Math.round(hits / slice.length * 100) + "%)" : ""}</span>; })}</div>
-        <div
-          className="ml-auto rounded-md border border-[var(--line)] bg-[var(--surface)] px-3 py-1.5 font-mono text-xs"
-          title="Combined tally of the guesses shown at each trial, across predictor changes."
-        >
-          <span className="uppercase tracking-[0.18em] text-neutral-500">
-            AI ({arenaShownLabel})
-          </span>{" "}
-          <span className="tabular-nums text-neutral-800 dark:text-neutral-200">
-            {tally.right} / {tally.total}
-          </span>{" "}
-          <span className="tabular-nums text-neutral-500">
-            ({tallyPct.toFixed(0)}%)
-          </span>
-        </div>
-        <div className="font-mono text-xs text-neutral-500">
-          {trials.length} / {SESSION_TARGET} trials
-        </div>
+        <Segmented
+          label="Number of keys"
+          options={[
+            { value: "2", label: "2 keys" },
+            { value: "4", label: "4 keys" },
+          ]}
+          value={String(alphabet) as "2" | "4"}
+          onChange={(value) => setAlphabet(value === "4" ? 4 : 2)}
+        />
+        <Segmented
+          label="AI guess"
+          options={[
+            { value: "hidden", label: "AI guess hidden" },
+            { value: "shown", label: "AI guess shown" },
+          ]}
+          value={showHint ? "shown" : "hidden"}
+          onChange={(value) => setShowHint(value === "shown")}
+        />
+        <Button size="sm" variant="ghost" onClick={handleReset} disabled={trials.length === 0}>
+          Reset
+        </Button>
+        <span className="ml-auto font-mono text-[0.7rem] uppercase tracking-[0.08em] tabular-nums text-[var(--sub)]">
+          {trials.length} / {SESSION_TARGET} presses
+        </span>
       </div>
 
-      {sessionDone && (
-        <div className="mb-4 rounded-md border border-cyan-500/40 bg-cyan-500/5 px-4 py-3 font-mono text-xs text-cyan-700 dark:text-cyan-300">
-          Session done. Best AI: <strong>{leaderLabel}</strong> at{" "}
-          {(leaderAcc * 100).toFixed(0)}% rolling accuracy. Hit reset to play again.
-        </div>
-      )}
-
-      <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
-        <DemoPanel
-          title="Arena"
-          description="Each tap is one trial. Predictors guess the next tap before it happens."
-        >
+      <div className="grid gap-10 lg:grid-cols-[minmax(0,28rem)_minmax(0,1fr)]">
+        <div className="min-w-0">
           <ArenaDiscrete
             symbolLabels={symbolLabels}
             keyMap={keyMap}
@@ -258,103 +228,54 @@ function Session({ alphabet }: { alphabet: 2 | 4 }) {
             disabled={sessionDone}
             onPress={handlePress}
           />
-        </DemoPanel>
+          <div className="mt-4" aria-live="polite">
+            <p className="text-2xl font-semibold sm:text-3xl">
+              {tally.total === 0 ? (
+                "Your move"
+              ) : (
+                <>
+                  The AI guessed <span className="tabular-nums">{tally.right}</span> of your{" "}
+                  <span className="tabular-nums">{tally.total}</span> presses
+                </>
+              )}
+            </p>
+            <p className="mt-1 text-sm text-[var(--muted)]">
+              {tally.total === 0
+                ? `A ${chanceName.toLowerCase()} would guess ${alphabet === 2 ? "half" : "a quarter"} of your presses. Can the AI do better?`
+                : `${chanceName}: about ${Math.round(tally.total * chance)}. ${
+                    showHint ? "The guess is shown, so dodging it is easy and this is not a fair test." : verdict
+                  }`}
+            </p>
+            {sessionDone ? <p className="mt-2 text-sm">{SESSION_TARGET} presses done. Reset to play again.</p> : null}
+          </div>
+        </div>
 
-        <DemoPanel
-          title="Leaderboard"
-          description="Rolling 50-trial accuracy. Bits = bits saved per trial vs random."
-        >
-          <Leaderboard
-            rows={leaderboardRows}
-            primaryFmt={(v) => `${(v * 100).toFixed(0)}%`}
-            secondaryFmt={(v) => v.toFixed(2)}
-          />
-        </DemoPanel>
-
-        <DemoPanel
-          title="Entropy"
-          description="Conditional bigram entropy of your input. The lower it goes, the more patterned you are."
-        >
-          <EntropyPlot
-            series={entropySeries}
-            max={Math.log2(alphabet)}
-            label="bigram H(X|prev)"
-            unit="bits"
-          />
-        </DemoPanel>
-
-        <DemoPanel
-          title="Why?"
-          description={`Internal state of the leading predictor (${leaderLabel}).`}
-        >
-          <WhyPanelDiscrete
-            why={whyData}
-            symbolLabels={symbolLabels}
-            predictorLabel={leaderLabel}
-          />
-        </DemoPanel>
+        <div className="min-w-0">
+          <AccuracyChart hits={hitSeries} chance={chance} chanceLabel={chanceName} />
+          <p className="mt-3 text-sm text-[var(--muted)]">
+            {leaderId ? (
+              <>
+                Guessing with <span className="font-mono text-[var(--foreground)]">{leaderLabel}</span>, the best of{" "}
+                {predictors.length} predictors over your last {SCORE_WINDOW} presses.
+              </>
+            ) : (
+              `${predictors.length} predictors compete. The best one takes over after ${WARMUP_TRIALS} presses.`
+            )}
+          </p>
+          <Details summary="How it reads you" className="mt-4">
+            <div className="space-y-6">
+              <WhyPanelDiscrete why={whyData} symbolLabels={symbolLabels} predictorLabel={leaderLabel} />
+              <Leaderboard rows={leaderboardRows} window={SCORE_WINDOW} />
+              <EntropyPlot series={entropySeries} max={Math.log2(alphabet)} label="Your randomness, bigram entropy" unit="bits" />
+              <p className="text-xs">
+                Scores count only presses made with the current guess setting. &quot;Clearly better than chance&quot; means pure
+                guessing would score this high less than {CLEAR_P * 100}% of the time (one-sided binomial test). The bigram entropy
+                is lower when your next press depends on your last one.
+              </p>
+            </div>
+          </Details>
+        </div>
       </div>
     </>
-  );
-}
-
-// ============================================================================
-// Toolbar bits.
-// ============================================================================
-
-function HintToggle({
-  showHint,
-  setShowHint,
-}: {
-  showHint: boolean;
-  setShowHint: (v: boolean) => void;
-}) {
-  return (
-    <div className="inline-flex rounded-md border border-[var(--line)] bg-[var(--surface)] p-0.5">
-      <span className="px-2 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-neutral-500">
-        AI guess
-      </span>
-      {([true, false] as const).map((v) => (
-        <button
-          key={String(v)}
-          type="button"
-          onClick={() => setShowHint(v)}
-          className={`rounded px-3 py-1 font-mono text-xs uppercase tracking-[0.18em] transition ${
-            showHint === v
-              ? "bg-cyan-500/15 text-cyan-700 dark:text-cyan-300"
-              : "text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
-          }`}
-        >
-          {v ? "show" : "hide"}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function AlphabetPicker({
-  alphabet,
-  setAlphabet,
-}: {
-  alphabet: 2 | 4;
-  setAlphabet: (a: 2 | 4) => void;
-}) {
-  return (
-    <div className="inline-flex rounded-md border border-[var(--line)] bg-[var(--surface)] p-0.5">
-      {([2, 4] as const).map((a) => (
-        <button
-          key={a}
-          type="button"
-          onClick={() => setAlphabet(a)}
-          className={`rounded px-3 py-1 font-mono text-xs uppercase tracking-[0.18em] transition ${
-            alphabet === a
-              ? "bg-cyan-500/15 text-cyan-700 dark:text-cyan-300"
-              : "text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
-          }`}
-        >
-          {a} keys
-        </button>
-      ))}
-    </div>
   );
 }

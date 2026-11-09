@@ -4,9 +4,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import AsciiDataBackground from "./AsciiDataBackground";
 import {
-  getBackgroundScope,
   isBgDisabled,
-  isBgDisabledByDefault,
   subscribeBgToggle,
 } from "./backgroundToggle";
 
@@ -21,11 +19,10 @@ export function hasBackground(pathname: string | null, notFound: boolean): boole
 
 export default function DataBackground() {
   const pathname = usePathname();
-  const scope = getBackgroundScope(pathname);
   const disabled = useSyncExternalStore<boolean>(
     subscribeBgToggle,
-    () => isBgDisabled(scope),
-    () => isBgDisabledByDefault(scope),
+    isBgDisabled,
+    () => false,
   );
 
   // The 404 page doesn't have a stable pathname (it's whatever the user

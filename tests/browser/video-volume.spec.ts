@@ -40,7 +40,8 @@ test("real gallery selects all clips, scrubs, plays, resets and resizes", async 
   const paused = await time.inputValue();
   await page.waitForTimeout(250);
   await expect(time).toHaveValue(paused);
-  await page.getByRole("button", { name: "Drag time", exact: true }).click();
+  await page.locator("summary", { hasText: "View options" }).click();
+  await page.getByRole("radio", { name: "Scrub time", exact: true }).click();
   await volume.scrollIntoViewIfNeeded();
   let box = await volume.boundingBox();
   if (!box) throw new Error("No canvas");
@@ -53,7 +54,7 @@ test("real gallery selects all clips, scrubs, plays, resets and resizes", async 
   await expect
     .poll(async () => Number(await time.inputValue()))
     .toBeGreaterThan(Number(paused));
-  await page.getByRole("button", { name: "Rotate", exact: true }).click();
+  await page.getByRole("radio", { name: "Rotate", exact: true }).click();
   await volume.scrollIntoViewIfNeeded();
   box = await volume.boundingBox();
   if (!box) throw new Error("No canvas");
@@ -86,7 +87,8 @@ test("real gallery selects all clips, scrubs, plays, resets and resizes", async 
     .getByRole("button", { name: "San Francisco traffic", exact: true })
     .click();
   await expect(volume).toBeVisible();
-  await page.getByRole("button", { name: "car", exact: true }).click();
+  await page.locator("summary", { hasText: "View options" }).click();
+  await page.getByRole("radio", { name: "car", exact: true }).click();
   await expect(
     page.getByRole("list", { name: "Track legend" }),
   ).not.toContainText("bus");
@@ -123,7 +125,7 @@ test("cancel, retry, failed loading and rapid switching never retain stale frame
     }
   await expect(page.getByRole("img", { name: /^Time volume/ })).toBeVisible();
   await expect(
-    page.getByRole("img", { name: /Sunlit cat, selected frame/ }),
+    page.getByRole("img", { name: /^Time volume of Sunlit cat/ }),
   ).toBeVisible();
   await expect(page.getByTestId("time-output")).toHaveText(
     "0.000 s · Frame 1 / 36",
@@ -143,7 +145,8 @@ test("touch scrubbing starts paused with reduced motion", async ({
   await page.goto("/video-volume");
   const volume = page.getByRole("img", { name: /^Time volume/ });
   await expect(volume).toBeVisible();
-  await page.getByRole("button", { name: "Drag time", exact: true }).click();
+  await page.locator("summary", { hasText: "View options" }).click();
+  await page.getByRole("radio", { name: "Scrub time", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Play", exact: true }),
   ).toBeEnabled();
@@ -198,12 +201,12 @@ test("fullscreen preserves time, supports orbit/zoom/reset and repeated Escape/c
     const canvas = modal.getByRole("img", { name: /^Time volume/ });
     await canvas.focus();
     await canvas.press("ArrowRight");
-    await modal.getByText("Camera controls", { exact: true }).click();
+    await modal.locator("summary", { hasText: "View options" }).click();
     await expect(
       modal.getByRole("slider", { name: "Rotation", exact: true }),
     ).not.toHaveValue("42");
-    await modal.getByText("Camera controls", { exact: true }).click();
-    await modal.getByRole("button", { name: "Zoom in", exact: true }).click();
+    await canvas.press("=");
+    await canvas.press("=");
     await expect(
       modal.getByRole("slider", { name: "Zoom", exact: true }),
     ).toHaveValue("1.2");
@@ -218,9 +221,8 @@ test("fullscreen preserves time, supports orbit/zoom/reset and repeated Escape/c
         ),
       )
       .toBeGreaterThan(1.2);
-    await modal
-      .getByRole("button", { name: "Reset view", exact: true })
-      .click();
+    // The 0 key resets the camera only; the selected moment stays.
+    await canvas.press("0");
     await expect(
       modal.getByRole("slider", { name: "Zoom", exact: true }),
     ).toHaveValue("1");
@@ -313,6 +315,7 @@ test("mobile fullscreen pinch zoom keeps time fixed and closes after resize", as
     type: "touchEnd",
     touchPoints: [],
   });
+  await modal.locator("summary", { hasText: "View options" }).click();
   await expect
     .poll(async () =>
       Number(
@@ -325,7 +328,7 @@ test("mobile fullscreen pinch zoom keeps time fixed and closes after resize", as
   await expect(modal.getByRole("slider", { name: "Time slice" })).toHaveValue(
     "0",
   );
-  await modal.getByRole("button", { name: "Reset view", exact: true }).click();
+  await modal.getByRole("button", { name: "Reset", exact: true }).click();
   await expect(
     modal.getByRole("slider", { name: "Zoom", exact: true }),
   ).toHaveValue("1");

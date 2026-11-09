@@ -14,3 +14,11 @@ export function reconstructSamples(samples: readonly number[], sampleRate: numbe
     return sum + sample * (Math.abs(x) < 1e-10 ? 1 : Math.sin(Math.PI * x) / (Math.PI * x));
   }, 0);
 }
+
+/** One plain sentence describing what the sampler sees. */
+export function verdict(frequency: number, sampleRate: number, alias: number): string {
+  const head = `${frequency} Hz sampled at ${sampleRate} Hz`;
+  if (sampleRate === 2 * frequency) return `${head} sits on the limit: two samples per cycle, so the phase decides what the dots show.`;
+  if (sampleRate < 2 * frequency) return alias === 0 ? `${head} looks like a constant.` : `${head} looks like ${Math.abs(alias)} Hz.`;
+  return `${head} is captured: no slower wave fits the same dots.`;
+}

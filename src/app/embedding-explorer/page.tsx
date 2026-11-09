@@ -828,7 +828,7 @@ export default function EmbeddingExplorerPage() {
 
   if (!isModelReady) {
     return (
-      <DemoPage width="lg">
+      <DemoPage>
         <DemoHeader eyebrow="NLP / Embeddings" title="Embedding Explorer" description="Load a local embedding model and inspect semantic geometry in a shareable workspace." />
         <DemoPanel
           title={isModelLoading ? "Model Loading" : "Load Model"}

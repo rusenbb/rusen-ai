@@ -3,9 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useSyncExternalStore } from "react";
 import {
-  getBackgroundScope,
   isBgDisabled,
-  isBgDisabledByDefault,
   setBgDisabled,
   subscribeBgToggle,
 } from "./backgroundToggle";
@@ -13,17 +11,16 @@ import { hasBackground } from "./DataBackground";
 
 export default function BgToggle() {
   const pathname = usePathname();
-  const scope = getBackgroundScope(pathname);
   const disabled = useSyncExternalStore<boolean>(
     subscribeBgToggle,
-    () => isBgDisabled(scope),
-    () => isBgDisabledByDefault(scope),
+    isBgDisabled,
+    () => false,
   );
 
   // Only the home page has a background to switch (404 is not a route here).
   if (!hasBackground(pathname, false)) return null;
 
-  const onClick = () => setBgDisabled(!disabled, scope);
+  const onClick = () => setBgDisabled(!disabled);
   const aria = disabled ? "Enable background animation" : "Disable background animation";
 
   return (

@@ -4,81 +4,41 @@ import type { PredictorMeta } from "../modes";
 
 export type LeaderboardRow = {
   meta: PredictorMeta;
-  primary: number;
-  primaryLabel: string;
-  secondary: number;
-  secondaryLabel: string;
+  accuracy: number;
+  bitsSaved: number;
   isLeader: boolean;
-  warmup: boolean;
 };
 
-export function Leaderboard({
-  rows,
-  primaryFmt,
-  secondaryFmt,
-}: {
-  rows: LeaderboardRow[];
-  primaryFmt: (v: number) => string;
-  secondaryFmt: (v: number) => string;
-}) {
+const LABEL = "font-mono text-[0.7rem] uppercase tracking-[0.08em] text-[var(--sub)]";
+
+/** Every predictor's rolling score. Negative bits mean it does worse than a uniform guess. */
+export function Leaderboard({ rows, window }: { rows: LeaderboardRow[]; window: number }) {
   return (
-    <div className="space-y-2">
-      {rows.map((row) => (
-        <div
-          key={row.meta.id}
-          className={`flex items-center gap-3 rounded-md border px-3 py-2 ${
-            row.isLeader
-              ? "border-cyan-500 bg-cyan-500/5"
-              : "border-[var(--line)] bg-[var(--surface)]"
-          }`}
-        >
-          <div className="min-w-0 flex-1">
-            <div className="flex items-baseline gap-2">
-              <span
-                className={`font-mono text-sm ${
-                  row.isLeader
-                    ? "text-cyan-700 dark:text-cyan-300 font-semibold"
-                    : "text-neutral-800 dark:text-neutral-200"
-                }`}
-              >
-                {row.meta.label}
-              </span>
-              {row.warmup && (
-                <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-amber-600 dark:text-amber-400">
-                  warmup
-                </span>
-              )}
-            </div>
-            <p className="mt-0.5 truncate text-xs text-neutral-500">
-              {row.meta.blurb}
-            </p>
-          </div>
-          <div className="text-right">
-            <div className="flex items-baseline justify-end gap-2 font-mono">
-              <span className="text-[10px] uppercase tracking-[0.18em] text-neutral-500">
-                {row.primaryLabel}
-              </span>
-              <span
-                className={`text-sm tabular-nums ${
-                  row.isLeader
-                    ? "text-cyan-700 dark:text-cyan-300 font-semibold"
-                    : "text-neutral-800 dark:text-neutral-200"
-                }`}
-              >
-                {primaryFmt(row.primary)}
-              </span>
-            </div>
-            <div className="flex items-baseline justify-end gap-2 font-mono">
-              <span className="text-[10px] uppercase tracking-[0.18em] text-neutral-500">
-                {row.secondaryLabel}
-              </span>
-              <span className="text-xs tabular-nums text-neutral-500">
-                {secondaryFmt(row.secondary)}
-              </span>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
+    <table className="w-full border-collapse text-sm">
+      <thead>
+        <tr className="border-b border-[var(--line)]">
+          <th className={`py-1.5 text-left font-normal ${LABEL}`}>Predictor</th>
+          <th className={`py-1.5 text-right font-normal ${LABEL}`}>Hit rate, last {window}</th>
+          <th className={`py-1.5 text-right font-normal ${LABEL}`} title="Average bits per press saved compared with a uniform guess. Negative means worse than uniform.">
+            Bits saved vs random
+          </th>
+        </tr>
+      </thead>
+      <tbody className="font-mono tabular-nums">
+        {rows.map((row) => (
+          <tr key={row.meta.id} className="border-b border-[var(--line)]">
+            <td className={`py-1.5 ${row.isLeader ? "text-[var(--foreground)]" : ""}`} title={row.meta.blurb}>
+              {row.meta.label}
+              {row.isLeader ? <span className="ml-2 text-[var(--accent)]">leading</span> : null}
+            </td>
+            <td className="py-1.5 text-right">{(row.accuracy * 100).toFixed(0)}%</td>
+            <td className="py-1.5 text-right">
+              {row.bitsSaved >= 0 ? "+" : "−"}
+              {Math.abs(row.bitsSaved).toFixed(2)}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }

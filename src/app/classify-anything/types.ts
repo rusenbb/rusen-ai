@@ -1,3 +1,5 @@
+import { EXAMPLES } from "./utils/examples";
+
 // Classification result from the model
 export interface ClassificationResult {
   label: string;
@@ -28,8 +30,8 @@ export type ClassifyAction =
 
 // Initial state
 export const initialState: ClassifyState = {
-  labels: ["positive", "negative", "neutral"],
-  inputText: "",
+  labels: [...EXAMPLES[0].labels],
+  inputText: EXAMPLES[0].text,
   results: null,
   isClassifying: false,
   error: null,

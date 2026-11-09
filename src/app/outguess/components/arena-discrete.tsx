@@ -51,24 +51,19 @@ export function ArenaDiscrete({
 
   return (
     <div className="select-none">
-      <p className="mb-3 text-center font-mono text-[11px] uppercase tracking-[0.18em] text-neutral-500">
-        {symbolLabels.length === 2
-          ? "tap or press a key. try to be unpredictable."
-          : "tap or press one of the keys. try to be unpredictable."}
-      </p>
       <div
         className={`grid gap-3 ${
-          symbolLabels.length === 2 ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-4"
+          "grid-cols-2"
         }`}
       >
         {symbolLabels.map((label, i) => {
           const isPredicted = showPrediction && predictedNext === i && !disabled;
           const isPulsing = pulse?.symbol === i;
-          const ring = isPredicted ? "ring-2 ring-cyan-500/70" : "";
+          // Accent-2 when the AI called it, accent when the press slipped past.
           const pulseColor = isPulsing
             ? pulse!.correct
-              ? "bg-rose-500/15 border-rose-500"
-              : "bg-emerald-500/15 border-emerald-500"
+              ? "border-[var(--accent-2)] bg-[color-mix(in_srgb,var(--accent-2)_14%,var(--surface))]"
+              : "border-[var(--accent)] bg-[color-mix(in_srgb,var(--accent)_14%,var(--surface))]"
             : "";
           return (
             <button
@@ -76,19 +71,16 @@ export function ArenaDiscrete({
               type="button"
               disabled={disabled}
               onClick={() => onPress(i)}
-              className={`group relative aspect-square w-full rounded-xl border bg-[var(--surface)] transition active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 ${
-                pulseColor || "border-[var(--line)] hover:border-cyan-500/60"
-              } ${ring}`}
+              className={`group relative ${symbolLabels.length === 2 ? "aspect-[4/3]" : "aspect-[2/1]"} w-full cursor-pointer border bg-[var(--surface)] transition-[transform,background-color,border-color] duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 ${
+                pulseColor || (isPredicted ? "border-[var(--accent)]" : "border-[var(--line)] hover:border-[var(--line-strong)]")
+              }`}
               aria-label={`Press ${label} (key ${keyMap[i]})`}
             >
-              <span className="block text-4xl sm:text-5xl font-bold text-neutral-800 dark:text-neutral-200">
+              <span className="block font-mono text-4xl font-bold sm:text-5xl">
                 {label}
               </span>
-              <span className="absolute bottom-2 right-2 font-mono text-[10px] uppercase tracking-[0.18em] text-neutral-500">
-                key {keyMap[i]}
-              </span>
               {isPredicted && (
-                <span className="absolute left-2 top-2 font-mono text-[10px] uppercase tracking-[0.18em] text-cyan-600 dark:text-cyan-400">
+                <span className="absolute left-2 top-2 font-mono text-[0.65rem] uppercase tracking-[0.08em] text-[var(--accent)]">
                   AI guess
                 </span>
               )}
@@ -97,16 +89,11 @@ export function ArenaDiscrete({
         })}
       </div>
       {pulse && (
-        <p
-          className={`mt-3 text-center font-mono text-xs ${
-            pulse.correct
-              ? "text-rose-600 dark:text-rose-400"
-              : "text-emerald-600 dark:text-emerald-400"
-          }`}
-        >
+        <p className="mt-2 text-center font-mono text-xs text-[var(--muted)]">
           {pulse.correct ? "AI called it." : "You slipped past the AI."}
         </p>
       )}
+      {!pulse && <p aria-hidden className="mt-2 font-mono text-xs">&nbsp;</p>}
     </div>
   );
 }

@@ -560,6 +560,3 @@ export function createScene(id: string, grid: Grid, seed: number): Scene {
   return (SCENES[id] ?? plasma)(grid, mulberry32(seed));
 }
 
-export function hasScene(id: string): boolean {
-  return id in SCENES;
-}

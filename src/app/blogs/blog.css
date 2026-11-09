@@ -541,13 +541,6 @@ html { scroll-behavior: smooth; }
 }
 .idx-section-body { padding: 0 0 1.5rem; }
 
-.series-blurb {
-  color: var(--muted);
-  margin: 0.5rem 0 1.5rem;
-  max-width: 60ch;
-  font-size: 0.95rem;
-}
-
 /* ============================================================
    TAG AND SERIES PAGES
    Same page head and post rows as the index; no panels or chips.

@@ -202,28 +202,6 @@ export function forward(
 }
 
 // Forward pass that stores intermediate activations for backprop
-type ForwardCache = {
-  preActivations: Float32Array[]; // z values before ReLU
-  activations: Float32Array[]; // a values after ReLU (or linear for output)
-};
-
-function forwardWithCache(
-  weights: DQNWeights,
-  input: Float32Array,
-): ForwardCache {
-  const preActivations: Float32Array[] = [];
-  const activations: Float32Array[] = [input]; // a[0] = input
-
-  for (let l = 0; l < weights.layers.length; l++) {
-    const layer = weights.layers[l];
-    preActivations.push(new Float32Array(layer.outDim));
-    activations.push(new Float32Array(layer.outDim));
-  }
-
-  forwardInto(weights, input, activations, preActivations);
-  return { preActivations, activations };
-}
-
 function forwardInto(
   weights: DQNWeights,
   input: Float32Array,
@@ -294,123 +272,11 @@ export function pushTransition(
   }
 }
 
-export function sampleBatch(
-  replay: ReplayBuffer,
-  batchSize: number,
-): Transition[] {
-  const batch: Transition[] = [];
-  for (let i = 0; i < batchSize; i++) {
-    const index = Math.floor(Math.random() * replay.size);
-    batch.push(replay.buffer[index]!);
-  }
-  return batch;
-}
-
 function zeroWeights(weights: DQNWeights): void {
   for (const layer of weights.layers) {
     layer.weights.fill(0);
     layer.biases.fill(0);
   }
-}
-
-// ── Backward Pass (Backpropagation) ───────────────────────────────────────────
-
-export type GradientResult = {
-  gradients: DQNWeights;
-  loss: number;
-};
-
-export function backpropBatch(
-  policy: DQNWeights,
-  target: DQNWeights,
-  batch: Transition[],
-  gamma: number,
-): GradientResult {
-  const numLayers = policy.layers.length;
-  const grads = createZeroWeights(
-    policy.layers
-      .map((l) => l.inDim)
-      .concat([policy.layers[numLayers - 1].outDim]),
-  );
-  let totalLoss = 0;
-
-  for (const transition of batch) {
-    // Forward pass through policy network
-    const cache = forwardWithCache(policy, transition.state);
-    const qValues = cache.activations[numLayers]; // output layer activations
-
-    // Compute target Q-value
-    let targetQ: number;
-    if (transition.nextState === null) {
-      targetQ = transition.reward;
-    } else {
-      const nextQValues = forward(target, transition.nextState);
-      let maxNextQ = nextQValues[0];
-      for (let i = 1; i < nextQValues.length; i++) {
-        if (nextQValues[i] > maxNextQ) maxNextQ = nextQValues[i];
-      }
-      targetQ = transition.reward + gamma * maxNextQ;
-    }
-
-    // Loss for this sample: (Q(s,a) - target)^2
-    const predicted = qValues[transition.action];
-    const error = predicted - targetQ;
-    totalLoss += error * error;
-
-    // Backward pass
-    // dL/dOutput: zeros except at the chosen action
-    let delta = new Float32Array(policy.layers[numLayers - 1].outDim);
-    delta[transition.action] = 2 * error; // d/dq (q - target)^2 = 2(q - target)
-
-    // Backprop through each layer (reverse order)
-    for (let l = numLayers - 1; l >= 0; l--) {
-      const layer = policy.layers[l];
-      const inputActivation = cache.activations[l];
-      const gradLayer = grads.layers[l];
-
-      // If not the output layer, apply ReLU derivative
-      if (l < numLayers - 1) {
-        const z = cache.preActivations[l];
-        for (let i = 0; i < delta.length; i++) {
-          if (z[i] <= 0) delta[i] = 0;
-        }
-      }
-
-      // Accumulate weight gradients: dL/dW[l] += outer(delta, input)
-      for (let i = 0; i < layer.outDim; i++) {
-        const rowOffset = i * layer.inDim;
-        for (let j = 0; j < layer.inDim; j++) {
-          gradLayer.weights[rowOffset + j] += delta[i] * inputActivation[j];
-        }
-        gradLayer.biases[i] += delta[i];
-      }
-
-      // Propagate delta to previous layer: delta_prev = W[l]^T * delta
-      if (l > 0) {
-        const prevDelta = new Float32Array(layer.inDim);
-        for (let i = 0; i < layer.outDim; i++) {
-          const rowOffset = i * layer.inDim;
-          for (let j = 0; j < layer.inDim; j++) {
-            prevDelta[j] += layer.weights[rowOffset + j] * delta[i];
-          }
-        }
-        delta = prevDelta;
-      }
-    }
-  }
-
-  // Average gradients over batch
-  const batchSize = batch.length;
-  for (const layer of grads.layers) {
-    for (let i = 0; i < layer.weights.length; i++) {
-      layer.weights[i] /= batchSize;
-    }
-    for (let i = 0; i < layer.biases.length; i++) {
-      layer.biases[i] /= batchSize;
-    }
-  }
-
-  return { gradients: grads, loss: totalLoss / batchSize };
 }
 
 // ── Adam Optimizer ────────────────────────────────────────────────────────────

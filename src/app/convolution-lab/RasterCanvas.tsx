@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type KeyboardEvent, type MouseEvent } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent, type MouseEvent } from "react";
 
 export type RasterFocus = {
   row: number;
@@ -15,7 +15,8 @@ type RasterCanvasProps = {
   pixels: Uint8ClampedArray;
   label: string;
   focus?: RasterFocus;
-  focusColor?: string;
+  /** CSS custom property used for the focus box. */
+  focusToken?: string;
   onCellSelect?: (row: number, col: number) => void;
   pixelated?: boolean;
   className?: string;
@@ -39,12 +40,19 @@ export function RasterCanvas({
   pixels,
   label,
   focus,
-  focusColor = "#fbbf24",
+  focusToken = "--accent-2",
   onCellSelect,
   pixelated = true,
   className = "",
 }: RasterCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [themeKey, setThemeKey] = useState(0);
+
+  useEffect(() => {
+    const redraw = () => setThemeKey((key) => key + 1);
+    window.addEventListener("rusen-theme-change", redraw);
+    return () => window.removeEventListener("rusen-theme-change", redraw);
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -60,12 +68,12 @@ export function RasterCanvas({
 
     if (!focus || focus.rows <= 0 || focus.columns <= 0) return;
     context.save();
-    context.strokeStyle = focusColor;
+    context.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue(focusToken).trim() || "#fbbf24";
     context.lineWidth = Math.max(1, Math.round(Math.min(width, height) / 96));
     context.setLineDash([2, 1]);
     context.strokeRect(focus.col, focus.row, focus.columns, focus.rows);
     context.restore();
-  }, [focus, focusColor, height, pixels, width]);
+  }, [focus, focusToken, height, pixels, width, themeKey]);
 
   const handleKeyDown = (event: KeyboardEvent<HTMLCanvasElement>) => {
     if (!onCellSelect || !focus) return;
@@ -83,7 +91,7 @@ export function RasterCanvas({
   return (
     <canvas
       ref={canvasRef}
-      className={`block h-auto w-full bg-neutral-950 ${pixelated ? "[image-rendering:pixelated]" : ""} ${onCellSelect ? "cursor-crosshair focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300" : ""} ${className}`}
+      className={`block h-auto w-full border border-[var(--line)] bg-[var(--surface)] ${pixelated ? "[image-rendering:pixelated]" : ""} ${onCellSelect ? "cursor-crosshair focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[var(--line-strong)]" : ""} ${className}`}
       aria-label={label}
       role={onCellSelect ? "button" : "img"}
       tabIndex={onCellSelect ? 0 : undefined}

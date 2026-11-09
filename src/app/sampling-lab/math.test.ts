@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { aliasFrequency, sineAt, reconstructSamples } from "./math";
+import { aliasFrequency, reconstructSamples, sineAt, verdict } from "./math";
 
 describe("sampling aliases", () => {
   it("interpolates every measured sample without using the source frequency", () => {
@@ -27,5 +27,12 @@ describe("sampling aliases", () => {
     expect(sineAt(1 / 12, 6, Math.PI / 2)).toBeCloseTo(-1);
     expect(aliasFrequency(3, 12)).toBe(3);
     expect(aliasFrequency(9, 12)).toBe(-3);
+  });
+
+  it("describes the result in one sentence from the state", () => {
+    expect(verdict(9, 12, aliasFrequency(9, 12))).toBe("9 Hz sampled at 12 Hz looks like 3 Hz.");
+    expect(verdict(12, 12, aliasFrequency(12, 12))).toBe("12 Hz sampled at 12 Hz looks like a constant.");
+    expect(verdict(6, 12, aliasFrequency(6, 12))).toMatch(/on the limit/);
+    expect(verdict(3, 24, aliasFrequency(3, 24))).toMatch(/is captured/);
   });
 });

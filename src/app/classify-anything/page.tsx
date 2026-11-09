@@ -1,141 +1,164 @@
 "use client";
 
-import { useReducer, useCallback, useState } from "react";
+import { useCallback, useReducer, useState, type FormEvent } from "react";
 import { useClassifier } from "./hooks/useClassifier";
-import ClassInput from "./components/ClassInput";
-import TextInput from "./components/TextInput";
 import ResultsPanel from "./components/ResultsPanel";
 import { classifyReducer, initialState } from "./types";
-import { DemoFootnote, DemoHeader, DemoMutedSection, DemoPage, DemoPanel } from "@/components/ui";
+import { EXAMPLES } from "./utils/examples";
+import { Button, Chip, DemoHeader, DemoPage, Details } from "@/components/ui";
+
+const MIN_LABELS = 2;
 
 export default function ClassifyAnythingPage() {
   const [state, dispatch] = useReducer(classifyReducer, initialState);
   const [multiLabel, setMultiLabel] = useState(false);
+  const [draftLabel, setDraftLabel] = useState("");
   const { classify, isModelReady, loadProgress, modelStatus, error: modelError } = useClassifier();
+  const busy = state.isClassifying;
 
   const handleClassify = useCallback(async () => {
-    if (!state.inputText.trim() || state.labels.length < 2) {
-      return;
-    }
-
+    if (!state.inputText.trim() || state.labels.length < MIN_LABELS) return;
     dispatch({ type: "SET_CLASSIFYING", isClassifying: true });
-
     try {
       const results = await classify(state.inputText, state.labels, multiLabel);
       dispatch({ type: "SET_RESULTS", results });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Classification failed";
-      dispatch({ type: "SET_ERROR", error: message });
+      dispatch({ type: "SET_ERROR", error: err instanceof Error ? err.message : "Classification failed" });
     }
   }, [classify, state.inputText, state.labels, multiLabel]);
 
-  const handleAddLabel = useCallback((label: string) => {
-    dispatch({ type: "ADD_LABEL", label });
-  }, []);
-
-  const handleRemoveLabel = useCallback((index: number) => {
-    dispatch({ type: "REMOVE_LABEL", index });
-  }, []);
-
-  const handleSetLabels = useCallback((labels: string[]) => {
-    dispatch({ type: "SET_LABELS", labels });
-  }, []);
-
-  const handleSetInputText = useCallback((text: string) => {
-    dispatch({ type: "SET_INPUT_TEXT", text });
-  }, []);
+  const addLabel = (event: FormEvent) => {
+    event.preventDefault();
+    const label = draftLabel.trim().toLowerCase();
+    if (label && !state.labels.includes(label)) dispatch({ type: "ADD_LABEL", label });
+    setDraftLabel("");
+  };
 
   return (
     <DemoPage>
       <DemoHeader
-        eyebrow="NLP / Zero-Shot Classification"
+        eyebrow="Zero-shot text classification"
         title="Classify Anything"
-        description={
-          <>
-          Zero-shot classification for English text. Define your own classes, paste an excerpt, get predictions.
-          All processing happens locally in your browser.
-          </>
-        }
+        description="Write any text, invent the categories, and a small model in your browser picks the best fit."
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="min-w-0 lg:col-span-1">
-          <DemoPanel title="Labels" description="Create the classes your prompt should be sorted into.">
-            <label className="mb-4 flex items-center gap-2 text-sm"><input type="checkbox" checked={multiLabel} disabled={state.isClassifying} onChange={(event) => { setMultiLabel(event.target.checked); dispatch({ type: "SET_LABELS", labels: state.labels }); }} />Allow multiple matching labels</label>
-            <p className="mb-4 text-xs text-neutral-500">{multiLabel ? "Each label is scored independently; scores do not need to sum to 100%." : "Labels compete for one best match; scores are relative to this label set."} Scores are model estimates, not measured accuracy.</p>
-            <ClassInput
-              labels={state.labels}
-              onAddLabel={handleAddLabel}
-              onRemoveLabel={handleRemoveLabel}
-              onSetLabels={handleSetLabels}
-              disabled={state.isClassifying}
-            />
-          </DemoPanel>
-        </div>
+      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <div className="min-w-0 space-y-5">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-mono text-[0.7rem] uppercase tracking-[0.08em] text-[var(--sub)]">Examples</span>
+            {EXAMPLES.map((example) => (
+              <Chip
+                key={example.name}
+                selected={state.inputText === example.text}
+                disabled={busy}
+                onClick={() => {
+                  dispatch({ type: "SET_INPUT_TEXT", text: example.text });
+                  dispatch({ type: "SET_LABELS", labels: [...example.labels] });
+                }}
+              >
+                {example.name}
+              </Chip>
+            ))}
+          </div>
 
-        <div className="min-w-0 lg:col-span-1">
-          <DemoPanel title="Input Text" description="Paste an English sentence, paragraph, or short document excerpt.">
-            <TextInput
+          <div>
+            <label htmlFor="classify-text-input" className="sr-only">
+              Text to Classify
+            </label>
+            <textarea
+              id="classify-text-input"
               value={state.inputText}
-              onChange={handleSetInputText}
-              onClassify={handleClassify}
-              isClassifying={state.isClassifying}
-              isModelReady={isModelReady}
-              disabled={state.isClassifying}
+              onChange={(event) => dispatch({ type: "SET_INPUT_TEXT", text: event.target.value })}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+                  event.preventDefault();
+                  if (!busy) handleClassify();
+                }
+              }}
+              placeholder="Write or paste English text…"
+              disabled={busy}
+              rows={5}
+              className="w-full resize-none border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-base leading-relaxed focus:border-[var(--line-strong)] focus:outline-none disabled:opacity-50"
             />
-          </DemoPanel>
+            {state.inputText && (
+              <button
+                type="button"
+                onClick={() => dispatch({ type: "SET_INPUT_TEXT", text: "" })}
+                disabled={busy}
+                className="mt-1 font-mono text-[0.7rem] uppercase tracking-[0.08em] text-[var(--sub)] hover:text-[var(--foreground)] disabled:opacity-50"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+
+          <div>
+            <div className="mb-2 font-mono text-[0.7rem] uppercase tracking-[0.08em] text-[var(--sub)]">
+              Categories
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {state.labels.map((label, index) => (
+                <Chip
+                  key={label}
+                  onRemove={() => dispatch({ type: "REMOVE_LABEL", index })}
+                  disabled={busy || state.labels.length <= MIN_LABELS}
+                >
+                  {label}
+                </Chip>
+              ))}
+              <form onSubmit={addLabel} className="flex">
+                <input
+                  aria-label="New category"
+                  value={draftLabel}
+                  onChange={(event) => setDraftLabel(event.target.value)}
+                  placeholder="+ add your own"
+                  disabled={busy}
+                  className="w-36 border-b border-dashed border-[var(--line-strong)] bg-transparent px-1 py-1 font-mono text-[0.75rem] focus:outline-none disabled:opacity-50"
+                />
+              </form>
+            </div>
+          </div>
+
+          <Button
+            variant="primary"
+            size="lg"
+            onClick={handleClassify}
+            loading={busy}
+            disabled={!state.inputText.trim() || state.labels.length < MIN_LABELS}
+          >
+            {busy ? (isModelReady ? "Classifying" : "Loading model") : "Classify"}
+          </Button>
         </div>
 
-        <div className="min-w-0 lg:col-span-1">
-          <DemoPanel title="Results" description="Review the predicted label distribution and model status.">
-            <ResultsPanel
-              results={state.results}
-              isClassifying={state.isClassifying}
-              modelStatus={modelStatus}
-              loadProgress={loadProgress}
-              error={state.error || modelError}
-            />
-          </DemoPanel>
+        <div className="min-w-0">
+          <ResultsPanel
+            results={state.results}
+            isClassifying={busy}
+            modelStatus={modelStatus}
+            loadProgress={loadProgress}
+            error={state.error || modelError}
+          />
+          <Details summary="Options and model" className="mt-6">
+            <label className="mb-3 flex items-center gap-2 text-[var(--foreground)]">
+              <input
+                type="checkbox"
+                checked={multiLabel}
+                disabled={busy}
+                onChange={(event) => {
+                  setMultiLabel(event.target.checked);
+                  dispatch({ type: "SET_LABELS", labels: state.labels });
+                }}
+              />
+              Let several categories match
+            </label>
+            <p>
+              MobileBERT trained on natural-language inference, run with Transformers.js on WebAssembly. Each category
+              is tested as a statement about the text, and the scores compare those statements. Text past 512 tokens
+              is cut. Nothing you type leaves the browser.
+            </p>
+          </Details>
         </div>
       </div>
-
-      <DemoMutedSection className="mt-8" title="How it works">
-        <div className="grid md:grid-cols-3 gap-4 text-sm text-neutral-600 dark:text-neutral-400">
-          <div>
-            <h3 className="font-medium text-neutral-900 dark:text-neutral-100 mb-1">
-              1. Define Classes
-            </h3>
-            <p>
-              Add the labels you want to classify text into. Use presets for common tasks
-              like sentiment analysis or topic classification.
-            </p>
-          </div>
-          <div>
-            <h3 className="font-medium text-neutral-900 dark:text-neutral-100 mb-1">
-              2. Enter Text
-            </h3>
-            <p>
-              Use English sentences or short paragraphs. The model reads up to
-              512 tokens, including the label hypothesis and special tokens.
-              Longer inputs are automatically truncated; their full content is
-              not classified. Split long documents into excerpts.
-            </p>
-          </div>
-          <div>
-            <h3 className="font-medium text-neutral-900 dark:text-neutral-100 mb-1">
-              3. Get Predictions
-            </h3>
-            <p>
-              The model predicts which class best matches your text, with confidence scores
-              for each label. No data leaves your browser.
-            </p>
-          </div>
-        </div>
-      </DemoMutedSection>
-
-      <DemoFootnote>
-        Using MobileBERT-uncased-MNLI via Transformers.js. Model runs entirely in your browser using WebAssembly.
-      </DemoFootnote>
     </DemoPage>
   );
 }

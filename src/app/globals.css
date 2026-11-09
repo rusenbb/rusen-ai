@@ -17,12 +17,19 @@
   --muted: #525252;
   --sub: #6d6d6d;
   --signal: #15803d;
+  /* Data colours for demos: the primary series and its contrast. */
+  --accent: #0e7490;
+  --accent-2: #b45309;
   color-scheme: light;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-line: var(--line);
+  --color-muted: var(--muted);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -38,6 +45,8 @@
     --muted: #a3a3a3;
     --sub: #85858b;
     --signal: #4ade80;
+    --accent: #22d3ee;
+    --accent-2: #fbbf24;
   }
 }
 
@@ -50,6 +59,8 @@ html[data-theme="light"] {
   --muted: #525252;
   --sub: #6d6d6d;
   --signal: #15803d;
+  --accent: #0e7490;
+  --accent-2: #b45309;
   color-scheme: light;
 }
 
@@ -62,6 +73,8 @@ html[data-theme="dark"] {
   --muted: #a3a3a3;
   --sub: #85858b;
   --signal: #4ade80;
+  --accent: #22d3ee;
+  --accent-2: #fbbf24;
   color-scheme: dark;
 }
 
@@ -170,18 +183,6 @@ body {
 
 .ui-surface {
   background: rgb(253 250 244 / 0.88);
-}
-
-.ui-card {
-  background: rgb(253 250 244 / 0.94);
-  border-color: rgb(226 232 240 / 0.72);
-  backdrop-filter: saturate(1.1);
-}
-
-@media (max-width: 640px) {
-  .ui-card {
-    border-radius: 0.9rem;
-  }
 }
 
 body[data-game-life-page="on"] main {
@@ -531,29 +532,14 @@ body[data-game-life-fullscreen="on"] header {
   .ui-surface {
     background: rgb(9 9 12 / 0.72);
   }
-
-  .ui-card {
-    background: rgb(11 11 14 / 0.82);
-    border-color: rgb(64 64 74 / 0.72);
-  }
 }
 
 html[data-theme="light"] .ui-surface {
   background: rgb(253 250 244 / 0.88);
 }
 
-html[data-theme="light"] .ui-card {
-  background: rgb(253 250 244 / 0.94);
-  border-color: rgb(226 232 240 / 0.72);
-}
-
 html[data-theme="dark"] .ui-surface {
   background: rgb(9 9 12 / 0.72);
-}
-
-html[data-theme="dark"] .ui-card {
-  background: rgb(11 11 14 / 0.82);
-  border-color: rgb(64 64 74 / 0.72);
 }
 
 /* Pulse Board Animations */
@@ -682,37 +668,6 @@ html[data-theme="dark"] .ui-card {
   opacity: 0.3;
 }
 
-.term-btn {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 0.82rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  padding: 0.7rem 1.1rem;
-  text-decoration: none;
-  border: 1px solid var(--line-strong);
-  background: transparent;
-  color: var(--foreground);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.55rem;
-  cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
-}
-.term-btn:hover {
-  background: var(--line-strong);
-  color: var(--background);
-}
-.term-btn-primary {
-  background: var(--line-strong);
-  color: var(--background);
-}
-.term-btn-primary:hover {
-  background: transparent;
-  color: var(--foreground);
-}
-.term-btn .arrow { transition: transform 0.15s ease; display: inline-block; }
-.term-btn:hover .arrow { transform: translateX(3px); }
 
 .term-card {
   background: var(--surface);
@@ -805,3 +760,35 @@ html.dark .term-tag--soon {
     padding: 0 !important;
   }
 }
+
+/* ========================================
+   SHARED UI PRIMITIVES (src/components/ui)
+   ======================================== */
+.ui-slider {
+  appearance: none;
+  height: 1.25rem;
+  background: transparent;
+  cursor: pointer;
+}
+.ui-slider::-webkit-slider-runnable-track { height: 1px; background: var(--line-strong); }
+.ui-slider::-moz-range-track { height: 1px; background: var(--line-strong); }
+.ui-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 0.8rem;
+  height: 0.8rem;
+  margin-top: -0.4rem;
+  background: var(--background);
+  border: 1px solid var(--line-strong);
+}
+.ui-slider::-moz-range-thumb {
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 0;
+  background: var(--background);
+  border: 1px solid var(--line-strong);
+}
+.ui-slider:focus-visible { outline: 1px solid var(--line-strong); outline-offset: 3px; }
+.ui-slider:disabled { opacity: 0.4; cursor: not-allowed; }
+.ui-details summary::-webkit-details-marker { display: none; }
+.ui-details[open] .ui-details__mark { transform: rotate(45deg); }
+.ui-details__mark { display: inline-block; transition: transform 0.15s ease; }

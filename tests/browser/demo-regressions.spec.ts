@@ -26,8 +26,9 @@ test("kernel typing preserves negative and fractional weights and shows the calc
 
   const png = await sharp({ create: { width: 3, height: 3, channels: 3, background: { r: 100, g: 100, b: 100 } } }).png().toBuffer();
   await page.getByLabel("Convolution source image").setInputFiles({ name: "flat100.png", mimeType: "image/png", buffer: png });
+  await page.locator("summary", { hasText: "Advanced" }).click();
   await page.getByRole("button", { name: /^b\/w · luminance$/i }).click();
-  await page.getByLabel("Convolution padding").fill("0");
+  await page.getByLabel("Zero padding").fill("0");
   for (let row = 1; row <= 3; row++) {
     for (let col = 1; col <= 3; col++) await page.getByLabel(`Kernel row ${row}, column ${col}`).fill("0");
   }
@@ -49,6 +50,7 @@ test("Outguess explains Frequency using its actual counts and next-key probabili
   await page.keyboard.press("j");
   await expect(page.getByLabel("Next-key probabilities")).toContainText("92.9%");
   await expect(page.getByText("Next guess:")).toContainText("Frequency");
+  await page.locator("summary", { hasText: "How it reads you" }).click();
   await page.getByText("Counts behind the prediction", { exact: true }).click();
   await expect(page.getByText("Whole session: F 25 · J 1", { exact: true })).toBeVisible();
 });

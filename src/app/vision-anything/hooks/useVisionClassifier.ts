@@ -49,8 +49,9 @@ export function useVisionClassifier(): UseVisionClassifier {
 
         const classifier = await pipeline("zero-shot-image-classification", MODEL_ID, {
           device: "wasm",
+          // The pipeline sums every file into "progress_total"; per-file events would make the bar jump.
           progress_callback: (progress: { progress?: number; status?: string }) => {
-            if (progress.progress !== undefined) {
+            if (progress.status === "progress_total" && progress.progress !== undefined) {
               setLoadProgress(Math.round(progress.progress));
             }
           },
