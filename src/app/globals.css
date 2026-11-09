@@ -17,9 +17,14 @@
   --muted: #525252;
   --sub: #6d6d6d;
   --signal: #15803d;
-  /* Data colours for demos: the primary series and its contrast. */
+  /* Data colours for demos: the primary series, its contrast, then three more
+     categorical series for charts with many groups. --danger is for errors. */
   --accent: #0e7490;
   --accent-2: #b45309;
+  --accent-3: #6d28d9;
+  --accent-4: #047857;
+  --accent-5: #be123c;
+  --danger: #b91c1c;
   color-scheme: light;
 }
 
@@ -28,8 +33,16 @@
   --color-foreground: var(--foreground);
   --color-accent: var(--accent);
   --color-accent-2: var(--accent-2);
+  --color-accent-3: var(--accent-3);
+  --color-accent-4: var(--accent-4);
+  --color-accent-5: var(--accent-5);
+  --color-surface: var(--surface);
   --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
   --color-muted: var(--muted);
+  --color-sub: var(--sub);
+  --color-signal: var(--signal);
+  --color-danger: var(--danger);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -47,6 +60,10 @@
     --signal: #4ade80;
     --accent: #22d3ee;
     --accent-2: #fbbf24;
+    --accent-3: #a78bfa;
+    --accent-4: #34d399;
+    --accent-5: #fb7185;
+    --danger: #f87171;
   }
 }
 
@@ -61,6 +78,10 @@ html[data-theme="light"] {
   --signal: #15803d;
   --accent: #0e7490;
   --accent-2: #b45309;
+  --accent-3: #6d28d9;
+  --accent-4: #047857;
+  --accent-5: #be123c;
+  --danger: #b91c1c;
   color-scheme: light;
 }
 
@@ -75,6 +96,10 @@ html[data-theme="dark"] {
   --signal: #4ade80;
   --accent: #22d3ee;
   --accent-2: #fbbf24;
+  --accent-3: #a78bfa;
+  --accent-4: #34d399;
+  --accent-5: #fb7185;
+  --danger: #f87171;
   color-scheme: dark;
 }
 
