@@ -694,7 +694,7 @@ function RusenizerPageInner() {
                   {/* Why This Matters Tooltip */}
                   <span className="relative group ml-2">
                     <span className="text-sub cursor-help text-lg">ⓘ</span>
-                    <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 p-3 text-xs bg-foreground text-background opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none w-64 z-30">
+                    <span className="absolute bottom-full right-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2 mb-2 p-3 text-xs bg-foreground text-background opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none w-64 z-30">
                       <strong className="block mb-1">Cost Impact:</strong>
                       Each token costs ~$0.01-0.03 in API calls.
                       {Number(savings) > 0 && (

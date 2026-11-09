@@ -906,7 +906,7 @@ export default function EmbeddingExplorerPage() {
         </Alert>
       )}
 
-      <div className="grid lg:grid-cols-[320px_1fr] gap-4 sm:gap-6">
+      <div className="grid [&>*]:min-w-0 lg:grid-cols-[320px_1fr] gap-4 sm:gap-6">
         <div className="space-y-4">
           <Card padding="md" className="space-y-3">
             <div className="flex items-center justify-between gap-4">
@@ -978,7 +978,7 @@ export default function EmbeddingExplorerPage() {
           </Card>
 
           <Card padding="md" className="space-y-3">
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
               <h3 className="font-medium text-sm">Vector Arithmetic</h3>
               <Segmented
                 label="Arithmetic mode"
@@ -1115,7 +1115,7 @@ export default function EmbeddingExplorerPage() {
             onHoverWord={setHoveredWord}
           />
 
-          <div className="grid md:grid-cols-[1.4fr_1fr] gap-4">
+          <div className="grid [&>*]:min-w-0 md:grid-cols-[1.4fr_1fr] gap-4">
             <div className="space-y-4">
               <Card padding="md" className="space-y-4 overflow-hidden">
                 <div className="flex items-center justify-between gap-4">
