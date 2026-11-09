@@ -1,6 +1,8 @@
 "use client";
 
 import { useSimulation } from "./SimulationFrame";
+import { Button, Slider } from "@/components/ui";
+import { mix, usePalette } from "../theme";
 
 import { useMemo, useRef, useState, useCallback, useEffect } from "react";
 
@@ -22,13 +24,6 @@ const GRID_SIZE = 50;
 const CELL_COUNT = GRID_SIZE * GRID_SIZE;
 const BLUE_FRAC = 0.45;
 const ORANGE_FRAC = 0.45;
-
-const COLOR_BLUE = "#3b82f6";
-const COLOR_BLUE_DIM = "#2563eb";
-const COLOR_ORANGE = "#f97316";
-const COLOR_ORANGE_DIM = "#ea580c";
-const COLOR_EMPTY = "#1a1a2e";
-const COLOR_BG = "#0f0f1a";
 
 const NEIGHBOR_OFFSETS: [number, number][] = [
   [-1, -1],
@@ -211,15 +206,15 @@ function NeighborDiagram({ threshold }: { threshold: number }) {
             <div
               key={i}
               className={`w-8 h-8 rounded-sm flex items-center justify-center text-[10px] font-mono ${
-                isCenter ? "ring-2 ring-white/60" : ""
+                isCenter ? "ring-2 ring-line" : ""
               }`}
               style={{
                 backgroundColor:
                   cell === BLUE
-                    ? COLOR_BLUE
+                    ? "var(--accent)"
                     : cell === ORANGE
-                      ? COLOR_ORANGE
-                      : COLOR_EMPTY,
+                      ? "var(--accent-2)"
+                      : "color-mix(in srgb, var(--foreground) 8%, transparent)",
                 opacity: cell === EMPTY ? 0.4 : 1,
               }}
             >
@@ -228,11 +223,11 @@ function NeighborDiagram({ threshold }: { threshold: number }) {
           );
         })}
       </div>
-      <div className="text-xs text-neutral-400 text-center font-mono">
+      <div className="text-xs text-muted text-center font-mono">
         {same}/{total} similar neighbors ({Math.round(ratio * 100)}%)
         <br />
         <span
-          className={`font-semibold ${happy ? "text-green-400" : "text-red-400"}`}
+          className={`font-semibold ${happy ? "text-accent-4" : "text-danger"}`}
         >
           {happy ? "Happy" : "Unhappy"} at {Math.round(threshold * 100)}%
           threshold
@@ -247,6 +242,7 @@ function NeighborDiagram({ threshold }: { threshold: number }) {
 export default function SchellingSegregation() {
   const { active, random } = useSimulation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const palette = usePalette();
   const initialGrid = useMemo(() => createRandomGrid(random), [random]);
   const gridRef = useRef<Int8Array>(initialGrid);
   const happyMapRef = useRef<Uint8Array>(new Uint8Array(CELL_COUNT));
@@ -286,7 +282,7 @@ export default function SchellingSegregation() {
       canvas.height = pixelH;
     }
 
-    ctx.fillStyle = COLOR_BG;
+    ctx.fillStyle = palette.surface;
     ctx.fillRect(0, 0, pixelW, pixelH);
 
     const grid = gridRef.current;
@@ -305,7 +301,7 @@ export default function SchellingSegregation() {
         const h = cellH - gap * 2;
 
         if (cell === EMPTY) {
-          ctx.fillStyle = COLOR_EMPTY;
+          ctx.fillStyle = mix(palette.foreground, 8);
           ctx.fillRect(x, y, w, h);
           continue;
         }
@@ -313,9 +309,9 @@ export default function SchellingSegregation() {
         const happy = happyMap[idx] === 1;
 
         if (cell === BLUE) {
-          ctx.fillStyle = happy ? COLOR_BLUE : COLOR_BLUE_DIM;
+          ctx.fillStyle = palette.accent;
         } else {
-          ctx.fillStyle = happy ? COLOR_ORANGE : COLOR_ORANGE_DIM;
+          ctx.fillStyle = palette.accent2;
         }
 
         ctx.globalAlpha = happy ? 1.0 : 0.6;
@@ -323,7 +319,7 @@ export default function SchellingSegregation() {
 
         // Subtle stress indicator for unhappy agents
         if (!happy) {
-          ctx.strokeStyle = "rgba(255,255,255,0.25)";
+          ctx.strokeStyle = mix(palette.foreground, 40);
           ctx.lineWidth = Math.max(1, cellW * 0.08);
           ctx.strokeRect(x, y, w, h);
         }
@@ -331,7 +327,7 @@ export default function SchellingSegregation() {
         ctx.globalAlpha = 1.0;
       }
     }
-  }, []);
+  }, [palette]);
 
   const updateHappyMap = useCallback(() => {
     const grid = gridRef.current;
@@ -420,65 +416,65 @@ export default function SchellingSegregation() {
     <section className="w-full max-w-4xl mx-auto">
       {/* Heading */}
       <div className="mb-8">
-        <h2 className="text-2xl sm:text-3xl font-mono font-bold text-neutral-900 dark:text-neutral-100 mb-2">
+        <h2 className="text-2xl sm:text-3xl font-mono font-bold text-foreground mb-2">
           Schelling&apos;s Segregation
         </h2>
-        <p className="text-base sm:text-lg text-neutral-500 dark:text-neutral-400">
+        <p className="text-base sm:text-lg text-muted">
           Mild preferences. Extreme outcomes.
         </p>
       </div>
 
       {/* Rules */}
       <div className="mb-8 space-y-4">
-        <p className="text-sm sm:text-base text-neutral-700 dark:text-neutral-300 leading-relaxed">
+        <p className="text-sm sm:text-base text-foreground leading-relaxed">
           A grid of agents, two types. Each agent has a{" "}
-          <strong className="text-neutral-900 dark:text-neutral-100">
+          <strong className="text-foreground">
             tolerance threshold
           </strong>
           : &ldquo;I&apos;m happy if at least X% of my neighbors are like
           me.&rdquo; Unhappy agents move to a random empty cell.
         </p>
-        <p className="text-sm sm:text-base text-neutral-700 dark:text-neutral-300 leading-relaxed">
+        <p className="text-sm sm:text-base text-foreground leading-relaxed">
           That&apos;s it. No bias, no hostility. Just a mild preference
           for similarity.
         </p>
 
         <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-4">
-            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
+          <div className="border border-line bg-surface/50 p-4">
+            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-sub">
               What It Is
             </div>
-            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
+            <p className="mt-2 text-sm text-foreground">
               A relocation model where unhappy agents move until their neighborhood feels acceptable.
             </p>
           </div>
-          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-4">
-            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
+          <div className="border border-line bg-surface/50 p-4">
+            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-sub">
               Why It Matters
             </div>
-            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
+            <p className="mt-2 text-sm text-foreground">
               It shows how systems can become polarized without any single agent aiming for a polarized outcome.
             </p>
           </div>
-          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-4">
-            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
+          <div className="border border-line bg-surface/50 p-4">
+            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-sub">
               What To Notice
             </div>
-            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
+            <p className="mt-2 text-sm text-foreground">
               Raise the threshold only a little and watch global clustering appear much faster than intuition says it should.
             </p>
           </div>
         </div>
 
         {/* Neighbor explanation */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 p-4 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 p-4 border border-line bg-surface/50">
           <NeighborDiagram threshold={threshold} />
-          <div className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+          <div className="text-xs sm:text-sm text-muted leading-relaxed">
             Each agent checks its 8 surrounding neighbors. If the fraction of
             same-type neighbors falls below the threshold, the agent is unhappy
             and will relocate.
             <br />
-            <span className="text-neutral-600 dark:text-neutral-400">
+            <span className="text-muted">
               Edge and corner cells have fewer neighbors (5 or 3).
             </span>
           </div>
@@ -488,29 +484,17 @@ export default function SchellingSegregation() {
       {/* Interactive demo */}
       <div className="space-y-4">
         {/* Threshold slider - the star */}
-        <div className="p-4 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50">
-          <div className="flex items-baseline justify-between mb-3">
-            <label
-              htmlFor="threshold-slider"
-              className="text-sm font-mono text-neutral-600 dark:text-neutral-400"
-            >
-              Tolerance threshold
-            </label>
-            <span className="text-2xl sm:text-3xl font-mono font-bold text-neutral-900 dark:text-neutral-100 tabular-nums">
-              {Math.round(threshold * 100)}%
-            </span>
-          </div>
-          <input
-            id="threshold-slider"
-            type="range"
+        <div className="p-4 border border-line bg-surface/50">
+          <Slider
+            label="Tolerance threshold"
+            value={Math.round(threshold * 100)}
             min={0}
             max={75}
             step={1}
-            value={Math.round(threshold * 100)}
-            onChange={(e) => handleThresholdChange(Number(e.target.value) / 100)}
-            className="w-full h-3 rounded-full appearance-none cursor-pointer bg-gradient-to-r from-neutral-300 via-yellow-400 to-red-500 dark:from-neutral-700 dark:via-yellow-500 dark:to-red-500 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-neutral-400 [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:w-6 [&::-moz-range-thumb]:h-6 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-neutral-400 [&::-moz-range-thumb]:cursor-pointer"
+            display={<span className="text-2xl sm:text-3xl font-bold">{Math.round(threshold * 100)}%</span>}
+            onChange={(value) => handleThresholdChange(value / 100)}
           />
-          <div className="flex justify-between text-[10px] font-mono text-neutral-500 mt-1">
+          <div className="flex justify-between text-[10px] font-mono text-sub mt-1">
             <span>0% (no preference)</span>
             <span>33%</span>
             <span>50%</span>
@@ -519,7 +503,7 @@ export default function SchellingSegregation() {
         </div>
 
         {/* Canvas */}
-        <div className="rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800">
+        <div className="overflow-hidden border border-line">
           <canvas
             ref={canvasRef}
             className="w-full block"
@@ -533,75 +517,54 @@ export default function SchellingSegregation() {
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Controls */}
           <div className="flex items-center gap-2 flex-wrap">
-            <button
-              type="button"
-              onClick={doStep}
-              disabled={running}
-              className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 hover:border-neutral-500 dark:hover:border-neutral-500 transition disabled:opacity-40 disabled:cursor-not-allowed"
-            >
+            <Button size="sm" onClick={doStep} disabled={running}>
               Step
-            </button>
-            <button
-              type="button"
-              onClick={() => setRunning((r) => !r)}
-              className={`px-3 py-1.5 text-xs font-mono rounded border transition ${
-                running
-                  ? "border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300 hover:border-red-500"
-                  : "border-green-400 dark:border-green-600 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 hover:border-green-500"
-              }`}
-            >
+            </Button>
+            <Button size="sm" variant={running ? "danger" : "success"} onClick={() => setRunning((r) => !r)}>
               {running ? "Pause" : "Play"}
-            </button>
-            <button
-              type="button"
-              onClick={handleReset}
-              className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 hover:border-neutral-500 dark:hover:border-neutral-500 transition"
-            >
+            </Button>
+            <Button size="sm" onClick={handleReset}>
               Reset
-            </button>
+            </Button>
 
             {/* Speed slider */}
-            <div className="flex items-center gap-2 ml-2">
-              <span className="text-[10px] font-mono text-neutral-500">
-                Speed
-              </span>
-              <input
-                type="range"
-                min={10}
-                max={300}
-                step={10}
-                value={310 - speed}
-                onChange={(e) => setSpeed(310 - Number(e.target.value))}
-                className="w-20 h-1.5 rounded-full appearance-none cursor-pointer bg-neutral-300 dark:bg-neutral-700 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-neutral-600 [&::-webkit-slider-thumb]:dark:bg-neutral-300 [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-neutral-600 [&::-moz-range-thumb]:cursor-pointer"
-              />
-            </div>
+            <Slider
+              className="ml-2 w-32"
+              label="Speed"
+              min={10}
+              max={300}
+              step={10}
+              value={310 - speed}
+              display=""
+              onChange={(value) => setSpeed(310 - value)}
+            />
           </div>
 
           {/* Stats */}
           <div className="flex items-center gap-4 sm:ml-auto text-xs font-mono">
             <div className="flex items-center gap-2">
-              <span className="text-neutral-500">Round</span>
-              <span className="text-neutral-900 dark:text-neutral-100 tabular-nums font-semibold">
+              <span className="text-sub">Round</span>
+              <span className="text-foreground tabular-nums font-semibold">
                 {stepCount}
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-neutral-500">Happy</span>
+              <span className="text-sub">Happy</span>
               <span
                 className={`tabular-nums font-semibold ${
                   stats.happyPercent > 90
-                    ? "text-green-600 dark:text-green-400"
+                    ? "text-accent-4"
                     : stats.happyPercent > 60
-                      ? "text-yellow-600 dark:text-yellow-400"
-                      : "text-red-600 dark:text-red-400"
+                      ? "text-accent-2"
+                      : "text-danger"
                 }`}
               >
                 {stats.happyPercent.toFixed(1)}%
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-neutral-500">Avg similarity</span>
-              <span className="text-neutral-900 dark:text-neutral-100 tabular-nums font-semibold">
+              <span className="text-sub">Avg similarity</span>
+              <span className="text-foreground tabular-nums font-semibold">
                 {stats.avgSimilarity.toFixed(1)}%
               </span>
             </div>
@@ -610,12 +573,12 @@ export default function SchellingSegregation() {
       </div>
 
       {/* Takeaway */}
-      <div className="mt-10 space-y-4 text-sm sm:text-base text-neutral-700 dark:text-neutral-300 leading-relaxed">
+      <div className="mt-10 space-y-4 text-sm sm:text-base text-foreground leading-relaxed">
         <p>
           Nobody wanted segregation. Every agent just wanted 1 in 3 neighbors to
           be similar.
         </p>
-        <p className="text-neutral-600 dark:text-neutral-400">
+        <p className="text-muted">
           Thomas Schelling shared the 2005 Nobel Prize in Economics for his
           game-theoretic analysis of conflict and cooperation.
         </p>
@@ -623,7 +586,7 @@ export default function SchellingSegregation() {
           Emergence isn&apos;t always beautiful. Sometimes simple rules produce
           outcomes nobody intended.
         </p>
-        <p className="text-neutral-500 dark:text-neutral-400">
+        <p className="text-muted">
           The important shift is from motives to outcomes: local comfort can still generate global separation.
         </p>
       </div>

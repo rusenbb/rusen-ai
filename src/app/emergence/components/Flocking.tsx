@@ -1,6 +1,8 @@
 "use client";
 
 import { useSimulation } from "./SimulationFrame";
+import { Button, Card, Chip, Slider } from "@/components/ui";
+import { mix, usePaletteRef } from "../theme";
 
 import {
   useCallback,
@@ -110,6 +112,7 @@ export default function FlockingDemo() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const boidsRef = useRef<Boid[]>([]);
   const predatorRef = useRef<{ x: number; y: number } | null>(null);
+  const paletteRef = usePaletteRef();
 
   const [presetId, setPresetId] = useState("balanced");
   const [count, setCount] = useState(140);
@@ -160,12 +163,14 @@ export default function FlockingDemo() {
       const h = canvas.height / dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
+      const palette = paletteRef.current;
+
       // Background
-      ctx.fillStyle = "#0a0a0a";
+      ctx.fillStyle = palette.surface;
       ctx.fillRect(0, 0, w, h);
 
       // Faint grid
-      ctx.strokeStyle = "rgba(255,255,255,0.04)";
+      ctx.strokeStyle = mix(palette.foreground, 5);
       ctx.lineWidth = 1;
       ctx.beginPath();
       for (let x = 0; x <= w; x += 60) {
@@ -260,7 +265,7 @@ export default function FlockingDemo() {
       }
 
       // Render boids as triangles pointing in their velocity direction
-      ctx.fillStyle = "#22d3ee";
+      ctx.fillStyle = palette.accent;
       for (let i = 0; i < boids.length; i++) {
         const b = boids[i];
         const angle = Math.atan2(b.vy, b.vx);
@@ -283,12 +288,12 @@ export default function FlockingDemo() {
         const x = SX(predatorRef.current.x);
         const y = SY(predatorRef.current.y);
         const r = PREDATOR_RADIUS * Math.min(sx, sy);
-        ctx.strokeStyle = "rgba(244, 114, 182, 0.4)";
+        ctx.strokeStyle = mix(palette.accent5, 40);
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.arc(x, y, r, 0, Math.PI * 2);
         ctx.stroke();
-        ctx.fillStyle = "#f472b6";
+        ctx.fillStyle = palette.accent5;
         ctx.beginPath();
         ctx.arc(x, y, 5, 0, Math.PI * 2);
         ctx.fill();
@@ -301,7 +306,7 @@ export default function FlockingDemo() {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", resize);
     };
-  }, [paused, separation, alignment, cohesion, active]);
+  }, [paused, separation, alignment, cohesion, active, paletteRef]);
 
   // Predator pointer tracking
   useEffect(() => {
@@ -334,30 +339,18 @@ export default function FlockingDemo() {
   }, [count, random]);
 
   return (
-    <div className="rounded-2xl border border-neutral-300 dark:border-neutral-800 bg-white/80 dark:bg-neutral-950/60 p-4 sm:p-5 shadow-[0_12px_32px_rgba(15,23,42,0.05)]">
+    <Card padding="lg">
       {/* Preset selector */}
       <div className="flex flex-wrap items-center gap-2 mb-3">
-        {PRESETS.map((p) => {
-          const active = p.id === presetId;
-          return (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => setPresetId(p.id)}
-              className={`rounded-full border px-3 py-1 text-xs font-mono transition ${
-                active
-                  ? "border-cyan-500 bg-cyan-500/10 text-cyan-700 dark:text-cyan-300"
-                  : "border-neutral-300 dark:border-neutral-700 text-neutral-500 hover:border-neutral-500"
-              }`}
-            >
-              {p.label}
-            </button>
-          );
-        })}
+        {PRESETS.map((p) => (
+          <Chip key={p.id} selected={p.id === presetId} onClick={() => setPresetId(p.id)}>
+            {p.label}
+          </Chip>
+        ))}
       </div>
-      <p className="text-xs text-neutral-500 mb-4 italic">{activePreset.subtitle}</p>
+      <p className="text-xs text-sub mb-4 italic">{activePreset.subtitle}</p>
 
-      <div className="rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 bg-black mb-4">
+      <div className="overflow-hidden border border-line bg-surface mb-4">
         <canvas
           ref={canvasRef}
           className="block w-full"
@@ -367,87 +360,39 @@ export default function FlockingDemo() {
       </div>
 
       {/* Controls */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3 text-xs">
-        <label className="flex flex-col gap-1">
-          <span className="font-mono uppercase tracking-[0.2em] text-neutral-500">
-            Separation · {separation.toFixed(2)}
-          </span>
-          <input
-            type="range"
-            min={0}
-            max={2}
-            step={0.05}
-            value={separation}
-            onChange={(e) => setSeparation(parseFloat(e.target.value))}
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="font-mono uppercase tracking-[0.2em] text-neutral-500">
-            Alignment · {alignment.toFixed(2)}
-          </span>
-          <input
-            type="range"
-            min={0}
-            max={2}
-            step={0.05}
-            value={alignment}
-            onChange={(e) => setAlignment(parseFloat(e.target.value))}
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="font-mono uppercase tracking-[0.2em] text-neutral-500">
-            Cohesion · {cohesion.toFixed(2)}
-          </span>
-          <input
-            type="range"
-            min={0}
-            max={2}
-            step={0.05}
-            value={cohesion}
-            onChange={(e) => setCohesion(parseFloat(e.target.value))}
-          />
-        </label>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+        <Slider label="Separation" value={separation} min={0} max={2} step={0.05} display={separation.toFixed(2)} onChange={setSeparation} />
+        <Slider label="Alignment" value={alignment} min={0} max={2} step={0.05} display={alignment.toFixed(2)} onChange={setAlignment} />
+        <Slider label="Cohesion" value={cohesion} min={0} max={2} step={0.05} display={cohesion.toFixed(2)} onChange={setCohesion} />
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          onClick={() => setPaused((p) => !p)}
-          className="rounded-md border border-neutral-300 dark:border-neutral-700 px-3 py-1.5 text-xs font-mono uppercase tracking-[0.18em] hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
-        >
+        <Button size="sm" onClick={() => setPaused((p) => !p)}>
           {paused ? "▶ Play" : "⏸ Pause"}
-        </button>
-        <button
-          type="button"
-          onClick={reset}
-          className="rounded-md border border-neutral-300 dark:border-neutral-700 px-3 py-1.5 text-xs font-mono uppercase tracking-[0.18em] hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
-        >
+        </Button>
+        <Button size="sm" onClick={reset}>
           ↺ Reseed
-        </button>
+        </Button>
         <label className="flex items-center gap-2 text-xs font-mono">
           <input
             type="checkbox"
             checked={predatorMode}
             onChange={(e) => setPredatorMode(e.target.checked)}
           />
-          <span className="uppercase tracking-[0.18em] text-neutral-500">
+          <span className="uppercase tracking-[0.18em] text-sub">
             Disturb (cursor scares the flock)
           </span>
         </label>
-        <label className="flex items-center gap-2 text-xs font-mono ml-auto">
-          <span className="uppercase tracking-[0.18em] text-neutral-500">
-            Count · {count}
-          </span>
-          <input
-            type="range"
-            min={20}
-            max={300}
-            step={5}
-            value={count}
-            onChange={(e) => setCount(parseInt(e.target.value, 10))}
-          />
-        </label>
+        <Slider
+          className="ml-auto w-48"
+          label="Count"
+          value={count}
+          min={20}
+          max={300}
+          step={5}
+          onChange={setCount}
+        />
       </div>
-    </div>
+    </Card>
   );
 }
