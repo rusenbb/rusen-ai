@@ -25,6 +25,9 @@ const HOVER_RADIUS = 7;
 const PADDING = 60;
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 4;
+// Icon-style canvas toolbar buttons: too small for the shared Button.
+const CONTROL =
+  "flex items-center justify-center border border-line bg-surface text-foreground cursor-pointer transition-colors hover:border-line-strong";
 
 export default function Visualization({
   points,
@@ -38,7 +41,7 @@ export default function Visualization({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 600, height: 500 });
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [themeKey, setThemeKey] = useState(0);
 
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -46,14 +49,14 @@ export default function Visualization({
   const lastMousePos = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
-    const checkDarkMode = () => {
-      setIsDarkMode(document.documentElement.classList.contains("dark"));
+    const redraw = () => setThemeKey((key) => key + 1);
+    window.addEventListener("rusen-theme-change", redraw);
+    const observer = new MutationObserver(redraw);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "class"] });
+    return () => {
+      window.removeEventListener("rusen-theme-change", redraw);
+      observer.disconnect();
     };
-
-    checkDarkMode();
-    const observer = new MutationObserver(checkDarkMode);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-    return () => observer.disconnect();
   }, []);
 
   const toCanvasCoords = useCallback(
@@ -121,14 +124,19 @@ export default function Visualization({
     const centerX = width / 2;
     const centerY = height / 2;
 
-    const gridColor = isDarkMode ? "#262626" : "#e5e5e5";
-    const axisColor = isDarkMode ? "#404040" : "#d4d4d4";
-    const labelColor = isDarkMode ? "#b5b5b5" : "#5f5f5f";
-    const textColor = "#fafafa";
-    const badgeBg = isDarkMode ? "rgba(10, 10, 10, 0.92)" : "rgba(17, 24, 39, 0.88)";
-    const badgeBorder = isDarkMode ? "#525252" : "rgba(255, 255, 255, 0.16)";
-    const badgeTextColor = "#f8fafc";
-    const pointLabelBg = isDarkMode ? "rgba(10, 10, 10, 0.9)" : "rgba(23, 23, 23, 0.88)";
+    const token = (name: string) =>
+      getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    const gridColor = token("--line");
+    const axisColor = token("--sub");
+    const labelColor = token("--sub");
+    const textColor = token("--foreground");
+    const surfaceColor = token("--surface");
+    const strokeColor = token("--line-strong");
+    const pointColors = {
+      default: token(COLORS.default),
+      highlighted: token(COLORS.highlighted),
+      arithmeticResult: token(COLORS.arithmeticResult),
+    };
 
     ctx.clearRect(0, 0, width, height);
 
@@ -138,7 +146,7 @@ export default function Visualization({
 
     ctx.strokeStyle = gridColor;
     ctx.lineWidth = 1;
-    ctx.globalAlpha = 0.45;
+    ctx.globalAlpha = 1;
     for (let x = offsetX; x < width; x += gridSize) {
       ctx.beginPath();
       ctx.moveTo(x, 0);
@@ -156,6 +164,7 @@ export default function Visualization({
     const axisY = centerY + pan.y;
     const axisX = centerX + pan.x;
     ctx.strokeStyle = axisColor;
+    ctx.globalAlpha = 0.5;
     ctx.lineWidth = 2;
 
     if (axisY > 0 && axisY < height) {
@@ -172,6 +181,7 @@ export default function Visualization({
       ctx.stroke();
     }
 
+    ctx.globalAlpha = 1;
     ctx.fillStyle = labelColor;
     ctx.font = "12px Georgia, serif";
 
@@ -213,15 +223,15 @@ export default function Visualization({
       }
     }
 
-    ctx.fillStyle = badgeBg;
-    ctx.strokeStyle = badgeBorder;
+    ctx.fillStyle = surfaceColor;
+    ctx.strokeStyle = strokeColor;
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.roundRect(12, 12, 152, 30, 15);
     ctx.fill();
     ctx.stroke();
 
-    ctx.fillStyle = badgeTextColor;
+    ctx.fillStyle = textColor;
     ctx.font = "600 11px Georgia, serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
@@ -256,23 +266,27 @@ export default function Visualization({
       if (isSelected) radius = SELECTED_RADIUS * Math.sqrt(zoom);
       else if (isHovered || point.isHighlighted) radius = HOVER_RADIUS * Math.sqrt(zoom);
 
-      let color = COLORS.default;
-      if (point.isArithmeticResult) color = COLORS.arithmeticResult;
-      else if (point.isHighlighted) color = COLORS.highlighted;
+      let color = pointColors.default;
+      if (point.isArithmeticResult) color = pointColors.arithmeticResult;
+      else if (point.isHighlighted) color = pointColors.highlighted;
 
       if (isSelected || isHovered || point.isHighlighted || point.isArithmeticResult) {
         ctx.beginPath();
         ctx.arc(cx, cy, radius + 4, 0, Math.PI * 2);
-        ctx.fillStyle = `${color}40`;
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 0.25;
         ctx.fill();
+        ctx.globalAlpha = 1;
       }
 
       ctx.beginPath();
       ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-      ctx.fillStyle = isSelected || isHovered ? color : `${color}cc`;
+      ctx.fillStyle = color;
+      ctx.globalAlpha = isSelected || isHovered ? 1 : 0.8;
       ctx.fill();
+      ctx.globalAlpha = 1;
 
-      ctx.strokeStyle = isDarkMode ? "#000" : "#fff";
+      ctx.strokeStyle = surfaceColor;
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
@@ -284,10 +298,13 @@ export default function Visualization({
         const labelX = cx - labelWidth / 2;
         const labelY = cy - radius - 22;
 
-        ctx.fillStyle = pointLabelBg;
+        ctx.fillStyle = surfaceColor;
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.roundRect(labelX, labelY, labelWidth, labelHeight, 6);
         ctx.fill();
+        ctx.stroke();
 
         ctx.fillStyle = textColor;
         ctx.textAlign = "center";
@@ -310,15 +327,15 @@ export default function Visualization({
         const tooltipX = cx - tooltipWidth / 2;
         const tooltipY = cy + HOVER_RADIUS * Math.sqrt(zoom) + 10;
 
-        ctx.fillStyle = isDarkMode ? "rgba(38, 38, 38, 0.95)" : "rgba(255, 255, 255, 0.95)";
-        ctx.strokeStyle = isDarkMode ? "#404040" : "#d4d4d4";
+        ctx.fillStyle = surfaceColor;
+        ctx.strokeStyle = gridColor;
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.roundRect(tooltipX, tooltipY, tooltipWidth, tooltipHeight, 4);
         ctx.fill();
         ctx.stroke();
 
-        ctx.fillStyle = isDarkMode ? "#a3a3a3" : "#525252";
+        ctx.fillStyle = labelColor;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText(coordText, cx, tooltipY + tooltipHeight / 2);
@@ -330,7 +347,7 @@ export default function Visualization({
     ctx.font = "11px Georgia, serif";
     ctx.textAlign = "right";
     ctx.fillText(`${Math.round(zoom * 100)}%`, width - 10, height - 10);
-  }, [axisLabels, dimensions, hoveredWord, isDarkMode, onHoverWord, pan, points, projectionMode, selectedWord, toCanvasCoords, zoom]);
+  }, [axisLabels, dimensions, hoveredWord, themeKey, onHoverWord, pan, points, projectionMode, selectedWord, toCanvasCoords, zoom]);
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -423,7 +440,7 @@ export default function Visualization({
     <div className="relative">
       <div
         ref={containerRef}
-        className="w-full h-[500px] border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden"
+        className="w-full h-[500px] border border-line bg-surface overflow-hidden"
       >
         <canvas
           ref={canvasRef}
@@ -442,28 +459,28 @@ export default function Visualization({
       <div className="absolute bottom-3 left-3 flex items-center gap-2">
         <button
           onClick={() => setZoom((prev) => Math.min(MAX_ZOOM, prev * 1.2))}
-          className="w-7 h-7 flex items-center justify-center rounded bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700"
+          className={`w-7 h-7 text-sm ${CONTROL}`}
           title="Zoom in"
         >
           +
         </button>
         <button
           onClick={() => setZoom((prev) => Math.max(MIN_ZOOM, prev / 1.2))}
-          className="w-7 h-7 flex items-center justify-center rounded bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700"
+          className={`w-7 h-7 text-sm ${CONTROL}`}
           title="Zoom out"
         >
           -
         </button>
         <button
           onClick={handleReset}
-          className="h-7 px-2 flex items-center justify-center rounded bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-xs hover:bg-neutral-100 dark:hover:bg-neutral-700"
+          className={`h-7 px-2 text-xs ${CONTROL}`}
           title="Reset view"
         >
           Reset
         </button>
       </div>
 
-      <div className="absolute top-3 right-3 text-xs text-neutral-400 dark:text-neutral-500 text-right">
+      <div className="absolute top-3 right-3 text-xs text-sub text-right">
         <div>Shift+scroll to zoom</div>
         <div>Shift+drag to pan</div>
       </div>
