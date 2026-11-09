@@ -277,9 +277,34 @@ interface IssState {
 }
 
 const ISS_TRAIL = 360;
+/** One orbit takes about 92 minutes, so this much history draws close to a full lap on arrival. */
+const ISS_HISTORY_MINUTES = 90;
+/** The positions endpoint takes at most 10 timestamps per request. */
+const ISS_HISTORY_BATCHES = 2;
 
 export function useIss(): IssState {
   const [state, setState] = useState<IssState>({ position: null, trail: [], error: false });
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const count = ISS_HISTORY_BATCHES * 10;
+    const now = Math.floor(Date.now() / 1000);
+    const stamps = Array.from({ length: count }, (_, index) => now - Math.round(((count - index) * ISS_HISTORY_MINUTES * 60) / count));
+    const load = async () => {
+      const past: Array<{ lat: number; lon: number }> = [];
+      for (let batch = 0; batch < ISS_HISTORY_BATCHES; batch++) {
+        const chunk = stamps.slice(batch * 10, batch * 10 + 10).join(",");
+        const response = await fetchPublic(`https://api.wheretheiss.at/v1/satellites/25544/positions?timestamps=${chunk}`, { signal: controller.signal });
+        if (!response.ok) return;
+        const rows = (await response.json()) as Array<{ latitude: number; longitude: number }>;
+        past.push(...rows.map((row) => ({ lat: row.latitude, lon: row.longitude })));
+      }
+      setState((current) => ({ ...current, trail: [...past, ...current.trail].slice(-ISS_TRAIL) }));
+    };
+    // The history is a nice-to-have; the live position keeps working without it.
+    load().catch(() => undefined);
+    return () => controller.abort();
+  }, []);
 
   const fetchIss = useCallback(async (signal: AbortSignal) => {
     try {
@@ -343,7 +368,7 @@ export function useQuakes(): QuakeState {
 
   const fetchQuakes = useCallback(async (signal: AbortSignal) => {
     try {
-      const response = await fetchPublic("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson", { signal });
+      const response = await fetchPublic("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.geojson", { signal });
       if (!response.ok) throw new Error(String(response.status));
       const data = await response.json();
       const features = data.features as Array<{
@@ -371,9 +396,13 @@ export function useQuakes(): QuakeState {
   return state;
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+const WEEK_MS = 7 * DAY_MS;
+
 export function QuakeFeed({ feed }: { feed: QuakeState }) {
-  const { quakes, error } = feed;
+  const { error } = feed;
   const now = useNow(30000);
+  const quakes = feed.quakes?.filter((quake) => now - quake.time <= DAY_MS) ?? null;
   const strongest = quakes?.reduce<Quake | null>((best, quake) => (!best || quake.magnitude > best.magnitude ? quake : best), null);
 
   return (
@@ -430,6 +459,7 @@ function trailSegments(trail: Array<{ lat: number; lon: number }>): string[] {
 
 export function LiveMap({ iss, feed }: { iss: IssState; feed: QuakeState }) {
   const position = iss.position;
+  const now = useNow(60000);
   return (
     <figure className="min-w-0">
       <div className="relative w-full" style={{ aspectRatio: `360 / ${MAP_HEIGHT}` }}>
@@ -450,8 +480,8 @@ export function LiveMap({ iss, feed }: { iss: IssState; feed: QuakeState }) {
           role="img"
           aria-label={
             position
-              ? `World map with the space station near ${issRegion(position.lat, position.lon)} and ${feed.quakes?.length ?? 0} earthquakes from the past day`
-              : "World map of the past day's earthquakes"
+              ? `World map with the space station near ${issRegion(position.lat, position.lon)} and ${feed.quakes?.length ?? 0} earthquakes from the past week`
+              : "World map of the past week's earthquakes"
           }
         >
           {feed.quakes?.map((quake) => (
@@ -461,7 +491,7 @@ export function LiveMap({ iss, feed }: { iss: IssState; feed: QuakeState }) {
               cy={mapY(quake.lat)}
               r={0.35 + Math.max(0, quake.magnitude - 2.5) * 0.45}
               fill="var(--accent-2)"
-              fillOpacity="0.35"
+              fillOpacity={0.12 + 0.5 * Math.max(0, 1 - (now - quake.time) / WEEK_MS)}
               stroke="var(--accent-2)"
               strokeWidth="0.25"
               vectorEffect="non-scaling-stroke"
@@ -481,11 +511,11 @@ export function LiveMap({ iss, feed }: { iss: IssState; feed: QuakeState }) {
       <figcaption className={`mt-2 flex flex-wrap gap-x-5 gap-y-1 ${LABEL}`}>
         <span className="inline-flex items-center gap-1.5">
           <i className="size-2 rounded-full bg-accent" />
-          Space station and its path since you opened the page
+          Space station and its last 90 minutes
         </span>
         <span className="inline-flex items-center gap-1.5">
           <i className="size-2 rounded-full bg-accent-2 opacity-60" />
-          Earthquakes, past day, larger is stronger
+          Earthquakes, past week, larger is stronger, brighter is newer
         </span>
       </figcaption>
     </figure>
@@ -501,11 +531,14 @@ interface Edit {
 
 const WIKI_ROWS = 6;
 const WIKI_STEP_MS = 900;
+const RATE_WINDOW_MS = 60000;
 
 /** Wikimedia's server-sent event stream. One recent edit joins the list each step so it stays readable. */
 export function WikiFeed() {
   const [edits, setEdits] = useState<Edit[]>([]);
+  const [rate, setRate] = useState<{ count: number; seconds: number } | null>(null);
   const latest = useRef<Edit | null>(null);
+  const stamps = useRef<number[]>([]);
   const now = useNow();
 
   useEffect(() => {
@@ -517,6 +550,7 @@ export function WikiFeed() {
         try {
           const change = JSON.parse(event.data) as WikiChange & { id?: number };
           if (!isReadableEdit(change)) return;
+          stamps.current.push(Date.now());
           latest.current = { id: `${change.wiki}-${change.id ?? Date.now()}`, title: change.title!, wiki: wikiLabel(change.server_name!), at: Date.now() };
         } catch {
           /* Skip malformed events. */
@@ -528,7 +562,11 @@ export function WikiFeed() {
       source = null;
     };
     const onVisibility = () => (document.hidden ? close() : open());
+    const openedAt = Date.now();
     const step = window.setInterval(() => {
+      const at = Date.now();
+      stamps.current = stamps.current.filter((stamp) => at - stamp <= RATE_WINDOW_MS);
+      setRate({ count: stamps.current.length, seconds: Math.min(RATE_WINDOW_MS, at - openedAt) / 1000 });
       const edit = latest.current;
       if (!edit) return;
       latest.current = null;
@@ -546,6 +584,14 @@ export function WikiFeed() {
   return (
     <section aria-label="Wikipedia edits" className="min-w-0">
       <p className={LABEL}>Wikipedia edits, all languages</p>
+      {rate && rate.count > 0 ? (
+        <p className="mt-2 text-2xl font-semibold tabular-nums">
+          {rate.count}{" "}
+          <span className="text-sm font-normal text-[var(--muted)]">
+            article edits {rate.seconds >= RATE_WINDOW_MS / 1000 ? "in the last minute" : `in the first ${Math.floor(rate.seconds)} s`}
+          </span>
+        </p>
+      ) : null}
       {edits.length ? (
         <ul className="mt-2">
           {edits.map((edit) => (
