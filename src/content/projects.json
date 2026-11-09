@@ -57,12 +57,12 @@
     "slug": "decision-boundary",
     "collection": "demos",
     "status": "live",
-    "summary": "Inspect nearest-neighbor votes, add examples, and reshape a classifier's decision boundary on moons, rings, and XOR.",
-    "description": "Interactive k-nearest-neighbor classifier with editable synthetic datasets and leave-one-out evaluation.",
+    "summary": "Drop points and compare how nearest neighbours, a linear network and a tanh network split moons, rings and XOR.",
+    "description": "Interactive classifier playground: k-nearest neighbours and two tiny neural networks trained in the browser on editable datasets.",
     "tags": [
       "Classification",
       "k-NN",
-      "Visualization"
+      "Neural Networks"
     ],
     "domains": [
       "ML"
@@ -162,12 +162,12 @@
     "slug": "curve-fitter",
     "collection": "demos",
     "status": "live",
-    "summary": "Scrub real gradient updates, then inspect how tanh turns straight hidden scores into bounded gates that combine into nonlinear shapes.",
-    "description": "Interactive regression and neural-network playground with actual training traces, held-out fitting, and an inspectable tanh gate-by-gate view.",
+    "summary": "Scrub real gradient updates and watch a straight line and a polynomial fit the same noisy points, then compare them on held-out data.",
+    "description": "Interactive polynomial regression with real gradient-descent traces and held-out error.",
     "tags": [
       "Regression",
-      "Neural Networks",
-      "Nonlinearity"
+      "Gradient Descent",
+      "Overfitting"
     ],
     "domains": [
       "ML"

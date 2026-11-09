@@ -66,14 +66,34 @@ describe("pathfinding algorithms", () => {
     expect(bfs.path.length).toBeLessThan(dijkstra.path.length);
   });
 
-  it("keeps every curated scenario solvable", () => {
-    PATHFINDING_PRESETS.forEach((preset) => {
+  it("keeps every curated scenario solvable except the sealed one", () => {
+    PATHFINDING_PRESETS.filter((preset) => preset.id !== "no-route").forEach((preset) => {
       const grid = preset.createGrid();
 
       ["bfs", "dijkstra", "greedy", "astar"].forEach((algorithm) => {
         expect(traceSearch(grid, algorithm as "bfs" | "dijkstra" | "greedy" | "astar").found).toBe(true);
       });
     });
+  });
+
+  it("makes every solver search the whole reachable area when the goal is sealed", () => {
+    const grid = PATHFINDING_PRESETS.find((preset) => preset.id === "no-route")!.createGrid();
+    const reachable = traceSearch(grid, "bfs").visited.length;
+
+    (["bfs", "dijkstra", "greedy", "astar"] as const).forEach((algorithm) => {
+      const trace = traceSearch(grid, algorithm);
+      expect(trace.found).toBe(false);
+      expect(trace.visited).toHaveLength(reachable);
+    });
+  });
+
+  it("lets Greedy settle for a longer route than A* in the maze", () => {
+    const grid = PATHFINDING_PRESETS.find((preset) => preset.id === "maze")!.createGrid();
+    const greedy = traceSearch(grid, "greedy");
+    const astar = traceSearch(grid, "astar");
+
+    expect(astar.cost).toBe(traceSearch(grid, "dijkstra").cost);
+    expect(greedy.cost!).toBeGreaterThan(astar.cost!);
   });
 
   it("records an inspectable frontier after every settled cell", () => {

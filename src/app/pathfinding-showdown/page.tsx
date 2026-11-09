@@ -28,6 +28,8 @@ type Mode = "race" | "inspect";
 type Run = { definition: (typeof SEARCH_ALGORITHMS)[number]; trace: SearchTrace };
 
 const RACE_TICK_MS = 45;
+/** Longer races skip frames so a big map still finishes in about this many ticks. */
+const RACE_MAX_TICKS = 120;
 const INSPECT_TICK_MS = 340;
 const LABEL = "font-mono text-[0.7rem] uppercase tracking-[0.08em] text-[var(--sub)]";
 
@@ -69,7 +71,12 @@ function joinNames(names: string[]): string {
 /** One sentence built from the finished runs, so the copy follows the map. */
 function takeaway(runs: Run[]): string {
   const found = runs.filter(({ trace }) => trace.found);
-  if (found.length === 0) return "No solver can reach the goal on this map.";
+  if (found.length === 0) {
+    const checked = runs[0].trace.visited.length;
+    return runs.every(({ trace }) => trace.visited.length === checked)
+      ? `No solver can reach the goal. To be sure, each one checked all ${checked} cells it could reach.`
+      : "No solver can reach the goal on this map.";
+  }
   const fewest = Math.min(...found.map(({ trace }) => trace.visited.length));
   const cheapest = Math.min(...found.map(({ trace }) => trace.cost ?? Infinity));
   const quick = found.filter(({ trace }) => trace.visited.length === fewest);
@@ -236,9 +243,10 @@ export default function PathfindingShowdownPage() {
 
   useEffect(() => {
     if (mode !== "race" || raceDone) return;
-    const timer = window.setTimeout(() => setRaceStep((step) => step + 1), RACE_TICK_MS);
+    const stride = Math.ceil(raceLength / RACE_MAX_TICKS);
+    const timer = window.setTimeout(() => setRaceStep((step) => step + stride), RACE_TICK_MS);
     return () => window.clearTimeout(timer);
-  }, [mode, raceDone, raceStep]);
+  }, [mode, raceDone, raceLength, raceStep]);
 
   const active = runs.find(({ definition }) => definition.id === algorithm) ?? runs[0];
   const lastStep = active.trace.frames.length - 1;

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { AttentionMask } from "../hooks/useClipSeg";
-import { containedImageStyle } from "../maps";
+import { OVERLAY_ALPHA, containedImageStyle } from "../maps";
 
 type Props = {
   mask: AttentionMask;
@@ -84,7 +84,7 @@ export default function HeatmapCanvas({
       img.data[j + 2] = b;
       // Overlay: alpha grows with the score so weak regions stay clear.
       // Alpha mode: nearly opaque so it reads as a stand-alone image.
-      img.data[j + 3] = blend === "overlay" ? Math.round(v * v * 190) : Math.round(40 + v * 215);
+      img.data[j + 3] = blend === "overlay" ? Math.round(v * v * OVERLAY_ALPHA) : Math.round(40 + v * 215);
     }
     ctx.putImageData(img, 0, 0);
   }, [mask, palette, blend, themeKey]);

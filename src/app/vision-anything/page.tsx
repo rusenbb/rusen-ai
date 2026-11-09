@@ -7,6 +7,7 @@ import { DEMO_IMAGES } from "@/lib/demoImages";
 import { useVisionClassifier, type VisionResult } from "./hooks/useVisionClassifier";
 import { useClipSeg, type AttentionMask } from "./hooks/useClipSeg";
 import HeatmapCanvas from "./components/HeatmapCanvas";
+import { hasVisibleRegion } from "./maps";
 import FullAttentionPanel from "./components/FullAttentionPanel";
 
 const SAMPLES = DEMO_IMAGES.filter((image) => image.suggestedLabels).slice(0, 5);
@@ -141,7 +142,9 @@ export default function VisionAnythingPage() {
         ? `Downloading the map model · ${clipSeg.progress}%`
         : `Finding "${attentionLabel}" in the image`;
   } else if (attentionMask && attentionLabel) {
-    mapNote = `Where the model sees "${attentionLabel}"`;
+    mapNote = hasVisibleRegion(attentionMask.data)
+      ? `Where the model sees "${attentionLabel}"`
+      : `The map model finds no region for "${attentionLabel}" in this photo`;
   }
 
   return (

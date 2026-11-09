@@ -13,7 +13,7 @@ export type DemoImage = {
 export const DEMO_IMAGES: DemoImage[] = [
   {
     url: "/demo-images/dog.jpg",
-    alt: "Dog",
+    alt: "Dog on a beach",
     suggestedLabels: [
       "a photo of a dog",
       "a photo of a cat",
@@ -23,7 +23,7 @@ export const DEMO_IMAGES: DemoImage[] = [
   },
   {
     url: "/demo-images/street.jpg",
-    alt: "Street",
+    alt: "City street",
     suggestedLabels: [
       "a busy city street",
       "a quiet residential road",
@@ -33,62 +33,62 @@ export const DEMO_IMAGES: DemoImage[] = [
   },
   {
     url: "/demo-images/kitchen.jpg",
-    alt: "Kitchen",
+    alt: "Two people cooking",
     suggestedLabels: [
+      "two people cooking",
       "a photo of a kitchen",
       "a photo of a living room",
-      "a photo of food",
-      "a photo of an empty room",
+      "a red cooking pot",
     ],
   },
   {
     url: "/demo-images/nature.jpg",
-    alt: "Nature",
+    alt: "Green hills at sunset",
     suggestedLabels: [
-      "a photo of a forest",
+      "a photo of grassy hills",
       "a photo of a mountain",
+      "a sunset sky",
       "a photo of a beach",
-      "a photo of a lake",
-    ],
-  },
-  {
-    url: "/demo-images/beach.jpg",
-    alt: "Beach",
-    suggestedLabels: [
-      "a photo of the ocean",
-      "a photo of a mountain",
-      "a photo of a sunset",
-      "a photo of sand",
     ],
   },
   {
     url: "/demo-images/food.jpg",
-    alt: "Food",
+    alt: "Coffee on a wooden table",
     suggestedLabels: [
-      "a photo of food",
-      "a photo of vegetables",
-      "a photo of a meal",
-      "a photo of a kitchen",
+      "a cup of coffee",
+      "a brass bell",
+      "paper receipts",
+      "a plate of pasta",
     ],
   },
   {
     url: "/demo-images/portrait.jpg",
-    alt: "Portrait",
+    alt: "Woman with sunglasses and flowers",
     suggestedLabels: [
-      "a portrait of a person",
+      "a woman wearing sunglasses",
+      "a bunch of flowers",
+      "a field of grass",
       "a black and white photo",
-      "a photo of someone smiling",
-      "a photo of a face",
     ],
   },
   {
-    url: "/demo-images/city.jpg",
-    alt: "City",
+    url: "/demo-images/mug.jpg",
+    alt: "Red mug",
     suggestedLabels: [
-      "a photo of a city skyline",
-      "a photo of a building",
-      "a photo of a bridge",
-      "a photo of a sky",
+      "a red mug",
+      "a postage stamp",
+      "a city skyline",
+      "a wooden table",
+    ],
+  },
+  {
+    url: "/demo-images/cat-nose.jpg",
+    alt: "Close-up of a cat's nose",
+    suggestedLabels: [
+      "a close-up of a cat",
+      "a close-up of a dog",
+      "a photo of fur",
+      "a pink nose",
     ],
   },
 ];

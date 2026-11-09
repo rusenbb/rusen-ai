@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "inputFingerprint": "421c209ed535224e1651c619583ca7c522462bc8d4950dd2d6d78f3192797d50",
+  "inputFingerprint": "20e3aa999c77bd27b92517f8538fdc46605bdb3d655fef540f0e05c0f260dbae",
   "assets": [
     {
       "route": "/",
@@ -87,7 +87,7 @@
       "image": "/social/projects/decision-boundary.png",
       "width": 1200,
       "height": 630,
-      "bytes": 28308,
+      "bytes": 28227,
       "format": "png"
     },
     {
@@ -119,7 +119,7 @@
       "image": "/social/projects/curve-fitter.png",
       "width": 1200,
       "height": 630,
-      "bytes": 23517,
+      "bytes": 23528,
       "format": "png"
     },
     {
