@@ -1,246 +1,214 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
-import {
-  Button,
-  DemoFootnote,
-  DemoHeader,
-  DemoPage,
-  DemoPanel,
-} from "@/components/ui";
+import { Chip, DemoHeader, DemoPage, Details, Segmented, Slider } from "@/components/ui";
 
-import { aliasFrequency, sineAt, reconstructSamples } from "./math";
+import { aliasFrequency, reconstructSamples, sineAt, verdict } from "./math";
 
-const PRESETS = [
-  { label: "Enough samples", frequency: 3, sampleRate: 24, phase: 0 },
-  { label: "A false frequency", frequency: 9, sampleRate: 12, phase: 0 },
-  { label: "The Nyquist edge", frequency: 6, sampleRate: 12, phase: 0 },
-];
+const PRESETS = {
+  captured: { label: "Captured", frequency: 3, sampleRate: 24, phase: 0 },
+  aliased: { label: "Aliased", frequency: 9, sampleRate: 12, phase: 0 },
+  vanishes: { label: "Vanishes", frequency: 6, sampleRate: 12, phase: 0 },
+} as const;
+type PresetId = keyof typeof PRESETS;
+
+const VIEW_W = 1000;
+const VIEW_H = 290;
+const LEFT = 40;
+const WIDTH = 870;
+const MID = 140;
+const AMP = 100;
+const POINTS = 801;
+
+/** SVG coordinate with fixed precision so server and client markup match. */
+const fixed = (value: number) => Number(value.toFixed(2));
+const x = (t: number) => fixed(LEFT + t * WIDTH);
+const y = (value: number) => fixed(MID - value * AMP);
+const curve = (valueAt: (t: number) => number) =>
+  Array.from({ length: POINTS }, (_, i) => {
+    const t = i / (POINTS - 1);
+    return `${x(t)},${y(valueAt(t))}`;
+  }).join(" ");
+
+const LABEL = "font-mono text-[0.7rem] uppercase tracking-[0.08em] text-[var(--sub)]";
+
+/** Direct label at the right end of a curve, in HTML so it stays readable on phones. */
+const SHIFT = { above: "-100%", center: "-50%", below: "0%" } as const;
+function EndLabel({ y: top, shift, color, children }: { y: number; shift: keyof typeof SHIFT; color: string; children: ReactNode }) {
+  return (
+    <span
+      className="pointer-events-none absolute right-1 font-mono text-xs tabular-nums sm:right-2"
+      style={{ top: `${(top / VIEW_H) * 100}%`, transform: `translateY(${SHIFT[shift]})`, color }}
+    >
+      {children}
+    </span>
+  );
+}
+
+/** The verdict sentence with each frequency in its curve's colour. */
+function Verdict({ frequency, sampleRate, alias }: { frequency: number; sampleRate: number; alias: number }) {
+  const sentence = verdict(frequency, sampleRate, alias);
+  const head = `${frequency} Hz`;
+  const tail = ` ${Math.abs(alias)} Hz.`;
+  const colourTail = Math.abs(alias) !== frequency && alias !== 0 && sentence.endsWith(tail);
+  const middle = sentence.slice(head.length, colourTail ? -tail.length : undefined);
+  return (
+    <>
+      <span className="text-accent">{head}</span>
+      {middle}
+      {colourTail && (
+        <>
+          {" "}
+          <span style={{ color: "var(--accent-2)" }}>{tail.trim()}</span>
+        </>
+      )}
+    </>
+  );
+}
 
 export default function SamplingLab() {
-  const [signal, setSignal] = useState(PRESETS[1]);
+  const [preset, setPreset] = useState<PresetId | null>("aliased");
+  const [signal, setSignal] = useState<{ frequency: number; sampleRate: number; phase: number }>(PRESETS.aliased);
   const [selectedSample, setSelectedSample] = useState(0);
-  const [showReconstruction, setShowReconstruction] = useState(true);
-  const [showAlias, setShowAlias] = useState(true);
+  const [showReconstruction, setShowReconstruction] = useState(false);
   const { frequency, sampleRate, phase } = signal;
   const radians = (phase * Math.PI) / 180;
-  const samples = Array.from({ length: sampleRate + 1 }, (_, index) => sineAt(index / sampleRate, frequency, radians));
+  const samples = Array.from({ length: sampleRate + 1 }, (_, n) => sineAt(n / sampleRate, frequency, radians));
   const sampleIndex = Math.min(selectedSample, sampleRate);
-  const reconstructedPath = Array.from({ length: 801 }, (_, index) => `${40 + index / 800 * 720},${170 - reconstructSamples(samples, sampleRate, index / 800) * 110}`).join(" ");
   const alias = aliasFrequency(frequency, sampleRate);
-  const undersampled = sampleRate < 2 * frequency;
-  const atNyquist = sampleRate === 2 * frequency;
-  const path = (hz: number) =>
-    Array.from({ length: 801 }, (_, i) => {
-      const t = i / 800;
-      return `${40 + t * 720},${170 - sineAt(t, hz, radians) * 110}`;
-    }).join(" ");
+  const showAlias = Math.abs(alias) !== frequency;
+  const update = (patch: Partial<typeof signal>) => {
+    setPreset(null);
+    setSignal({ ...signal, ...patch });
+  };
+
+  const originalEnd = sineAt(1, frequency, radians);
+  const aliasEnd = sineAt(1, alias, radians);
+  // Stack the two end labels when the curves finish close together.
+  const close = Math.abs(originalEnd - aliasEnd) * AMP < 30;
+  const originalShift = close ? (originalEnd >= aliasEnd ? "above" : "below") : "center";
+  const aliasShift = close ? (originalEnd >= aliasEnd ? "below" : "above") : "center";
 
   return (
     <DemoPage>
       <DemoHeader
-        eyebrow="Signals · interactive lab"
+        eyebrow="Signals"
         title="Sampling Lab"
-        description="The dots are all a digital system gets. Change how often you sample a wave and watch a different frequency pass through exactly the same dots."
+        description="A digital system only sees the dots: drop the sample rate below twice the frequency and a slower wave fits them exactly."
       />
-      <div className="mb-6 flex flex-wrap gap-2">
-        {PRESETS.map((preset) => (
-          <Button
-            key={preset.label}
-            variant="secondary"
-            size="sm"
-            onClick={() => setSignal(preset)}
-          >
-            {preset.label}
-          </Button>
-        ))}
+
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <Segmented
+          label="Preset"
+          options={Object.entries(PRESETS).map(([value, item]) => ({ value: value as PresetId, label: item.label }))}
+          value={preset ?? ("" as PresetId)}
+          onChange={(id) => {
+            setPreset(id);
+            setSignal(PRESETS[id]);
+          }}
+        />
+        <Chip selected={showReconstruction} onClick={() => setShowReconstruction(!showReconstruction)}>
+          Sinc reconstruction
+        </Chip>
       </div>
-      <DemoPanel
-        title="One second of signal"
-        description="Cyan: original wave. Dots: measured samples. Dashed amber: a baseband wave with the same samples."
-      >
+
+      <div className="border border-[var(--line)] bg-[var(--surface)]">
+        <p className={`${LABEL} px-3 pt-2`}>{sampleRate + 1} samples in one second</p>
+        <div className="relative">
         <svg
-          viewBox="0 0 800 350"
-          className="w-full"
+          viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
+          className="block w-full text-[var(--sub)]"
           role="img"
-          aria-label={`${frequency} Hz signal sampled at ${sampleRate} Hz; baseband frequency ${Math.abs(alias)} Hz`}
+          aria-label={verdict(frequency, sampleRate, alias)}
         >
-          {showReconstruction && <polyline points={reconstructedPath} fill="none" stroke="#a855f7" strokeWidth="2" />}
-          {[60, 170, 280].map((y, i) => (
-            <g key={y}>
-              <line x1="40" x2="760" y1={y} y2={y} stroke="var(--line)" />
-              <text
-                x="25"
-                y={y + 4}
-                textAnchor="end"
-                fill="currentColor"
-                fontSize="12"
-              >
-                {1 - i}
+          {[1, 0, -1].map((level) => (
+            <g key={level}>
+              <line x1={LEFT} x2={LEFT + WIDTH} y1={y(level)} y2={y(level)} stroke="var(--line)" />
+              <text x={LEFT - 12} y={y(level) + 4} textAnchor="end" fill="currentColor" fontSize="13">
+                {level}
               </text>
             </g>
           ))}
           {[0, 0.25, 0.5, 0.75, 1].map((t) => (
             <g key={t}>
-              <line
-                x1={40 + t * 720}
-                x2={40 + t * 720}
-                y1="45"
-                y2="290"
-                stroke="var(--line)"
-              />
-              <text
-                x={40 + t * 720}
-                y="315"
-                textAnchor="middle"
-                fill="currentColor"
-                fontSize="12"
-              >
+              <line x1={x(t)} x2={x(t)} y1="30" y2="255" stroke="var(--line)" />
+              <text x={x(t)} y="278" textAnchor="middle" fill="currentColor" fontSize="13">
                 {t}s
               </text>
             </g>
           ))}
-          <polyline
-            points={path(frequency)}
-            fill="none"
-            stroke="#0891b2"
-            strokeWidth="2.5"
-          />
+          {showReconstruction && (
+            <polyline
+              points={curve((t) => reconstructSamples(samples, sampleRate, t))}
+              fill="none"
+              stroke="var(--foreground)"
+              strokeWidth="1.25"
+              opacity="0.45"
+            />
+          )}
+          <polyline points={curve((t) => sineAt(t, frequency, radians))} fill="none" stroke="var(--accent)" strokeWidth="2.5" />
           {showAlias && (
             <polyline
-              points={path(alias)}
+              points={curve((t) => sineAt(t, alias, radians))}
               fill="none"
-              stroke="#d97706"
+              stroke="var(--accent-2)"
               strokeWidth="2.5"
               strokeDasharray="7 5"
             />
           )}
-          {Array.from({ length: sampleRate + 1 }, (_, n) => {
-            const x = 40 + (n / sampleRate) * 720;
-            const y = 170 - sineAt(n / sampleRate, frequency, radians) * 110;
-            return (
-              <g key={n}>
-                <line
-                  x1={x}
-                  x2={x}
-                  y1="170"
-                  y2={y}
-                  stroke="currentColor"
-                  opacity="0.25"
-                />
-                <circle
-                  cx={x}
-                  cy={y}
-                  r={n === sampleIndex ? 6 : 4}
-                  onClick={() => setSelectedSample(n)}
-                  fill="var(--foreground)"
-                  stroke="var(--surface)"
-                  strokeWidth="1.5"
-                />
-              </g>
-            );
-          })}
-        </svg>
-        <div className="grid gap-5 sm:grid-cols-3">
-          {(
-            [
-              {
-                key: "frequency",
-                label: "Signal frequency",
-                min: 1,
-                max: 20,
-                unit: "Hz",
-              },
-              {
-                key: "sampleRate",
-                label: "Sample rate",
-                min: 4,
-                max: 64,
-                unit: "Hz",
-              },
-              { key: "phase", label: "Phase", min: 0, max: 360, unit: "°" },
-            ] as const
-          ).map((control) => (
-            <label key={control.key} className="text-sm">
-              <span className="flex justify-between gap-2">
-                {control.label}
-                <strong className="font-mono">
-                  {signal[control.key]} {control.unit}
-                </strong>
-              </span>
-              <input
-                className="mt-3 w-full accent-cyan-600"
-                type="range"
-                min={control.min}
-                max={control.max}
-                step="1"
-                value={signal[control.key]}
-                onChange={(event) =>
-                  setSignal({
-                    ...signal,
-                    [control.key]: Number(event.target.value),
-                  })
-                }
+          {samples.map((value, n) => (
+            <g key={n}>
+              <line x1={x(n / sampleRate)} x2={x(n / sampleRate)} y1={MID} y2={y(value)} stroke="var(--foreground)" opacity="0.25" />
+              <circle
+                cx={x(n / sampleRate)}
+                cy={y(value)}
+                r={n === sampleIndex ? 6 : 4}
+                onClick={() => setSelectedSample(n)}
+                className="cursor-pointer"
+                fill="var(--foreground)"
+                stroke="var(--surface)"
+                strokeWidth="1.5"
               />
-            </label>
+            </g>
           ))}
+        </svg>
+        <EndLabel y={y(originalEnd)} shift={originalShift} color="var(--accent)">{frequency} Hz</EndLabel>
+        {showAlias && <EndLabel y={y(aliasEnd)} shift={aliasShift} color="var(--accent-2)">{Math.abs(alias)} Hz</EndLabel>}
         </div>
-        <label className="mt-5 flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={showAlias}
-            onChange={(event) => setShowAlias(event.target.checked)}
-          />
-          Show the baseband wave
-        </label>
-      </DemoPanel>
-      <DemoPanel className="mt-6" title="Reconstruct from measurements">
-        <label className="flex gap-2 text-sm"><input type="checkbox" checked={showReconstruction} onChange={(event) => setShowReconstruction(event.target.checked)} />Purple: finite sinc interpolation using only these sample values</label>
-        <p className="mt-3 text-sm text-neutral-500">Samples outside this one-second window are assumed zero. Boundary ringing and finite-window error are expected; this is not ideal infinite reconstruction.</p>
-        <label className="mt-4 block text-sm">Inspect sample {sampleIndex}<input aria-label="Selected sample" type="range" min="0" max={sampleRate} value={sampleIndex} onChange={(event) => setSelectedSample(Number(event.target.value))} className="w-full mt-2" /></label>
-        <p aria-live="polite" className="mt-3 font-mono text-sm">n = {sampleIndex} · t = {(sampleIndex / sampleRate).toFixed(4)} s · measured = {samples[sampleIndex].toFixed(4)} · alias = {sineAt(sampleIndex / sampleRate, alias, radians).toFixed(4)}</p>
-      </DemoPanel>
-      <div className="mt-6 grid gap-6 md:grid-cols-2">
-        <DemoPanel
-          title={
-            atNyquist
-              ? "At the boundary"
-              : undersampled
-                ? "Different waves, identical samples"
-                : "Inside the sampling limit"
-          }
-        >
-          <p className="text-sm leading-relaxed" aria-live="polite">
-            {atNyquist
-              ? "Exactly two samples per cycle is a boundary case. At zero phase every dot is zero; rotate the phase to see why the original amplitude and phase cannot be uniquely recovered."
-              : undersampled
-                ? `Your ${frequency} Hz wave looks like a ${Math.abs(alias)} Hz wave to this sampler. The original oscillates between measurements, where the sampler cannot see it.`
-                : "The sample rate is greater than twice the signal frequency. With the assumption that no frequencies reach half the sample rate, ideal reconstruction can recover the original wave."}
-          </p>
-        </DemoPanel>
-        <DemoPanel title="Read the numbers">
-          <dl className="grid grid-cols-2 gap-3 text-sm">
-            <dt>Nyquist frequency</dt>
-            <dd className="text-right font-mono">{sampleRate / 2} Hz</dd>
-            <dt>Baseband frequency</dt>
-            <dd className="text-right font-mono">{Math.abs(alias)} Hz</dd>
-            <dt>Samples per cycle</dt>
-            <dd className="text-right font-mono">
-              {(sampleRate / frequency).toFixed(2)}
-            </dd>
-          </dl>
-          <p className="mt-4 text-xs text-neutral-500">
-            The dashed curve is an analytically constructed alias, not an
-            interpolation of this finite window. Negative signed frequencies
-            reverse the sine&apos;s direction to keep its phase consistent.
-          </p>
-        </DemoPanel>
       </div>
-      <DemoFootnote>
-        Ideal, noise-free sampling of a single sine wave. All calculations run
-        locally.
-      </DemoFootnote>
+
+      <div className="mt-4 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1" aria-live="polite">
+        <p className="text-lg font-semibold text-[var(--foreground)]">
+          <Verdict frequency={frequency} sampleRate={sampleRate} alias={alias} />
+        </p>
+        <p className={LABEL}>
+          Nyquist {sampleRate / 2} Hz · {(sampleRate / frequency).toFixed(2)} samples per cycle
+        </p>
+      </div>
+
+      <div className="mt-6 grid gap-6 sm:grid-cols-2">
+        <Slider label="Sample rate" min={4} max={64} value={sampleRate} display={`${sampleRate} Hz`} onChange={(value) => update({ sampleRate: value })} />
+        <Slider label="Signal frequency" min={1} max={20} value={frequency} display={`${frequency} Hz`} onChange={(value) => update({ frequency: value })} />
+      </div>
+
+      <Details summary="Advanced" className="mt-8">
+        <div className="grid gap-6 sm:grid-cols-2">
+          <Slider label="Phase" min={0} max={360} value={phase} display={`${phase}°`} onChange={(value) => update({ phase: value })} />
+          <div>
+            <Slider label="Inspect sample" min={0} max={sampleRate} value={sampleIndex} onChange={setSelectedSample} />
+            <p className="mt-2 font-mono text-xs tabular-nums text-[var(--muted)]">
+              n = {sampleIndex} · t = {(sampleIndex / sampleRate).toFixed(4)} s · measured = {samples[sampleIndex].toFixed(4)} · alias ={" "}
+              {sineAt(sampleIndex / sampleRate, alias, radians).toFixed(4)}
+            </p>
+          </div>
+        </div>
+        <p className="mt-5">
+          The dashed wave is the alias frequency computed from the sample rate, not fitted to the dots. A negative alias
+          frequency runs the sine backwards so its phase matches. The sinc reconstruction uses only the samples in this
+          one-second window and treats the rest as zero, so it rings near the edges.
+        </p>
+      </Details>
     </DemoPage>
   );
 }

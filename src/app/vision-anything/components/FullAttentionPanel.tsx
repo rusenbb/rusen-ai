@@ -1,9 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { AttentionMask, UseClipSeg } from "../hooks/useClipSeg";
+import { Button, Details, Segmented, Slider } from "@/components/ui";
 import HeatmapCanvas from "./HeatmapCanvas";
+
+const kicker = "font-mono text-[0.7rem] uppercase tracking-[0.08em] text-[var(--sub)]";
 
 type LabeledMask = { label: string; mask: AttentionMask };
 
@@ -52,6 +55,12 @@ export default function FullAttentionPanel({
   const [imageOpacity, setImageOpacity] = useState(60);
 
   const { segmentBatch } = clipSeg;
+  const panelRef = useRef<HTMLElement>(null);
+
+  // The panel opens above the main view, so bring it on screen.
+  useEffect(() => {
+    panelRef.current?.scrollIntoView?.({ block: "start", behavior: "smooth" });
+  }, []);
 
   // Progress updates must not restart inference for the same image and labels.
   useEffect(() => {
@@ -93,56 +102,36 @@ export default function FullAttentionPanel({
     selection.kind === "average" ? "Average across all labels" : selection.label;
 
   return (
-    <div className="rounded-xl border border-cyan-500/40 bg-neutral-950 text-neutral-100 p-4 sm:p-6 mb-6">
-      <div className="flex items-baseline justify-between mb-4">
-        <div>
-          <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-cyan-400">
-            Segmentation maps
-          </p>
-          <h2 className="text-lg sm:text-xl font-semibold mt-0.5">{activeTitle}</h2>
+    <section ref={panelRef} className="mb-8 scroll-mt-24 border border-[var(--line-strong)] bg-[var(--surface)] p-4 sm:p-6">
+      <div className="mb-4 flex items-baseline justify-between gap-3">
+        <div className="min-w-0">
+          <p className={kicker}>All maps</p>
+          <h2 className="mt-0.5 truncate text-lg font-semibold sm:text-xl">{activeTitle}</h2>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="text-xs font-mono uppercase tracking-[0.18em] text-neutral-400 hover:text-neutral-200 transition"
-        >
-          ✕ Close
-        </button>
+        <Button variant="ghost" size="sm" onClick={onClose}>
+          Close
+        </Button>
       </div>
 
       {busy && (
-        <div className="mb-4 rounded-lg border border-cyan-500/40 bg-cyan-500/5 p-3">
-          <div className="flex items-center justify-between gap-3 text-xs font-mono text-cyan-300">
-            <span className="flex items-center gap-2">
-              <span className="relative inline-flex h-2 w-2">
-                <span className="absolute inset-0 rounded-full bg-cyan-400 animate-ping" />
-                <span className="relative inline-block h-2 w-2 rounded-full bg-cyan-400" />
-              </span>
-              {clipSeg.status === "loading"
-                ? `Loading attention model · ${clipSeg.progress}%`
-                : `Computing attention for ${labels.length} ${labels.length === 1 ? "label" : "labels"}…`}
-            </span>
-            <span className="hidden sm:inline text-cyan-500/60">browser may pause briefly</span>
-          </div>
-          <div className="relative mt-2 h-1 bg-neutral-800 rounded-full overflow-hidden">
-            {clipSeg.status === "loading" ? (
-              <div
-                className="absolute inset-y-0 left-0 bg-cyan-500 transition-all"
-                style={{ width: `${clipSeg.progress}%` }}
-              />
-            ) : (
-              <div className="absolute inset-y-0 left-0 right-0 bg-cyan-500/60 animate-pulse" />
-            )}
+        <div role="status" className="mb-4">
+          <p className={kicker}>
+            {clipSeg.status === "loading"
+              ? `Downloading the map model · ${clipSeg.progress}%`
+              : `Computing maps for ${labels.length} ${labels.length === 1 ? "label" : "labels"}`}
+          </p>
+          <div className="mt-2 h-px w-full bg-[var(--line)]">
+            <div
+              className="h-px bg-[var(--line-strong)] transition-all duration-300"
+              style={{ width: `${clipSeg.status === "loading" ? clipSeg.progress : 100}%` }}
+            />
           </div>
         </div>
       )}
-      {error && (
-        <p className="text-xs font-mono text-red-400 mb-3">{error}</p>
-      )}
+      {error && <p role="alert" className="mb-3 text-sm text-[var(--muted)]">{error}</p>}
 
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-5">
-        {/* Image / heatmap viewport */}
-        <div className="relative aspect-[4/3] w-full bg-black rounded-lg overflow-hidden border border-neutral-800">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+        <div className="relative aspect-[4/3] w-full overflow-hidden border border-[var(--line)] bg-black">
           {mode === "overlay" && (
             <Image
               src={imageUrl}
@@ -153,154 +142,92 @@ export default function FullAttentionPanel({
               unoptimized
             />
           )}
-          {mode === "heatmap" && (
-            // Plain dark backdrop so the heatmap reads as a standalone image.
-            <div className="absolute inset-0 bg-black" />
-          )}
           {activeMask && (
             <HeatmapCanvas
               mask={activeMask}
               imageAspect={imageAspect}
-              palette={mode === "heatmap" ? "viridis" : "cyan"}
-              blend={mode === "heatmap" ? "alpha" : "screen"}
+              palette={mode === "heatmap" ? "viridis" : "accent"}
+              blend={mode === "heatmap" ? "alpha" : "overlay"}
             />
           )}
         </div>
 
-        {/* Controls + label list */}
-        <div className="flex flex-col gap-4">
-          {/* Mode toggle */}
-          <div>
-            <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-neutral-500 mb-2">
-              View
-            </p>
-            <div className="flex gap-1 rounded-md border border-neutral-700 p-1 w-fit">
-              {(["overlay", "heatmap"] as const).map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => setMode(m)}
-                  className={`px-3 py-1 text-xs font-mono uppercase tracking-[0.16em] rounded transition ${
-                    mode === m
-                      ? "bg-cyan-500 text-neutral-950"
-                      : "text-neutral-400 hover:text-neutral-100"
-                  }`}
-                >
-                  {m === "overlay" ? "Overlay" : "Heatmap only"}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Image opacity (only meaningful in overlay mode) */}
+        <div className="flex min-w-0 flex-col gap-4">
+          <Segmented
+            label="View"
+            options={[
+              { value: "overlay", label: "On the photo" },
+              { value: "heatmap", label: "Heatmap only" },
+            ]}
+            value={mode}
+            onChange={setMode}
+          />
           {mode === "overlay" && (
-            <div>
-              <div className="flex items-baseline justify-between mb-1">
-                <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-neutral-500">
-                  Image opacity
-                </p>
-                <span className="text-xs font-mono text-neutral-400 tabular-nums">
-                  {imageOpacity}%
-                </span>
-              </div>
-              <input
-                type="range"
-                min={0}
-                max={100}
-                step={1}
-                value={imageOpacity}
-                onChange={(e) => setImageOpacity(parseInt(e.target.value, 10))}
-                className="w-full accent-cyan-500"
-              />
-              <p className="text-[10px] text-neutral-500 mt-1">
-                Drag toward 0% to see the heatmap by itself.
-              </p>
-            </div>
+            <Slider
+              label="Photo opacity"
+              min={0}
+              max={100}
+              value={imageOpacity}
+              display={`${imageOpacity}%`}
+              onChange={setImageOpacity}
+            />
           )}
-
-          {/* Label list with mini heatmaps */}
-          <div className="flex-1 min-h-0">
-            <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-neutral-500 mb-2">
-              Concepts ({labels.length})
-            </p>
-            <ul className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
-              {/* Average pseudo-entry first so it's easy to find */}
-              {averageMask && (
-                <li>
-                  <button
-                    type="button"
-                    onClick={() => setSelection({ kind: "average" })}
-                    className={`w-full flex items-center gap-3 p-2 rounded-md border transition ${
-                      selection.kind === "average"
-                        ? "border-cyan-500 bg-cyan-500/10"
-                        : "border-neutral-800 hover:border-neutral-600"
-                    }`}
-                  >
-                    <ThumbHeatmap mask={averageMask} />
-                    <span className="text-sm font-mono">★ Average</span>
-                  </button>
-                </li>
-              )}
-              {allMasks.map(({ label, mask }) => {
-                const isActive =
-                  selection.kind === "label" && selection.label === label;
-                return (
-                  <li key={label}>
-                    <button
-                      type="button"
-                      onClick={() => setSelection({ kind: "label", label })}
-                      className={`w-full flex items-center gap-3 p-2 rounded-md border transition text-left ${
-                        isActive
-                          ? "border-cyan-500 bg-cyan-500/10"
-                          : "border-neutral-800 hover:border-neutral-600"
-                      }`}
-                    >
-                      <ThumbHeatmap mask={mask} />
-                      <span className="text-xs font-mono truncate">{label}</span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
+          <ul className="max-h-72 space-y-1.5 overflow-y-auto pr-1">
+            {averageMask && (
+              <li>
+                <MapRow
+                  mask={averageMask}
+                  label="Average of all labels"
+                  active={selection.kind === "average"}
+                  onClick={() => setSelection({ kind: "average" })}
+                />
+              </li>
+            )}
+            {allMasks.map(({ label, mask }) => (
+              <li key={label}>
+                <MapRow
+                  mask={mask}
+                  label={label}
+                  active={selection.kind === "label" && selection.label === label}
+                  onClick={() => setSelection({ kind: "label", label })}
+                />
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
 
-      <details className="mt-5 text-xs text-neutral-400">
-        <summary className="cursor-pointer text-neutral-300 font-mono uppercase tracking-[0.18em] text-[10px]">
-          How is this computed?
-        </summary>
-        <div className="mt-2 leading-relaxed space-y-2">
-          <p>
-            CLIP, the model behind classification, encodes the image and each text label
-            into a shared embedding space and measures cosine similarity. That gives one
-            number per label - useful for ranking, but it doesn&apos;t say <em>where</em>{" "}
-            in the image the label applies.
-          </p>
-          <p>
-            CLIPSeg adds a small Transformer decoder on top of CLIP that, given the same
-            image and a text prompt, predicts a per-pixel logit map - &ldquo;does this pixel
-            match this concept?&rdquo;. We pass it the sigmoid, keep its original 0–1 scale, and paint the result. Dark = 0, bright = 1. Each label uses the same scale; these are model scores, not calibrated accuracy. This is not classical attention rollout
-            from the image encoder - CLIPSeg is its own decoder trained on the PhraseCut
-            dataset.
-          </p>
-          <p>
-            <strong className="text-neutral-200">Per-label maps</strong> show what the
-            model finds for one concept; the{" "}
-            <strong className="text-neutral-200">average</strong> entry is the per-pixel
-            mean across every label on the same scale - a rough &ldquo;saliency&rdquo; pass
-            highlighting regions the model finds informative no matter what you&apos;re
-            looking for.
-          </p>
-        </div>
-      </details>
-    </div>
+      <Details summary="How the maps are made" className="mt-5">
+        <p>
+          CLIP gives one score per label for the whole image. CLIPSeg adds a small decoder, trained on the PhraseCut
+          dataset, that scores every pixel against one label. The page applies a sigmoid and paints the 0 to 1 result on
+          the same scale for every label: dark is 0, bright is 1. These are model scores, not calibrated probabilities.
+          The average entry is the per-pixel mean over all labels.
+        </p>
+      </Details>
+    </section>
+  );
+}
+
+function MapRow({ mask, label, active, onClick }: { mask: AttentionMask; label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`flex w-full cursor-pointer items-center gap-3 border p-1.5 text-left transition-colors ${
+        active ? "border-[var(--line-strong)]" : "border-[var(--line)] hover:border-[var(--line-strong)]"
+      }`}
+    >
+      <ThumbHeatmap mask={mask} />
+      <span className="truncate font-mono text-xs">{label}</span>
+    </button>
   );
 }
 
 function ThumbHeatmap({ mask }: { mask: AttentionMask }) {
   return (
-    <div className="relative w-12 h-9 rounded-sm overflow-hidden bg-black flex-shrink-0">
+    <div className="relative h-9 w-12 shrink-0 overflow-hidden bg-black">
       <HeatmapCanvas
         mask={mask}
         palette="viridis"

@@ -1,20 +1,41 @@
 "use client";
-import { useEffect, useId, useRef, useState, type PointerEvent } from "react";
-import { Button } from "@/components/ui";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type PointerEvent,
+  type ReactNode,
+} from "react";
+import { Button, Details, Segmented, Slider } from "@/components/ui";
 import { clamp, DEFAULT_PITCH, DEFAULT_YAW, HEIGHT, WIDTH } from "./scene";
 import { createVolumeCache, drawVolume, type VolumeCache } from "./render";
 import type { Gallery } from "./gallery";
-const rangeClass =
-  "w-full accent-emerald-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-500";
+
+const LABEL =
+  "font-mono text-[0.7rem] uppercase tracking-[0.08em] text-[var(--sub)]";
+/** Arrival motion: a slow swing around the default view, stopped by any interaction. */
+const SWING_DEGREES = 26;
+const SWING_PERIOD_MS = 14000;
+const SWING_DURATION_MS = 2 * SWING_PERIOD_MS;
+
 type Props = {
   gallery: Gallery;
   title: string;
   fps: number;
   index: number;
   filter: string;
+  labels: readonly string[];
   playing: boolean;
+  /** Swing the camera slowly on arrival unless the visitor prefers reduced motion. */
+  autoRotate: boolean;
   onIndex: (index: number) => void;
+  onFilter: (filter: string) => void;
   onPlaying: (playing: boolean) => void;
+  onReset: () => void;
+  onInteract: () => void;
+  /** One line under the controls: objects in this frame and the source credit. */
+  caption?: ReactNode;
 };
 type Position = { x: number; y: number };
 export function VolumeViewer({
@@ -23,9 +44,15 @@ export function VolumeViewer({
   fps,
   index,
   filter,
+  labels,
   playing,
+  autoRotate,
   onIndex,
+  onFilter,
   onPlaying,
+  onReset,
+  onInteract,
+  caption,
 }: Props) {
   const [yaw, setYaw] = useState(DEFAULT_YAW),
     [pitch, setPitch] = useState(DEFAULT_PITCH),
@@ -34,6 +61,7 @@ export function VolumeViewer({
     [ghosts, setGhosts] = useState(true),
     [mode, setMode] = useState<"orbit" | "slice">("orbit"),
     [expanded, setExpanded] = useState(false),
+    [swinging, setSwinging] = useState(false),
     [notice, setNotice] = useState("");
   const surface = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null),
@@ -62,6 +90,41 @@ export function VolumeViewer({
     drag.current = null;
     pinch.current = null;
   };
+  /** Any deliberate input ends the arrival swing. */
+  const interact = () => {
+    setSwinging(false);
+    onInteract();
+  };
+
+  useEffect(() => {
+    if (!autoRotate) return;
+    const timer = window.setTimeout(() => {
+      if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches)
+        setSwinging(true);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [autoRotate]);
+  useEffect(() => {
+    if (!swinging) return;
+    let frameId = 0;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const elapsed = now - start;
+      if (elapsed > SWING_DURATION_MS) {
+        setYaw(DEFAULT_YAW);
+        setSwinging(false);
+        return;
+      }
+      setYaw(
+        DEFAULT_YAW +
+          SWING_DEGREES * Math.sin((elapsed / SWING_PERIOD_MS) * 2 * Math.PI),
+      );
+      frameId = requestAnimationFrame(tick);
+    };
+    frameId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frameId);
+  }, [swinging]);
+
   function closeExpanded() {
     transition.current++;
     nativeOwned.current = false;
@@ -72,6 +135,7 @@ export function VolumeViewer({
     requestAnimationFrame(() => opener.current?.focus());
   }
   function openExpanded() {
+    interact();
     const current = ++transition.current;
     setNotice("");
     setMode("orbit");
@@ -192,6 +256,7 @@ export function VolumeViewer({
     return () => target.removeEventListener("wheel", wheel);
   }, [expanded]);
   function resetView() {
+    setSwinging(false);
     setYaw(DEFAULT_YAW);
     setPitch(DEFAULT_PITCH);
     setDepth(800);
@@ -202,6 +267,7 @@ export function VolumeViewer({
   }
   function pointerDown(event: PointerEvent<HTMLCanvasElement>) {
     if (event.button !== 0) return;
+    interact();
     onPlaying(false);
     event.currentTarget.setPointerCapture(event.pointerId);
     pointers.current.set(event.pointerId, {
@@ -268,55 +334,43 @@ export function VolumeViewer({
     const remaining = [...pointers.current.values()][0];
     drag.current = remaining ? { ...remaining, yaw, pitch, index } : null;
   }
+  const camera = (set: (value: number) => void) => (value: number) => {
+    interact();
+    set(value);
+  };
   const content = (
     <div
       ref={surface}
       className={
         expanded
-          ? "flex h-dvh w-screen flex-col overflow-auto bg-[var(--background)]"
-          : "overflow-hidden border border-[var(--line)]"
+          ? "flex h-dvh w-screen flex-col overflow-auto bg-[var(--background)] p-3 sm:p-5"
+          : ""
       }
     >
-      <div
-        className={`flex flex-wrap items-center justify-between gap-3 bg-[#090e12] p-3 text-xs text-[#afc0c7] ${expanded ? "sticky top-0 z-10" : ""}`}
-      >
-        <div>
+      {expanded && (
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <h2
-            id={expanded ? `${id}-title` : undefined}
-            className="font-mono text-sm text-white"
+            id={`${id}-title`}
+            className="font-mono text-sm uppercase tracking-[0.08em]"
           >
             {title}
           </h2>
-          <p className="mt-1">
-            3 seconds · {gallery.frames.length} analyzed frames · {fps} fps
-          </p>
-        </div>
-        {expanded ? (
-          <Button
-            style={{ color: "white", borderColor: "#87979b" }}
-            onClick={closeExpanded}
-          >
+          <Button size="sm" onClick={closeExpanded}>
             Close fullscreen
           </Button>
-        ) : (
-          <Button
-            ref={opener}
-            style={{ color: "white", borderColor: "#87979b" }}
-            onClick={openExpanded}
-          >
-            Fullscreen
-          </Button>
-        )}
-      </div>
+        </div>
+      )}
       <canvas
         ref={canvas}
         role="img"
         tabIndex={0}
-        aria-label={`Time volume at ${seconds} seconds. Drag to ${mode === "orbit" ? "rotate" : "scrub time"}; keyboard controls below.`}
+        aria-label={`Time volume of ${title} at ${seconds} seconds. Drag to ${mode === "orbit" ? "rotate" : "scrub time"}.`}
         aria-describedby={`${id}-help`}
-        className={`block w-full cursor-grab select-none bg-[#090e12] active:cursor-grabbing focus-visible:outline-2 focus-visible:outline-emerald-400 ${expanded ? "min-h-[140px]" : "h-[340px] sm:h-[500px] lg:h-[560px]"}`}
+        className="block w-full cursor-grab select-none border border-[var(--line)] bg-[#090e12] active:cursor-grabbing focus-visible:outline-1 focus-visible:outline-[var(--line-strong)]"
         style={{
-          height: expanded ? "max(140px, calc(100dvh - 285px))" : undefined,
+          height: expanded
+            ? "max(140px, calc(100dvh - 210px))"
+            : "clamp(18rem, calc(100svh - 29rem), 40rem)",
           touchAction: mode === "orbit" ? "none" : "pan-y",
         }}
         onPointerDown={pointerDown}
@@ -339,6 +393,7 @@ export function VolumeViewer({
             ].includes(e.key)
           ) {
             e.preventDefault();
+            interact();
             if (e.key === "0") resetView();
             else if (e.key === "+" || e.key === "=")
               setZoom((z) => clamp(z + 0.1, 0.5, 2.5));
@@ -354,47 +409,29 @@ export function VolumeViewer({
           }
         }}
       >
-        Real frames and AI silhouettes stacked through time. Use the timeline
-        and camera controls below.
+        Video frames and object outlines stacked through time. Use the time
+        slider below.
       </canvas>
-      <div className="space-y-3 p-3 sm:px-5">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex flex-wrap gap-2">
-            <Button onClick={() => onPlaying(!playing)} aria-pressed={playing}>
-              {playing ? "Pause" : "Play"}
-            </Button>
-            <Button
-              onClick={() => {
-                clearGesture();
-                setMode("orbit");
-              }}
-              aria-pressed={mode === "orbit"}
-            >
-              Rotate
-            </Button>
-            <Button
-              onClick={() => {
-                clearGesture();
-                setMode("slice");
-              }}
-              aria-pressed={mode === "slice"}
-            >
-              Drag time
-            </Button>
-            <Button onClick={resetView}>Reset view</Button>
-          </div>
-          <output
-            data-testid="time-output"
-            aria-live="off"
-            className="font-mono text-xs tabular-nums"
-          >
-            {seconds} s · Frame {index + 1} / {gallery.frames.length}
-          </output>
-        </div>
-        <label className="block text-xs" htmlFor={`${id}-time`}>
-          Time slice
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-3">
+        <Button
+          size="sm"
+          variant="primary"
+          className="w-20"
+          onClick={() => {
+            interact();
+            onPlaying(!playing);
+          }}
+          aria-pressed={playing}
+        >
+          {playing ? "Pause" : "Play"}
+        </Button>
+        <div className="order-last flex min-w-0 basis-full items-center gap-3 sm:order-none sm:basis-0 sm:flex-1">
+          <label htmlFor={`${id}-time`} className={LABEL}>
+            Time
+          </label>
           <input
             id={`${id}-time`}
+            aria-label="Time slice"
             type="range"
             min={0}
             max={last}
@@ -402,106 +439,135 @@ export function VolumeViewer({
             value={index}
             aria-valuetext={`${seconds} seconds, frame ${index + 1} of ${gallery.frames.length}`}
             onChange={(e) => {
+              interact();
               onPlaying(false);
               onIndex(Number(e.target.value));
             }}
-            className={`${rangeClass} mt-2 block`}
+            className="ui-slider min-w-0 flex-1"
           />
-        </label>
-        <div className="flex items-center gap-3">
-          <Button
-            aria-label="Zoom out"
-            onClick={() => setZoom((z) => clamp(z - 0.2, 0.5, 2.5))}
+          <output
+            data-testid="time-output"
+            aria-live="off"
+            className="shrink-0 font-mono text-xs tabular-nums"
           >
-            −
-          </Button>
-          <label className="flex-1 text-xs">
-            Zoom · {Math.round(zoom * 100)}%
-            <input
-              aria-label="Zoom"
-              type="range"
-              min="0.5"
-              max="2.5"
-              step="0.01"
-              value={zoom}
-              onChange={(e) => setZoom(Number(e.target.value))}
-              className={`${rangeClass} mt-1 block`}
-            />
-          </label>
+            {seconds} s · Frame {index + 1} / {gallery.frames.length}
+          </output>
+        </div>
+        <div className="ml-auto flex gap-2 sm:ml-0">
+          {!expanded && (
+            <Button ref={opener} size="sm" onClick={openExpanded}>
+              Fullscreen
+            </Button>
+          )}
           <Button
-            aria-label="Zoom in"
-            onClick={() => setZoom((z) => clamp(z + 0.2, 0.5, 2.5))}
+            size="sm"
+            onClick={() => {
+              resetView();
+              onReset();
+            }}
           >
-            +
+            Reset
           </Button>
         </div>
+      </div>
+      {notice && (
         <p
-          id={`${id}-help`}
-          className="text-xs leading-relaxed text-neutral-500"
+          role="status"
+          aria-label="Fullscreen status"
+          className="mt-2 text-xs text-[var(--muted)]"
         >
-          Drag to {mode === "orbit" ? "rotate; pinch to zoom" : "scrub time"}.{" "}
-          {expanded
-            ? "Scroll over the volume to zoom. "
-            : "Use Fullscreen for scroll-to-zoom. "}
-          The timeline always controls time. Focus the volume for arrow keys,
-          +/− zoom and 0 to reset.
+          {notice}
         </p>
-        {notice && (
-          <p
-            role="status"
-            aria-label="Fullscreen status"
-            className="text-xs text-neutral-500"
-          >
-            {notice}
-          </p>
-        )}
-        <details open={!expanded}>
-          <summary className="cursor-pointer py-1 text-xs">
-            Camera controls
-          </summary>
-          <div className="mt-3 grid gap-4 sm:grid-cols-3">
-            {[
-              {
-                label: "Rotation",
-                value: yaw,
-                min: -180,
-                max: 180,
-                set: setYaw,
-              },
-              { label: "Tilt", value: pitch, min: -70, max: 70, set: setPitch },
-              {
-                label: "Time-axis spacing",
-                value: depth,
-                min: 400,
-                max: 1200,
-                set: setDepth,
-              },
-            ].map((control) => (
-              <label key={control.label} className="block text-xs">
-                {control.label}
-                <input
-                  aria-label={control.label}
-                  type="range"
-                  min={control.min}
-                  max={control.max}
-                  value={control.value}
-                  onChange={(e) => control.set(Number(e.target.value))}
-                  className={`${rangeClass} mt-2 block`}
+      )}
+      {caption}
+      <Details summary="View options" className="mt-5">
+        <div className="space-y-5">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+            <div className="flex items-center gap-2">
+              <span className={LABEL}>Drag on the volume</span>
+              <Segmented
+                label="Drag on the volume"
+                options={[
+                  { value: "orbit", label: "Rotate" },
+                  { value: "slice", label: "Scrub time" },
+                ]}
+                value={mode}
+                onChange={(next) => {
+                  interact();
+                  clearGesture();
+                  setMode(next);
+                }}
+              />
+            </div>
+            {labels.length > 1 && (
+              <div className="flex items-center gap-2">
+                <span className={LABEL}>Objects</span>
+                <Segmented
+                  label="Objects"
+                  options={["all", ...labels].map((label) => ({
+                    value: label,
+                    label: label === "all" ? "All" : label,
+                  }))}
+                  value={filter}
+                  onChange={onFilter}
                 />
-              </label>
-            ))}
+              </div>
+            )}
           </div>
-          <label className="mt-3 flex min-h-10 items-center gap-3 text-xs">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <Slider
+              label="Zoom"
+              min={0.5}
+              max={2.5}
+              step={0.01}
+              value={zoom}
+              display={`${Math.round(zoom * 100)}%`}
+              onChange={camera(setZoom)}
+            />
+            <Slider
+              label="Rotation"
+              min={-180}
+              max={180}
+              value={Math.round(yaw)}
+              display={`${Math.round(yaw)}°`}
+              onChange={camera(setYaw)}
+            />
+            <Slider
+              label="Tilt"
+              min={-70}
+              max={70}
+              value={Math.round(pitch)}
+              display={`${Math.round(pitch)}°`}
+              onChange={camera(setPitch)}
+            />
+            <Slider
+              label="Time-axis spacing"
+              min={400}
+              max={1200}
+              value={depth}
+              onChange={camera(setDepth)}
+            />
+          </div>
+          <label className="flex items-center gap-3 font-mono text-[0.7rem] uppercase tracking-[0.08em] text-[var(--muted)]">
             <input
               type="checkbox"
               checked={ghosts}
               onChange={(e) => setGhosts(e.target.checked)}
-              className="h-4 w-4 accent-emerald-600"
+              className="h-4 w-4 accent-[var(--foreground)]"
             />
             Show faint frame stack
           </label>
-        </details>
-      </div>
+          <p id={`${id}-help`}>
+            Drag the volume to{" "}
+            {mode === "orbit" ? "rotate it; pinch to zoom" : "scrub time"}.{" "}
+            {expanded
+              ? "Scroll over it to zoom. "
+              : "In fullscreen, scroll to zoom. "}
+            With the volume focused, arrow keys rotate, + and − zoom, and 0
+            resets the camera.
+          </p>
+        </div>
+      </Details>
     </div>
   );
   return (

@@ -37,16 +37,16 @@ export function EntropyPlot({
   return (
     <div>
       <div className="mb-2 flex items-baseline justify-between">
-        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-neutral-500">
+        <span className="font-mono text-[0.7rem] uppercase tracking-[0.08em] text-[var(--sub)]">
           {label}
         </span>
-        <span className="font-mono text-xs tabular-nums text-neutral-700 dark:text-neutral-200">
-          {last.toFixed(2)} <span className="text-neutral-500">{unit}</span>
+        <span className="font-mono text-xs tabular-nums text-[var(--foreground)]">
+          {last.toFixed(2)} <span className="text-[var(--sub)]">{unit}</span>
         </span>
       </div>
       <svg
         viewBox={`0 0 ${W} ${H}`}
-        className="h-16 w-full text-cyan-500"
+        className="h-16 w-full text-[var(--accent)]"
         preserveAspectRatio="none"
       >
         <line
@@ -76,9 +76,9 @@ export function EntropyPlot({
           strokeLinejoin="round"
         />
       </svg>
-      <div className="mt-1 flex justify-between font-mono text-[10px] text-neutral-500">
+      <div className="mt-1 flex justify-between font-mono text-[0.7rem] text-[var(--sub)]">
         <span>0</span>
-        <span>fill {(ratio * 100).toFixed(0)}%</span>
+        <span>{(ratio * 100).toFixed(0)}% of the maximum</span>
         <span>{max.toFixed(2)} {unit}</span>
       </div>
     </div>

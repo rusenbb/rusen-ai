@@ -32,3 +32,19 @@ export function scoreDiscrete(
     bitsSaved: trials_ === 0 ? 0 : bits / trials_,
   };
 }
+
+/**
+ * One-sided binomial tail: the chance that pure guessing (hit rate `p`) gets at least `hits`
+ * right out of `trials`. Small values mean the AI is beating chance.
+ */
+export function chanceOfAtLeast(hits: number, trials: number, p: number): number {
+  if (hits <= 0) return 1;
+  if (hits > trials) return 0;
+  let term = Math.pow(1 - p, trials);
+  let tail = 0;
+  for (let i = 0; i <= trials; i++) {
+    if (i >= hits) tail += term;
+    term *= ((trials - i) / (i + 1)) * (p / (1 - p));
+  }
+  return Math.min(1, tail);
+}

@@ -261,7 +261,7 @@ export default function FourierSketchPage() {
   };
 
   return (
-    <DemoPage width="2xl">
+    <DemoPage>
       <DemoHeader
         eyebrow="Signals / complex Fourier series"
         title="Fourier Sketch"

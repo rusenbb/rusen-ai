@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { Button, DemoFootnote, DemoHeader, DemoPage, DemoPanel } from "@/components/ui";
+import { Button, DemoHeader, DemoPage, Details, Segmented, Slider } from "@/components/ui";
 
 import {
   PATHFINDING_PRESETS,
@@ -18,148 +18,145 @@ import {
   type SearchAlgorithm,
   type SearchDecision,
   type SearchFrame,
+  type SearchTrace,
   type Terrain,
 } from "./algorithms";
 
 type EditTool = Terrain | "start" | "goal";
 type ScenarioId = (typeof PATHFINDING_PRESETS)[number]["id"] | "custom";
+type Mode = "race" | "inspect";
+type Run = { definition: (typeof SEARCH_ALGORITHMS)[number]; trace: SearchTrace };
 
-const TOOL_COPY: Array<{ id: EditTool; label: string; hint: string }> = [
-  { id: "wall", label: "Wall", hint: "Block a cell" },
-  { id: "mud", label: "Mud x5", hint: "Make a cell cost five" },
-  { id: "empty", label: "Erase", hint: "Clear terrain" },
-  { id: "start", label: "Move start", hint: "Place the green marker" },
-  { id: "goal", label: "Move goal", hint: "Place the coral marker" },
+const RACE_TICK_MS = 45;
+const INSPECT_TICK_MS = 340;
+const LABEL = "font-mono text-[0.7rem] uppercase tracking-[0.08em] text-[var(--sub)]";
+
+const TOOLS: Array<{ value: EditTool; label: string }> = [
+  { value: "wall", label: "Wall" },
+  { value: "mud", label: "Mud" },
+  { value: "empty", label: "Erase" },
+  { value: "start", label: "Start" },
+  { value: "goal", label: "Goal" },
 ];
 
-const ALGORITHM_ACCENTS: Record<SearchAlgorithm, { dot: string; text: string; row: string }> = {
-  bfs: {
-    dot: "bg-cyan-500",
-    text: "text-cyan-700 dark:text-cyan-300",
-    row: "bg-cyan-500/[0.06]",
-  },
-  dijkstra: {
-    dot: "bg-amber-500",
-    text: "text-amber-700 dark:text-amber-300",
-    row: "bg-amber-500/[0.07]",
-  },
-  greedy: {
-    dot: "bg-fuchsia-500",
-    text: "text-fuchsia-700 dark:text-fuchsia-300",
-    row: "bg-fuchsia-500/[0.06]",
-  },
-  astar: {
-    dot: "bg-emerald-500",
-    text: "text-emerald-700 dark:text-emerald-300",
-    row: "bg-emerald-500/[0.06]",
-  },
+const COLORS = {
+  empty: "var(--surface)",
+  wall: "var(--line-strong)",
+  mud: "color-mix(in srgb, var(--accent-2) 45%, var(--surface))",
+  settled: "color-mix(in srgb, var(--accent) 22%, var(--surface))",
+  frontier: "color-mix(in srgb, var(--accent) 50%, var(--surface))",
+  route: "var(--accent)",
 };
 
 function clearGrid(): PathGrid {
   const template = createDefaultGrid();
-  return {
-    ...template,
-    cells: template.cells.map((row) => row.map(() => "empty" as Terrain)),
-  };
-}
-
-function terrainClass(terrain: Terrain): string {
-  if (terrain === "wall") return "bg-neutral-800 dark:bg-neutral-200";
-  if (terrain === "mud") return "bg-amber-500/75";
-  return "bg-[color-mix(in_srgb,var(--background)_96%,var(--foreground)_4%)]";
+  return { ...template, cells: template.cells.map((row) => row.map(() => "empty" as Terrain)) };
 }
 
 function cellLabel(cell: Cell): string {
   return `[${cell.row + 1}, ${cell.col + 1}]`;
 }
 
-function formatNumber(value: number): string {
-  return Number.isInteger(value) ? String(value) : value.toFixed(2);
+function frameAt(trace: SearchTrace, step: number): SearchFrame | undefined {
+  if (step < 0 || trace.frames.length === 0) return undefined;
+  return trace.frames[Math.min(step, trace.frames.length - 1)];
 }
 
-function Grid({
+function joinNames(names: string[]): string {
+  return names.length > 1 ? `${names.slice(0, -1).join(", ")} and ${names.at(-1)}` : names[0];
+}
+
+/** One sentence built from the finished runs, so the copy follows the map. */
+function takeaway(runs: Run[]): string {
+  const found = runs.filter(({ trace }) => trace.found);
+  if (found.length === 0) return "No solver can reach the goal on this map.";
+  const fewest = Math.min(...found.map(({ trace }) => trace.visited.length));
+  const cheapest = Math.min(...found.map(({ trace }) => trace.cost ?? Infinity));
+  const quick = found.filter(({ trace }) => trace.visited.length === fewest);
+  const quickNames = joinNames(quick.map(({ definition }) => definition.label));
+  const quickCost = quick[0].trace.cost ?? 0;
+  if (quickCost === cheapest) {
+    return `${quickNames} checked the fewest cells (${fewest}) and still found the cheapest route (cost ${cheapest}).`;
+  }
+  const cheapRuns = found.filter(({ trace }) => trace.cost === cheapest);
+  const leastWork = Math.min(...cheapRuns.map(({ trace }) => trace.visited.length));
+  const best = cheapRuns.filter(({ trace }) => trace.visited.length === leastWork);
+  return `${quickNames} checked the fewest cells (${fewest}) but paid ${quickCost}. ${joinNames(best.map(({ definition }) => definition.label))} found the cheapest route (${cheapest}) after checking ${leastWork}.`;
+}
+
+function Board({
   grid,
   frame,
   path,
+  size,
   onCellClick,
+  label,
 }: {
   grid: PathGrid;
   frame?: SearchFrame;
   path?: Cell[];
+  size: "sm" | "lg";
   onCellClick?: (cell: Cell) => void;
+  label: string;
 }) {
   const settled = new Set(frame?.settled.map(cellKey) ?? []);
   const frontier = new Set(frame?.frontier.map((entry) => cellKey(entry.cell)) ?? []);
-  const newlyOpened = new Set(frame?.newlyOpened.map(cellKey) ?? []);
   const route = new Set(path?.map(cellKey) ?? []);
-  const currentKey = frame ? cellKey(frame.current) : null;
+  const currentKey = frame && !path ? cellKey(frame.current) : null;
+  const letter = size === "lg" ? "text-[0.7rem]" : "text-[0.55rem]";
 
   return (
     <div
-      className="grid select-none overflow-hidden border border-[var(--line)] bg-[var(--line)] p-px shadow-[0_14px_42px_rgba(0,0,0,0.08)]"
+      className="grid select-none gap-px border border-[var(--line)] bg-[var(--line)]"
       style={{ gridTemplateColumns: `repeat(${grid.cols}, minmax(0, 1fr))` }}
       role={onCellClick ? "grid" : "img"}
-      aria-label={onCellClick ? "Editable pathfinding map" : "Search trace map"}
+      aria-label={label}
     >
       {grid.cells.flatMap((row, rowIndex) =>
         row.map((terrain, columnIndex) => {
           const cell = { row: rowIndex, col: columnIndex };
           const key = cellKey(cell);
-          const start = sameCell(cell, grid.start);
-          const goal = sameCell(cell, grid.goal);
-          const current = currentKey === key;
-          const searched = settled.has(key);
-          const queued = frontier.has(key);
-          const fresh = newlyOpened.has(key);
-          const onRoute = route.has(key);
-
-          let classes = terrainClass(terrain);
-          if (!start && !goal) {
-            if (onRoute) classes = "bg-fuchsia-600 text-white dark:bg-fuchsia-400 dark:text-fuchsia-950";
-            else if (queued) classes = "bg-sky-400/85 dark:bg-sky-500/75";
-            else if (searched) classes = "bg-cyan-500/75 dark:bg-cyan-500/70";
+          const endpoint = sameCell(cell, grid.start) ? "S" : sameCell(cell, grid.goal) ? "G" : null;
+          let background = COLORS[terrain];
+          if (!endpoint && terrain !== "wall") {
+            if (route.has(key)) background = COLORS.route;
+            else if (frontier.has(key)) background = COLORS.frontier;
+            else if (settled.has(key)) background = COLORS.settled;
           }
-          if (start) classes = "bg-emerald-500 text-emerald-950";
-          if (goal) classes = "bg-rose-500 text-rose-950";
-
-          const state = current
-            ? "current decision"
-            : onRoute
-              ? "final route"
-              : queued
-                ? "open frontier"
-                : searched
-                  ? "settled"
-                  : terrain === "mud"
-                    ? "mud, cost five"
-                    : terrain;
-          const sharedClassName = `relative aspect-square min-w-0 select-none ${classes}`;
-          const markers = (
+          if (endpoint) background = "var(--foreground)";
+          // Mud keeps a corner mark under the search colours, so a route through mud stays visible.
+          const mudMark = terrain === "mud" && (route.has(key) || frontier.has(key) || settled.has(key));
+          const content = (
             <>
-              {current ? <span aria-hidden className="pointer-events-none absolute inset-[14%] border-2 border-amber-200 shadow-[0_0_0_1px_rgba(0,0,0,0.5)]" /> : null}
-              {fresh && !current ? <span aria-hidden className="pointer-events-none absolute inset-[19%] border border-sky-100/90" /> : null}
-              {start ? <span className="relative z-10 text-[8px] font-black sm:text-[10px]">S</span> : null}
-              {goal ? <span className="relative z-10 text-[8px] font-black sm:text-[10px]">G</span> : null}
+              {mudMark ? (
+                <span aria-hidden className="absolute inset-x-0 bottom-0 h-1/4" style={{ background: "var(--accent-2)" }} />
+              ) : null}
+              {currentKey === key ? (
+                <span aria-hidden className="absolute inset-[18%] border-2 border-[var(--foreground)]" />
+              ) : null}
+              {endpoint ? (
+                <span className={`relative font-mono font-bold text-[var(--background)] ${letter}`}>{endpoint}</span>
+              ) : null}
             </>
           );
-
+          const className = "relative flex aspect-square min-w-0 items-center justify-center transition-colors duration-150";
           if (onCellClick) {
             return (
               <button
                 key={key}
                 type="button"
                 onClick={() => onCellClick(cell)}
-                className={`${sharedClassName} transition-colors hover:brightness-110 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-foreground`}
-                aria-label={`Row ${rowIndex + 1}, column ${columnIndex + 1}: ${state}`}
+                className={`${className} cursor-pointer focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--foreground)]`}
+                style={{ background }}
+                aria-label={`Row ${rowIndex + 1}, column ${columnIndex + 1}: ${endpoint === "S" ? "start" : endpoint === "G" ? "goal" : terrain}`}
               >
-                {markers}
+                {content}
               </button>
             );
           }
-
           return (
-            <div key={key} className={sharedClassName} aria-label={state}>
-              {markers}
+            <div key={key} className={className} style={{ background }}>
+              {content}
             </div>
           );
         }),
@@ -168,390 +165,362 @@ function Grid({
   );
 }
 
-function Metric({ label, value }: { label: string; value: string | number }) {
+function Legend() {
+  const items = [
+    { label: "Mud, cost 5", color: COLORS.mud },
+    { label: "Checked", color: COLORS.settled },
+    { label: "Frontier", color: COLORS.frontier },
+    { label: "Route", color: COLORS.route },
+  ];
   return (
-    <div className="border border-[var(--line)] bg-[color-mix(in_srgb,var(--foreground)_2%,transparent)] p-3">
-      <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-neutral-500 dark:text-neutral-400">{label}</p>
-      <p className="mt-1 font-mono text-lg font-bold tabular-nums">{value}</p>
+    <div className={`flex flex-wrap gap-x-5 gap-y-2 ${LABEL}`}>
+      {items.map((item) => (
+        <span key={item.label} className="inline-flex items-center gap-2">
+          <i className="size-3 border border-[var(--line)]" style={{ background: item.color }} />
+          {item.label}
+        </span>
+      ))}
     </div>
   );
 }
 
 function decisionReason(algorithm: SearchAlgorithm, decision: SearchDecision): string {
-  if (algorithm === "bfs") {
-    return `It has the oldest queue ticket (#${decision.order + 1}), so FIFO expands it before newer frontier cells.`;
-  }
-  if (algorithm === "dijkstra") {
-    return `Its known travel cost is the smallest: g = ${formatNumber(decision.g)}.`;
-  }
-  if (algorithm === "greedy") {
-    return `It looks closest to the goal: h = ${formatNumber(decision.h)}.`;
-  }
-  return `Its combined score is smallest: f = g + h = ${formatNumber(decision.g)} + ${formatNumber(decision.h)} = ${formatNumber(decision.f)}.`;
+  if (algorithm === "bfs") return `It has the oldest queue ticket (#${decision.order + 1}), so BFS takes it first.`;
+  if (algorithm === "dijkstra") return `Its known cost from the start is the smallest: g = ${decision.g}.`;
+  if (algorithm === "greedy") return `It looks closest to the goal: h = ${decision.h}.`;
+  return `Its total is the smallest: f = g + h = ${decision.g} + ${decision.h} = ${decision.f}.`;
 }
 
 function priorityText(algorithm: SearchAlgorithm, decision: SearchDecision): string {
-  if (algorithm === "bfs") return `ticket #${decision.order + 1}`;
-  if (algorithm === "dijkstra") return `g ${formatNumber(decision.g)}`;
-  if (algorithm === "greedy") return `h ${formatNumber(decision.h)}`;
-  return `f ${formatNumber(decision.f)}`;
+  if (algorithm === "bfs") return `#${decision.order + 1}`;
+  if (algorithm === "dijkstra") return `g ${decision.g}`;
+  if (algorithm === "greedy") return `h ${decision.h}`;
+  return `f ${decision.f}`;
+}
+
+function usePrefersReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setReduced(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+  return reduced;
 }
 
 export default function PathfindingShowdownPage() {
+  const reducedMotion = usePrefersReducedMotion();
+  const [mode, setMode] = useState<Mode>("race");
   const [grid, setGrid] = useState<PathGrid>(() => createDefaultGrid());
-  const [tool, setTool] = useState<EditTool>("wall");
   const [scenarioId, setScenarioId] = useState<ScenarioId>("mud-shortcut");
-  const [edits, setEdits] = useState<Array<{ grid: PathGrid; scenario: ScenarioId }>>([]);
-  const [algorithm, setAlgorithm] = useState<SearchAlgorithm>("bfs");
-  const [stepIndex, setStepIndex] = useState(-1);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [edits, setEdits] = useState<PathGrid[]>([]);
+  const [tool, setTool] = useState<EditTool>("wall");
   const [editorOpen, setEditorOpen] = useState(false);
 
-  const activePreset = PATHFINDING_PRESETS.find((preset) => preset.id === scenarioId);
-  const traces = useMemo(
-    () =>
-      SEARCH_ALGORITHMS.map((definition) => ({
-        definition,
-        trace: traceSearch(grid, definition.id),
-      })),
+  // Race: one shared step counter, so every board expands one cell per tick.
+  const [raceStep, setRaceStep] = useState(0);
+  // Inspect: one solver, stepped or played.
+  const [algorithm, setAlgorithm] = useState<SearchAlgorithm>("astar");
+  const [stepIndex, setStepIndex] = useState(-1);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const runs = useMemo<Run[]>(
+    () => SEARCH_ALGORITHMS.map((definition) => ({ definition, trace: traceSearch(grid, definition.id) })),
     [grid],
   );
-  const active = traces.find(({ definition }) => definition.id === algorithm) ?? traces[0];
-  const activeFrame = stepIndex >= 0 ? active.trace.frames[stepIndex] : undefined;
+  const raceLength = Math.max(...runs.map(({ trace }) => trace.frames.length));
+  const raceDone = reducedMotion || raceStep >= raceLength - 1;
+  const shownRaceStep = reducedMotion ? raceLength : raceStep;
+
+  useEffect(() => {
+    if (mode !== "race" || raceDone) return;
+    const timer = window.setTimeout(() => setRaceStep((step) => step + 1), RACE_TICK_MS);
+    return () => window.clearTimeout(timer);
+  }, [mode, raceDone, raceStep]);
+
+  const active = runs.find(({ definition }) => definition.id === algorithm) ?? runs[0];
   const lastStep = active.trace.frames.length - 1;
   const finished = stepIndex >= lastStep;
-  const showPath = finished && active.trace.found ? active.trace.path : undefined;
-  const scenarioLabel = activePreset?.label ?? "Custom map";
-  const scenarioDescription = activePreset?.description ?? "Your edits changed the original scenario.";
-  const scenarioLesson = activePreset?.lesson ?? "Switch between the algorithms to see which objective your terrain rewards.";
-  const status = stepIndex < 0
-    ? "Ready to search"
-    : finished
-      ? active.trace.found
-        ? "Goal reached"
-        : "No route"
-      : `Step ${stepIndex + 1} of ${active.trace.frames.length}`;
+  const activeFrame = stepIndex >= 0 ? active.trace.frames[stepIndex] : undefined;
 
-  const resetTrace = () => {
+  useEffect(() => {
+    if (!isPlaying || stepIndex >= lastStep) return;
+    const timer = window.setTimeout(() => {
+      const next = Math.min(lastStep, stepIndex + 1);
+      setStepIndex(next);
+      if (next >= lastStep) setIsPlaying(false);
+    }, INSPECT_TICK_MS);
+    return () => window.clearTimeout(timer);
+  }, [isPlaying, lastStep, stepIndex]);
+
+  const restart = () => {
+    setRaceStep(0);
     setIsPlaying(false);
     setStepIndex(-1);
   };
 
-  const stepTrace = () => {
-    setIsPlaying(false);
-    setStepIndex((current) => Math.min(lastStep, current + 1));
+  const loadGrid = (next: PathGrid, scenario: ScenarioId) => {
+    restart();
+    setScenarioId(scenario);
+    setGrid(next);
   };
 
-  const togglePlayback = () => {
-    if (isPlaying) {
-      setIsPlaying(false);
-      return;
-    }
-
-    setStepIndex((current) => (current < 0 || current >= lastStep ? 0 : current));
-    setIsPlaying(true);
+  const loadPreset = (id: ScenarioId) => {
+    const preset = PATHFINDING_PRESETS.find((candidate) => candidate.id === id);
+    if (!preset) return;
+    setEdits([]);
+    loadGrid(preset.createGrid(), preset.id);
   };
-
-  useEffect(() => {
-    if (!isPlaying || stepIndex >= lastStep) return;
-
-    const timer = window.setTimeout(() => {
-      const nextStep = Math.min(lastStep, stepIndex + 1);
-      setStepIndex(nextStep);
-      if (nextStep >= lastStep) setIsPlaying(false);
-    }, 340);
-
-    return () => window.clearTimeout(timer);
-  }, [isPlaying, lastStep, stepIndex]);
 
   const changeGrid = (next: PathGrid) => {
     if (next === grid) return;
-    setEdits((previous) => [...previous.slice(-29), { grid, scenario: scenarioId }]);
-    resetTrace(); setScenarioId("custom"); setGrid(next);
-  };
-  const undoEdit = () => {
-    const previous = edits.at(-1);
-    if (!previous) return;
-    resetTrace(); setGrid(previous.grid); setScenarioId(previous.scenario); setEdits(edits.slice(0, -1));
-  };
-  const editCell = (cell: Cell) => changeGrid(tool === "start" || tool === "goal" ? moveEndpoint(grid, tool, cell) : updateTerrain(grid, cell, tool));
-
-  const loadPreset = (presetId: Exclude<ScenarioId, "custom">) => {
-    const preset = PATHFINDING_PRESETS.find((candidate) => candidate.id === presetId);
-    if (!preset) return;
-
-    resetTrace();
-    setEditorOpen(false);
-    setEdits([]);
-    setScenarioId(preset.id);
-    setGrid(preset.createGrid());
+    setEdits((previous) => [...previous.slice(-29), grid]);
+    loadGrid(next, "custom");
   };
 
-  const chooseAlgorithm = (next: SearchAlgorithm) => {
-    resetTrace();
-    setAlgorithm(next);
-  };
+  const editCell = (cell: Cell) =>
+    changeGrid(tool === "start" || tool === "goal" ? moveEndpoint(grid, tool, cell) : updateTerrain(grid, cell, tool));
+
+  const scenarioOptions = PATHFINDING_PRESETS.map((preset) => ({ value: preset.id as ScenarioId, label: preset.label }));
+  if (scenarioId === "custom") scenarioOptions.push({ value: "custom", label: "Your map" });
 
   return (
-    <DemoPage width="2xl">
+    <DemoPage>
       <DemoHeader
-        eyebrow="Algorithms / see one decision at a time"
+        eyebrow="Search algorithms"
         title="Pathfinding Showdown"
-        description="A search algorithm does not see the route in advance. Pick one rule, then step through every frontier decision on the same map before comparing its final tradeoff."
+        description="Four search algorithms race to the same goal, where a mud cell costs 5 and any other step costs 1."
       />
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.18fr)_minmax(20rem,0.82fr)] lg:items-start">
-        <DemoPanel title="Choose the question and the solver" description="The map stays put while the decision rule changes. Click an algorithm, then inspect its full trace.">
-          <div className="space-y-5">
-            <div className="grid gap-4 border-b border-[var(--line)] pb-5 lg:grid-cols-2">
-              <div>
-                <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.14em] text-neutral-500 dark:text-neutral-400">Scenario</p>
-                <div className="flex flex-wrap gap-2" role="group" aria-label="Pathfinding scenarios">
-                  {PATHFINDING_PRESETS.map((preset) => (
-                    <Button
-                      key={preset.id}
-                      size="sm"
-                      variant={scenarioId === preset.id ? "primary" : "secondary"}
-                      onClick={() => loadPreset(preset.id)}
-                      aria-pressed={scenarioId === preset.id}
-                      title={preset.description}
-                    >
-                      {preset.label}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.14em] text-neutral-500 dark:text-neutral-400">Decision rule</p>
-                <div className="flex flex-wrap gap-2" role="group" aria-label="Pathfinding algorithms">
-                  {SEARCH_ALGORITHMS.map((definition) => (
-                    <Button
-                      key={definition.id}
-                      size="sm"
-                      variant={algorithm === definition.id ? "primary" : "secondary"}
-                      onClick={() => chooseAlgorithm(definition.id)}
-                      aria-pressed={algorithm === definition.id}
-                      title={definition.decisionRule}
-                    >
-                      {definition.label}
-                    </Button>
-                  ))}
-                </div>
-              </div>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <Segmented label="Map" options={scenarioOptions} value={scenarioId} onChange={loadPreset} />
+        <div className="flex flex-wrap items-center gap-2">
+          {mode === "race" && !reducedMotion ? (
+            <Button size="sm" variant="ghost" onClick={() => setRaceStep(0)}>
+              Replay
+            </Button>
+          ) : null}
+          <Segmented
+            label="View"
+            options={[
+              { value: "race", label: "Race" },
+              { value: "inspect", label: "Inspect" },
+            ]}
+            value={mode}
+            onChange={(next) => {
+              setMode(next);
+              restart();
+            }}
+          />
+        </div>
+      </div>
+
+      {mode === "race" ? (
+        <>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-5 lg:grid-cols-4">
+            {runs.map(({ definition, trace }) => {
+              const frame = frameAt(trace, shownRaceStep);
+              const done = shownRaceStep >= trace.frames.length - 1;
+              const checked = frame ? frame.step + 1 : 0;
+              return (
+                <figure key={definition.id} className="min-w-0">
+                  <figcaption className="mb-2 flex items-baseline justify-between gap-2">
+                    <span className="font-mono text-sm font-semibold">{definition.label}</span>
+                    <span className={`${LABEL} tabular-nums`}>
+                      {done ? (trace.found ? `cost ${trace.cost}` : "no route") : `${checked} checked`}
+                    </span>
+                  </figcaption>
+                  <Board
+                    size="sm"
+                    grid={grid}
+                    frame={frame}
+                    path={done && trace.found ? trace.path : undefined}
+                    label={`${definition.label}: ${trace.found ? `checked ${trace.visited.length} cells, route cost ${trace.cost}` : "no route"}`}
+                  />
+                </figure>
+              );
+            })}
+          </div>
+
+          <div className="mt-4">
+            <Legend />
+          </div>
+
+          <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:items-start">
+            <table className="w-full border-collapse text-left text-sm">
+              <thead className={LABEL}>
+                <tr className="border-b border-[var(--line)]">
+                  <th className="py-2 pr-4 font-normal">Solver</th>
+                  <th className="py-2 pr-4 text-right font-normal">Checked</th>
+                  <th className="py-2 text-right font-normal">Cost</th>
+                </tr>
+              </thead>
+              <tbody className="font-mono tabular-nums">
+                {runs.map(({ definition, trace }) => {
+                  const done = shownRaceStep >= trace.frames.length - 1;
+                  return (
+                    <tr key={definition.id} className="border-b border-[var(--line)]">
+                      <td className="py-2 pr-4">
+                        {definition.label}
+                        <span className="ml-3 hidden font-sans text-xs text-[var(--sub)] sm:inline">{definition.decisionRule}</span>
+                      </td>
+                      <td className="py-2 pr-4 text-right">{done ? trace.visited.length : "…"}</td>
+                      <td className="py-2 text-right">{done ? (trace.cost ?? "none") : "…"}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            <p className="text-base text-[var(--foreground)]" aria-live="polite">
+              {raceDone ? takeaway(runs) : " "}
+            </p>
+          </div>
+        </>
+      ) : (
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
+          <div className="min-w-0">
+            <Board
+              size="lg"
+              grid={grid}
+              frame={activeFrame}
+              path={finished && active.trace.found ? active.trace.path : undefined}
+              onCellClick={editorOpen ? editCell : undefined}
+              label={editorOpen ? "Editable pathfinding map" : "Search trace map"}
+            />
+            <div className="mt-3">
+              <Legend />
             </div>
-
-            <div className="border-l-2 border-foreground bg-[color-mix(in_srgb,var(--foreground)_4%,transparent)] px-4 py-3">
-              <p className="font-mono text-xs font-bold uppercase tracking-[0.14em]">{scenarioLabel}</p>
-              <p className="mt-2 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">{scenarioDescription}</p>
-              <p className="mt-2 text-sm leading-relaxed">{scenarioLesson}</p>
-            </div>
-
-            <Grid grid={grid} frame={activeFrame} path={showPath} onCellClick={editorOpen ? editCell : undefined} />
-
-            <div className="grid grid-cols-2 gap-x-4 gap-y-2 border-y border-[var(--line)] py-4 text-xs font-mono uppercase tracking-[0.08em] text-neutral-600 dark:text-neutral-400 sm:grid-cols-3">
-              <span className="flex items-center gap-2"><i className="size-3 bg-emerald-500" />Start</span>
-              <span className="flex items-center gap-2"><i className="size-3 bg-rose-500" />Goal</span>
-              <span className="flex items-center gap-2"><i className="size-3 border-2 border-amber-300 bg-neutral-700" />Current</span>
-              <span className="flex items-center gap-2"><i className="size-3 bg-sky-400" />Frontier</span>
-              <span className="flex items-center gap-2"><i className="size-3 bg-cyan-500" />Settled</span>
-              <span className="flex items-center gap-2"><i className="size-3 bg-fuchsia-600" />Final route</span>
-              <span className="flex items-center gap-2"><i className="size-3 bg-amber-500" />Mud x5</span>
-              <span className="flex items-center gap-2"><i className="size-3 bg-neutral-800 dark:bg-neutral-200" />Wall</span>
-            </div>
-
             <details
               open={editorOpen}
               onToggle={(event) => setEditorOpen(event.currentTarget.open)}
-              className="border border-[var(--line)] bg-[color-mix(in_srgb,var(--foreground)_2%,transparent)]"
+              className="ui-details mt-5 border-t border-[var(--line)]"
             >
-              <summary className="cursor-pointer select-none px-4 py-3 text-sm font-semibold marker:text-neutral-500">Make your own map</summary>
-              <div className="border-t border-[var(--line)] px-4 py-4">
-                <p className="mb-3 text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">With this panel open, click the main board to paint. Each edit rewinds the trace.</p>
-                <div className="flex flex-wrap gap-2">
-                  <Button size="sm" disabled={!edits.length} onClick={undoEdit}>Undo map edit</Button>
-                  {TOOL_COPY.map((item) => (
-                    <Button
-                      key={item.id}
-                      size="sm"
-                      variant={tool === item.id ? "primary" : "secondary"}
-                      onClick={() => setTool(item.id)}
-                      title={item.hint}
-                      aria-pressed={tool === item.id}
-                    >
-                      {item.label}
-                    </Button>
-                  ))}
+              <summary className="flex cursor-pointer list-none items-center gap-2 py-3 font-mono text-[0.7rem] uppercase tracking-[0.12em] text-[var(--muted)] hover:text-[var(--foreground)]">
+                <span aria-hidden="true" className="ui-details__mark">+</span>
+                Edit the map
+              </summary>
+              <div className="pb-4 text-sm text-[var(--muted)]">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Segmented label="Paint" options={TOOLS} value={tool} onChange={setTool} />
                   <Button
                     size="sm"
                     variant="ghost"
+                    disabled={!edits.length}
                     onClick={() => {
-                      changeGrid(clearGrid());
+                      const previous = edits.at(-1);
+                      if (!previous) return;
+                      setEdits(edits.slice(0, -1));
+                      loadGrid(previous, "custom");
                     }}
                   >
-                    Clear map
+                    Undo
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => changeGrid(clearGrid())}>
+                    Clear
                   </Button>
                 </div>
+                <p className="mt-2">Click the board to paint while this is open.</p>
               </div>
             </details>
           </div>
-        </DemoPanel>
 
-        <DemoPanel title="Play and inspect the trace" description="The controls stay next to the board. Pause or scrub at any step to read the exact rule at work." className="lg:sticky lg:top-4">
-          <div className="space-y-5">
-            <div className="flex items-start justify-between gap-4 border-b border-[var(--line)] pb-4">
-              <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-neutral-500 dark:text-neutral-400">Active solver</p>
-                <div className="mt-2 flex items-center gap-2">
-                  <i className={`size-2 ${ALGORITHM_ACCENTS[algorithm].dot}`} />
-                  <p className={`font-mono text-lg font-bold ${ALGORITHM_ACCENTS[algorithm].text}`}>{active.definition.label}</p>
-                </div>
-                <p className="mt-1 text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">{active.definition.decisionRule}</p>
-              </div>
-              <span className="shrink-0 border border-[var(--line)] px-2 py-1 font-mono text-[10px] uppercase tracking-[0.1em] text-neutral-600 dark:text-neutral-300">{status}</span>
-            </div>
-
+          <aside className="space-y-5">
+            <Segmented
+              label="Solver"
+              options={SEARCH_ALGORITHMS.map((definition) => ({ value: definition.id, label: definition.label }))}
+              value={algorithm}
+              onChange={(next) => {
+                setAlgorithm(next);
+                setIsPlaying(false);
+                setStepIndex(-1);
+              }}
+            />
+            <p className="text-sm text-[var(--muted)]">{active.definition.decisionRule}</p>
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="ghost" onClick={resetTrace}>Reset</Button>
-              <Button size="sm" variant="secondary" onClick={stepTrace} disabled={finished}>Step</Button>
-              <Button size="sm" onClick={togglePlayback} disabled={lastStep < 0}>
-                {isPlaying ? "Pause" : finished ? "Play again" : stepIndex < 0 ? "Start search" : "Play"}
+              <Button
+                size="sm"
+                variant="primary"
+                onClick={() => {
+                  if (isPlaying) return setIsPlaying(false);
+                  setStepIndex((current) => (current < 0 || current >= lastStep ? 0 : current));
+                  setIsPlaying(true);
+                }}
+                disabled={lastStep < 0}
+              >
+                {isPlaying ? "Pause" : finished ? "Play again" : "Play"}
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => {
+                  setIsPlaying(false);
+                  setStepIndex((current) => Math.min(lastStep, current + 1));
+                }}
+                disabled={finished}
+              >
+                Step
               </Button>
             </div>
-
-            <label className="block border-y border-[var(--line)] py-4">
-              <span className="flex items-baseline justify-between font-mono text-xs uppercase tracking-[0.12em]">
-                <span>Trace position</span>
-                <strong>{stepIndex < 0 ? "not started" : `${stepIndex + 1} / ${active.trace.frames.length}`}</strong>
-              </span>
-              <input
-                aria-label="Search trace position"
-                className="mt-3 w-full accent-foreground"
-                type="range"
-                min={-1}
-                max={lastStep}
-                step={1}
-                value={stepIndex}
-                onChange={(event) => {
-                  setIsPlaying(false);
-                  setStepIndex(Number(event.target.value));
-                }}
-              />
-              <p className="mt-2 text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">Every notch is one settled cell. The sky cells are still waiting in the frontier.</p>
-            </label>
+            <Slider
+              label="Step"
+              min={-1}
+              max={lastStep}
+              value={stepIndex}
+              display={stepIndex < 0 ? "start" : `${stepIndex + 1} / ${active.trace.frames.length}`}
+              onChange={(value) => {
+                setIsPlaying(false);
+                setStepIndex(value);
+              }}
+            />
 
             {activeFrame ? (
-              <div className="space-y-4">
-                <div className="border-l-2 border-amber-400 bg-amber-500/[0.07] px-4 py-3">
-                  <p className="font-mono text-xs font-bold uppercase tracking-[0.12em]">Step {activeFrame.step + 1}: chose {cellLabel(activeFrame.current)}</p>
-                  <p className="mt-2 text-sm leading-relaxed">{decisionReason(algorithm, activeFrame.decision)}</p>
-                </div>
-
-                {algorithm === "bfs" ? (
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    <Metric label="moves so far" value={formatNumber(activeFrame.decision.g)} />
-                    <Metric label="queue ticket" value={`#${activeFrame.decision.order + 1}`} />
-                    <Metric label="frontier now" value={activeFrame.frontier.length} />
-                  </div>
-                ) : algorithm === "astar" ? (
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    <Metric label="cost g" value={formatNumber(activeFrame.decision.g)} />
-                    <Metric label="distance h" value={formatNumber(activeFrame.decision.h)} />
-                    <Metric label="total f" value={formatNumber(activeFrame.decision.f)} />
-                  </div>
-                ) : (
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    <Metric label="cost g" value={formatNumber(activeFrame.decision.g)} />
-                    <Metric label="distance h" value={formatNumber(activeFrame.decision.h)} />
-                    <Metric label="frontier now" value={activeFrame.frontier.length} />
-                  </div>
-                )}
-
-                <div className="border border-[var(--line)] p-4">
-                  <p className="font-mono text-[10px] uppercase tracking-[0.13em] text-neutral-500 dark:text-neutral-400">What changed on this step</p>
-                  <p className="mt-2 text-sm leading-relaxed text-neutral-700 dark:text-neutral-200">
+              <div className="space-y-4" aria-live="polite">
+                <div>
+                  <p className={LABEL}>Step {activeFrame.step + 1}: chose {cellLabel(activeFrame.current)}</p>
+                  <p className="mt-1 text-sm">
                     {finished && active.trace.found
-                      ? `The goal ends this search. ${activeFrame.frontier.length} frontier cell${activeFrame.frontier.length === 1 ? " was" : "s were"} still waiting, so they were not expanded.`
-                      : activeFrame.newlyOpened.length > 0
-                      ? `Opened or improved: ${activeFrame.newlyOpened.map(cellLabel).join(", ")}.`
-                      : "No new frontier cells were opened on this step."}
+                      ? `Goal reached. Route cost ${active.trace.cost} after checking ${active.trace.visited.length} cells.`
+                      : decisionReason(algorithm, activeFrame.decision)}
                   </p>
-                  <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.13em] text-neutral-500 dark:text-neutral-400">{finished && active.trace.found ? "Unexpanded frontier" : "Next in the frontier"}</p>
-                  {activeFrame.frontier.length > 0 ? (
-                    <div className="mt-2 max-h-64 overflow-y-auto flex flex-wrap gap-2" aria-label="Complete ordered frontier">
-                      {activeFrame.frontier.map((entry) => (
-                        <span key={cellKey(entry.cell)} className="border border-[var(--line)] px-2 py-1 font-mono text-xs tabular-nums">
-                          {cellLabel(entry.cell)} <span className="text-neutral-500 dark:text-neutral-400">{priorityText(algorithm, entry)} · g={entry.g} h={entry.h} f={entry.f} · inserted #{entry.order}</span>
-                        </span>
-                      ))}
-                    </div>
-                  ) : <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">The frontier is empty.</p>}
-                  <p className="mt-2 text-xs text-neutral-500">Complete queue in expansion order. Equal priorities keep their insertion order; BFS uses insertion order directly.</p>
                 </div>
+                <dl className="grid grid-cols-3 gap-3 font-mono tabular-nums">
+                  {[
+                    ["Cost g", activeFrame.decision.g],
+                    ["Distance h", activeFrame.decision.h],
+                    ["Frontier", activeFrame.frontier.length],
+                  ].map(([name, value]) => (
+                    <div key={name}>
+                      <dt className={LABEL}>{name}</dt>
+                      <dd className="mt-1 text-lg">{value}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <Details summary={`Frontier, ${activeFrame.frontier.length} cells in order`}>
+                  {activeFrame.frontier.length > 0 ? (
+                    <ol className="flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs tabular-nums" aria-label="Complete ordered frontier">
+                      {activeFrame.frontier.map((entry) => (
+                        <li key={cellKey(entry.cell)}>
+                          {cellLabel(entry.cell)} <span className="text-[var(--sub)]">{priorityText(algorithm, entry)}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  ) : (
+                    <p>The frontier is empty.</p>
+                  )}
+                  <p className="mt-2 text-xs">Ties keep the order the cells were added.</p>
+                </Details>
               </div>
             ) : (
-              <div className="border border-dashed border-[var(--line)] bg-[color-mix(in_srgb,var(--foreground)_2%,transparent)] p-5 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
-                Press <strong className="text-foreground">Step</strong> once. The board will show the selected cell, the newly opened neighbors, and the frontier that remains.
-              </div>
+              <p className="text-sm text-[var(--muted)]">Press Play or Step to watch {active.definition.label} choose one cell at a time.</p>
             )}
-          </div>
-        </DemoPanel>
-      </div>
-
-      <section className="mt-5" aria-labelledby="comparison-title">
-        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
-          <div>
-            <p className="font-mono text-xs uppercase tracking-[0.18em] text-neutral-500 dark:text-neutral-400">Compare finished runs</p>
-            <h2 id="comparison-title" className="mt-1 text-2xl font-bold">One map, four outcomes</h2>
-          </div>
-          <p className="max-w-md text-xs leading-relaxed text-neutral-500 dark:text-neutral-400 sm:text-right">Click a solver name to load its complete trace into the board above.</p>
+          </aside>
         </div>
+      )}
 
-        <div className="overflow-x-auto border border-[var(--line)]">
-          <table className="min-w-[44rem] w-full border-collapse text-left text-sm">
-            <thead className="bg-[color-mix(in_srgb,var(--foreground)_4%,transparent)] font-mono text-[10px] uppercase tracking-[0.12em] text-neutral-500 dark:text-neutral-400">
-              <tr>
-                <th className="px-4 py-3 font-inherit">Solver</th>
-                <th className="px-4 py-3 font-inherit">Rule</th>
-                <th className="px-4 py-3 text-right font-inherit">Checked</th>
-                <th className="px-4 py-3 text-right font-inherit">Moves</th>
-                <th className="px-4 py-3 text-right font-inherit">Route cost</th>
-                <th className="px-4 py-3 text-right font-inherit">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {traces.map(({ definition, trace }) => {
-                const selected = definition.id === algorithm;
-                const accent = ALGORITHM_ACCENTS[definition.id];
-                const moves = trace.path.length > 0 ? trace.path.length - 1 : "none";
-
-                return (
-                  <tr key={definition.id} className={`border-t border-[var(--line)] ${selected ? accent.row : ""}`}>
-                    <td className="px-4 py-3">
-                      <button
-                        type="button"
-                        onClick={() => chooseAlgorithm(definition.id)}
-                        className={`flex items-center gap-2 font-mono font-bold transition hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground ${accent.text}`}
-                        aria-pressed={selected}
-                      >
-                        <i className={`size-2 ${accent.dot}`} />{definition.label}
-                      </button>
-                    </td>
-                    <td className="max-w-72 px-4 py-3 text-xs leading-relaxed text-neutral-600 dark:text-neutral-400">{definition.decisionRule}</td>
-                    <td className="px-4 py-3 text-right font-mono tabular-nums">{trace.visited.length}</td>
-                    <td className="px-4 py-3 text-right font-mono tabular-nums">{moves}</td>
-                    <td className="px-4 py-3 text-right font-mono tabular-nums">{trace.cost ?? "none"}</td>
-                    <td className="px-4 py-3 text-right font-mono text-xs uppercase tracking-[0.08em]">{trace.found ? "found" : "no route"}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <DemoFootnote>
-        Costs are entered-cell costs: empty = 1 and mud = 5. BFS guarantees fewest moves only when each move costs the same. Dijkstra and A* guarantee a cheapest route here because the Manhattan estimate never overstates the remaining empty-cell cost.
-      </DemoFootnote>
+      <p className="mt-10 text-xs text-[var(--sub)]">
+        BFS finds the fewest moves. Dijkstra and A* always find the cheapest route. Greedy only aims at the goal.
+      </p>
     </DemoPage>
   );
 }

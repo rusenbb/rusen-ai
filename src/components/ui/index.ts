@@ -6,7 +6,7 @@
  *
  * @example
  * ```tsx
- * import { Button, Spinner, Alert, Card } from '@/components/ui';
+ * import { Button, Chip, Segmented, Slider, Details, Stat } from '@/components/ui';
  * ```
  */
 
@@ -16,3 +16,8 @@ export { Button } from "./Button";
 export { Alert } from "./Alert";
 export { Card } from "./Card";
 export { DemoPage, DemoHeader, DemoPanel, DemoMutedSection, DemoFootnote } from "./DemoLayout";
+export { Chip } from "./Chip";
+export { Segmented } from "./Segmented";
+export { Slider } from "./Slider";
+export { Details } from "./Details";
+export { Stat } from "./Stat";

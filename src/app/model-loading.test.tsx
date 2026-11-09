@@ -34,7 +34,7 @@ describe("browser model loading", () => {
     transformerMocks.pipeline.mockResolvedValueOnce(inference);
     render(<ClassifyAnythingPage />);
     fireEvent.change(screen.getByLabelText("Text to Classify"), { target: { value: "A useful result" } });
-    await act(async () => { fireEvent.click(screen.getByRole("button", { name: /Classify.*Cmd/ })); });
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Classify" })); });
     expect(screen.getByLabelText("Text to Classify")).toBeDisabled();
     expect(screen.getByRole("button", { name: "Clear" })).toBeDisabled();
     await act(async () => resolve({ labels: ["positive", "negative"], scores: [0.9, 0.1] }));
