@@ -52,7 +52,8 @@ export interface DecodeResult {
 }
 
 export interface UseSAMResult {
-  encodeImage: (imageUrl: string) => Promise<void>;
+  /** Resolves with the encoder time in ms (model download excluded). */
+  encodeImage: (imageUrl: string) => Promise<number>;
   decodePoints: (points: SegmentPoint[]) => Promise<DecodeResult>;
   clearCache: () => Promise<void>;
 }
@@ -95,11 +96,21 @@ export function useSAM(dispatch: React.Dispatch<SAMAction>): UseSAMResult {
         TensorCtor.current = Tensor as unknown as TensorConstructor;
         RawImageCtor.current = RawImage as unknown as RawImageStatic;
 
+        const files: Record<string, { loaded: number; total: number }> = {};
         const [model, processor] = await Promise.all([
           Sam2Model.from_pretrained(MODEL_ID, {
             dtype: "uint8",
             device: "wasm",
-            progress_callback: (p: ProgressInfo) => {
+            progress_callback: (info: ProgressInfo) => {
+              // Sam2Model reports each file separately; sum them so the bar tracks the whole download.
+              let p = info;
+              if (info.status === "progress") {
+                files[info.file] = { loaded: info.loaded, total: info.total };
+                const all = Object.values(files);
+                const loaded = all.reduce((sum, f) => sum + f.loaded, 0);
+                const total = all.reduce((sum, f) => sum + f.total, 0);
+                p = { status: "progress_total", name: info.name, progress: total ? (loaded / total) * 100 : 0, loaded, total, files: { ...files } };
+              }
               const next = resolveLoadProgress(
                 loadProgressRef.current,
                 loadMessageRef.current,
@@ -151,6 +162,7 @@ export function useSAM(dispatch: React.Dispatch<SAMAction>): UseSAMResult {
       if (request !== imageRequestRef.current) throw new DOMException("Image changed", "AbortError");
 
       dispatch({ type: "ENCODE_START" });
+      const started = performance.now();
 
       const image = await RawImage.fromURL(imageUrl);
       const processed = await processor(image);
@@ -165,6 +177,7 @@ export function useSAM(dispatch: React.Dispatch<SAMAction>): UseSAMResult {
       reshapedSizesRef.current = [reshaped[0], reshaped[1]] as const;
       originalSizesRef.current = [original[0], original[1]] as const;
       embeddingsRef.current = embeddings;
+      return performance.now() - started;
     },
     [dispatch, initModel],
   );
