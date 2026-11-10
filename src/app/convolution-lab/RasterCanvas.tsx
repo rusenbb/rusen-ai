@@ -68,7 +68,7 @@ export function RasterCanvas({
 
     if (!focus || focus.rows <= 0 || focus.columns <= 0) return;
     context.save();
-    context.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue(focusToken).trim() || "#fbbf24";
+    context.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue(focusToken).trim() || "#fbbf24"; // Fallback only; the colour comes from the focus token.
     context.lineWidth = Math.max(1, Math.round(Math.min(width, height) / 96));
     context.setLineDash([2, 1]);
     context.strokeRect(focus.col, focus.row, focus.columns, focus.rows);

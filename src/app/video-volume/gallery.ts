@@ -21,15 +21,16 @@ export type Gallery = {
   atlas: ImageBitmap;
   frames: PreparedFrame[];
 };
+/** CSS custom properties for the track colours; render.ts resolves them for canvas drawing. */
 export const colors = [
-  "#6ee7cb",
-  "#f2a6d0",
-  "#f4cc76",
-  "#a6b5ff",
-  "#91d8ed",
-  "#bde584",
+  "--accent",
+  "--accent-2",
+  "--accent-3",
+  "--accent-4",
+  "--accent-5",
 ];
-export const objectColor = (id: number) => colors[(id - 1) % colors.length];
+export const objectToken = (id: number) => colors[(id - 1) % colors.length];
+export const objectColor = (id: number) => `var(${objectToken(id)})`;
 
 /** Validate the static result before allocating masks or preparing drawing paths. */
 export function validateAnalysis(value: unknown, clip: Clip): Analysis {
