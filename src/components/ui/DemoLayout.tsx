@@ -81,7 +81,7 @@ export function DemoHeader({
     >
       <div className="min-w-0">
         {eyebrow && (
-          <p className="mb-3 text-xs font-mono uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-400">
+          <p className="mb-3 text-xs font-mono uppercase tracking-[0.2em] text-sub">
             {eyebrow}
           </p>
         )}
@@ -89,7 +89,7 @@ export function DemoHeader({
         {description && (
           <p
             data-allow-select
-            className="mt-3 max-w-3xl text-sm text-neutral-600 dark:text-neutral-400 sm:text-base"
+            className="mt-3 max-w-3xl text-sm text-muted sm:text-base"
           >
             {description}
           </p>
@@ -113,14 +113,14 @@ export function DemoPanel({
     title || description ? (
       <div>
         {title && (
-          <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-neutral-700 dark:text-neutral-200">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-foreground">
             {title}
           </h2>
         )}
         {description && (
           <p
             data-allow-select
-            className="mt-2 text-sm text-neutral-500 dark:text-neutral-400"
+            className="mt-2 text-sm text-sub"
           >
             {description}
           </p>
@@ -175,7 +175,7 @@ export function DemoFootnote({
     <p
       data-allow-select
       className={cx(
-        "mt-4 text-xs text-neutral-500 dark:text-neutral-400",
+        "mt-4 text-xs text-sub",
         align === "center" ? "text-center" : "text-left",
         className,
       )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { getResolvedTheme, THEME_EVENT } from "./theme";
+import { getPalette, getResolvedTheme, readTokenRgb, THEME_EVENT } from "./theme";
 
 const DENSITY_RAMP = " .·:-=+*#%@";
 const CELL_W = 10;
@@ -153,12 +153,14 @@ export default function AsciiDataBackground({
     let anchorEl: Element | null = null;
 
     let currentTheme: "light" | "dark" = getResolvedTheme();
+    let currentPalette = getPalette();
     // [bucket][charIdx-1] → tile canvas. Index skips RAMP[0] (' ').
     let atlas: HTMLCanvasElement[][] = [];
 
     const buildAtlas = () => {
       const isDark = currentTheme === "dark";
-      const baseColor = isDark ? "236, 236, 236" : "23, 23, 23";
+      // Glyphs take the page's text colour, so a palette tints the background too.
+      const baseColor = readTokenRgb("--foreground", isDark ? "236, 236, 236" : "23, 23, 23");
       const ATLAS_W = CELL_W * 2;
       const ATLAS_H = CELL_H * 2;
       const next: HTMLCanvasElement[][] = [];
@@ -223,8 +225,10 @@ export default function AsciiDataBackground({
     const drawFrame = (now: number): boolean => {
       // Theme toggle → rebuild atlas with new color.
       const t = getResolvedTheme();
-      if (t !== currentTheme) {
+      const palette = getPalette();
+      if (t !== currentTheme || palette !== currentPalette) {
         currentTheme = t;
+        currentPalette = palette;
         buildAtlas();
       }
 

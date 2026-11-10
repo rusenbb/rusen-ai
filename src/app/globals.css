@@ -103,6 +103,43 @@ html[data-theme="dark"] {
   color-scheme: dark;
 }
 
+/* Phosphor palette: an old green-screen terminal. Dark is phosphor on near-black,
+   light is a green-ruled printout. The attribute selector outranks the plain
+   mode blocks above, so it wins in both modes. */
+html[data-palette="phosphor"][data-theme="dark"] {
+  --background: #050806;
+  --surface:    #0a100c;
+  --foreground: #c4f5d2;
+  --line: rgba(120, 255, 160, 0.13);
+  --line-strong: #c4f5d2;
+  --muted: #8cc59d;
+  --sub: #6e9c7b;
+  --signal: #39ff88;
+  --accent: #39ff88;
+  --accent-2: #ffb000;
+  --accent-3: #7dd3fc;
+  --accent-4: #c3f53c;
+  --accent-5: #ff6b6b;
+  --danger: #ff6b6b;
+}
+
+html[data-palette="phosphor"][data-theme="light"] {
+  --background: #eef4ea;
+  --surface:    #f7fbf3;
+  --foreground: #0f2418;
+  --line: rgba(15, 36, 24, 0.12);
+  --line-strong: #0f2418;
+  --muted: #35523f;
+  --sub: #4f6d59;
+  --signal: #11713a;
+  --accent: #11713a;
+  --accent-2: #a14b06;
+  --accent-3: #0b6390;
+  --accent-4: #4a6f0b;
+  --accent-5: #b4183c;
+  --danger: #b4183c;
+}
+
 html.dark {
   color-scheme: dark;
 }
@@ -207,7 +244,7 @@ body {
 }
 
 .ui-surface {
-  background: rgb(253 250 244 / 0.88);
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
 }
 
 body[data-game-life-page="on"] main {
@@ -417,6 +454,11 @@ body[data-game-life-fullscreen="on"] header {
   outline: none;
 }
 
+.site-nav-palette {
+  width: auto;
+  padding: 0 0.35rem;
+}
+
 .site-nav-theme .site-nav-word-frame {
   font-size: 0.68rem;
   letter-spacing: 0.025em;
@@ -553,19 +595,8 @@ body[data-game-life-fullscreen="on"] header {
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  .ui-surface {
-    background: rgb(9 9 12 / 0.72);
-  }
-}
 
-html[data-theme="light"] .ui-surface {
-  background: rgb(253 250 244 / 0.88);
-}
 
-html[data-theme="dark"] .ui-surface {
-  background: rgb(9 9 12 / 0.72);
-}
 
 /* Pulse Board Animations */
 @keyframes fade-in-up {
@@ -717,7 +748,7 @@ html[data-theme="dark"] .ui-surface {
 }
 html[data-theme="dark"] .term-cover,
 html.dark .term-cover {
-  background: #08080a;
+  background: color-mix(in srgb, var(--background) 70%, black);
 }
 .term-cover__canvas {
   position: absolute;
@@ -753,11 +784,7 @@ html.dark .term-cover {
   margin: 0;
 }
 .term-tag--soon {
-  color: #dc2626;
-}
-html[data-theme="dark"] .term-tag--soon,
-html.dark .term-tag--soon {
-  color: #f87171;
+  color: var(--danger);
 }
 .term-status {
   display: inline-flex;
