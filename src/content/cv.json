@@ -4,7 +4,7 @@
     "role": "AI Researcher & Engineer",
     "location": "RIZE, TR",
     "locationLong": "Rize, Turkey",
-    "email": "birben20@itu.edu.tr",
+    "email": "contact@rusen.ai",
     "website": "rusen.ai",
     "websiteUrl": "https://rusen.ai",
     "linkedin": "linkedin.com/in/rusenbirben",
@@ -13,8 +13,8 @@
     "githubUrl": "https://github.com/rusenbb",
     "kaggle": "kaggle.com/rusenbirben",
     "kaggleUrl": "https://www.kaggle.com/rusenbirben",
-    "summary": "AI and Data Engineering graduate from Istanbul Technical University and independent researcher with METU’s Applied NLP Group. Research interests center on LLM reliability and interpretability, with experience in Turkish NLP, machine unlearning, and LLM applications for finance.",
-    "printSummary": "AI and Data Engineering graduate from Istanbul Technical University and independent researcher with METU’s Applied NLP Group. Research interests center on LLM reliability and interpretability, with experience in Turkish NLP, machine unlearning, and LLM applications for finance."
+    "summary": "AI and Data Engineering graduate from Istanbul Technical University and independent researcher with METU’s Applied NLP Group. Research interests center on LLM reliability and evaluation, with experience in numerical precision in interpretability, Turkish LLM pre-training data, Turkish NLP benchmarks and datasets, machine unlearning, and LLM applications for finance.",
+    "printSummary": "AI and Data Engineering graduate from Istanbul Technical University and independent researcher with METU’s Applied NLP Group. Research interests center on LLM reliability and evaluation, with experience in numerical precision in interpretability, Turkish LLM pre-training data, Turkish NLP benchmarks and datasets, machine unlearning, and LLM applications for finance."
   },
   "heroLinks": [
     {
@@ -31,7 +31,7 @@
     },
     {
       "label": "Email",
-      "url": "mailto:birben20@itu.edu.tr"
+      "url": "mailto:contact@rusen.ai"
     }
   ],
   "experience": [
@@ -40,7 +40,7 @@
       "company": "METU Applied NLP Group",
       "period": "03/2026 - Present",
       "location": "Ankara, TR",
-      "description": "Co-organize the [SIGTURK 2027 Shared Task](https://sigturk.github.io/workshops/2027/shared-task/) at the SIGTURK 2027 Workshop (ACL 2027) with Çağrı Toraman, Evren Ayberk Munis, and İlker Kesen. Contribute to data creation and evaluation methodology; built the shared-task website and evaluation pipeline.\n\nContribute to GemmaTurk, a Turkish LLM, across training-data collection, synthetic instruction and reasoning data generation, mid-training, continual pre-training, and pre-training evaluation.\n\nLead [METU NLP Connect](https://www.youtube.com/@metunlpconnect), producing expert interviews.",
+      "description": "Co-organize the [SIGTURK 2027 Shared Task](https://sigturk.github.io/workshops/2027/shared-task/) at the SIGTURK 2027 Workshop (ACL 2027) with Çağrı Toraman, Evren Ayberk Munis, and İlker Kesen. Built the Text/LLM track: 1,000 culturally grounded items in five Turkic languages (Turkish, Azerbaijani, Kazakh, Uzbek, Uyghur) across four tasks, selected from 1,750 candidates and grounded in 620 sources; wrote the evaluator, ran the baselines, and built the shared-task website.\n\nContribute to GemmaTurk, a 1.6B-parameter Turkish LLM: built a Turkish YouTube caption corpus (1.34M documents, 6.1B tokens), generated synthetic instruction and reasoning data, ran mid-training data-mix experiments, and run continued pre-training with long-context extension to 64K tokens.\n\nUpcoming: TurkBench 2, an agentic extension of the TurkBench Turkish LLM benchmark, in collaboration with Turkcell.",
       "link": "https://nlp.ceng.metu.edu.tr",
       "category": "research"
     },
@@ -49,7 +49,7 @@
       "company": "Fiction Studios",
       "period": "08/2025 - 04/2026",
       "location": "Ankara, TR",
-      "description": "Co-founded Fiction Studios at Bilkent Cyberpark; led technical development and coordinated three additional contributors. Built a multilingual LLM-powered museum and tourism guide and pitched it to customers and investors.",
+      "description": "Co-founded Fiction Studios at Bilkent Cyberpark; led technical development and coordinated three additional contributors. Built the backend of Meddah, a multilingual LLM-powered museum and tourism audio guide, and pitched it to customers and investors.",
       "link": "https://github.com/fiction-ai-studios",
       "category": "professional"
     },
@@ -180,7 +180,7 @@
       "school": "Istanbul Technical University",
       "period": "2022 - 2025",
       "gpa": "3.61 / 4.00",
-      "note": "Graduated at 09.07.2025"
+      "note": "Graduated July 2025"
     },
     {
       "degree": "Electronics and Communication Engineering",
@@ -249,6 +249,20 @@
       "summary": "Cloud architecture and AWS services including EC2, Lambda, S3, RDS, and DynamoDB."
     }
   ],
+  "service": [
+    {
+      "title": "Shared Task Co-organizer, SIGTURK 2027",
+      "venue": "SIGTURK 2027 Workshop @ ACL 2027",
+      "period": "2026 - Present",
+      "url": "https://sigturk.github.io/workshops/2027/shared-task/"
+    },
+    {
+      "title": "Lead, METU NLP Connect",
+      "venue": "Expert interview series of the METU Applied NLP Group; co-hosted 4 episodes",
+      "period": "2026 - Present",
+      "url": "https://www.youtube.com/@metunlpconnect"
+    }
+  ],
   "languages": [
     {
       "name": "Turkish",
@@ -292,10 +306,34 @@
   },
   "publications": [
     {
-      "title": "Exact First, Then Fast: An Event-for-Event C++ Rebuild of the Agenthon ABIDES Market",
-      "subtitle": "Agenthon Workshop @ [NeurIPS 2026](https://neurips.cc/Conferences/2026) - Accepted for in-person poster presentation",
+      "title": "Patching Fails Small, Attribution Fails Large: Component Effects in 16-Bit Language Models",
+      "subtitle": "Transactions on Machine Learning Research (TMLR) - Under review",
       "period": "2026",
-      "description": "Göktürk Batın Dervişoğlu, Muhammed Faruk Aytin, Muhammed Rüşen Birben.\n\nRebuilt the Agenthon ABIDES market simulator in C++, preserving event ordering, random-number sequences, and reference outputs. Validated exact agreement across 6,900 randomized comparisons and achieved a 1,299× simulation-loop speedup on the largest public benchmark.\n\nAtlanta, USA, December 12, 2026.",
+      "description": "Sole author.\n\nShows across ten language models that bfloat16 puts an error floor under intervention-based interpretability effects, while attribution keeps the ranking and sign of single-neuron effects (rank correlation ≥ 0.97); recommends measuring the floor before trusting 16-bit interventions.",
+      "tags": [
+        "Interpretability",
+        "Numerical Precision",
+        "bfloat16"
+      ],
+      "links": []
+    },
+    {
+      "title": "Tokenization Strategies for Pretraining Generative Large Language Models: A Case Study in Turkish",
+      "subtitle": "Journal of Artificial Intelligence Research (JAIR) - Under review",
+      "period": "2026",
+      "description": "Evren Ayberk Munis and **Ruşen Birben** (equal contribution, joint first authors), Çağrı Toraman.\n\nCompared eight lossless tokenizers, including morpheme-constrained BPE, for Turkish LLM pretraining on a fixed 30 GB budget: bits per byte differed by at most 1.2%, while estimated training compute differed by up to 49%; morpheme-constrained BPE cost 23 to 29% more compute than byte-level BPE.",
+      "tags": [
+        "Tokenization",
+        "Pretraining",
+        "Turkish"
+      ],
+      "links": []
+    },
+    {
+      "title": "Exact First, Then Fast: An Event-for-Event C++ Rebuild of the Agenthon ABIDES Market",
+      "subtitle": "Agenthon Workshop @ [NeurIPS 2026](https://neurips.cc/Conferences/2026) - In-person poster, Atlanta, USA, December 12, 2026",
+      "period": "2026",
+      "description": "Göktürk Batın Dervişoğlu, Muhammed Faruk Aytin, **Muhammed Rüşen Birben**.\n\nRebuilt the Agenthon ABIDES market simulator in C++, preserving event ordering, random-number sequences, and reference outputs. Validated exact agreement across 6,900 randomized comparisons and achieved a 1,299× simulation-loop speedup on the largest public benchmark.",
       "tags": [
         "C++",
         "ABIDES",
@@ -310,9 +348,9 @@
     },
     {
       "title": "Turkish Cultural Knowledge Dataset",
-      "subtitle": "MRL Workshop @ [EMNLP 2026](https://2026.emnlp.org/) - Accepted dataset contribution; joint benchmark paper in preparation",
+      "subtitle": "MRL Workshop @ [EMNLP 2026](https://2026.emnlp.org/) - Dataset accepted; joint paper in preparation",
       "period": "2026",
-      "description": "Led the source-grounded agent pipeline and data preparation for a Turkish cultural knowledge dataset spanning 15 domains.\n\nScreened 1,200 candidate question-answer pairs; selected 500 for sociological review by Büşra Tufan and prepared the final 300-pair submission.\n\nReviewed English translations; supervised by Çağrı Toraman.",
+      "description": "Led the source-grounded agent pipeline and data preparation for a Turkish cultural knowledge dataset spanning 15 domains.\n\nGenerated 1,200 candidate question-answer pairs with 15 domain agents, selected 500 for sociological review by Büşra Tufan (who chose the final 300), and prepared the submission.\n\nReviewed English translations; supervised by Çağrı Toraman.",
       "tags": [
         "Cultural QA",
         "Data Curation",

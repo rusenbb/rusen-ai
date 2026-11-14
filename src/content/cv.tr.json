@@ -4,7 +4,7 @@
     "role": "Yapay Zeka Araştırmacısı ve Mühendisi",
     "location": "RIZE, TR",
     "locationLong": "Rize, Türkiye",
-    "email": "birben20@itu.edu.tr",
+    "email": "contact@rusen.ai",
     "website": "rusen.ai",
     "websiteUrl": "https://rusen.ai",
     "linkedin": "linkedin.com/in/rusenbirben",
@@ -13,8 +13,8 @@
     "githubUrl": "https://github.com/rusenbb",
     "kaggle": "kaggle.com/rusenbirben",
     "kaggleUrl": "https://www.kaggle.com/rusenbirben",
-    "summary": "İTÜ Yapay Zeka ve Veri Mühendisliği mezunu ve ODTÜ Uygulamalı NLP Grubu’nda bağımsız araştırmacıyım. Araştırma ilgim LLM’lerin güvenilirliği ve yorumlanabilirliği; deneyimim Türkçe NLP, makine unutma ve finans alanında LLM uygulamalarını kapsıyor.",
-    "printSummary": "İTÜ Yapay Zeka ve Veri Mühendisliği mezunu ve ODTÜ Uygulamalı NLP Grubu’nda bağımsız araştırmacıyım. Araştırma ilgim LLM’lerin güvenilirliği ve yorumlanabilirliği; deneyimim Türkçe NLP, makine unutma ve finans alanında LLM uygulamalarını kapsıyor."
+    "summary": "İTÜ Yapay Zeka ve Veri Mühendisliği mezunu ve ODTÜ Uygulamalı NLP Grubu’nda bağımsız araştırmacıyım. Araştırma ilgim LLM’lerin güvenilirliği ve değerlendirilmesi; deneyimim yorumlanabilirlikte sayısal hassasiyet, Türkçe LLM ön eğitim verisi, Türkçe NLP benchmark ve veri setleri, makine unutma ve finans alanında LLM uygulamalarını kapsıyor.",
+    "printSummary": "İTÜ Yapay Zeka ve Veri Mühendisliği mezunu ve ODTÜ Uygulamalı NLP Grubu’nda bağımsız araştırmacıyım. Araştırma ilgim LLM’lerin güvenilirliği ve değerlendirilmesi; deneyimim yorumlanabilirlikte sayısal hassasiyet, Türkçe LLM ön eğitim verisi, Türkçe NLP benchmark ve veri setleri, makine unutma ve finans alanında LLM uygulamalarını kapsıyor."
   },
   "heroLinks": [
     {
@@ -31,7 +31,7 @@
     },
     {
       "label": "E-posta",
-      "url": "mailto:birben20@itu.edu.tr"
+      "url": "mailto:contact@rusen.ai"
     }
   ],
   "experience": [
@@ -40,7 +40,7 @@
       "company": "ODTÜ Uygulamalı NLP Grubu",
       "period": "03/2026 - Bugün",
       "location": "Ankara, TR",
-      "description": "Çağrı Toraman, Evren Ayberk Munis ve İlker Kesen ile SIGTURK 2027 Workshop’u (ACL 2027) kapsamındaki [SIGTURK 2027 Shared Task](https://sigturk.github.io/workshops/2027/shared-task/) ortak organizatörlüğü. Veri oluşturma ve değerlendirme metodolojisine katkı; görevin web sitesinin ve değerlendirme hattının geliştirilmesi.\n\nTürkçe LLM GemmaTurk’te eğitim verisi toplama, sentetik instruction ve reasoning verisi üretimi, mid-training, continual pre-training ve ön eğitim değerlendirmeleri üzerinde çalışma.\n\n[METU NLP Connect](https://www.youtube.com/@metunlpconnect) için uzman röportajlarının hazırlanması ve kanal yönetimi.",
+      "description": "Çağrı Toraman, Evren Ayberk Munis ve İlker Kesen ile SIGTURK 2027 Workshop’u (ACL 2027) kapsamındaki [SIGTURK 2027 Shared Task](https://sigturk.github.io/workshops/2027/shared-task/) ortak organizatörlüğü. Metin/LLM kısmının tamamının geliştirilmesi: beş Türk dilinde (Türkçe, Azerbaycanca, Kazakça, Özbekçe, Uygurca) dört görevde, 1.750 aday arasından seçilen ve 620 kaynağa dayanan 1.000 kültürel soru; değerlendirme aracının yazılması, baseline koşuları ve görevin web sitesi.\n\nTürkçe LLM GemmaTurk’te (1,6B parametre) çalışma: Türkçe YouTube altyazı korpusunun oluşturulması (1,34M doküman, 6,1B token), sentetik instruction ve reasoning verisi üretimi, mid-training veri karışımı deneyleri ve 64K bağlam uzunluğuna genişletmeyle continual pre-training.\n\nYakında: Turkcell iş birliğiyle, Türkçe LLM benchmark’ı TurkBench’in agentic görevlere genişletilmiş hâli olan TurkBench 2.",
       "link": "https://nlp.ceng.metu.edu.tr",
       "category": "research"
     },
@@ -49,7 +49,7 @@
       "company": "Fiction Studios",
       "period": "08/2025 - 04/2026",
       "location": "Ankara, TR",
-      "description": "Bilkent Cyberpark’ta Fiction Studios’un kurucu ortağı ve teknik lideri; üç ek katkıcının çalışmalarının koordinasyonu. Müzeler ve turistler için çok dilli LLM rehberinin geliştirilmesi ve müşterilere ve yatırımcılara sunulması.",
+      "description": "Bilkent Cyberpark’ta Fiction Studios’un kurucu ortağı ve teknik lideri; üç ek katkıcının çalışmalarının koordinasyonu. Müzeler ve turistler için çok dilli LLM sesli rehberi Meddah’ın backend’inin geliştirilmesi ve müşterilere ve yatırımcılara sunulması.",
       "link": "https://github.com/fiction-ai-studios",
       "category": "professional"
     },
@@ -248,6 +248,20 @@
       "summary": "Bulut mimarisi; EC2, Lambda, S3, RDS ve DynamoDB dahil AWS servisleri."
     }
   ],
+  "service": [
+    {
+      "title": "Shared Task Ortak Organizatörü, SIGTURK 2027",
+      "venue": "SIGTURK 2027 Workshop @ ACL 2027",
+      "period": "2026 - Bugün",
+      "url": "https://sigturk.github.io/workshops/2027/shared-task/"
+    },
+    {
+      "title": "Yürütücü, METU NLP Connect",
+      "venue": "ODTÜ Uygulamalı NLP Grubu'nun uzman röportaj serisi; 4 bölümde ortak sunucu",
+      "period": "2026 - Bugün",
+      "url": "https://www.youtube.com/@metunlpconnect"
+    }
+  ],
   "languages": [
     {
       "name": "Türkçe",
@@ -291,10 +305,34 @@
   },
   "publications": [
     {
-      "title": "Exact First, Then Fast: An Event-for-Event C++ Rebuild of the Agenthon ABIDES Market",
-      "subtitle": "Agenthon Workshop @ [NeurIPS 2026](https://neurips.cc/Conferences/2026) - Yüz yüze poster sunumu için kabul edildi",
+      "title": "Patching Fails Small, Attribution Fails Large: Component Effects in 16-Bit Language Models",
+      "subtitle": "Transactions on Machine Learning Research (TMLR) - Hakem değerlendirmesinde",
       "period": "2026",
-      "description": "Göktürk Batın Dervişoğlu, Muhammed Faruk Aytin, Muhammed Rüşen Birben.\n\nAgenthon ABIDES piyasa simülatörü; olay sırası, rastgele sayı dizileri ve referans çıktılar korunarak C++ ile yeniden geliştirildi. 6.900 rastgele karşılaştırmada birebir uyum doğrulandı; en büyük açık benchmark’ta simülasyon döngüsünde 1.299× hızlanma elde edildi.\n\nAtlanta, ABD, 12 Aralık 2026.",
+      "description": "Tek yazar.\n\nOn dil modelinde bfloat16’nın müdahale tabanlı yorumlanabilirlik ölçümlerine bir hata tabanı koyduğunu, attribution yönteminin ise tekil nöron etkilerinin sırasını ve işaretini koruduğunu (sıra korelasyonu ≥ 0,97) gösteriyor; 16 bit müdahalelere güvenmeden önce bu tabanın ölçülmesini öneriyor.",
+      "tags": [
+        "Interpretability",
+        "Numerical Precision",
+        "bfloat16"
+      ],
+      "links": []
+    },
+    {
+      "title": "Tokenization Strategies for Pretraining Generative Large Language Models: A Case Study in Turkish",
+      "subtitle": "Journal of Artificial Intelligence Research (JAIR) - Hakem değerlendirmesinde",
+      "period": "2026",
+      "description": "Evren Ayberk Munis ve **Ruşen Birben** (eşit katkı, ortak birinci yazar), Çağrı Toraman.\n\nTürkçe LLM ön eğitimi için morfem sınırlı BPE dahil sekiz kayıpsız tokenizer’ın sabit 30 GB bütçeyle karşılaştırılması: bits per byte farkı en fazla %1,2 iken tahmini eğitim maliyeti %49’a kadar değişti; morfem sınırlı BPE, byte düzeyinde BPE’den %23-29 daha fazla hesaplama gerektirdi.",
+      "tags": [
+        "Tokenization",
+        "Pretraining",
+        "Turkish"
+      ],
+      "links": []
+    },
+    {
+      "title": "Exact First, Then Fast: An Event-for-Event C++ Rebuild of the Agenthon ABIDES Market",
+      "subtitle": "Agenthon Workshop @ [NeurIPS 2026](https://neurips.cc/Conferences/2026) - Yüz yüze poster, Atlanta, ABD, 12 Aralık 2026",
+      "period": "2026",
+      "description": "Göktürk Batın Dervişoğlu, Muhammed Faruk Aytin, **Muhammed Rüşen Birben**.\n\nAgenthon ABIDES piyasa simülatörü; olay sırası, rastgele sayı dizileri ve referans çıktılar korunarak C++ ile yeniden geliştirildi. 6.900 rastgele karşılaştırmada birebir uyum doğrulandı; en büyük açık benchmark’ta simülasyon döngüsünde 1.299× hızlanma elde edildi.",
       "tags": [
         "C++",
         "ABIDES",
@@ -309,9 +347,9 @@
     },
     {
       "title": "Türk Kültürel Bilgi Veri Kümesi",
-      "subtitle": "MRL Workshop @ [EMNLP 2026](https://2026.emnlp.org/) - Kabul edilmiş veri katkısı; ortak benchmark makalesi hazırlanıyor",
+      "subtitle": "MRL Workshop @ [EMNLP 2026](https://2026.emnlp.org/) - Veri katkısı kabul edildi; ortak makale hazırlanıyor",
       "period": "2026",
-      "description": "15 alanı kapsayan Türk kültürel bilgi veri kümesi için kaynak temelli ajan hattını ve veri hazırlığını yönetti.\n\n1.200 aday soru-cevap çiftini taradı; 500 çifti Büşra Tufan’ın sosyolojik incelemesine seçerek 300 çiftlik nihai teslimi hazırladı.\n\nİngilizce çevirileri inceledi; danışman: Çağrı Toraman.",
+      "description": "15 alanı kapsayan Türk kültürel bilgi veri kümesi için kaynak temelli ajan hattını ve veri hazırlığını yönetti.\n\n15 alan ajanıyla 1.200 aday soru-cevap çifti üretti, bunlardan 500’ünü Büşra Tufan’ın sosyolojik incelemesi için seçti (nihai 300 çifti Büşra Tufan seçti) ve teslimi hazırladı.\n\nİngilizce çevirileri inceledi; danışman: Çağrı Toraman.",
       "tags": [
         "Cultural QA",
         "Data Curation",
