@@ -38,6 +38,7 @@ describe("ThemeToggle", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     delete document.documentElement.dataset.theme;
+    delete document.documentElement.dataset.palette;
     document.documentElement.style.colorScheme = "";
     document.documentElement.classList.remove("dark");
   });
@@ -48,20 +49,34 @@ describe("ThemeToggle", () => {
     fireEvent.click(screen.getByRole("button", { name: "Switch to dark theme" }));
 
     expect(document.documentElement).toHaveAttribute("data-theme", "dark");
+    expect(document.documentElement).not.toHaveAttribute("data-palette");
     expect(document.documentElement).toHaveClass("dark");
     expect(document.documentElement.style.colorScheme).toBe("dark");
     expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe("dark");
-    expect(screen.getByRole("button", { name: "Switch to light theme" }))
-      .toContainElement(document.querySelector('[data-nav-word="Theme: 0"]'));
+    expect(screen.getByRole("button", { name: "Switch to phosphor theme" }))
+      .toContainElement(document.querySelector('[data-nav-word="Theme: dark"]'));
+
+    fireEvent.click(screen.getByRole("button", { name: "Switch to phosphor theme" }));
+
+    expect(document.documentElement).toHaveAttribute("data-theme", "dark");
+    expect(document.documentElement).toHaveAttribute("data-palette", "phosphor");
+    expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe("phosphor");
+
+    fireEvent.click(screen.getByRole("button", { name: "Switch to phosphor paper theme" }));
+
+    expect(document.documentElement).toHaveAttribute("data-theme", "light");
+    expect(document.documentElement).toHaveAttribute("data-palette", "phosphor");
+    expect(document.documentElement).not.toHaveClass("dark");
+    expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe("phosphor-paper");
 
     fireEvent.click(screen.getByRole("button", { name: "Switch to light theme" }));
 
     expect(document.documentElement).toHaveAttribute("data-theme", "light");
-    expect(document.documentElement).not.toHaveClass("dark");
+    expect(document.documentElement).not.toHaveAttribute("data-palette");
     expect(document.documentElement.style.colorScheme).toBe("light");
     expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe("light");
     expect(screen.getByRole("button", { name: "Switch to dark theme" }))
-      .toContainElement(document.querySelector('[data-nav-word="Theme: 1"]'));
+      .toContainElement(document.querySelector('[data-nav-word="Theme: light"]'));
   });
 
   it("still applies a theme when browser storage is unavailable", () => {

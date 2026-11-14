@@ -108,7 +108,7 @@
     "slug": "segment-anything",
     "collection": "demos",
     "status": "live",
-    "summary": "Click any object in an image to instantly segment it. SAM 2.1 running entirely in your browser via WebAssembly.",
+    "summary": "Click any object in an image to segment it. SAM 2.1 runs entirely in your browser via WebAssembly.",
     "description": "Interactive image segmentation with SAM 2.1 Tiny, running locally via WASM.",
     "tags": [
       "Segmentation",

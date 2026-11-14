@@ -1,6 +1,8 @@
 "use client";
 
 import { useSimulation } from "./SimulationFrame";
+import { Button, Card, Chip, Slider, Stat } from "@/components/ui";
+import { mix, readPalette, usePalette } from "../theme";
 
 import {
   useMemo,
@@ -262,6 +264,7 @@ export default function FireflySynchronization(): React.ReactElement {
 
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const palette = usePalette();
 
   const initialFireflies = useMemo(() => createScene(initialScene, seed), [initialScene, seed]);
   const firefliesRef = useRef<Firefly[]>(initialFireflies);
@@ -326,11 +329,8 @@ export default function FireflySynchronization(): React.ReactElement {
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    const bg = ctx.createLinearGradient(0, 0, width, height);
-    bg.addColorStop(0, "#030d0d");
-    bg.addColorStop(0.55, "#071713");
-    bg.addColorStop(1, "#03080b");
-    ctx.fillStyle = bg;
+    const palette = readPalette();
+    ctx.fillStyle = palette.surface;
     ctx.fillRect(0, 0, width, height);
 
     const haze = ctx.createRadialGradient(
@@ -341,9 +341,9 @@ export default function FireflySynchronization(): React.ReactElement {
       height * 0.42,
       width * 0.52
     );
-    haze.addColorStop(0, "rgba(250, 204, 21, 0.09)");
-    haze.addColorStop(0.48, "rgba(45, 212, 191, 0.05)");
-    haze.addColorStop(1, "rgba(3, 8, 11, 0)");
+    haze.addColorStop(0, mix(palette.accent2, 9));
+    haze.addColorStop(0.48, mix(palette.accent, 5));
+    haze.addColorStop(1, mix(palette.surface, 0));
     ctx.fillStyle = haze;
     ctx.fillRect(0, 0, width, height);
 
@@ -357,7 +357,7 @@ export default function FireflySynchronization(): React.ReactElement {
       const py = hoveredFirefly.y * scaleY;
       const radiusPx = radiusRef.current * ((scaleX + scaleY) * 0.5);
 
-      ctx.strokeStyle = "rgba(94, 234, 212, 0.22)";
+      ctx.strokeStyle = mix(palette.accent, 22);
       ctx.lineWidth = 1.5;
       ctx.setLineDash([5, 7]);
       ctx.beginPath();
@@ -366,8 +366,8 @@ export default function FireflySynchronization(): React.ReactElement {
       ctx.setLineDash([]);
 
       const glow = ctx.createRadialGradient(px, py, 0, px, py, radiusPx);
-      glow.addColorStop(0, "rgba(94, 234, 212, 0.08)");
-      glow.addColorStop(1, "rgba(94, 234, 212, 0)");
+      glow.addColorStop(0, mix(palette.accent, 8));
+      glow.addColorStop(1, mix(palette.accent, 0));
       ctx.fillStyle = glow;
       ctx.beginPath();
       ctx.arc(px, py, radiusPx, 0, Math.PI * 2);
@@ -382,9 +382,9 @@ export default function FireflySynchronization(): React.ReactElement {
 
       if (flash > 0.01) {
         const glow = ctx.createRadialGradient(px, py, 0, px, py, radiusPx * 5.4);
-        glow.addColorStop(0, `rgba(255, 248, 204, ${0.95 * flash})`);
-        glow.addColorStop(0.4, `rgba(250, 204, 21, ${0.34 * flash})`);
-        glow.addColorStop(1, "rgba(250, 204, 21, 0)");
+        glow.addColorStop(0, mix(palette.accent2, 95 * flash));
+        glow.addColorStop(0.4, mix(palette.accent2, 34 * flash));
+        glow.addColorStop(1, mix(palette.accent2, 0));
         ctx.fillStyle = glow;
         ctx.beginPath();
         ctx.arc(px, py, radiusPx * 5.4, 0, Math.PI * 2);
@@ -393,19 +393,24 @@ export default function FireflySynchronization(): React.ReactElement {
 
       ctx.fillStyle =
         flash > 0.18
-          ? "#fff7cc"
+          ? palette.accent2
           : firefly.phase > 0.82
-            ? "#facc15"
-            : "rgba(153, 246, 228, 0.34)";
+            ? mix(palette.accent2, 75)
+            : mix(palette.accent, 34);
       ctx.beginPath();
       ctx.arc(px, py, radiusPx, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    ctx.strokeStyle = "rgba(187, 247, 208, 0.09)";
+    ctx.strokeStyle = mix(palette.foreground, 10);
     ctx.lineWidth = 1;
     ctx.strokeRect(14, 14, width - 28, height - 28);
   }, [canvasWidth, hoveredIndex]);
+
+  // Redraw when the theme changes.
+  useEffect(() => {
+    render();
+  }, [render, palette]);
 
   const emitPulse = useCallback((worldX: number, worldY: number) => {
     const radiusValue = radiusRef.current * 0.82;
@@ -622,15 +627,15 @@ export default function FireflySynchronization(): React.ReactElement {
   return (
     <div className="w-full max-w-4xl mx-auto space-y-8">
       <div>
-        <h2 className="font-mono text-2xl sm:text-3xl font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
+        <h2 className="font-mono text-2xl sm:text-3xl font-semibold text-foreground mb-2">
           Firefly Synchronization
         </h2>
-        <p className="text-neutral-500 dark:text-neutral-400 text-base sm:text-lg">
+        <p className="text-muted text-base sm:text-lg">
           From scattered clocks to one shared pulse.
         </p>
       </div>
 
-      <div className="space-y-4 text-neutral-700 dark:text-neutral-300 text-sm sm:text-base leading-relaxed">
+      <div className="space-y-4 text-foreground text-sm sm:text-base leading-relaxed">
         <p>
           The surprising part is the transition. At first the field is only a
           crowd of private clocks. Then the local nudges begin to matter. With
@@ -639,46 +644,46 @@ export default function FireflySynchronization(): React.ReactElement {
         </p>
 
         <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-4">
-            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
+          <div className="border border-line bg-surface/50 p-4">
+            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-sub">
               What It Is
             </div>
-            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
+            <p className="mt-2 text-sm text-foreground">
               Fixed local oscillators that only react when nearby neighbors flash.
             </p>
           </div>
-          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-4">
-            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
+          <div className="border border-line bg-surface/50 p-4">
+            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-sub">
               Why It Matters
             </div>
-            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
+            <p className="mt-2 text-sm text-foreground">
               It shows emergence in time rather than shape. Order appears as synchrony, not geometry.
             </p>
           </div>
-          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-4">
-            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
+          <div className="border border-line bg-surface/50 p-4">
+            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-sub">
               What To Notice
             </div>
-            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
+            <p className="mt-2 text-sm text-foreground">
               First the flashes are random. Then whole bursts start arriving together. That is the emergence moment.
             </p>
           </div>
         </div>
 
-        <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-[linear-gradient(135deg,rgba(6,95,70,0.08),rgba(250,204,21,0.14))] dark:bg-[linear-gradient(135deg,rgba(16,185,129,0.1),rgba(250,204,21,0.12))] p-4">
+        <div className="border border-line bg-gradient-to-br from-accent-4/10 to-accent-2/10 p-4">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
+              <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-sub">
                 Scene
               </div>
-              <div className="mt-2 text-base font-medium text-neutral-900 dark:text-neutral-100">
+              <div className="mt-2 text-base font-medium text-foreground">
                 {currentScene.label}
               </div>
-              <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
+              <p className="mt-1 text-sm text-foreground">
                 {currentScene.subtitle}
               </p>
             </div>
-            <p className="max-w-md text-sm leading-relaxed text-neutral-600 dark:text-neutral-300">
+            <p className="max-w-md text-sm leading-relaxed text-foreground">
               Press <span className="font-mono">Play</span> to start the
               transition. If you want to replay it from the beginning, hit
               <span className="font-mono"> Restart transition</span>.
@@ -689,97 +694,49 @@ export default function FireflySynchronization(): React.ReactElement {
 
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-2">
-          {SCENES.map((scene) => {
-            const active = scene.id === selectedScene;
-            return (
-              <button
-                key={scene.id}
-                type="button"
-                onClick={() => handleSceneChange(scene)}
-                className={`rounded-full border px-3 py-1.5 text-xs font-mono transition ${
-                  active
-                    ? "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:border-emerald-500 dark:bg-emerald-500/10 dark:text-emerald-300"
-                    : "border-neutral-300 text-neutral-600 hover:border-neutral-500 hover:text-neutral-900 dark:border-neutral-700 dark:text-neutral-300 dark:hover:border-neutral-500 dark:hover:text-neutral-100"
-                }`}
-              >
-                {scene.label}
-              </button>
-            );
-          })}
+          {SCENES.map((scene) => (
+            <Chip
+              key={scene.id}
+              selected={scene.id === selectedScene}
+              onClick={() => handleSceneChange(scene)}
+            >
+              {scene.label}
+            </Chip>
+          ))}
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <label className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/50 p-4">
-            <div className="flex items-baseline justify-between gap-4">
-              <span className="text-xs font-mono uppercase tracking-[0.18em] text-neutral-500">
-                Nudge Strength
-              </span>
-              <span className="text-sm font-mono tabular-nums text-neutral-900 dark:text-neutral-100">
-                {coupling.toFixed(2)}
-              </span>
-            </div>
-            <input
-              aria-label="Nudge strength"
-              type="range"
+          <Card>
+            <Slider
+              label="Nudge Strength"
               min={0.18}
               max={0.55}
               step={0.01}
               value={coupling}
-              onChange={(event) => setCoupling(Number(event.target.value))}
-              className="mt-3 w-full accent-emerald-500"
+              display={coupling.toFixed(2)}
+              onChange={setCoupling}
             />
-          </label>
-
-          <label className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/50 p-4">
-            <div className="flex items-baseline justify-between gap-4">
-              <span className="text-xs font-mono uppercase tracking-[0.18em] text-neutral-500">
-                Neighbor Reach
-              </span>
-              <span className="text-sm font-mono tabular-nums text-neutral-900 dark:text-neutral-100">
-                {Math.round(radius)} px
-              </span>
-            </div>
-            <input
-              aria-label="Neighbor reach"
-              type="range"
+          </Card>
+          <Card>
+            <Slider
+              label="Neighbor Reach"
               min={110}
               max={260}
               step={5}
               value={radius}
-              onChange={(event) => setRadius(Number(event.target.value))}
-              className="mt-3 w-full accent-amber-500"
+              display={`${Math.round(radius)} px`}
+              onChange={setRadius}
             />
-          </label>
+          </Card>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/50 p-4">
-            <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-neutral-500">
-              Stage
-            </div>
-            <div className="mt-2 text-2xl font-mono tabular-nums text-neutral-900 dark:text-neutral-100">
-              {stats.stage}
-            </div>
-          </div>
-          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/50 p-4">
-            <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-neutral-500">
-              Sync Score
-            </div>
-            <div className="mt-2 text-2xl font-mono tabular-nums text-neutral-900 dark:text-neutral-100">
-              {Math.round(stats.sync * 100)}%
-            </div>
-          </div>
-          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/50 p-4">
-            <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-neutral-500">
-              Live Coupling
-            </div>
-            <div className="mt-2 text-2xl font-mono tabular-nums text-neutral-900 dark:text-neutral-100">
-              {stats.liveCoupling.toFixed(2)}
-            </div>
-          </div>
+          <Card><Stat label="Stage" value={stats.stage} /></Card>
+          <Card><Stat label="Sync Score" value={`${Math.round(stats.sync * 100)}%`} /></Card>
+          <Card><Stat label="Live Coupling" value={stats.liveCoupling.toFixed(2)} /></Card>
         </div>
 
-        <div className="rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden bg-[#03080b] shadow-[0_16px_40px_rgba(15,23,42,0.1)]">
+        <div className="border border-line overflow-hidden bg-surface">
           <div
             ref={wrapRef}
             className="relative w-full"
@@ -795,11 +752,11 @@ export default function FireflySynchronization(): React.ReactElement {
               role="img"
               aria-label={`${currentScene.count} simulated firefly clocks. Stage: ${stats.stage}; synchronization ${Math.round(stats.sync * 100)} percent; ${stats.flashes} flashing now.`}
             />
-            <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between p-3 text-[10px] font-mono uppercase tracking-[0.18em] text-white/60">
+            <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between p-3 text-[10px] font-mono uppercase tracking-[0.18em] text-foreground/60">
               <span>Scattered first, synchronized later</span>
               <span>{currentScene.count} clocks</span>
             </div>
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-between p-3 text-[10px] font-mono uppercase tracking-[0.18em] text-white/60">
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-between p-3 text-[10px] font-mono uppercase tracking-[0.18em] text-foreground/60">
               <span>{stats.stage}</span>
               <span>{stats.flashes} flashes now</span>
             </div>
@@ -807,46 +764,22 @@ export default function FireflySynchronization(): React.ReactElement {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setPlaying((current) => !current)}
-            className={`px-3 py-1.5 text-xs font-mono rounded border transition ${
-              playing
-                ? "border-amber-500 bg-amber-500/10 text-amber-700 dark:border-amber-600 dark:bg-amber-600/10 dark:text-amber-400"
-                : "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:border-emerald-600 dark:bg-emerald-600/10 dark:text-emerald-300"
-            }`}
-          >
+          <Button size="sm" variant={playing ? "secondary" : "primary"} onClick={() => setPlaying((current) => !current)}>
             {playing ? "Pause" : "Play"}
-          </button>
-          <button
-            type="button"
-            onClick={handleRestart}
-            className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-neutral-500 hover:text-neutral-900 dark:hover:border-neutral-500 dark:hover:text-neutral-100 transition"
-          >
+          </Button>
+          <Button size="sm" onClick={handleRestart}>
             Restart transition
-          </button>
-          <button
-            type="button"
-            onClick={() => setAutoRestart((current) => !current)}
-            className={`px-3 py-1.5 text-xs font-mono rounded border transition ${
-              autoRestart
-                ? "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:border-emerald-600 dark:bg-emerald-600/10 dark:text-emerald-300"
-                : "border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-neutral-500 hover:text-neutral-900 dark:hover:border-neutral-500 dark:hover:text-neutral-100"
-            }`}
-          >
+          </Button>
+          <Chip selected={autoRestart} onClick={() => setAutoRestart((current) => !current)}>
             Auto-restart: {autoRestart ? "On" : "Off"}
-          </button>
-          <button
-            type="button"
-            onClick={() => emitPulse(WORLD_W * 0.5, WORLD_H * 0.5)}
-            className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-neutral-500 hover:text-neutral-900 dark:hover:border-neutral-500 dark:hover:text-neutral-100 transition"
-          >
+          </Chip>
+          <Button size="sm" onClick={() => emitPulse(WORLD_W * 0.5, WORLD_H * 0.5)}>
             Pulse center
-          </button>
+          </Button>
         </div>
       </div>
 
-      <div className="text-neutral-700 dark:text-neutral-300 text-sm sm:text-base leading-relaxed space-y-3 border-l-2 border-emerald-300 dark:border-emerald-800 pl-4">
+      <div className="text-foreground text-sm sm:text-base leading-relaxed space-y-3 border-l-2 border-accent-4 pl-4">
         <p>
           This section works only if the main field tells the story by itself.
           You should be able to watch independent blinking give way to bursts
@@ -858,7 +791,7 @@ export default function FireflySynchronization(): React.ReactElement {
           the population stops behaving like many clocks and starts behaving
           like one distributed clock.
         </p>
-        <p className="text-neutral-500 dark:text-neutral-400">
+        <p className="text-muted">
           Emergence here is a transition: from private timing to public rhythm.
         </p>
       </div>

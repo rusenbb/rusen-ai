@@ -33,7 +33,7 @@ export default function BgKickerToggle() {
         aria-hidden="true"
         className={
           disabled
-            ? "inline-block w-[0.45rem] h-[0.45rem] rounded-full bg-neutral-400 dark:bg-neutral-600"
+            ? "inline-block w-[0.45rem] h-[0.45rem] rounded-full bg-sub"
             : "signal-blip"
         }
       />

@@ -101,7 +101,7 @@ export default function NotFoundTypewriter() {
     <div className="relative z-10 mt-12 flex w-full items-center justify-center sm:mt-16">
       {variant ? (
         <div className="flex flex-col items-center gap-10">
-          <p className="pointer-events-none font-mono text-lg tracking-[0.14em] text-neutral-700 dark:text-neutral-200 sm:text-2xl">
+          <p className="pointer-events-none font-mono text-lg tracking-[0.14em] text-foreground sm:text-2xl">
             {message.slice(0, visibleCount)}
             <span
               aria-hidden="true"
@@ -113,14 +113,14 @@ export default function NotFoundTypewriter() {
           <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 pt-2 font-mono text-xs tracking-[0.12em] sm:text-sm">
             <Link
               href="/"
-              className="pointer-events-auto text-neutral-600 underline decoration-neutral-400 underline-offset-[0.32em] transition hover:text-neutral-950 hover:decoration-neutral-700 dark:text-neutral-300 dark:decoration-neutral-600 dark:hover:text-neutral-50 dark:hover:decoration-neutral-300"
+              className="pointer-events-auto text-muted underline decoration-line-strong/40 underline-offset-[0.32em] transition hover:text-foreground hover:decoration-line-strong"
             >
               {variant.homeLabel}
             </Link>
             <button
               type="button"
               onClick={() => router.push(pickRandomProjectPath())}
-              className="pointer-events-auto text-neutral-600 underline decoration-neutral-400 underline-offset-[0.32em] transition hover:text-neutral-950 hover:decoration-neutral-700 dark:text-neutral-300 dark:decoration-neutral-600 dark:hover:text-neutral-50 dark:hover:decoration-neutral-300"
+              className="pointer-events-auto text-muted underline decoration-line-strong/40 underline-offset-[0.32em] transition hover:text-foreground hover:decoration-line-strong"
             >
               {variant.randomLabel}
             </button>

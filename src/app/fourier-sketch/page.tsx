@@ -9,7 +9,7 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 
-import { DemoFootnote, DemoHeader, DemoPage, DemoPanel } from "@/components/ui";
+import { Button, Chip, DemoFootnote, DemoHeader, DemoPage, DemoPanel, Slider } from "@/components/ui";
 
 import {
   dft,
@@ -22,6 +22,7 @@ import {
   type FourierTerm,
   type Point,
 } from "./math";
+import { useTokenColors } from "./useTokenColors";
 
 const PRESETS: Array<{ label: string; create: () => Point[] }> = [
   { label: "Heart", create: () => makeHeartPath() },
@@ -67,17 +68,7 @@ function FourierCanvas({
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
-  const [legendColor, setLegendColor] = useState("#737373");
-
-  useEffect(() => {
-    const update = () => {
-      setLegendColor(getComputedStyle(document.documentElement).getPropertyValue("--muted").trim());
-    };
-    update();
-    const observer = new MutationObserver(update);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
-    return () => observer.disconnect();
-  }, []);
+  const colors = useTokenColors(["--muted", "--line", "--accent", "--accent-2", "--accent-3", "--accent-5"] as const);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -113,7 +104,7 @@ function FourierCanvas({
     });
 
     context.lineWidth = 1;
-    context.strokeStyle = "rgba(115, 115, 115, 0.20)";
+    context.strokeStyle = colors["--line"];
     for (let coordinate = -1; coordinate <= 1; coordinate += 0.5) {
       const a = project({ x: coordinate, y: -1.1 });
       const b = project({ x: coordinate, y: 1.1 });
@@ -124,10 +115,12 @@ function FourierCanvas({
     }
     context.setLineDash([4, 5]);
     context.lineWidth = 1.2;
-    context.strokeStyle = drawing ? "rgba(245, 158, 11, 0.92)" : "rgba(6, 182, 212, 0.44)";
+    context.strokeStyle = drawing ? colors["--accent-2"] : colors["--accent"];
+    context.globalAlpha = drawing ? 0.92 : 0.5;
     drawPolyline(context, path, project);
+    context.globalAlpha = 1;
     if (!drawing && path.length > 1) {
-      context.strokeStyle = "#f97316";
+      context.strokeStyle = colors["--accent-5"];
       context.setLineDash([9, 4]);
       drawPolyline(context, [path[path.length - 1], path[0]], project);
     }
@@ -135,8 +128,10 @@ function FourierCanvas({
 
     if (reconstruction.length > 0) {
       context.lineWidth = 2.1;
-      context.strokeStyle = "rgba(217, 70, 239, 0.88)";
+      context.strokeStyle = colors["--accent-3"];
+      context.globalAlpha = 0.9;
       drawPolyline(context, reconstruction, project);
+      context.globalAlpha = 1;
     }
 
     if (terms.length > 0) {
@@ -149,29 +144,42 @@ function FourierCanvas({
           y: current.y + term.re * Math.sin(angle) + term.im * Math.cos(angle),
         };
         const center = project(current);
-        context.strokeStyle = "rgba(245, 158, 11, 0.34)";
+        context.strokeStyle = colors["--accent-2"];
+        context.globalAlpha = 0.34;
         context.beginPath();
         context.arc(center.x, center.y, term.amplitude * scale, 0, Math.PI * 2);
         context.stroke();
+        context.globalAlpha = 0.92;
         const projectedNext = project(next);
-        context.strokeStyle = "rgba(245, 158, 11, 0.92)";
         context.beginPath(); context.moveTo(center.x, center.y); context.lineTo(projectedNext.x, projectedNext.y); context.stroke();
+        context.globalAlpha = 1;
         current = next;
       });
       const head = project(current);
-      context.fillStyle = "rgba(217, 70, 239, 1)";
+      context.fillStyle = colors["--accent-3"];
       context.beginPath(); context.arc(head.x, head.y, 5, 0, Math.PI * 2); context.fill();
     }
 
-    context.fillStyle = legendColor;
+    context.fillStyle = colors["--muted"];
     context.font = "11px ui-monospace, SFMono-Regular, Menlo, monospace";
     if (path.length < 2) {
       context.fillText("draw one continuous stroke", 12, size.height - 15);
     } else {
-      context.fillText("cyan: stroke · orange: closure", 12, size.height - 30);
-      context.fillText("magenta: reconstruction", 12, size.height - 15);
+      const legend: Array<[string, string]> = [
+        [colors["--accent"], "stroke"],
+        [colors["--accent-5"], "closure"],
+        [colors["--accent-3"], "reconstruction"],
+      ];
+      let x = 12;
+      legend.forEach(([color, label]) => {
+        context.strokeStyle = color;
+        context.lineWidth = 2;
+        context.beginPath(); context.moveTo(x, size.height - 19); context.lineTo(x + 14, size.height - 19); context.stroke();
+        context.fillText(label, x + 20, size.height - 15);
+        x += 20 + context.measureText(label).width + 16;
+      });
     }
-  }, [drawing, legendColor, path, reconstruction, size, terms, time]);
+  }, [colors, drawing, path, reconstruction, size, terms, time]);
 
   return (
     <canvas
@@ -268,45 +276,45 @@ export default function FourierSketchPage() {
         description="Draw a path. The browser samples it as a periodic complex signal, finds its Fourier coefficients, and rebuilds the drawing with rotating vectors."
         actions={
           <div className="flex gap-2">
-            <button type="button" onClick={() => setPlaying((current) => !current)} className="border border-fuchsia-500 bg-fuchsia-500/10 px-3 py-2 font-mono text-xs uppercase tracking-[0.14em] text-fuchsia-700 transition hover:bg-fuchsia-500/20 dark:text-fuchsia-300">{playing ? "Pause" : "Animate"}</button>
-            <button type="button" onClick={clearSketch} className="border border-[var(--line)] px-3 py-2 font-mono text-xs uppercase tracking-[0.14em] text-neutral-500 transition hover:border-fuchsia-500/60">Clear</button>
+            <Button variant="primary" size="sm" onClick={() => setPlaying((current) => !current)}>{playing ? "Pause" : "Animate"}</Button>
+            <Button size="sm" onClick={clearSketch}>Clear</Button>
           </div>
         }
       />
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(330px,0.75fr)]">
-        <DemoPanel title="Draw → decompose → trace" description="Drag one continuous stroke in the field. The cyan dashed source is closed before sampling; orange marks the synthetic closing edge; magenta is its retained Fourier reconstruction." padding="none">
+        <DemoPanel title="Draw → decompose → trace" description="Drag one continuous stroke in the field. The dashed source stroke is closed before sampling; the legend marks the synthetic closing edge and the retained Fourier reconstruction." padding="none">
           <FourierCanvas path={path} terms={visibleTerms} reconstruction={reconstruction} time={time} drawing={drawing} onStartStroke={startStroke} onContinueStroke={continueStroke} onFinishStroke={finishStroke} />
         </DemoPanel>
 
         <div className="space-y-6">
           <DemoPanel title="Signal controls" description="More components retain more detail; the largest amplitudes are added first." padding="md">
-            <label className="block font-mono text-xs uppercase tracking-[0.14em] text-neutral-500">Retained components <span className="ml-2 text-fuchsia-700 dark:text-fuchsia-300">{componentCount} of {allTerms.length || 0}</span><input type="range" min="1" max={maxComponents} step="1" value={Math.min(harmonics, maxComponents)} onChange={(event) => setHarmonics(Number(event.target.value))} className="mt-3 block w-full accent-fuchsia-500" disabled={allTerms.length === 0} /></label>
-            <div className="mt-3 grid grid-cols-3 gap-1">
-              {[12, 40].map((count) => <button key={count} type="button" onClick={() => setHarmonics(Math.min(count, maxComponents))} className="border border-[var(--line)] px-2 py-2 font-mono text-[10px] uppercase tracking-[0.12em] text-neutral-500 transition hover:border-fuchsia-500 hover:text-fuchsia-700 dark:hover:text-fuchsia-300">Use {count}</button>)}
-              <button type="button" onClick={() => setHarmonics(maxComponents)} className="border border-fuchsia-500/50 bg-fuchsia-500/5 px-2 py-2 font-mono text-[10px] uppercase tracking-[0.12em] text-fuchsia-700 transition hover:bg-fuchsia-500/10 dark:text-fuchsia-300">Use all {allTerms.length || 0}</button>
+<Slider label="Retained components" value={Math.min(harmonics, maxComponents)} min={1} max={maxComponents} step={1} display={`${componentCount} of ${allTerms.length || 0}`} onChange={setHarmonics} disabled={allTerms.length === 0} />
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {[12, 40].map((count) => <Chip key={count} onClick={() => setHarmonics(Math.min(count, maxComponents))}>Use {count}</Chip>)}
+              <Chip onClick={() => setHarmonics(maxComponents)}>Use all {allTerms.length || 0}</Chip>
             </div>
-            <label className="mt-5 block font-mono text-xs uppercase tracking-[0.14em] text-neutral-500">Angular speed <span className="ml-2 text-amber-700 dark:text-amber-300">{speed.toFixed(1)}×</span><input type="range" min="0.2" max="2.4" step="0.1" value={speed} onChange={(event) => setSpeed(Number(event.target.value))} className="mt-3 block w-full accent-amber-500" /></label>
-            <div className="mt-5 grid grid-cols-3 gap-1">
-              {PRESETS.map((preset) => <button key={preset.label} type="button" onClick={() => loadPreset(preset.create)} className="border border-[var(--line)] px-2 py-2 font-mono text-[10px] uppercase tracking-[0.12em] text-neutral-500 transition hover:border-cyan-500 hover:text-cyan-700 dark:hover:text-cyan-300">{preset.label}</button>)}
+<Slider className="mt-5" label="Angular speed" value={speed} min={0.2} max={2.4} step={0.1} display={`${speed.toFixed(1)}×`} onChange={setSpeed} />
+            <div className="mt-5 flex flex-wrap gap-1.5">
+              {PRESETS.map((preset) => <Chip key={preset.label} onClick={() => loadPreset(preset.create)}>{preset.label}</Chip>)}
             </div>
           </DemoPanel>
           <DemoPanel title="Sampling ledger" padding="md">
             <p aria-live="polite" className="mb-4 text-sm">Sample reconstruction RMSE: <strong className="font-mono">{sampleError.toFixed(6)}</strong> path units. Measured at the {samples.length} resampled points, including the synthetic closing segment.</p>
-            <div className="grid grid-cols-3 gap-px border border-[var(--line)] bg-[var(--line)] font-mono text-xs"><div className="bg-[var(--surface)] p-3"><span className="block text-[10px] uppercase tracking-[0.12em] text-neutral-500">stroke points</span><strong>{path.length}</strong></div><div className="bg-[var(--surface)] p-3"><span className="block text-[10px] uppercase tracking-[0.12em] text-neutral-500">DFT samples</span><strong>{samples.length}</strong></div><div className="bg-[var(--surface)] p-3"><span className="block text-[10px] uppercase tracking-[0.12em] text-neutral-500">time</span><strong>{time.toFixed(3)}</strong></div></div>
-            <p className="mt-4 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">Every component is one complex coefficient: a radius, a phase, and an integer rotation frequency. Their vector sum is the tracing point.</p>
-            <p className="mt-3 text-xs leading-relaxed text-neutral-500">All {SAMPLE_COUNT} terms exactly reproduce this {SAMPLE_COUNT}-sample signal. More than {SAMPLE_COUNT} terms would add no information unless the sketch is sampled more densely.</p>
+            <div className="grid grid-cols-3 gap-px border border-[var(--line)] bg-[var(--line)] font-mono text-xs"><div className="bg-[var(--surface)] p-3"><span className="block text-[10px] uppercase tracking-[0.12em] text-sub">stroke points</span><strong>{path.length}</strong></div><div className="bg-[var(--surface)] p-3"><span className="block text-[10px] uppercase tracking-[0.12em] text-sub">DFT samples</span><strong>{samples.length}</strong></div><div className="bg-[var(--surface)] p-3"><span className="block text-[10px] uppercase tracking-[0.12em] text-sub">time</span><strong>{time.toFixed(3)}</strong></div></div>
+            <p className="mt-4 text-sm leading-relaxed text-muted">Every component is one complex coefficient: a radius, a phase, and an integer rotation frequency. Their vector sum is the tracing point.</p>
+            <p className="mt-3 text-xs leading-relaxed text-sub">All {SAMPLE_COUNT} terms exactly reproduce this {SAMPLE_COUNT}-sample signal. More than {SAMPLE_COUNT} terms would add no information unless the sketch is sampled more densely.</p>
           </DemoPanel>
         </div>
       </div>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(330px,0.85fr)]">
         <DemoPanel className="min-w-0" title="Dominant components" description="The circle radii in the canvas are coefficient amplitudes." padding="md">
-          <div className="overflow-x-auto"><table className="w-full border-collapse font-mono text-xs sm:min-w-[540px]"><thead className="border-b border-[var(--line)] text-left text-[10px] uppercase tracking-[0.14em] text-neutral-500"><tr><th className="pb-2 font-normal">rank</th><th className="pb-2 font-normal">frequency</th><th className="pb-2 font-normal">amplitude</th><th className="pb-2 font-normal">phase</th><th className="hidden pb-2 font-normal sm:table-cell">relative radius</th></tr></thead><tbody>{allTerms.slice(0, 8).map((term, index) => <tr key={`${term.frequency}-${index}`} className="border-b border-[var(--line)]"><td className="py-2 text-neutral-500">{index + 1}</td><td className="py-2 text-amber-700 dark:text-amber-300">{term.frequency >= 0 ? "+" : ""}{term.frequency}</td><td className="py-2 tabular-nums">{formatAmplitude(term.amplitude)}</td><td className="py-2 tabular-nums text-neutral-500">{Math.round((term.phase * 180) / Math.PI)}°</td><td className="hidden py-2 sm:table-cell"><span className="block h-1.5 max-w-44 bg-[color-mix(in_srgb,var(--foreground)_8%,transparent)]"><span className="block h-full bg-amber-500" style={{ width: `${allTerms[0] ? ((term.amplitude / allTerms[0].amplitude) * 100).toFixed(3) : "0"}%` }} /></span></td></tr>)}</tbody></table></div>
+          <div className="overflow-x-auto"><table className="w-full border-collapse font-mono text-xs sm:min-w-[540px]"><thead className="border-b border-[var(--line)] text-left text-[10px] uppercase tracking-[0.14em] text-sub"><tr><th className="pb-2 font-normal">rank</th><th className="pb-2 font-normal">frequency</th><th className="pb-2 font-normal">amplitude</th><th className="pb-2 font-normal">phase</th><th className="hidden pb-2 font-normal sm:table-cell">relative radius</th></tr></thead><tbody>{allTerms.slice(0, 8).map((term, index) => <tr key={`${term.frequency}-${index}`} className="border-b border-[var(--line)]"><td className="py-2 text-sub">{index + 1}</td><td className="py-2 text-accent-2">{term.frequency >= 0 ? "+" : ""}{term.frequency}</td><td className="py-2 tabular-nums">{formatAmplitude(term.amplitude)}</td><td className="py-2 tabular-nums text-sub">{Math.round((term.phase * 180) / Math.PI)}°</td><td className="hidden py-2 sm:table-cell"><span className="block h-1.5 max-w-44 bg-[color-mix(in_srgb,var(--foreground)_8%,transparent)]"><span className="block h-full bg-accent-2" style={{ width: `${allTerms[0] ? ((term.amplitude / allTerms[0].amplitude) * 100).toFixed(3) : "0"}%` }} /></span></td></tr>)}</tbody></table></div>
         </DemoPanel>
         <DemoPanel className="min-w-0" title="The equation behind the pen" padding="md">
-          <div className="border border-fuchsia-500/25 bg-fuchsia-500/5 p-4 font-mono text-sm leading-8 text-fuchsia-800 dark:text-fuchsia-200">z(t) = Σₖ cₖ · e<sup>i2πkt</sup></div>
-          <p className="mt-4 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">The direct discrete Fourier transform (DFT) computes the cₖ values from {SAMPLE_COUNT} evenly spaced samples. Using all {SAMPLE_COUNT} coefficients reconstructs that sampled periodic signal. A 1024-term version would need 1024 samples and a faster FFT, otherwise it would only duplicate frequency information.</p>
+          <div className="border border-accent-3/25 bg-accent-3/5 p-4 font-mono text-sm leading-8 text-accent-3">z(t) = Σₖ cₖ · e<sup>i2πkt</sup></div>
+          <p className="mt-4 text-sm leading-relaxed text-muted">The direct discrete Fourier transform (DFT) computes the cₖ values from {SAMPLE_COUNT} evenly spaced samples. Using all {SAMPLE_COUNT} coefficients reconstructs that sampled periodic signal. A 1024-term version would need 1024 samples and a faster FFT, otherwise it would only duplicate frequency information.</p>
         </DemoPanel>
       </div>
 

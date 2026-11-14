@@ -249,8 +249,6 @@ export const BOT_CONFIG: BotConfig = {
   gamma: 0.74,
 };
 
-export const BOT_ACCENT = "#f97316";
-
 export const BOT_DIFFICULTIES: BotDifficultySetting[] = [
   {
     id: "easy",

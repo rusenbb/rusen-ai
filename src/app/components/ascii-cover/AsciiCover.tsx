@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { getResolvedTheme, THEME_EVENT } from "../theme";
+import { getPalette, getResolvedTheme, THEME_EVENT } from "../theme";
 import type { CellOut } from "./scene-kit";
 import { glyphKey, glyphStyle } from "./ink";
+
+const PHOSPHOR_HUE = 140;
 import { createScene } from "./scenes";
 
 const RAMP = " .:-=+*#%@";
@@ -20,11 +22,18 @@ const PLAY_EVENT = "ascii-cover-play";
 // Simulated seconds rendered before the first paint, so covers never start
 // on an empty or freshly seeded frame.
 const WARMUP_S = 6;
+// With `restInMotion`, the rest frame is moved to the first frame that
+// differs from the one before by at least this many glyphs, searching at most
+// MOTION_SEEK_S simulated seconds. Hover then continues motion at once.
+const MOTION_CELLS = 3;
+const MOTION_SEEK_S = 10;
 
 type Props = {
   /** Scene id; matches a project id in `scenes.ts`, unknown ids fall back. */
   scene: string;
   className?: string;
+  /** Rest on a frame where the scene is moving, so hover shows motion at once. */
+  restInMotion?: boolean;
 };
 
 function hashSeed(s: string): number {
@@ -39,7 +48,7 @@ function hashSeed(s: string): number {
  * a few seconds after a tap on the cover (one cover at a time). Cells near
  * the pointer brighten. Reduced motion keeps it still.
  */
-export default function AsciiCover({ scene, className }: Props) {
+export default function AsciiCover({ scene, className, restInMotion = false }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -65,8 +74,11 @@ export default function AsciiCover({ scene, className }: Props) {
     const playing = () => hovered || tapped;
     let pointer: { x: number; y: number } | null = null;
     let dark = getResolvedTheme() === "dark";
+    let phosphor = getPalette() === "phosphor";
 
-    const fillFor = (hue: number, v: number) => {
+    const fillFor = (sceneHue: number, v: number) => {
+      // The phosphor palette is a monochrome green screen, so every scene uses one hue.
+      const hue = phosphor ? PHOSPHOR_HUE : sceneHue;
       const key = glyphKey(hue, v);
       let style = styleCache.get(key);
       if (!style) {
@@ -99,6 +111,30 @@ export default function AsciiCover({ scene, className }: Props) {
         simTime += 1 / 30;
         sim.step(1 / 30, simTime);
       }
+      if (!restInMotion) return;
+      let previous = glyphs();
+      for (let s = 0; s < MOTION_SEEK_S * 30; s++) {
+        simTime += 1 / 30;
+        sim.step(1 / 30, simTime);
+        const current = glyphs();
+        let changed = 0;
+        for (let i = 0; i < current.length && changed < MOTION_CELLS; i++) if (current[i] !== previous[i]) changed++;
+        if (changed >= MOTION_CELLS) return;
+        previous = current;
+      }
+    };
+
+    /** The glyph each cell would show, without the pointer glow. */
+    const glyphs = () => {
+      const out = new Uint16Array(cols * rows);
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          sim.sample(c, r, cell);
+          const v = cell.v;
+          out[r * cols + c] = v < 0.04 ? 0 : (cell.ch ?? RAMP[Math.min(RAMP.length - 1, Math.ceil(v * (RAMP.length - 1)))]).charCodeAt(0);
+        }
+      }
+      return out;
     };
 
     const draw = () => {
@@ -203,6 +239,7 @@ export default function AsciiCover({ scene, className }: Props) {
     const onVisibility = () => wake();
     const onTheme = () => {
       dark = getResolvedTheme() === "dark";
+      phosphor = getPalette() === "phosphor";
       styleCache.clear();
       draw();
     };
@@ -234,7 +271,7 @@ export default function AsciiCover({ scene, className }: Props) {
       document.removeEventListener("visibilitychange", onVisibility);
       reduced.removeEventListener("change", onMotion);
     };
-  }, [scene]);
+  }, [scene, restInMotion]);
 
   return <canvas ref={canvasRef} className={className} aria-hidden="true" />;
 }

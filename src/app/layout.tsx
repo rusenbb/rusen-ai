@@ -4,7 +4,7 @@ import "./globals.css";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import DataBackground from "./components/DataBackground";
-import { THEME_STORAGE_KEY } from "./components/theme";
+import { THEME_STORAGE_KEY, THEMES } from "./components/theme";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -49,14 +49,17 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               (() => {
+                const themes = ${JSON.stringify(THEMES)};
                 let stored = null;
                 try { stored = localStorage.getItem("${THEME_STORAGE_KEY}"); } catch (_) {}
-                const resolved = stored === "light" || stored === "dark"
-                  ? stored
+                const theme = Object.prototype.hasOwnProperty.call(themes, stored) ? themes[stored] : null;
+                const resolved = theme
+                  ? theme.mode
                   : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
                 document.documentElement.dataset.theme = resolved;
                 document.documentElement.style.colorScheme = resolved;
                 document.documentElement.classList.toggle("dark", resolved === "dark");
+                if (theme && theme.palette !== "default") document.documentElement.dataset.palette = theme.palette;
               })();
             `,
           }}

@@ -53,7 +53,7 @@ export default function SimulationFrame({ children }: { children: ReactNode }) {
         <Button size="sm" onClick={() => setSeed((value) => value + 1)}>
           New seed
         </Button>
-        <span className="text-neutral-500">
+        <span className="text-sub">
           Replay restores this seed and default controls. Offscreen simulations
           pause.
         </span>
@@ -66,7 +66,7 @@ export default function SimulationFrame({ children }: { children: ReactNode }) {
           {children}
         </SimulationContext.Provider>
       ) : (
-        <p className="text-sm text-neutral-500">
+        <p className="text-sm text-sub">
           Simulation initializes when this section enters the viewport.
         </p>
       )}

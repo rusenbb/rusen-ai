@@ -1,6 +1,30 @@
 import { createProjection, HEIGHT, WIDTH, type Point } from "./scene";
-import { objectColor, type Gallery } from "./gallery";
+import { objectToken, type Gallery } from "./gallery";
 type Context = CanvasRenderingContext2D;
+type Palette = {
+  stage: string;
+  grid: string;
+  edge: string;
+  label: string;
+  tokens: Record<string, string>;
+};
+/** Reads the active theme's colours from CSS custom properties. */
+function readPalette(): Palette {
+  const style = getComputedStyle(document.documentElement);
+  const read = (name: string) => style.getPropertyValue(name).trim();
+  const tokens: Record<string, string> = {};
+  for (let id = 1; id <= 5; id++) {
+    const name = objectToken(id);
+    tokens[name] = read(name);
+  }
+  return {
+    stage: read("--surface"),
+    grid: read("--sub"),
+    edge: read("--foreground"),
+    label: read("--muted"),
+    tokens,
+  };
+}
 function path(ctx: Context, points: readonly Point[]) {
   ctx.beginPath();
   points.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
@@ -11,6 +35,7 @@ export function drawFrame(
   gallery: Gallery,
   index: number,
   filter: string,
+  palette: Palette,
 ) {
   ctx.clearRect(0, 0, WIDTH, HEIGHT);
   ctx.drawImage(
@@ -26,7 +51,7 @@ export function drawFrame(
   );
   for (const object of gallery.frames[index].objects) {
     if (filter !== "all" && filter !== object.label) continue;
-    ctx.fillStyle = ctx.strokeStyle = objectColor(object.id);
+    ctx.fillStyle = ctx.strokeStyle = palette.tokens[objectToken(object.id)];
     ctx.globalAlpha = 0.2;
     ctx.fill(object.fill);
     ctx.globalAlpha = 1;
@@ -72,7 +97,8 @@ export function drawVolume(
     canvas.height = Math.round(height * dpr);
   }
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.fillStyle = "#090e12";
+  const palette = readPalette();
+  ctx.fillStyle = palette.stage;
   ctx.fillRect(0, 0, width, height);
   const p = createProjection(
     width,
@@ -114,15 +140,17 @@ export function drawVolume(
     view.depth,
     view.zoom,
     view.ghosts,
+    palette.stage,
+    palette.grid,
   ].join(",");
   if (cache.key !== key || cache.atlas !== gallery.atlas) {
     cache.canvas.width = canvas.width;
     cache.canvas.height = canvas.height;
     const background = cache.canvas.getContext("2d")!;
     background.setTransform(dpr, 0, 0, dpr, 0, 0);
-    background.fillStyle = "#090e12";
+    background.fillStyle = palette.stage;
     background.fillRect(0, 0, width, height);
-    background.strokeStyle = "#435058";
+    background.strokeStyle = palette.grid;
     background.lineWidth = 0.8;
     for (const t of [0, 1]) {
       path(background, border(t));
@@ -170,23 +198,23 @@ export function drawVolume(
     ctx.save();
     transform(ctx, i);
     if (i === view.index) {
-      drawFrame(fc, gallery, i, view.filter);
+      drawFrame(fc, gallery, i, view.filter, palette);
       ctx.drawImage(frame, 0, 0);
     }
     ctx.globalAlpha = i === view.index ? 1 : 0.6;
     ctx.lineWidth = i === view.index ? 2 : 1;
     for (const object of gallery.frames[i].objects) {
       if (view.filter !== "all" && object.label !== view.filter) continue;
-      ctx.strokeStyle = objectColor(object.id);
+      ctx.strokeStyle = palette.tokens[objectToken(object.id)];
       ctx.stroke(object.outline);
     }
     ctx.restore();
   }
   path(ctx, border(view.index / (gallery.frames.length - 1)));
-  ctx.strokeStyle = "#edf8f4";
+  ctx.strokeStyle = palette.edge;
   ctx.lineWidth = 1.6;
   ctx.stroke();
-  ctx.fillStyle = "#afc0c7";
+  ctx.fillStyle = palette.label;
   ctx.font = "11px monospace";
   ctx.fillText("0.00 s", 22, height - 20);
   ctx.textAlign = "right";

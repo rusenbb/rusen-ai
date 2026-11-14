@@ -10,7 +10,7 @@ Edit `src/content/projects.json`, then run `npm run projects:docs`.
 | Project | Status | Path | Summary |
 |---|---|---|---|
 | Classify Anything | `live` | `/classify-anything` | Zero-shot classification for English text. Define your own classes, paste a short excerpt, get predictions. |
-| Segment Anything | `live` | `/segment-anything` | Click any object in an image to instantly segment it. SAM 2.1 running entirely in your browser via WebAssembly. |
+| Segment Anything | `live` | `/segment-anything` | Click any object in an image to segment it. SAM 2.1 runs entirely in your browser via WebAssembly. |
 | Vision Anything | `live` | `/vision-anything` | Zero-shot image classification. Drop an image, type the labels you care about, see how a CLIP-class model ranks them. |
 | Curve Fitter | `live` | `/curve-fitter` | Scrub real gradient updates and watch a straight line and a polynomial fit the same noisy points, then compare them on held-out data. |
 | Convolution Lab | `live` | `/convolution-lab` | Run editable kernels over real RGB or B/W photos, move a receptive field, and inspect the exact pixels behind each feature response. |

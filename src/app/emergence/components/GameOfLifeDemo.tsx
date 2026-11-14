@@ -1,6 +1,8 @@
 "use client";
 
 import { useSimulation } from "./SimulationFrame";
+import { Button, Chip, Slider } from "@/components/ui";
+import { mix, usePalette } from "../theme";
 
 import { useRef, useState, useEffect, useCallback } from "react";
 
@@ -34,14 +36,16 @@ const ROWS = 60;
 const CANVAS_HEIGHT = 400;
 const MAX_AGE = 120;
 
-// Age-based color palette: newly born cells are bright cyan, older cells fade
-function cellColor(age: number): string {
+// Age-based fade: newly born cells use the full accent, older cells fade toward the surface.
+const OLDEST_ALPHA = 0.4;
+function cellAlpha(age: number): number {
   const t = Math.min(age / MAX_AGE, 1);
-  // Cyan → teal → dim grey-green
-  const r = Math.round(20 + t * 30);
-  const g = Math.round(240 - t * 160);
-  const b = Math.round(220 - t * 140);
-  return `rgb(${r},${g},${b})`;
+  return 1 - t * (1 - OLDEST_ALPHA);
+}
+
+/** The same fade as a CSS colour, for DOM swatches. */
+function cellColor(age: number): string {
+  return `color-mix(in srgb, var(--accent) ${Math.round(cellAlpha(age) * 100)}%, transparent)`;
 }
 
 // ---------------------------------------------------------------------------
@@ -295,7 +299,7 @@ function MiniGrid({
 
   return (
     <div
-      className="inline-grid border border-neutral-300 dark:border-neutral-700 rounded-sm"
+      className="inline-grid border border-line rounded-sm"
       style={{
         gridTemplateColumns: `repeat(${size}, ${cellSize}px)`,
         gap: `${gap}px`,
@@ -311,10 +315,10 @@ function MiniGrid({
         const isHighlight =
           highlight && highlight[0] === r && highlight[1] === c;
 
-        let bg = "bg-neutral-200 dark:bg-neutral-800";
-        if (alive) bg = "bg-cyan-400";
-        if (isHighlight && !highlightAlive && !alive) bg = "bg-neutral-400 dark:bg-neutral-600";
-        if (isHighlight && alive && !highlightAlive) bg = "bg-red-400/70";
+        let bg = "bg-foreground/10";
+        if (alive) bg = "bg-accent";
+        if (isHighlight && !highlightAlive && !alive) bg = "bg-foreground/30";
+        if (isHighlight && alive && !highlightAlive) bg = "bg-danger/70";
 
         return (
           <div
@@ -323,7 +327,7 @@ function MiniGrid({
             style={{
               width: cellSize,
               height: cellSize,
-              outline: isHighlight ? "2px solid rgba(255,255,255,0.5)" : "none",
+              outline: isHighlight ? "2px solid var(--foreground)" : "none",
               outlineOffset: -1,
             }}
           />
@@ -340,6 +344,7 @@ function MiniGrid({
 export default function GameOfLifeDemo() {
   const { active, random } = useSimulation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const palette = usePalette();
   const containerRef = useRef<HTMLDivElement>(null);
 
   const gridRef = useRef<Grid>(emptyGrid());
@@ -401,11 +406,11 @@ export default function GameOfLifeDemo() {
       ctx.scale(dpr, dpr);
     }
 
-    ctx.fillStyle = "#0a0a0a";
+    ctx.fillStyle = palette.surface;
     ctx.fillRect(0, 0, w, h);
 
     // Grid lines (subtle)
-    ctx.strokeStyle = "rgba(255,255,255,0.04)";
+    ctx.strokeStyle = mix(palette.foreground, 6);
     ctx.lineWidth = 0.5;
     for (let c = 0; c <= COLS; c++) {
       const x = c * (w / COLS);
@@ -428,17 +433,19 @@ export default function GameOfLifeDemo() {
     const cw = w / COLS;
     const ch = h / ROWS;
     const pad = 0.5;
+    ctx.fillStyle = palette.accent;
 
     for (let r = 0; r < ROWS; r++) {
       for (let c = 0; c < COLS; c++) {
         const i = idx(r, c);
         if (grid[i]) {
-          ctx.fillStyle = cellColor(ages[i]);
+          ctx.globalAlpha = cellAlpha(ages[i]);
           ctx.fillRect(c * cw + pad, r * ch + pad, cw - pad * 2, ch - pad * 2);
         }
       }
     }
-  }, [canvasWidth]);
+    ctx.globalAlpha = 1;
+  }, [canvasWidth, palette]);
 
   // Animation loop
   useEffect(() => {
@@ -566,17 +573,17 @@ export default function GameOfLifeDemo() {
     <section className="w-full max-w-4xl mx-auto space-y-12">
       {/* Header */}
       <div>
-        <h2 className="font-mono text-2xl sm:text-3xl font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
+        <h2 className="font-mono text-2xl sm:text-3xl font-semibold text-foreground mb-2">
           Conway&apos;s Game of Life
         </h2>
-        <p className="text-neutral-500 dark:text-neutral-400 text-lg font-mono">
+        <p className="text-muted text-lg font-mono">
           Four rules. Infinite complexity.
         </p>
       </div>
 
       {/* Rules explanation */}
       <div className="space-y-8">
-        <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed max-w-2xl">
+        <p className="text-foreground leading-relaxed max-w-2xl">
           The Game of Life is a cellular automaton devised by mathematician John
           Conway in 1970. It has no players. Its evolution is determined
           entirely by its initial state. The universe is an infinite
@@ -586,27 +593,27 @@ export default function GameOfLifeDemo() {
         </p>
 
         <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-4">
-            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
+          <div className="border border-line bg-surface/50 p-4">
+            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-sub">
               What It Is
             </div>
-            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
+            <p className="mt-2 text-sm text-foreground">
               A two-dimensional world where cells are only born, survive, or die depending on nearby neighbors.
             </p>
           </div>
-          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-4">
-            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
+          <div className="border border-line bg-surface/50 p-4">
+            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-sub">
               Why It Matters
             </div>
-            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
+            <p className="mt-2 text-sm text-foreground">
               This is where emergence stops looking decorative and starts looking computational.
             </p>
           </div>
-          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-4">
-            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
+          <div className="border border-line bg-surface/50 p-4">
+            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-sub">
               What To Notice
             </div>
-            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
+            <p className="mt-2 text-sm text-foreground">
               Small seeds do not just expand. They stabilize, oscillate, travel, and sometimes build larger machinery.
             </p>
           </div>
@@ -623,22 +630,22 @@ export default function GameOfLifeDemo() {
             return (
               <div
                 key={i}
-                className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-4 space-y-3"
+                className="border border-line p-4 space-y-3"
               >
                 <div>
-                  <span className="text-xs font-mono text-neutral-500 uppercase tracking-wider">
+                  <span className="text-xs font-mono text-sub uppercase tracking-wider">
                     Rule {i + 1}
                   </span>
-                  <h3 className="font-mono text-sm font-semibold text-neutral-800 dark:text-neutral-200 mt-0.5">
+                  <h3 className="font-mono text-sm font-semibold text-foreground mt-0.5">
                     {rd.title}
                   </h3>
                 </div>
-                <p className="text-neutral-600 dark:text-neutral-400 text-sm leading-relaxed">
+                <p className="text-muted text-sm leading-relaxed">
                   {rd.rule}
                 </p>
                 <div className="flex items-center gap-4">
                   <div className="text-center">
-                    <div className="text-[10px] text-neutral-500 dark:text-neutral-600 mb-1 font-mono">
+                    <div className="text-[10px] text-muted mb-1 font-mono">
                       Before
                     </div>
                     <MiniGrid
@@ -655,9 +662,9 @@ export default function GameOfLifeDemo() {
                       }
                     />
                   </div>
-                  <div className="text-neutral-400 dark:text-neutral-600 text-lg font-mono">&rarr;</div>
+                  <div className="text-muted text-lg font-mono">&rarr;</div>
                   <div className="text-center">
-                    <div className="text-[10px] text-neutral-500 dark:text-neutral-600 mb-1 font-mono">
+                    <div className="text-[10px] text-muted mb-1 font-mono">
                       After
                     </div>
                     <MiniGrid
@@ -676,115 +683,90 @@ export default function GameOfLifeDemo() {
 
       {/* Interactive demo */}
       <div className="space-y-4">
-        <h3 className="font-mono text-lg text-neutral-800 dark:text-neutral-200">
+        <h3 className="font-mono text-lg text-foreground">
           Try it yourself
         </h3>
-        <p className="text-neutral-600 dark:text-neutral-400 text-sm">
+        <p className="text-muted text-sm">
           Click or drag on the grid to draw cells. Load a preset pattern and
           press Play to watch it evolve. Start with a glider or blinker, then try the gun and watch persistent structure emerge from local rules alone.
         </p>
 
-        <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/50 p-3">
-          <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
+        <div className="border border-line bg-surface/50 p-3">
+          <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-sub">
             Visual key
           </div>
-          <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-neutral-600 dark:text-neutral-300">
+          <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-foreground">
             <div className="flex items-center gap-2">
               <span
-                className="h-4 w-4 rounded-sm border border-black/10 dark:border-white/10"
+                className="h-4 w-4 border border-line"
                 style={{ backgroundColor: cellColor(1) }}
               />
               <span>newborn cell</span>
             </div>
             <div className="flex items-center gap-2">
               <span
-                className="h-4 w-4 rounded-sm border border-black/10 dark:border-white/10"
+                className="h-4 w-4 border border-line"
                 style={{ backgroundColor: cellColor(Math.floor(MAX_AGE / 2)) }}
               />
               <span>surviving cell</span>
             </div>
             <div className="flex items-center gap-2">
               <span
-                className="h-4 w-4 rounded-sm border border-black/10 dark:border-white/10"
+                className="h-4 w-4 border border-line"
                 style={{ backgroundColor: cellColor(MAX_AGE) }}
               />
               <span>long-lived cell</span>
             </div>
           </div>
-          <p className="mt-2 text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">
-            In this mini-demo, color shows cell age. Bright cyan means newly born; dimmer cells have survived for many generations. This is a visualization aid, not an extra Conway rule.
+          <p className="mt-2 text-xs leading-relaxed text-muted">
+            In this mini-demo, color shows cell age. Bright cells are newly born; dimmer cells have survived for many generations. This is a visualization aid, not an extra Conway rule.
           </p>
         </div>
 
         {/* Controls row */}
         <div className="flex flex-wrap items-center gap-2">
           {PATTERNS.map((p) => (
-            <button
-              key={p.label}
-              onClick={() => handlePreset(p)}
-              className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
-            >
+            <Chip key={p.label} onClick={() => handlePreset(p)}>
               {p.label}
-            </button>
+            </Chip>
           ))}
 
-          <div className="w-px h-6 bg-neutral-200 dark:bg-neutral-800 mx-1" />
+          <div className="w-px h-6 bg-line mx-1" />
 
-          <button
-            onClick={handleStep}
-            className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
-          >
+          <Button size="sm" onClick={handleStep}>
             Step
-          </button>
-          <button
-            onClick={() => setPlaying((p) => !p)}
-            className={`px-3 py-1.5 text-xs font-mono rounded border transition-colors ${
-              playing
-                ? "border-cyan-500 dark:border-cyan-600 text-cyan-700 dark:text-cyan-400 hover:border-cyan-400 dark:hover:border-cyan-500"
-                : "border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100"
-            }`}
-          >
+          </Button>
+          <Button size="sm" variant={playing ? "secondary" : "primary"} onClick={() => setPlaying((p) => !p)}>
             {playing ? "Pause" : "Play"}
-          </button>
-          <button
-            onClick={handleClear}
-            className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
-          >
+          </Button>
+          <Button size="sm" onClick={handleClear}>
             Clear
-          </button>
+          </Button>
 
-          <div className="w-px h-6 bg-neutral-200 dark:bg-neutral-800 mx-1" />
+          <div className="w-px h-6 bg-line mx-1" />
 
-          <span className="text-xs font-mono text-neutral-500">
+          <span className="text-xs font-mono text-sub">
             Gen {generation}
           </span>
         </div>
 
         {/* Speed slider */}
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-mono text-neutral-500 w-12">
-            Speed
-          </span>
-          <input
-            type="range"
-            aria-label="Game of Life generations per second"
-            min={1}
-            max={30}
-            value={speed}
-            onChange={(e) => setSpeed(Number(e.target.value))}
-            className="flex-1 max-w-48 accent-cyan-500 h-1"
-          />
-          <span className="text-xs font-mono text-neutral-500 w-16">
-            {speed} gen/s
-          </span>
-        </div>
+        <Slider
+          className="max-w-xs"
+          label="Speed"
+          min={1}
+          max={30}
+          value={speed}
+          display={`${speed} gen/s`}
+          onChange={setSpeed}
+        />
 
         {/* Canvas */}
         <div ref={containerRef} className="w-full">
           <canvas
             ref={canvasRef}
             style={{ width: canvasWidth, height: CANVAS_HEIGHT }}
-            className="rounded-lg border border-neutral-200 dark:border-neutral-800 cursor-crosshair"
+            className="border border-line cursor-crosshair"
             onMouseDown={handleCanvasMouseDown}
             onMouseMove={handleCanvasMouseMove}
             onMouseUp={handleCanvasMouseUp}
@@ -796,14 +778,14 @@ export default function GameOfLifeDemo() {
       </div>
 
       {/* Takeaway */}
-      <div className="space-y-4 border-t border-neutral-200 dark:border-neutral-800 pt-8">
-        <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed max-w-2xl">
+      <div className="space-y-4 border-t border-line pt-8">
+        <p className="text-foreground leading-relaxed max-w-2xl">
           The Game of Life is{" "}
-          <span className="text-neutral-900 dark:text-neutral-100 font-medium">Turing complete</span>{" "}
+          <span className="text-foreground font-medium">Turing complete</span>{" "}
           ... you can build entire computers inside it. Logic gates,
           memory, clocks. All from four rules applied to a grid.
         </p>
-        <p className="text-neutral-500 dark:text-neutral-400 max-w-2xl">
+        <p className="text-muted max-w-2xl">
           What to take away: the same tiny rule set can produce stillness, repetition, locomotion, and computation depending only on the seed.
         </p>
       </div>

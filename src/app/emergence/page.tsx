@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Card } from "@/components/ui";
 import SimulationFrame from "./components/SimulationFrame";
 import ElementaryCA from "./components/ElementaryCA";
 import GameOfLifeDemo from "./components/GameOfLifeDemo";
@@ -46,28 +47,28 @@ export default function EmergencePage() {
     <div className="max-w-4xl mx-auto px-4 py-10 sm:py-16">
       {/* Page intro */}
       <header className="mb-16 sm:mb-24">
-        <p className="text-xs font-mono text-neutral-500 tracking-[0.18em] mb-3">
+        <p className="text-xs font-mono text-sub tracking-[0.18em] mb-3">
           AN INTERACTIVE ESSAY
         </p>
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 leading-tight text-balance">
           Emergence
         </h1>
-        <p className="text-base sm:text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl text-pretty leading-relaxed">
+        <p className="text-base sm:text-lg text-muted max-w-2xl text-pretty leading-relaxed">
           Simple rules, followed locally, can produce complex behavior globally
           ... behavior that nobody designed, nobody predicted, and sometimes
           nobody can fully explain. This page lets you see it happen.
         </p>
 
-        <div className="mt-8 rounded-2xl border border-neutral-300 dark:border-neutral-800 bg-white/90 dark:bg-neutral-900/50 p-5 shadow-[0_12px_32px_rgba(15,23,42,0.05)]">
-          <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+        <Card className="mt-8">
+          <p className="text-sm font-medium text-foreground">
             How to read this essay
           </p>
-          <p className="mt-2 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
+          <p className="mt-2 text-sm leading-relaxed text-muted">
             Move from top to bottom. The early sections show pattern formation in its purest mathematical form.
             The later sections move toward social systems, delayed order, and cascades. For each demo, look for
             three things: the local rule, the global pattern, and the moment where your intuition starts to fail.
           </p>
-        </div>
+        </Card>
 
         <EmergenceSectionDirectory sections={ESSAY_SECTIONS} />
       </header>
@@ -75,10 +76,10 @@ export default function EmergencePage() {
       {/* Section 1 */}
       <section id="elementary-ca" className="scroll-mt-24">
         <div className="flex items-center gap-4 mb-8">
-          <span className="text-sm font-mono tracking-[0.22em] text-neutral-400 dark:text-neutral-500 shrink-0">01</span>
-          <hr className="flex-1 border-neutral-200 dark:border-neutral-800" />
+          <span className="text-sm font-mono tracking-[0.22em] text-sub shrink-0">01</span>
+          <hr className="flex-1 border-line" />
         </div>
-        <p className="mb-6 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400 max-w-2xl">
+        <p className="mb-6 text-sm leading-relaxed text-muted max-w-2xl">
           We start with the smallest possible canvas: one row of cells and a lookup table.
           If emergence is real, we should be able to see it even here.
         </p>
@@ -90,10 +91,10 @@ export default function EmergencePage() {
       {/* Section 2 */}
       <section id="game-of-life" className="scroll-mt-24">
         <div className="flex items-center gap-4 mb-8">
-          <span className="text-sm font-mono tracking-[0.22em] text-neutral-400 dark:text-neutral-500 shrink-0">02</span>
-          <hr className="flex-1 border-neutral-200 dark:border-neutral-800" />
+          <span className="text-sm font-mono tracking-[0.22em] text-sub shrink-0">02</span>
+          <hr className="flex-1 border-line" />
         </div>
-        <p className="mb-6 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400 max-w-2xl">
+        <p className="mb-6 text-sm leading-relaxed text-muted max-w-2xl">
           Next, move from a line to a plane. With one extra dimension, stable structures,
           moving organisms, and computation begin to emerge from the same local logic.
         </p>
@@ -101,7 +102,7 @@ export default function EmergencePage() {
         <div className="mt-4">
           <Link
             href="/game-of-life"
-            className="text-sm text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-200 underline underline-offset-4 transition"
+            className="text-sm text-muted hover:text-foreground underline underline-offset-4 transition"
           >
             See the full Game of Life experience &rarr;
           </Link>
@@ -113,10 +114,10 @@ export default function EmergencePage() {
       {/* Section 3 */}
       <section id="firefly-sync" className="scroll-mt-24">
         <div className="flex items-center gap-4 mb-8">
-          <span className="text-sm font-mono tracking-[0.22em] text-neutral-400 dark:text-neutral-500 shrink-0">03</span>
-          <hr className="flex-1 border-neutral-200 dark:border-neutral-800" />
+          <span className="text-sm font-mono tracking-[0.22em] text-sub shrink-0">03</span>
+          <hr className="flex-1 border-line" />
         </div>
-        <p className="mb-6 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400 max-w-2xl">
+        <p className="mb-6 text-sm leading-relaxed text-muted max-w-2xl">
           Keep the agents independent, but let them communicate through time.
           Order can emerge not as shape, but as a shared beat.
         </p>
@@ -128,10 +129,10 @@ export default function EmergencePage() {
       {/* Section 4 */}
       <section id="schelling" className="scroll-mt-24">
         <div className="flex items-center gap-4 mb-8">
-          <span className="text-sm font-mono tracking-[0.22em] text-neutral-400 dark:text-neutral-500 shrink-0">04</span>
-          <hr className="flex-1 border-neutral-200 dark:border-neutral-800" />
+          <span className="text-sm font-mono tracking-[0.22em] text-sub shrink-0">04</span>
+          <hr className="flex-1 border-line" />
         </div>
-        <p className="mb-6 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400 max-w-2xl">
+        <p className="mb-6 text-sm leading-relaxed text-muted max-w-2xl">
           Now the idea leaves pure mathematics and enters social behavior.
           The rule is still local and mild. The outcome is not.
         </p>
@@ -143,10 +144,10 @@ export default function EmergencePage() {
       {/* Section 5 */}
       <section id="langtons-ant" className="scroll-mt-24">
         <div className="flex items-center gap-4 mb-8">
-          <span className="text-sm font-mono tracking-[0.22em] text-neutral-400 dark:text-neutral-500 shrink-0">05</span>
-          <hr className="flex-1 border-neutral-200 dark:border-neutral-800" />
+          <span className="text-sm font-mono tracking-[0.22em] text-sub shrink-0">05</span>
+          <hr className="flex-1 border-line" />
         </div>
-        <p className="mb-6 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400 max-w-2xl">
+        <p className="mb-6 text-sm leading-relaxed text-muted max-w-2xl">
           Then comes a harsher lesson: some systems look chaotic for a very long time
           before they reveal any order at all.
         </p>
@@ -158,10 +159,10 @@ export default function EmergencePage() {
       {/* Section 6 */}
       <section id="flocking" className="scroll-mt-24">
         <div className="flex items-center gap-4 mb-8">
-          <span className="text-sm font-mono tracking-[0.22em] text-neutral-400 dark:text-neutral-500 shrink-0">06</span>
-          <hr className="flex-1 border-neutral-200 dark:border-neutral-800" />
+          <span className="text-sm font-mono tracking-[0.22em] text-sub shrink-0">06</span>
+          <hr className="flex-1 border-line" />
         </div>
-        <p className="mb-6 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400 max-w-2xl">
+        <p className="mb-6 text-sm leading-relaxed text-muted max-w-2xl">
           We end where the agents leave the grid. Each one only watches its near neighbors and obeys
           three rules: avoid crowding, match speed, drift toward the group. No leader, no plan,
           and yet a single sweeping motion appears.
@@ -170,8 +171,8 @@ export default function EmergencePage() {
       </section>
 
       {/* Closing */}
-      <footer className="border-t border-neutral-200 dark:border-neutral-800 pt-10 pb-6">
-        <p className="text-neutral-600 dark:text-neutral-400 text-sm leading-relaxed max-w-2xl">
+      <footer className="border-t border-line pt-10 pb-6">
+        <p className="text-muted text-sm leading-relaxed max-w-2xl">
           Six systems. Rules you can fit on an index card. Behavior that
           surprises, disturbs, and remains unexplained. Emergence is not a
           special case. It is the default. The question is not why

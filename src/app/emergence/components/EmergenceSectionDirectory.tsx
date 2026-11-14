@@ -53,13 +53,10 @@ export default function EmergenceSectionDirectory({
               onBlur={() => setHoveredId(null)}
               className={`group relative overflow-hidden rounded-full border px-3 py-1.5 text-xs font-mono transition ${
                 isFocused
-                  ? "border-neutral-100 bg-white text-neutral-950 shadow-[0_0_0_1px_rgba(255,255,255,0.1),0_0_32px_rgba(244,244,245,0.18)] dark:border-neutral-200 dark:bg-neutral-50 dark:text-neutral-950"
-                  : "border-neutral-300 px-3 py-1.5 text-neutral-600 hover:border-neutral-900 hover:text-neutral-900 dark:border-neutral-700 dark:text-neutral-300 dark:hover:border-neutral-300 dark:hover:text-neutral-100"
+                  ? "border-line-strong bg-foreground text-background"
+                  : "border-line text-muted hover:border-line-strong hover:text-foreground"
               }`}
             >
-              {isFocused && (
-                <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.18),transparent_65%)] dark:bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.12),transparent_65%)]" />
-              )}
               <span className="relative inline-flex items-center gap-2">
                 <span className={`text-[10px] transition ${isFocused ? "opacity-90" : "opacity-55"}`}>
                   {sectionIndexLabel(index)}
@@ -84,44 +81,37 @@ export default function EmergenceSectionDirectory({
               onMouseLeave={() => setHoveredId(null)}
               onFocus={() => setHoveredId(section.id)}
               onBlur={() => setHoveredId(null)}
-              className={`group relative overflow-hidden rounded-xl border p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)] transition ${
+              className={`group relative overflow-hidden rounded-xl border p-4 transition ${
                 isFocused
-                  ? "border-neutral-100 bg-white text-neutral-950 shadow-[0_0_0_1px_rgba(255,255,255,0.08),0_18px_48px_rgba(248,250,252,0.12)] dark:border-neutral-200 dark:bg-neutral-50 dark:text-neutral-950"
-                  : "border-neutral-300 bg-white/92 hover:border-neutral-400 dark:border-neutral-800 dark:bg-neutral-950/40 dark:hover:border-neutral-600"
+                  ? "border-line-strong bg-foreground text-background"
+                  : "border-line bg-surface hover:border-line-strong"
               }`}
             >
-              {isFocused && (
-                <>
-                  <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_60%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.1),transparent_60%)]" />
-                  <span className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-neutral-900/90 dark:bg-neutral-950" />
-                </>
-              )}
-
               <div className="relative">
                 <div className={`text-[10px] font-mono uppercase tracking-[0.22em] transition ${
                   isFocused
-                    ? "text-neutral-700 dark:text-neutral-700"
-                    : "text-neutral-500"
+                    ? "text-background opacity-70"
+                    : "text-sub"
                 }`}>
                   {sectionIndexLabel(index)}
                 </div>
                 <h2 className={`mt-2 text-sm font-semibold transition ${
                   isFocused
-                    ? "text-neutral-950"
-                    : "text-neutral-900 dark:text-neutral-100"
+                    ? "text-background"
+                    : "text-foreground"
                 }`}>
                   {section.title}
                 </h2>
                 <p className={`mt-1 text-sm transition ${
                   isFocused
-                    ? "text-neutral-700"
-                    : "text-neutral-700 dark:text-neutral-400"
+                    ? "text-background opacity-80"
+                    : "text-muted"
                 }`}>
                   {section.summary}
                 </p>
 
                 <div className="mt-4 flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.18em]">
-                  <span className={isFocused ? "text-neutral-700" : "text-neutral-500 dark:text-neutral-500"}>
+                  <span className={isFocused ? "text-background opacity-70" : "text-sub"}>
                     Jump to section
                   </span>
                 </div>
