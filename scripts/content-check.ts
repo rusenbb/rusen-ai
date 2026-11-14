@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
@@ -61,11 +62,41 @@ const posts = getAllPosts();
 const series = getAllSeries();
 for (const locale of ["en", "tr", "ja"] as const) getCvData(locale);
 
+// The CV PDFs are committed build outputs of scripts/render_cv.py. Recompute the
+// hashes it records so a JSON edit without `npm run cv:build` fails the build.
+const sha256 = (...parts: Buffer[]) => {
+  const hash = createHash("sha256");
+  for (const part of parts) hash.update(part);
+  return hash.digest("hex");
+};
+const cvLock = JSON.parse(
+  readFileSync(resolve(ROOT, "scripts/cv-template/cv-build.lock.json"), "utf8"),
+) as Record<string, { source: string; tex: string; pdf: string }>;
+const cvInputs = ["scripts/cv-template/cv.tex.j2", "scripts/render_cv.py"].map((path) =>
+  readFileSync(resolve(ROOT, path)),
+);
+const NUL = Buffer.from([0]);
+for (const locale of ["en", "tr", "ja"] as const) {
+  const base = locale === "en" ? "cv" : `cv.${locale}`;
+  const entry = cvLock[locale];
+  const json = readFileSync(resolve(ROOT, `src/content/${base}.json`));
+  const source = sha256(...[json, ...cvInputs].flatMap((part) => [part, NUL]));
+  const tex = sha256(readFileSync(resolve(ROOT, `public/${base}.tex`)));
+  const pdf = sha256(readFileSync(resolve(ROOT, `public/${base}.pdf`)));
+  if (!entry || entry.source !== source) {
+    failures.push(`CV ${locale}: PDF is stale; run \`npm run cv:build\` and commit public/${base}.*`);
+  } else if (entry.tex !== tex || entry.pdf !== pdf) {
+    failures.push(
+      `CV ${locale}: public/${base}.tex or .pdf differs from the last recorded build; run \`npm run cv:build\``,
+    );
+  }
+}
+
 if (failures.length > 0) {
   throw new Error(`Content verification failed:\n- ${failures.join("\n- ")}`);
 }
 
 console.log(
   `Verified ${PROJECTS.length} projects, ${posts.length} blog posts, ` +
-    `${series.length} blog series, navigation aliases, social routes, and CV locale parity.`,
+    `${series.length} blog series, navigation aliases, social routes, CV locale parity, and CV PDF freshness.`,
 );

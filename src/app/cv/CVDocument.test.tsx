@@ -23,12 +23,14 @@ describe("CV publication venue links", () => {
         expect(link.parentElement?.textContent).not.toContain("](https://");
       }
 
-      const title = screen.getByRole("heading", { name: cv.publications[0].title });
+      const agenthon = cv.publications.find((item) => item.tags.includes("Differential Testing"));
+      expect(agenthon).toBeTruthy();
+      const title = screen.getByRole("heading", { name: agenthon!.title });
       const card = title.closest("div")?.parentElement?.parentElement;
       expect(card).toBeTruthy();
       const publication = within(card!);
       expect(publication.getByText("Differential Testing")).toBeVisible();
-      expect(publication.getByRole("link", { name: cv.publications[0].links[0].label }))
+      expect(publication.getByRole("link", { name: agenthon!.links[0].label }))
         .toHaveAttribute("href", "https://www.agenthon.net/");
     },
   );

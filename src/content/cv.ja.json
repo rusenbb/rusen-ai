@@ -4,7 +4,7 @@
     "role": "AI研究者・エンジニア",
     "location": "RIZE, TR",
     "locationLong": "リゼ、トルコ",
-    "email": "birben20@itu.edu.tr",
+    "email": "contact@rusen.ai",
     "website": "rusen.ai",
     "websiteUrl": "https://rusen.ai",
     "linkedin": "linkedin.com/in/rusenbirben",
@@ -13,8 +13,8 @@
     "githubUrl": "https://github.com/rusenbb",
     "kaggle": "kaggle.com/rusenbirben",
     "kaggleUrl": "https://www.kaggle.com/rusenbirben",
-    "summary": "イスタンブール工科大学の人工知能・データ工学科を卒業し、中東工科大学の応用NLPグループで独立研究者として活動。LLMの信頼性と解釈可能性に関心を持ち、トルコ語NLP、機械忘却、金融分野のLLM応用に取り組んできました。",
-    "printSummary": "イスタンブール工科大学の人工知能・データ工学科を卒業し、中東工科大学の応用NLPグループで独立研究者として活動。LLMの信頼性と解釈可能性に関心を持ち、トルコ語NLP、機械忘却、金融分野のLLM応用に取り組んできました。"
+    "summary": "イスタンブール工科大学の人工知能・データ工学科を卒業し、中東工科大学の応用NLPグループで独立研究者として活動。LLMの信頼性と評価に関心を持ち、解釈可能性における数値精度、トルコ語LLMの事前学習データ、トルコ語NLPのベンチマーク・データセット構築、機械忘却、金融分野のLLM応用に取り組んできました。",
+    "printSummary": "イスタンブール工科大学の人工知能・データ工学科を卒業し、中東工科大学の応用NLPグループで独立研究者として活動。LLMの信頼性と評価に関心を持ち、解釈可能性における数値精度、トルコ語LLMの事前学習データ、トルコ語NLPのベンチマーク・データセット構築、機械忘却、金融分野のLLM応用に取り組んできました。"
   },
   "heroLinks": [
     {
@@ -31,7 +31,7 @@
     },
     {
       "label": "メール",
-      "url": "mailto:birben20@itu.edu.tr"
+      "url": "mailto:contact@rusen.ai"
     }
   ],
   "experience": [
@@ -40,7 +40,7 @@
       "company": "中東工科大学 応用NLPグループ",
       "period": "03/2026 - 現在",
       "location": "アンカラ、トルコ",
-      "description": "Çağrı Toraman、Evren Ayberk Munis、İlker Kesenとともに、SIGTURK 2027 Workshop（ACL 2027）の[SIGTURK 2027 Shared Task](https://sigturk.github.io/workshops/2027/shared-task/)を共同主催。データ作成と評価手法に貢献し、Webサイトと評価パイプラインを構築。\n\nトルコ語LLMであるGemmaTurkで、学習データ収集、合成インストラクション・推論データの生成、mid-training、継続事前学習、事前学習の評価に携わる。\n\n[METU NLP Connect](https://www.youtube.com/@metunlpconnect)を運営し、専門家インタビューを制作。",
+      "description": "Çağrı Toraman、Evren Ayberk Munis、İlker Kesenとともに、SIGTURK 2027 Workshop（ACL 2027）の[SIGTURK 2027 Shared Task](https://sigturk.github.io/workshops/2027/shared-task/)を共同主催。テキスト/LLM部門を構築：5つのテュルク諸語（トルコ語、アゼルバイジャン語、カザフ語、ウズベク語、ウイグル語）・4タスクにわたり、1,750件の候補から選び620の情報源に基づく文化的設問1,000件を作成。評価ツールの実装、ベースライン評価、Webサイト構築も担当。\n\n16億パラメータのトルコ語LLMであるGemmaTurkで、トルコ語YouTube字幕コーパス（134万文書、61億トークン）を構築し、合成インストラクション・推論データの生成、mid-trainingのデータ配合実験、64Kトークンへの長文脈拡張を含む継続事前学習を担当。\n\n予定：Turkcellとの共同プロジェクトで、トルコ語LLMベンチマークTurkBenchをエージェント型タスクへ拡張するTurkBench 2。",
       "link": "https://nlp.ceng.metu.edu.tr",
       "category": "research"
     },
@@ -49,7 +49,7 @@
       "company": "Fiction Studios",
       "period": "08/2025 - 04/2026",
       "location": "アンカラ、トルコ",
-      "description": "Bilkent CyberparkでFiction Studiosを共同創業し、技術開発と追加メンバー3名の活動を統括。博物館・観光向けの多言語LLMガイドを開発し、顧客と投資家に提案。",
+      "description": "Bilkent CyberparkでFiction Studiosを共同創業し、技術開発と追加メンバー3名の活動を統括。博物館・観光向けの多言語LLM音声ガイド「Meddah」のバックエンドを開発し、顧客と投資家に提案。",
       "link": "https://github.com/fiction-ai-studios",
       "category": "professional"
     },
@@ -248,6 +248,20 @@
       "summary": "クラウドアーキテクチャとEC2、Lambda、S3、RDS、DynamoDBなどのAWSサービス。"
     }
   ],
+  "service": [
+    {
+      "title": "SIGTURK 2027 Shared Task 共同主催者",
+      "venue": "SIGTURK 2027 Workshop @ ACL 2027",
+      "period": "2026 - 現在",
+      "url": "https://sigturk.github.io/workshops/2027/shared-task/"
+    },
+    {
+      "title": "METU NLP Connect 運営責任者",
+      "venue": "中東工科大学応用NLPグループの専門家インタビューシリーズ。4回の共同司会",
+      "period": "2026 - 現在",
+      "url": "https://www.youtube.com/@metunlpconnect"
+    }
+  ],
   "languages": [
     {
       "name": "トルコ語",
@@ -291,10 +305,34 @@
   },
   "publications": [
     {
-      "title": "Exact First, Then Fast: An Event-for-Event C++ Rebuild of the Agenthon ABIDES Market",
-      "subtitle": "Agenthon Workshop @ [NeurIPS 2026](https://neurips.cc/Conferences/2026) - 対面ポスター発表に採択",
+      "title": "Patching Fails Small, Attribution Fails Large: Component Effects in 16-Bit Language Models",
+      "subtitle": "Transactions on Machine Learning Research (TMLR) - 査読中",
       "period": "2026",
-      "description": "Göktürk Batın Dervişoğlu, Muhammed Faruk Aytin, Muhammed Rüşen Birben.\n\nAgenthon ABIDES市場シミュレータをC++で再構築し、イベント順序、乱数列、参照出力を保持。6,900件のランダム化比較で完全一致を検証し、最大規模の公開ベンチマークにおいて、シミュレーションループの1,299倍の高速化を達成。\n\n2026年12月12日、米国アトランタ。",
+      "description": "単著。\n\n10のモデルで、bfloat16が介入に基づく解釈可能性の効果推定に誤差の下限を生じさせる一方、attributionは単一ニューロンの効果の順位と符号を保つこと（順位相関0.97以上）を示し、16ビットでの介入を用いる前にこの下限を測定することを提案。",
+      "tags": [
+        "Interpretability",
+        "Numerical Precision",
+        "bfloat16"
+      ],
+      "links": []
+    },
+    {
+      "title": "Tokenization Strategies for Pretraining Generative Large Language Models: A Case Study in Turkish",
+      "subtitle": "Journal of Artificial Intelligence Research (JAIR) - 査読中",
+      "period": "2026",
+      "description": "Evren Ayberk Munis、**Ruşen Birben**（同等貢献・共同筆頭著者）、Çağrı Toraman。\n\nトルコ語LLMの事前学習において、形態素境界制約付きBPEを含む8種の可逆トークナイザーを30 GBの固定予算で比較。bits per byteの差は最大1.2%にとどまる一方、推定学習計算量は最大49%異なり、形態素境界制約付きBPEはバイトレベルBPEより23〜29%多くの計算量を要した。",
+      "tags": [
+        "Tokenization",
+        "Pretraining",
+        "Turkish"
+      ],
+      "links": []
+    },
+    {
+      "title": "Exact First, Then Fast: An Event-for-Event C++ Rebuild of the Agenthon ABIDES Market",
+      "subtitle": "Agenthon Workshop @ [NeurIPS 2026](https://neurips.cc/Conferences/2026) - ポスター発表（アトランタ、2026年12月12日）",
+      "period": "2026",
+      "description": "Göktürk Batın Dervişoğlu, Muhammed Faruk Aytin, **Muhammed Rüşen Birben**.\n\nAgenthon ABIDES市場シミュレータをC++で再構築し、イベント順序、乱数列、参照出力を保持。6,900件のランダム化比較で完全一致を検証し、最大規模の公開ベンチマークにおいて、シミュレーションループの1,299倍の高速化を達成。",
       "tags": [
         "C++",
         "ABIDES",
@@ -311,7 +349,7 @@
       "title": "トルコ文化知識データセット",
       "subtitle": "MRL Workshop @ [EMNLP 2026](https://2026.emnlp.org/) - データ貢献採択済み・共同ベンチマーク論文準備中",
       "period": "2026",
-      "description": "15分野を対象とするトルコ文化知識データセットのため、出典に基づくエージェントパイプラインとデータ準備を主導。\n\n候補1,200組を精査し、500組をBüşra Tufanによる社会学的レビューに選定。最終提出用の300組を準備。\n\n英訳をレビュー。指導：Çağrı Toraman。",
+      "description": "15分野を対象とするトルコ文化知識データセットのため、出典に基づくエージェントパイプラインとデータ準備を主導。\n\n15の分野別エージェントで候補1,200組を生成し、Büşra Tufanによる社会学的レビュー用に500組を選定（最終300組は同氏が選定）。提出データを準備。\n\n英訳をレビュー。指導：Çağrı Toraman。",
       "tags": [
         "Cultural QA",
         "Data Curation",

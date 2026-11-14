@@ -32,7 +32,10 @@ describe("public CV Markdown", () => {
       const research = text.slice(researchStart, projectsStart);
       expect(research).toContain("SIGTURK 2027");
       expect(research).toContain("GemmaTurk");
-      expect(research).toContain("[METU NLP Connect](https://www.youtube.com/@metunlpconnect)");
+      expect(research).not.toContain("https://www.youtube.com/@metunlpconnect");
+      const serviceStart = text.indexOf(`## ${labels.service}`);
+      expect(serviceStart).toBeGreaterThan(professionalStart);
+      expect(text.slice(serviceStart)).toContain("(https://www.youtube.com/@metunlpconnect)");
       expect(research).not.toContain("CyberQuote");
       expect(text.slice(professionalStart)).toContain("CyberQuote");
       expect(text).toContain(cv.projects[0].description);

@@ -57,6 +57,13 @@ export type CVAwardItem = {
   linkText?: string;
 };
 
+export type CVServiceItem = {
+  title: string;
+  venue: string;
+  period: string;
+  url?: string;
+};
+
 export type CVLanguageItem = {
   name: string;
   level: string;
@@ -94,6 +101,7 @@ export type CVData = {
   interestsLink: CVLink;
   courses: CVCourseItem[];
   awards: CVAwardItem[];
+  service: CVServiceItem[];
   languages: CVLanguageItem[];
   skills: CVSkills;
 };
@@ -115,6 +123,7 @@ export type CVLabels = {
   publications: string;
   education: string;
   awards: string;
+  service: string;
   courses: string;
   languages: string;
   interests: string;
@@ -213,6 +222,7 @@ function parseCvData(value: unknown, locale: CVLocale): CVData {
       throw new Error(`${context}.awards[${index}].linkText requires a matching title substring and url`);
     }
   }
+  requireObjectArray(value.service, ["title", "venue", "period"], `${context}.service`);
   requireObjectArray(value.languages, ["name", "level"], `${context}.languages`);
   if (!isRecord(value.skills) || Object.keys(value.skills).length === 0) {
     throw new Error(`${context}.skills must be a non-empty object`);
@@ -229,7 +239,7 @@ function assertLocaleParity(data: Record<CVLocale, CVData>): void {
   const reference = data.en;
   const arrayFields = [
     "heroLinks", "experience", "publications", "projects", "education", "interests",
-    "courses", "awards", "languages",
+    "courses", "awards", "service", "languages",
   ] as const;
   for (const locale of ["tr", "ja"] as const) {
     for (const field of arrayFields) {
@@ -260,6 +270,7 @@ const LABELS_EN: CVLabels = {
   projects: "SELECTED PROJECTS",
   education: "EDUCATION",
   awards: "SCHOLARSHIPS & AWARDS",
+  service: "ACADEMIC SERVICE",
   courses: "COURSES",
   languages: "LANGUAGES",
   interests: "INTERESTS",
@@ -284,6 +295,7 @@ const LABELS_TR: CVLabels = {
   projects: "SEÇİLMİŞ PROJELER",
   education: "EĞİTİM",
   awards: "BURSLAR VE ÖDÜLLER",
+  service: "AKADEMİK HİZMET",
   courses: "KURSLAR",
   languages: "DİLLER",
   interests: "İLGİ ALANLARI",
@@ -308,6 +320,7 @@ const LABELS_JA: CVLabels = {
   projects: "プロジェクト",
   education: "学歴",
   awards: "受賞・表彰",
+  service: "学術活動",
   courses: "修了コース",
   languages: "言語",
   interests: "趣味",

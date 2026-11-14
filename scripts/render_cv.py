@@ -12,6 +12,12 @@ Outputs:
 Single source of truth lives in src/content/cv.json. Run this whenever the JSON
 changes; commit both outputs alongside.
 
+Each default build also records SHA-256 hashes of its inputs (JSON, template,
+this script) and outputs in scripts/cv-template/cv-build.lock.json.
+`npm run content:check` (part of prebuild) recomputes them and fails the build
+when the committed PDF is stale. Builds with --phone or --personal-email are
+not recorded, so a recipient-specific PDF left in public/ also fails the check.
+
 CLI flags (PDF-only - not reflected in the public HTML CV):
   --phone PHONE                  Inject a phone number. Intentionally not in
                                  cv.json so the public web CV doesn't expose
@@ -26,6 +32,7 @@ The ja PDF requires Noto CJK fonts on the build host (Debian/Ubuntu:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import shutil
@@ -41,6 +48,7 @@ CONTENT_DIR = ROOT / "src" / "content"
 TEMPLATE_DIR = ROOT / "scripts" / "cv-template"
 TEMPLATE_NAME = "cv.tex.j2"
 PUBLIC_DIR = ROOT / "public"
+LOCK_PATH = TEMPLATE_DIR / "cv-build.lock.json"
 
 SUPPORTED_LOCALES = ("en", "tr", "ja")
 CJK_LOCALES = frozenset({"ja"})
@@ -57,6 +65,7 @@ LABELS: dict[str, dict[str, str]] = {
         "projects": "Selected Projects",
         "education": "Education",
         "awards": "Scholarships & Awards",
+        "service": "Academic Service",
         "courses": "Courses",
         "skills": "Technical Skills",
         "languages": "Languages",
@@ -74,6 +83,7 @@ LABELS: dict[str, dict[str, str]] = {
         "projects": "Seçilmiş Projeler",
         "education": "Eğitim",
         "awards": "Burslar ve Ödüller",
+        "service": "Akademik Hizmet",
         "courses": "Kurslar",
         "skills": "Teknik Beceriler",
         "languages": "Diller",
@@ -91,6 +101,7 @@ LABELS: dict[str, dict[str, str]] = {
         "projects": "プロジェクト",
         "education": "学歴",
         "awards": "受賞歴",
+        "service": "学術活動",
         "courses": "受講コース",
         "skills": "スキル",
         "languages": "言語",
@@ -140,11 +151,12 @@ def latex_escape(value: object) -> str:
     return text
 
 
-_MD_LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
+_MD_LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)|\*\*([^*]+)\*\*")
 
 
 def latex_md(value: object) -> str:
-    """LaTeX-escape a string, but turn ``[text](url)`` into ``\\href{url}{text}``.
+    """LaTeX-escape a string, but turn ``[text](url)`` into ``\\href{url}{text}``
+    and ``**text**`` into ``\\textbf{text}``.
 
     The label is escaped as normal body text; the URL only needs its own
     special characters (% and #) escaped so hyperref accepts it verbatim.
@@ -154,9 +166,12 @@ def latex_md(value: object) -> str:
     last = 0
     for match in _MD_LINK_RE.finditer(text):
         parts.append(latex_escape(text[last : match.start()]))
-        label = latex_escape(match.group(1))
-        url = match.group(2).replace("%", r"\%").replace("#", r"\#")
-        parts.append(rf"\href{{{url}}}{{{label}}}")
+        if match.group(3) is not None:
+            parts.append(rf"\textbf{{{latex_escape(match.group(3))}}}")
+        else:
+            label = latex_escape(match.group(1))
+            url = match.group(2).replace("%", r"\%").replace("#", r"\#")
+            parts.append(rf"\cvlink{{{url}}}{{{label}}}")
         last = match.end()
     parts.append(latex_escape(text[last:]))
     return "".join(parts)
@@ -270,6 +285,25 @@ def compile_pdf(tex_source: str) -> bytes:
         return pdf_path.read_bytes()
 
 
+def source_hash(json_path: Path) -> str:
+    """Hash every input that shapes the PDF. Mirrored in scripts/content-check.ts."""
+    digest = hashlib.sha256()
+    for path in (json_path, TEMPLATE_DIR / TEMPLATE_NAME, Path(__file__).resolve()):
+        digest.update(path.read_bytes())
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
+def record_build(locale: str, json_path: Path, tex_source: str, pdf_bytes: bytes) -> None:
+    lock = json.loads(LOCK_PATH.read_text(encoding="utf-8")) if LOCK_PATH.exists() else {}
+    lock[locale] = {
+        "source": source_hash(json_path),
+        "tex": hashlib.sha256(tex_source.encode("utf-8")).hexdigest(),
+        "pdf": hashlib.sha256(pdf_bytes).hexdigest(),
+    }
+    LOCK_PATH.write_text(json.dumps(lock, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Render the CV from JSON to LaTeX and PDF.",
@@ -317,6 +351,10 @@ def build_for_locale(
     pdf_out.write_bytes(pdf_bytes)
     print(f"[{locale}] wrote    {tex_out.relative_to(ROOT)} ({len(tex_source):,} bytes)")
     print(f"[{locale}] wrote    {pdf_out.relative_to(ROOT)} ({len(pdf_bytes):,} bytes)")
+    if phone_override or personal_email:
+        print(f"[{locale}] not recorded in {LOCK_PATH.name}: recipient-specific build")
+    else:
+        record_build(locale, json_path, tex_source, pdf_bytes)
 
 
 def main() -> None:

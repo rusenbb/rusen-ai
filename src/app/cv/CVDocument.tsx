@@ -7,7 +7,7 @@ import {
   LuBookOpen, LuCamera, LuCoffee, LuTv, LuGraduationCap,
   LuFlaskConical, LuBriefcaseBusiness, LuCodeXml, LuAward,
   LuWrench, LuLanguages, LuHeart, LuMail, LuMapPin,
-  LuDownload, LuExternalLink,
+  LuDownload, LuExternalLink, LuUsers,
 } from "react-icons/lu";
 import { FaGithub, FaKaggle, FaLinkedinIn, FaYoutube } from "react-icons/fa";
 import {
@@ -35,7 +35,7 @@ type CVDocumentProps = {
 
 type OpenMenu = "language" | "download" | null;
 
-const MD_LINK_RE = /\[([^\]]+)\]\(([^)]+)\)/g;
+const MD_LINK_RE = /\[([^\]]+)\]\(([^)]+)\)|\*\*([^*]+)\*\*/g;
 
 function renderDescription(text: string): React.ReactNode {
   const parts: React.ReactNode[] = [];
@@ -44,6 +44,11 @@ function renderDescription(text: string): React.ReactNode {
   MD_LINK_RE.lastIndex = 0;
   while ((match = MD_LINK_RE.exec(text)) !== null) {
     if (match.index > last) parts.push(text.slice(last, match.index));
+    if (match[3] !== undefined) {
+      parts.push(<strong key={`b-${match.index}`}>{match[3]}</strong>);
+      last = match.index + match[0].length;
+      continue;
+    }
     parts.push(
       <a
         key={`lnk-${match.index}`}
@@ -404,6 +409,35 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
           <span className={styles.sectionNumber} aria-hidden="true">07</span>
+          <LuUsers className={styles.sectionIcon} aria-hidden="true" />
+          <h2 className={styles.sectionTitle}>{labels.service}</h2>
+          <div className={styles.sectionLine} />
+        </div>
+
+        <div className={styles.educationList}>
+          {cv.service.map((item) => (
+            <div key={item.title} className={styles.educationCard}>
+              <div className={styles.eduHeader}>
+                <div className={styles.eduMain}>
+                  <h3 className={styles.eduDegree}>
+                    {item.url ? (
+                      <a href={item.url} target="_blank" rel="noopener noreferrer" className={styles.descLink}>{item.title}</a>
+                    ) : item.title}
+                  </h3>
+                  <span className={styles.eduSchool}>{renderDescription(item.venue)}</span>
+                </div>
+                <div className={styles.eduMeta}>
+                  <span className={styles.eduPeriod}>{item.period}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <span className={styles.sectionNumber} aria-hidden="true">08</span>
           <LuWrench className={styles.sectionIcon} aria-hidden="true" />
           <h2 className={styles.sectionTitle}>{labels.skills}</h2>
           <div className={styles.sectionLine} />
@@ -417,7 +451,7 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
 
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
-          <span className={styles.sectionNumber} aria-hidden="true">08</span>
+          <span className={styles.sectionNumber} aria-hidden="true">09</span>
           <LuBookOpen className={styles.sectionIcon} aria-hidden="true" />
           <h2 className={styles.sectionTitle}>{labels.courses}</h2>
           <div className={styles.sectionLine} />
@@ -451,7 +485,7 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
 
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
-          <span className={styles.sectionNumber} aria-hidden="true">09</span>
+          <span className={styles.sectionNumber} aria-hidden="true">10</span>
           <LuLanguages className={styles.sectionIcon} aria-hidden="true" />
           <h2 className={styles.sectionTitle}>{labels.languages}</h2>
           <div className={styles.sectionLine} />
@@ -471,7 +505,7 @@ export default function CVDocument({ cv, labels, locale, outputBase }: CVDocumen
 
       <section className={styles.section}>
         <div className={`${styles.sectionHeader} ${styles.interestsHeader}`}>
-          <span className={styles.sectionNumber} aria-hidden="true">10</span>
+          <span className={styles.sectionNumber} aria-hidden="true">11</span>
           <LuHeart className={styles.sectionIcon} aria-hidden="true" />
           <h2 className={styles.sectionTitle}>{labels.interests}</h2>
           <div className={styles.sectionLine} />
