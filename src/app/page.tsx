@@ -64,6 +64,7 @@ export default function Home() {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {featuredDemos.map((project) => (
             <DemoPreview
+              coverInMotion
               key={project.id}
               title={project.title}
               description={project.summary}
@@ -198,17 +199,19 @@ function DemoPreview({
   href,
   tag,
   cover,
+  coverInMotion = false,
 }: {
   title: string;
   description: string;
   href: string;
   tag?: string;
   cover: string;
+  coverInMotion?: boolean;
 }) {
   return (
     <Link href={href} className="term-card block group">
       <div className="term-cover">
-        <AsciiCover scene={cover} className="term-cover__canvas" />
+        <AsciiCover scene={cover} className="term-cover__canvas" restInMotion={coverInMotion} />
       </div>
       <div className="flex items-start justify-between gap-3 mb-2">
         <h3 className="font-semibold text-base sm:text-lg group-hover:opacity-80 transition">{title}</h3>

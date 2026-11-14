@@ -9,9 +9,11 @@ interface DemoCardProps {
   status?: "live" | "coming-soon";
   /** Scene id for a live ASCII cover above the text. */
   cover?: string;
+  /** Rest the cover on a moving frame, so hover shows motion at once. */
+  coverInMotion?: boolean;
 }
 
-export default function DemoCard({ title, description, href, tags = [], status = "coming-soon", cover }: DemoCardProps) {
+export default function DemoCard({ title, description, href, tags = [], status = "coming-soon", cover, coverInMotion = false }: DemoCardProps) {
   const isLive = status === "live";
   const mutedContent = isLive ? "" : "opacity-70";
 
@@ -19,7 +21,7 @@ export default function DemoCard({ title, description, href, tags = [], status =
     <>
       {cover && (
         <div className="term-cover">
-          <AsciiCover scene={cover} className="term-cover__canvas" />
+          <AsciiCover scene={cover} className="term-cover__canvas" restInMotion={coverInMotion} />
         </div>
       )}
       <div className="flex items-start justify-between gap-3 mb-2">

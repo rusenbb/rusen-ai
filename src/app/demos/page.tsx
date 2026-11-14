@@ -25,6 +25,7 @@ export default function DemosPage() {
             tags={project.tags}
             status={project.status}
             cover={project.id}
+            coverInMotion
           />
         ))}
       </div>

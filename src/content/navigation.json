@@ -8,8 +8,7 @@
   "ui": {
     "menuLabel": "Toggle menu",
     "mobileHeading": "NAVIGATION",
-    "themeLabel": "Theme",
-    "paletteLabel": "Palette"
+    "themeLabel": "Theme"
   },
   "items": [
     {

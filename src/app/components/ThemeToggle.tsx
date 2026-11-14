@@ -2,46 +2,32 @@
 
 import { useSyncExternalStore } from "react";
 import {
-  getResolvedTheme,
+  getActiveTheme,
+  nextTheme,
   setThemePreference,
   subscribeTheme,
-  type ThemeMode,
+  THEMES,
+  type SiteTheme,
 } from "./theme";
 import NavWord from "./NavWord";
 import { useHydrated } from "./useHydrated";
 
-function nextTheme(current: ThemeMode): ThemeMode {
-  return current === "dark" ? "light" : "dark";
-}
-
 export default function ThemeToggle({ label }: { label: string }) {
   const hydrated = useHydrated();
-  const theme = useSyncExternalStore<ThemeMode>(
-    subscribeTheme,
-    getResolvedTheme,
-    () => "light",
-  );
-
-  const handleToggle = () => {
-    const updated = nextTheme(getResolvedTheme());
-    setThemePreference(updated);
-  };
-
-  const isDark = theme === "dark";
+  const theme = useSyncExternalStore<SiteTheme>(subscribeTheme, getActiveTheme, () => "light");
+  const next = THEMES[nextTheme(theme)].label;
 
   return (
     <button
       type="button"
       disabled={!hydrated}
-      onClick={handleToggle}
-      aria-label={`Switch to ${isDark ? "light" : "dark"} theme`}
-      title={`Switch to ${isDark ? "light" : "dark"} theme`}
-      className="theme-toggle group inline-flex items-center justify-center self-center font-mono tabular-nums leading-none text-foreground transition hover:text-foreground"
+      onClick={() => setThemePreference(nextTheme(getActiveTheme()))}
+      aria-label={`Switch to ${next} theme`}
+      title={`Switch to ${next} theme`}
+      className="theme-toggle group inline-flex items-center justify-center self-center font-mono leading-none text-foreground transition hover:text-foreground"
     >
-      <NavWord word={`${label}: ${isDark ? "0" : "1"}`} preserveCase />
-      <span className="sr-only">
-        Current theme: {isDark ? "dark" : "light"}
-      </span>
+      <NavWord word={`${label}: ${THEMES[theme].label}`} preserveCase />
+      <span className="sr-only">Current theme: {THEMES[theme].label}</span>
     </button>
   );
 }

@@ -103,8 +103,8 @@ html[data-theme="dark"] {
   color-scheme: dark;
 }
 
-/* Phosphor palette: an old green-screen terminal. Dark is phosphor on near-black,
-   light is a green-ruled printout. The attribute selector outranks the plain
+/* Phosphor palette: an old green-screen terminal. Dark is the "phosphor" theme,
+   light is "phosphor paper", a green-ruled printout. The attribute selector outranks the plain
    mode blocks above, so it wins in both modes. */
 html[data-palette="phosphor"][data-theme="dark"] {
   --background: #050806;
@@ -438,7 +438,9 @@ body[data-game-life-fullscreen="on"] header {
 
 .site-nav-theme {
   display: grid;
-  width: 5.1rem;
+  width: auto;
+  min-width: 5.1rem;
+  padding: 0 0.35rem;
   height: 2rem;
   place-items: center;
   margin-left: 0.05rem;
@@ -452,11 +454,6 @@ body[data-game-life-fullscreen="on"] header {
   gap: 0.32rem;
   color: inherit;
   outline: none;
-}
-
-.site-nav-palette {
-  width: auto;
-  padding: 0 0.35rem;
 }
 
 .site-nav-theme .site-nav-word-frame {

@@ -23,7 +23,7 @@ vi.mock("next/link", () => ({
 
 vi.mock("./ThemeToggle", () => ({
   default: ({ label }: { label: string }) => (
-    <button type="button">{label}: 1</button>
+    <button type="button">{label}: light</button>
   ),
 }));
 
@@ -38,7 +38,7 @@ describe("Header navigation", () => {
     for (const [name, href] of [["Home", "/"], ["Demos", "/demos"], ["Nerdy Stuff", "/nerdy-stuff"], ["Bulletin", "/bulletin"], ["Photos", "/photos"], ["Blog", "/blogs"], ["CV", "/cv"]]) {
       expect(screen.getByRole("link", { name })).toHaveAttribute("href", href);
     }
-    expect(screen.getByRole("button", { name: "Theme: 1" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Theme: light" })).toBeInTheDocument();
     expect(photosLink).toHaveAttribute("aria-current", "page");
   });
 
@@ -101,7 +101,7 @@ describe("Header navigation", () => {
       container.querySelector('.site-mobile-nav-link[aria-label="Photos"] .site-nav-word-frame'),
     ).toHaveAttribute("data-nav-word", "PHOTOS");
     expect(container.querySelector(".site-mobile-nav-theme button"))
-      .toHaveAccessibleName("Theme: 1");
+      .toHaveAccessibleName("Theme: light");
     expect(container.querySelector(".site-mobile-nav-home")).toHaveAttribute("href", "/");
     expect(container.querySelector(".site-mobile-nav-home"))
       .toHaveAccessibleName("Home");

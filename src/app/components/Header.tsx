@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import navigation from "@/content/navigation.json";
 import NavWord from "./NavWord";
-import PaletteToggle from "./PaletteToggle";
 import ThemeToggle from "./ThemeToggle";
 import { useHydrated } from "./useHydrated";
 
@@ -115,9 +114,6 @@ export default function Header() {
             <div className="site-nav-theme">
               <ThemeToggle label={navUi.themeLabel} />
             </div>
-            <div className="site-nav-theme site-nav-palette">
-              <PaletteToggle label={navUi.paletteLabel} />
-            </div>
           </div>
 
           <div className="md:hidden flex items-center">
@@ -193,9 +189,6 @@ export default function Header() {
               })}
               <div className="site-mobile-nav-theme">
                 <ThemeToggle label={navUi.themeLabel} />
-              </div>
-              <div className="site-mobile-nav-theme">
-                <PaletteToggle label={navUi.paletteLabel} />
               </div>
             </div>
           </div>
