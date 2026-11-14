@@ -49,9 +49,11 @@ export async function exportSelection(
 
   // Fill background
   if (background === "black") {
+    // Data scale, not a theme colour: exported mask pixels.
     ctx.fillStyle = "#000000";
     ctx.fillRect(0, 0, maskWidth, maskHeight);
   } else if (background === "white") {
+    // Data scale, not a theme colour: exported mask pixels.
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, maskWidth, maskHeight);
   }

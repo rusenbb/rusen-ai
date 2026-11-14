@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { getResolvedTheme, THEME_EVENT } from "../theme";
+import { getPalette, getResolvedTheme, THEME_EVENT } from "../theme";
 import type { CellOut } from "./scene-kit";
 import { glyphKey, glyphStyle } from "./ink";
+
+const PHOSPHOR_HUE = 140;
 import { createScene } from "./scenes";
 
 const RAMP = " .:-=+*#%@";
@@ -65,8 +67,11 @@ export default function AsciiCover({ scene, className }: Props) {
     const playing = () => hovered || tapped;
     let pointer: { x: number; y: number } | null = null;
     let dark = getResolvedTheme() === "dark";
+    let phosphor = getPalette() === "phosphor";
 
-    const fillFor = (hue: number, v: number) => {
+    const fillFor = (sceneHue: number, v: number) => {
+      // The phosphor palette is a monochrome green screen, so every scene uses one hue.
+      const hue = phosphor ? PHOSPHOR_HUE : sceneHue;
       const key = glyphKey(hue, v);
       let style = styleCache.get(key);
       if (!style) {
@@ -203,6 +208,7 @@ export default function AsciiCover({ scene, className }: Props) {
     const onVisibility = () => wake();
     const onTheme = () => {
       dark = getResolvedTheme() === "dark";
+      phosphor = getPalette() === "phosphor";
       styleCache.clear();
       draw();
     };

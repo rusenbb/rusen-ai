@@ -25,7 +25,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const baseClasses =
-  "inline-flex items-center justify-center gap-2 font-mono font-semibold uppercase tracking-[0.06em] border transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-neutral-500 disabled:opacity-50 disabled:cursor-not-allowed";
+  "inline-flex items-center justify-center gap-2 font-mono font-semibold uppercase tracking-[0.06em] border transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-line-strong disabled:opacity-50 disabled:cursor-not-allowed";
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
@@ -33,7 +33,7 @@ const variantClasses: Record<ButtonVariant, string> = {
   secondary:
     "border-foreground bg-transparent text-foreground hover:bg-foreground hover:text-background",
   ghost:
-    "border-transparent bg-transparent text-neutral-600 dark:text-neutral-400 hover:text-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800",
+    "border-transparent bg-transparent text-muted hover:text-foreground hover:bg-[color-mix(in_srgb,var(--foreground)_8%,transparent)]",
   danger:
     "border-foreground bg-transparent text-foreground hover:bg-foreground hover:text-background",
   success:

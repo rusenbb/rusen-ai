@@ -4,7 +4,7 @@ import "./globals.css";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import DataBackground from "./components/DataBackground";
-import { THEME_STORAGE_KEY } from "./components/theme";
+import { PALETTE_STORAGE_KEY, PALETTES, THEME_STORAGE_KEY } from "./components/theme";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -57,6 +57,11 @@ export default function RootLayout({
                 document.documentElement.dataset.theme = resolved;
                 document.documentElement.style.colorScheme = resolved;
                 document.documentElement.classList.toggle("dark", resolved === "dark");
+                let palette = null;
+                try { palette = localStorage.getItem("${PALETTE_STORAGE_KEY}"); } catch (_) {}
+                if (palette && palette !== "default" && ${JSON.stringify(PALETTES)}.includes(palette)) {
+                  document.documentElement.dataset.palette = palette;
+                }
               })();
             `,
           }}

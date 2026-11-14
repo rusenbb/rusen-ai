@@ -4,23 +4,20 @@ import { useReducer, useEffect, useCallback, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import type { Tiktoken } from "tiktoken";
 import benchmark from "@/content/tokenizer-benchmark.generated.json";
+import { Alert, Card, Chip, Details, DemoHeader, DemoPage, Segmented, Stat } from "@/components/ui";
 import { byteBoundaries, characterHint, tokenDisplay } from "./bytes";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES & CONSTANTS
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Token swatches: the five series tokens, tinted so text stays readable.
 const TOKEN_COLORS = [
-  "bg-red-200 dark:bg-red-900",
-  "bg-blue-200 dark:bg-blue-900",
-  "bg-green-200 dark:bg-green-900",
-  "bg-yellow-200 dark:bg-yellow-900",
-  "bg-purple-200 dark:bg-purple-900",
-  "bg-pink-200 dark:bg-pink-900",
-  "bg-indigo-200 dark:bg-indigo-900",
-  "bg-orange-200 dark:bg-orange-900",
-  "bg-teal-200 dark:bg-teal-900",
-  "bg-cyan-200 dark:bg-cyan-900",
+  "bg-[color-mix(in_srgb,var(--accent)_28%,transparent)]",
+  "bg-[color-mix(in_srgb,var(--accent-2)_28%,transparent)]",
+  "bg-[color-mix(in_srgb,var(--accent-3)_28%,transparent)]",
+  "bg-[color-mix(in_srgb,var(--accent-4)_28%,transparent)]",
+  "bg-[color-mix(in_srgb,var(--accent-5)_28%,transparent)]",
 ];
 
 interface TokenInfo {
@@ -183,10 +180,10 @@ function findDivergentBoundaries(
 
 function SkeletonLoader() {
   return (
-    <div className="max-w-6xl mx-auto px-4 py-10 sm:py-12 md:py-16">
+    <DemoPage>
       <h1 className="text-3xl sm:text-4xl font-bold mb-4">Rusenizer</h1>
-      <p role="status" className="text-neutral-500">Loading tokenizers…</p>
-    </div>
+      <p role="status" className="text-sub">Loading tokenizers…</p>
+    </DemoPage>
   );
 }
 
@@ -212,7 +209,7 @@ function EfficiencySparkline({ history }: { history: number[] }) {
               y={isPositive ? 12 - normalizedHeight : 12}
               width="4"
               height={Math.max(normalizedHeight, 2)}
-              className={isPositive ? "fill-green-500" : "fill-red-400"}
+              className={isPositive ? "fill-signal" : "fill-danger"}
               rx="1"
             />
           );
@@ -220,7 +217,7 @@ function EfficiencySparkline({ history }: { history: number[] }) {
         {/* Zero line */}
         <line x1="0" y1="12" x2="100" y2="12" stroke="currentColor" strokeOpacity="0.2" />
       </svg>
-      <span className="text-xs text-neutral-400">efficiency over time</span>
+      <span className="text-xs text-sub">efficiency over time</span>
     </div>
   );
 }
@@ -448,11 +445,11 @@ function RusenizerPageInner() {
   // ─────────────────────────────────────────────────────────────────────────
   if (state.error) {
     return (
-      <div className="max-w-6xl mx-auto px-4 py-10 sm:py-12 md:py-16">
+      <DemoPage>
         <div className="flex items-center justify-center min-h-[400px]">
-          <div><h1 className="text-3xl font-bold mb-4">Rusenizer</h1><p role="alert" className="text-red-500">Error: {state.error}</p></div>
+          <div><h1 className="text-3xl font-bold mb-4">Rusenizer</h1><Alert variant="error">Error: {state.error}</Alert></div>
         </div>
-      </div>
+      </DemoPage>
     );
   }
 
@@ -460,88 +457,72 @@ function RusenizerPageInner() {
   // RENDER: Main Content
   // ─────────────────────────────────────────────────────────────────────────
   return (
-    <div className="max-w-6xl mx-auto px-4 py-10 sm:py-12 md:py-16">
-      {/* Header */}
-      <h1 className="text-3xl sm:text-4xl font-bold mb-3 sm:mb-4">Rusenizer</h1>
-      <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 mb-6 sm:mb-8 max-w-2xl text-pretty">
-        A Turkish-optimized BPE tokenizer trained on Turkish Wikipedia. Uses{" "}
-        <span className="font-mono text-sm">{state.vocabSize.toLocaleString()}</span> tokens
-        Compare its actual token count with cl100k_base on your text.
-      </p>
+    <DemoPage>
+      <DemoHeader
+        title="Rusenizer"
+        description={
+          <>
+            A Turkish-optimized BPE tokenizer trained on Turkish Wikipedia. Uses{" "}
+            <span className="font-mono text-sm">{state.vocabSize.toLocaleString()}</span> tokens
+            Compare its actual token count with cl100k_base on your text.
+          </>
+        }
+      />
 
-      <details className="mb-6 border border-[var(--line)] p-4 text-sm">
-        <summary className="cursor-pointer">Measured comparison: {benchmark.rows.length} bundled examples</summary>
-        <p className="mt-3">{benchmark.totalRusen} Rusenizer tokens vs {benchmark.totalBaseline} {benchmark.baseline} tokens: {benchmark.reductionPercent.toFixed(2)}% reduction on this corpus only. {benchmark.scope}</p>
+      <Details className="mb-6" summary={<>Measured comparison: {benchmark.rows.length} bundled examples</>}>
+        <p>{benchmark.totalRusen} Rusenizer tokens vs {benchmark.totalBaseline} {benchmark.baseline} tokens: {benchmark.reductionPercent.toFixed(2)}% reduction on this corpus only. {benchmark.scope}</p>
         <div className="mt-3 overflow-x-auto"><table className="w-full text-left"><thead><tr><th>Text</th><th>Rusenizer</th><th>cl100k_base</th></tr></thead><tbody>{benchmark.rows.map((row) => <tr key={row.text}><td className="py-1 pr-3">{row.text}</td><td>{row.rusen}</td><td>{row.baseline}</td></tr>)}</tbody></table></div>
-        <p className="mt-3 break-all text-xs text-neutral-500">Corpus SHA-256: {benchmark.corpusSha256}. Baseline library: tiktoken {benchmark.tiktokenVersion}. Reproduce with npm run benchmark:tokenizer.</p>
-      </details>
+        <p className="mt-3 break-all text-xs text-sub">Corpus SHA-256: {benchmark.corpusSha256}. Baseline library: tiktoken {benchmark.tiktokenVersion}. Reproduce with npm run benchmark:tokenizer.</p>
+      </Details>
       {/* Mode Toggle */}
-      <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-6">
-        <button
-          onClick={() => dispatch({ type: "TOGGLE_BATCH_MODE" })}
-          className={`px-4 py-2 rounded-lg font-medium transition ${
-            !state.batchMode
-              ? "bg-neutral-900 dark:bg-white text-white dark:text-neutral-900"
-              : "bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700"
-          }`}
-        >
-          Single Text
-        </button>
-        <button
-          onClick={() => dispatch({ type: "TOGGLE_BATCH_MODE" })}
-          className={`px-4 py-2 rounded-lg font-medium transition ${
-            state.batchMode
-              ? "bg-neutral-900 dark:bg-white text-white dark:text-neutral-900"
-              : "bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700"
-          }`}
-        >
-          Batch Mode
-        </button>
+      <div className="mb-6">
+        <Segmented
+          label="Mode"
+          value={state.batchMode ? "batch" : "single"}
+          options={[
+            { value: "single", label: "Single Text" },
+            { value: "batch", label: "Batch Mode" },
+          ]}
+          onChange={(mode) => {
+            if ((mode === "batch") !== state.batchMode) dispatch({ type: "TOGGLE_BATCH_MODE" });
+          }}
+        />
       </div>
 
       {/* Category Tabs */}
       <div className="mb-4">
-        <div className="flex flex-wrap gap-2">
-          {(Object.keys(EXAMPLE_CATEGORIES) as ExampleCategory[]).map((cat) => (
-            <button
-              key={cat}
-              onClick={() => dispatch({ type: "SET_CATEGORY", category: cat })}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${
-                state.activeCategory === cat
-                  ? "bg-neutral-900 dark:bg-white text-white dark:text-neutral-900"
-                  : "bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700"
-              }`}
-            >
-              {cat.charAt(0).toUpperCase() + cat.slice(1)}
-            </button>
-          ))}
-        </div>
+        <Segmented
+          label="Example category"
+          value={state.activeCategory}
+          options={(Object.keys(EXAMPLE_CATEGORIES) as ExampleCategory[]).map((cat) => ({
+            value: cat,
+            label: cat.charAt(0).toUpperCase() + cat.slice(1),
+          }))}
+          onChange={(category) => dispatch({ type: "SET_CATEGORY", category })}
+        />
       </div>
 
       {/* Example Buttons */}
       <div className="mb-6">
-        <div className="text-sm text-neutral-500 mb-2">
-          Try an example: <span className="text-neutral-400">(or press 1-{examples.length})</span>
+        <div className="text-sm text-muted mb-2">
+          Try an example: <span className="text-sub">(or press 1-{examples.length})</span>
         </div>
         <div className="flex flex-wrap gap-2">
           {examples.map((example, idx) => (
-            <button
+            <Chip
               key={example.text}
+              selected={state.inputText === example.text}
               onClick={() => dispatch({ type: "SET_INPUT", text: example.text })}
-              className={`px-3 py-1 text-sm rounded-full border transition ${
-                state.inputText === example.text
-                  ? "border-neutral-900 dark:border-neutral-100 bg-neutral-100 dark:bg-neutral-800"
-                  : "border-neutral-300 dark:border-neutral-700 hover:border-neutral-500"
-              }`}
+              className="!normal-case !tracking-normal"
             >
-              <span className="text-neutral-400 mr-1">{idx + 1}.</span>
+              <span className="opacity-60">{idx + 1}.</span>
               {example.label}
-            </button>
+            </Chip>
           ))}
         </div>
       </div>
 
-      <p className="mb-4 text-sm text-neutral-500">{characterHint(state.inputText)} Partial UTF-8 tokens appear as hexadecimal bytes in ⟦brackets⟧; highlighted boundaries use byte positions.</p>
+      <p className="mb-4 text-sm text-muted">{characterHint(state.inputText)} Partial UTF-8 tokens appear as hexadecimal bytes in ⟦brackets⟧; highlighted boundaries use byte positions.</p>
 
       {/* Input */}
       <div className="mb-8">
@@ -551,16 +532,16 @@ function RusenizerPageInner() {
         <textarea
           value={state.inputText}
           onChange={(e) => dispatch({ type: "SET_INPUT", text: e.target.value })}
-          className="w-full h-24 p-4 border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-900 font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-neutral-400"
+          className="w-full h-24 p-4 border border-line bg-surface text-foreground font-mono text-sm resize-none focus:outline-none focus:border-line-strong"
           placeholder={state.batchMode ? "Paste multiple sentences to compare..." : "Enter any text to tokenize..."}
         />
       </div>
 
       {/* Empty State */}
       {!state.inputText && (
-        <div className="text-center py-12 mb-8 border border-dashed border-neutral-300 dark:border-neutral-700 rounded-lg">
-          <p className="text-neutral-500 mb-2 text-lg">Type Turkish text to see the magic!</p>
-          <p className="text-sm text-neutral-400 max-w-md mx-auto">
+        <div className="text-center py-12 mb-8 border border-dashed border-line">
+          <p className="text-muted mb-2 text-lg">Type Turkish text to see the magic!</p>
+          <p className="text-sm text-sub max-w-md mx-auto">
             Token savings depend on the input and vocabulary. Try &quot;göremeyecekmişsiniz&quot; to see how
             Rusenizer handles complex suffixes.
           </p>
@@ -569,14 +550,14 @@ function RusenizerPageInner() {
 
       {/* Batch Mode Results */}
       {state.batchMode && batchResults.length > 0 && (
-        <div className="mb-8 border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden">
-          <div className="px-4 py-3 bg-neutral-50 dark:bg-neutral-800/50 border-b border-neutral-200 dark:border-neutral-700">
+        <div className="mb-8 border border-line bg-surface overflow-hidden">
+          <div className="px-4 py-3 border-b border-line">
             <h2 className="font-semibold">Batch Comparison ({batchResults.length} sentences)</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-neutral-500 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800/30">
+                <tr className="text-left text-sub border-b border-line">
                   <th className="px-4 py-2">Sentence</th>
                   <th className="px-4 py-2 text-right">Rusenizer</th>
                   <th className="px-4 py-2 text-right">GPT-4</th>
@@ -585,18 +566,18 @@ function RusenizerPageInner() {
               </thead>
               <tbody>
                 {batchResults.map((result, i) => (
-                  <tr key={i} className="border-b border-neutral-100 dark:border-neutral-900">
+                  <tr key={i} className="border-b border-line">
                     <td className="px-4 py-3 max-w-xs truncate" title={result.text}>
                       {result.text.slice(0, 50)}{result.text.length > 50 ? "..." : ""}
                     </td>
-                    <td className="px-4 py-3 text-right font-mono text-green-600 dark:text-green-400">
+                    <td className="px-4 py-3 text-right font-mono text-signal">
                       {result.rusenTokens}
                     </td>
                     <td className="px-4 py-3 text-right font-mono">
                       {result.gptTokens}
                     </td>
                     <td className={`px-4 py-3 text-right font-mono ${
-                      result.savings > 0 ? "text-green-600 dark:text-green-400" : "text-red-500"
+                      result.savings > 0 ? "text-signal" : "text-danger"
                     }`}>
                       {result.savings > 0 ? "-" : "+"}{Math.abs(result.savings).toFixed(1)}%
                     </td>
@@ -604,15 +585,15 @@ function RusenizerPageInner() {
                 ))}
               </tbody>
               <tfoot>
-                <tr className="bg-neutral-50 dark:bg-neutral-800/30 font-medium">
+                <tr className="border-t border-line font-medium">
                   <td className="px-4 py-3">Total</td>
-                  <td className="px-4 py-3 text-right font-mono text-green-600 dark:text-green-400">
+                  <td className="px-4 py-3 text-right font-mono text-signal">
                     {batchResults.reduce((sum, r) => sum + r.rusenTokens, 0)}
                   </td>
                   <td className="px-4 py-3 text-right font-mono">
                     {batchResults.reduce((sum, r) => sum + r.gptTokens, 0)}
                   </td>
-                  <td className="px-4 py-3 text-right font-mono text-green-600 dark:text-green-400">
+                  <td className="px-4 py-3 text-right font-mono text-signal">
                     {(() => {
                       const totalRusen = batchResults.reduce((sum, r) => sum + r.rusenTokens, 0);
                       const totalGpt = batchResults.reduce((sum, r) => sum + r.gptTokens, 0);
@@ -633,10 +614,10 @@ function RusenizerPageInner() {
           {/* Results Grid */}
           <div className="grid md:grid-cols-2 gap-4 sm:gap-6 mb-8">
             {/* Rusenizer */}
-            <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-6">
+            <Card padding="lg">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold">Rusenizer v1</h2>
-                <span className="text-2xl font-bold text-green-600 dark:text-green-400">
+                <span className="text-2xl font-bold text-signal">
                   {rusenTokenCount} tokens
                 </span>
               </div>
@@ -649,7 +630,7 @@ function RusenizerPageInner() {
                       className={`relative group px-2 py-1 rounded text-sm font-mono cursor-pointer
                         hover:scale-105 transition-all duration-150
                         ${TOKEN_COLORS[i % TOKEN_COLORS.length]}
-                        ${isDivergent ? "ring-2 ring-amber-400 ring-offset-1" : ""}
+                        ${isDivergent ? "ring-2 ring-accent-2 ring-offset-1 ring-offset-surface" : ""}
                         animate-[token-appear_0.2s_ease-out_forwards]`}
                       style={{ animationDelay: `${i * 30}ms`, opacity: 0 }}
                       onClick={() => navigator.clipboard.writeText(token.text)}
@@ -657,25 +638,25 @@ function RusenizerPageInner() {
                     >
                       {token.text.replace(/ /g, "·").replace(/\n/g, "↵")}
                       {/* Enhanced Tooltip */}
-                      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-xs bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20 shadow-lg">
+                      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-xs bg-foreground text-background opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20">
                         <div><strong>ID:</strong> {token.id}</div>
                         <div><strong>Bytes:</strong> [{token.bytes.join(", ")}]</div>
                         <div><strong>Chars:</strong> {token.text.length}</div>
                         {isDivergent && (
-                          <div className="text-amber-400 mt-1">Divergent boundary</div>
+                          <div className="text-accent-2 mt-1">Divergent boundary</div>
                         )}
                       </span>
                     </span>
                   );
                 })}
               </div>
-            </div>
+            </Card>
 
             {/* GPT-4 */}
-            <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-6">
+            <Card padding="lg">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold">GPT-4 (cl100k_base)</h2>
-                <span className="text-2xl font-bold text-neutral-600 dark:text-neutral-400">
+                <span className="text-2xl font-bold text-muted">
                   {gpt4TokenCount} tokens
                 </span>
               </div>
@@ -688,7 +669,7 @@ function RusenizerPageInner() {
                       className={`relative group px-2 py-1 rounded text-sm font-mono cursor-pointer
                         hover:scale-105 transition-all duration-150
                         ${TOKEN_COLORS[i % TOKEN_COLORS.length]}
-                        ${isDivergent ? "ring-2 ring-amber-400 ring-offset-1" : ""}
+                        ${isDivergent ? "ring-2 ring-accent-2 ring-offset-1 ring-offset-surface" : ""}
                         animate-[token-appear_0.2s_ease-out_forwards]`}
                       style={{ animationDelay: `${i * 30}ms`, opacity: 0 }}
                       onClick={() => navigator.clipboard.writeText(token.text)}
@@ -696,11 +677,11 @@ function RusenizerPageInner() {
                     >
                       {token.text.replace(/ /g, "·").replace(/\n/g, "↵")}
                       {/* Tooltip */}
-                      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-xs bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20 shadow-lg">
+                      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-xs bg-foreground text-background opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20">
                         <div><strong>ID:</strong> {token.id}</div>
                         <div><strong>Chars:</strong> {token.text.length}</div>
                         {isDivergent && (
-                          <div className="text-amber-400 mt-1">Divergent boundary</div>
+                          <div className="text-accent-2 mt-1">Divergent boundary</div>
                         )}
                       </span>
                     </span>
@@ -708,12 +689,12 @@ function RusenizerPageInner() {
                 })}
               </div>
               {savings && Number(savings) > 0 && (
-                <div className="mt-4 text-sm text-green-600 dark:text-green-400 font-medium flex items-center">
+                <div className="mt-4 text-sm text-signal font-medium flex items-center">
                   Rusenizer saves {savings}% tokens
                   {/* Why This Matters Tooltip */}
                   <span className="relative group ml-2">
-                    <span className="text-neutral-400 cursor-help text-lg">ⓘ</span>
-                    <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 p-3 text-xs bg-neutral-900 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none w-64 z-30 shadow-lg">
+                    <span className="text-sub cursor-help text-lg">ⓘ</span>
+                    <span className="absolute bottom-full right-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2 mb-2 p-3 text-xs bg-foreground text-background opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none w-64 z-30">
                       <strong className="block mb-1">Cost Impact:</strong>
                       Each token costs ~$0.01-0.03 in API calls.
                       {Number(savings) > 0 && (
@@ -724,18 +705,18 @@ function RusenizerPageInner() {
                 </div>
               )}
               {savings && Number(savings) < 0 && (
-                <div className="mt-4 text-sm text-neutral-500 font-medium">
+                <div className="mt-4 text-sm text-sub font-medium">
                   GPT-4 uses {Math.abs(Number(savings))}% fewer tokens
                 </div>
               )}
-            </div>
+            </Card>
           </div>
 
           {/* Diff Legend */}
           {(rusenDivergent.size > 0 || gptDivergent.size > 0) && (
-            <div className="mb-8 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg text-sm">
-              <span className="inline-block w-4 h-4 ring-2 ring-amber-400 ring-offset-1 rounded mr-2 align-middle" />
-              <span className="text-amber-800 dark:text-amber-200">
+            <div className="mb-8 p-3 bg-accent-2/10 border border-accent-2/40 text-sm">
+              <span className="inline-block w-4 h-4 ring-2 ring-accent-2 ring-offset-1 ring-offset-surface rounded mr-2 align-middle" />
+              <span className="text-foreground">
                 Highlighted tokens show where tokenizers split differently
               </span>
             </div>
@@ -743,48 +724,40 @@ function RusenizerPageInner() {
 
           {/* Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-            <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold">{state.inputText.length}</div>
-              <div className="text-sm text-neutral-500">Characters</div>
-            </div>
-            <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold">{new TextEncoder().encode(state.inputText).length}</div>
-              <div className="text-sm text-neutral-500">Bytes</div>
-            </div>
-            <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">{rusenTokenCount}</div>
-              <div className="text-sm text-neutral-500">Rusenizer</div>
-            </div>
-            <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold">{gpt4TokenCount}</div>
-              <div className="text-sm text-neutral-500">GPT-4</div>
-            </div>
-            <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-4 text-center">
-              <div className={`text-2xl font-bold ${Number(savings) > 0 ? "text-green-600 dark:text-green-400" : ""}`}>
-                {savings ? `${Number(savings) > 0 ? "-" : "+"}${Math.abs(Number(savings))}%` : "·"}
-              </div>
-              <div className="text-sm text-neutral-500">Difference</div>
-            </div>
+            <Card padding="md"><Stat label="Characters" value={state.inputText.length} /></Card>
+            <Card padding="md"><Stat label="Bytes" value={new TextEncoder().encode(state.inputText).length} /></Card>
+            <Card padding="md"><Stat label="Rusenizer" value={<span className="text-signal">{rusenTokenCount}</span>} /></Card>
+            <Card padding="md"><Stat label="GPT-4" value={gpt4TokenCount} /></Card>
+            <Card padding="md">
+              <Stat
+                label="Difference"
+                value={
+                  <span className={Number(savings) > 0 ? "text-signal" : ""}>
+                    {savings ? `${Number(savings) > 0 ? "-" : "+"}${Math.abs(Number(savings))}%` : "·"}
+                  </span>
+                }
+              />
+            </Card>
           </div>
 
           {/* Efficiency Sparkline */}
           {state.efficiencyHistory.length >= 2 && (
-            <div className="mb-8 p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg">
+            <Card padding="md" className="mb-8">
               <div className="flex items-center">
                 <span className="text-sm font-medium">Efficiency Trend</span>
                 <EfficiencySparkline history={state.efficiencyHistory} />
               </div>
-            </div>
+            </Card>
           )}
 
           {/* Token Details */}
           {state.tokens.length > 0 && (
-            <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-6">
+            <Card padding="lg">
               <h2 className="text-lg font-semibold mb-4">Rusenizer Token Details</h2>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm font-mono">
                   <thead>
-                    <tr className="text-left text-neutral-500 border-b border-neutral-200 dark:border-neutral-800">
+                    <tr className="text-left text-sub border-b border-line">
                       <th className="pb-2 pr-4">#</th>
                       <th className="pb-2 pr-4">Token</th>
                       <th className="pb-2 pr-4">ID</th>
@@ -793,28 +766,28 @@ function RusenizerPageInner() {
                   </thead>
                   <tbody>
                     {state.tokens.map((token, i) => (
-                      <tr key={i} className="border-b border-neutral-100 dark:border-neutral-900">
-                        <td className="py-2 pr-4 text-neutral-400">{i}</td>
+                      <tr key={i} className="border-b border-line">
+                        <td className="py-2 pr-4 text-sub">{i}</td>
                         <td className="py-2 pr-4">
                           <span className={`px-2 py-0.5 rounded ${TOKEN_COLORS[i % TOKEN_COLORS.length]}`}>
                             {token.text.replace(/ /g, "·").replace(/\n/g, "↵")}
                           </span>
                         </td>
-                        <td className="py-2 pr-4 text-neutral-500">{token.id}</td>
-                        <td className="py-2 text-neutral-500">[{token.bytes.join(", ")}]</td>
+                        <td className="py-2 pr-4 text-muted">{token.id}</td>
+                        <td className="py-2 text-muted">[{token.bytes.join(", ")}]</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            </div>
+            </Card>
           )}
         </>
       )}
 
       {/* About */}
-      <div className="mt-12 text-sm text-neutral-500">
-        <h3 className="font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
+      <div className="mt-12 text-sm text-muted">
+        <h3 className="font-semibold text-foreground mb-2">
           About Rusenizer
         </h3>
         <p className="mb-2">
@@ -828,7 +801,7 @@ function RusenizerPageInner() {
           multilingual tokenizers like GPT-4&apos;s cl100k_base.
         </p>
       </div>
-    </div>
+    </DemoPage>
   );
 }
 

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import navigation from "@/content/navigation.json";
 import NavWord from "./NavWord";
+import PaletteToggle from "./PaletteToggle";
 import ThemeToggle from "./ThemeToggle";
 import { useHydrated } from "./useHydrated";
 
@@ -78,7 +79,7 @@ export default function Header() {
   }, [closeMobileNav, mobileNavOpen]);
 
   return (
-    <header className="ui-surface sticky top-0 z-[90] border-b border-neutral-200/70 dark:border-neutral-800/70 backdrop-blur-sm">
+    <header className="ui-surface sticky top-0 z-[90] border-b border-line backdrop-blur-sm">
       <nav className="relative max-w-6xl mx-auto px-4 py-3 sm:py-4 md:py-3" ref={mobileMenuRef}>
         <div className="flex items-center justify-between gap-3 md:justify-center">
           <Link href="/" className="text-lg sm:text-xl font-bold hover:opacity-80 transition md:hidden">
@@ -114,6 +115,9 @@ export default function Header() {
             <div className="site-nav-theme">
               <ThemeToggle label={navUi.themeLabel} />
             </div>
+            <div className="site-nav-theme site-nav-palette">
+              <PaletteToggle label={navUi.paletteLabel} />
+            </div>
           </div>
 
           <div className="md:hidden flex items-center">
@@ -122,7 +126,7 @@ export default function Header() {
               disabled={!hydrated}
               type="button"
               onClick={() => setMobileNavOpen((v) => !v)}
-              className="inline-flex items-center justify-center w-11 h-11 border border-[var(--line)] text-neutral-700 dark:text-neutral-200"
+              className="inline-flex items-center justify-center w-11 h-11 border border-[var(--line)] text-foreground"
               aria-label={navUi.menuLabel}
               aria-expanded={mobileNavOpen}
               aria-controls="mobile-nav"
@@ -189,6 +193,9 @@ export default function Header() {
               })}
               <div className="site-mobile-nav-theme">
                 <ThemeToggle label={navUi.themeLabel} />
+              </div>
+              <div className="site-mobile-nav-theme">
+                <PaletteToggle label={navUi.paletteLabel} />
               </div>
             </div>
           </div>

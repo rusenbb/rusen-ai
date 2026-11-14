@@ -28,7 +28,7 @@ export default function DemoCard({ title, description, href, tags = [], status =
           <span className="term-tag term-tag--soon shrink-0">SOON</span>
         )}
       </div>
-      <p className={`text-neutral-700 dark:text-neutral-400 text-sm leading-relaxed mb-3 ${mutedContent}`}>{description}</p>
+      <p className={`text-muted text-sm leading-relaxed mb-3 ${mutedContent}`}>{description}</p>
       {tags.length > 0 && (
         <p className={`term-tags ${mutedContent}`}>{tags.slice(0, 3).join(" · ")}</p>
       )}

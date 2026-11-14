@@ -6,6 +6,8 @@ import {
   DemoHeader,
   DemoPage,
   DemoPanel,
+  Details,
+  Slider,
 } from "@/components/ui";
 import { norm } from "./sampling";
 import type { Comparison, Condition } from "./model";
@@ -211,13 +213,13 @@ export default function SteeringLab() {
                   <span className="block text-sm font-semibold">
                     {item.title}
                   </span>
-                  <span className="mt-2 block font-mono text-xs text-neutral-500">
+                  <span className="mt-2 block font-mono text-xs text-sub">
                     After block {item.variants.map((v) => v.layer).join(" / ")}
                   </span>
                 </button>
               ))}
             </div>
-            <p className="mt-3 text-sm text-neutral-500">
+            <p className="mt-3 text-sm text-sub">
               Evaluated on short English story continuations with this pinned
               model. These are subject directions, not universal behavior
               controls.{" "}
@@ -232,10 +234,10 @@ export default function SteeringLab() {
         )}
       </fieldset>
       {!custom && (
-        <details className="mb-6 border border-[var(--line)] p-4">
-          <summary className="cursor-pointer text-sm font-semibold">
-            Evaluation & examples · {preset.title}
-          </summary>
+        <Details
+          className="mb-6"
+          summary={<>Evaluation &amp; examples · {preset.title}</>}
+        >
           <p className="my-3 text-sm leading-relaxed">
             After block {variant.layer}, α = {variant.strength}:{" "}
             {variant.nativePassed}/{variant.total} reviewed continuations passed
@@ -243,7 +245,7 @@ export default function SteeringLab() {
             T = 0.7 and seed 42. This was a small qualitative review of
             recognizable themes and interpretable continuations.
           </p>
-          <p className="my-3 text-sm text-neutral-500">{preset.limitation}</p>
+          <p className="my-3 text-sm text-sub">{preset.limitation}</p>
           <div className="grid gap-4 md:grid-cols-2">
             {(["original", "steered"] as const).map((condition) => (
               <div key={condition} className="border border-[var(--line)] p-4">
@@ -251,7 +253,7 @@ export default function SteeringLab() {
                   Recorded {condition} · browser
                 </h3>
                 <p className="whitespace-pre-wrap text-sm leading-relaxed">
-                  <span className="text-neutral-500">
+                  <span className="text-sub">
                     {preset.example.opening}
                   </span>
                   {preset.example[condition]}
@@ -268,14 +270,14 @@ export default function SteeringLab() {
               Development search history
             </a>
           </p>
-        </details>
+        </Details>
       )}
       <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <DemoPanel
           title="Where the intervention happens"
           description={`SmolLM2 · ${MODEL_SHAPE.blocks} transformer blocks · ${MODEL_SHAPE.hidden}-dimensional residual stream`}
         >
-          <div className="mb-5 flex items-center gap-3 font-mono text-xs text-neutral-500">
+          <div className="mb-5 flex items-center gap-3 font-mono text-xs text-sub">
             <span>Prompt</span>
             <span aria-hidden="true">→</span>
             <span>Embedding</span>
@@ -314,7 +316,7 @@ export default function SteeringLab() {
             )}
           </div>
           <div className="my-5 border-l-2 border-[var(--signal)] pl-4">
-            <p className="text-xs uppercase tracking-widest text-neutral-500">
+            <p className="text-xs uppercase tracking-widest text-sub">
               After block {settings.layer}, before block {settings.layer + 1}
             </p>
             <p className="my-2 font-mono text-xl">h′ = h + α · v</p>
@@ -325,20 +327,17 @@ export default function SteeringLab() {
             </p>
           </div>
           <fieldset disabled={busy}>
-            <label className="block text-sm">
-              Strength α = <strong>{settings.strength.toFixed(2)}</strong>
-              <input
-                aria-label="Steering strength"
-                type="range"
-                min={custom ? -2 : 0}
-                max={custom ? 2 : variant.strength}
-                step={0.05}
-                className="my-3 w-full"
-                value={settings.strength}
-                onChange={(e) => update("strength", Number(e.target.value))}
-              />
-            </label>
-            <div className="flex justify-between text-xs text-neutral-500">
+            <Slider
+              label="Steering strength α"
+              display={settings.strength.toFixed(2)}
+              min={custom ? -2 : 0}
+              max={custom ? 2 : variant.strength}
+              step={0.05}
+              className="mb-3"
+              value={settings.strength}
+              onChange={(v) => update("strength", v)}
+            />
+            <div className="flex justify-between text-xs text-sub">
               <span>{custom ? "− Contrast" : "No intervention"}</span>
               <button
                 className="underline"
@@ -349,7 +348,7 @@ export default function SteeringLab() {
               <span>+ {custom ? "Target" : preset.title}</span>
             </div>
           </fieldset>
-          <p className="mt-4 text-xs text-neutral-500">
+          <p className="mt-4 text-xs text-sub">
             {custom
               ? "α = 1 adds one raw mean contrast vector. Negative strength reverses it. Large interventions can introduce repetition or break coherence."
               : `Evaluation setting: α = ${variant.strength.toFixed(2)}, after block ${variant.layer}, T = 0.7, seed 42, 64 tokens. Intermediate strengths are exploratory; α = 0 is the unchanged control.`}
@@ -399,22 +398,19 @@ export default function SteeringLab() {
                 />
               </label>
             </div>
-            <label className="block text-sm">
-              Temperature {settings.temperature.toFixed(1)}
-              {settings.temperature === 0
-                ? " · greedy decoding"
-                : " · seeded top-40 sampling"}
-              <input
-                aria-label="Temperature"
-                type="range"
-                min={0}
-                max={1.2}
-                step={0.1}
-                value={settings.temperature}
-                onChange={(e) => update("temperature", Number(e.target.value))}
-                className="mt-2 w-full"
-              />
-            </label>
+            <Slider
+              label="Temperature"
+              display={`${settings.temperature.toFixed(1)}${
+                settings.temperature === 0
+                  ? " · greedy decoding"
+                  : " · seeded top-40 sampling"
+              }`}
+              min={0}
+              max={1.2}
+              step={0.1}
+              value={settings.temperature}
+              onChange={(v) => update("temperature", v)}
+            />
             <Button onClick={run} disabled={!settings.prompt.trim()}>
               Run experiment
             </Button>
@@ -433,15 +429,15 @@ export default function SteeringLab() {
               Stop experiment
             </Button>
           )}
-          <p role="status" className="mt-4 text-xs text-neutral-500">
+          <p role="status" className="mt-4 text-xs text-sub">
             {status}
           </p>
           {error && (
-            <p role="alert" className="mt-3 text-sm text-red-600">
+            <p role="alert" className="mt-3 text-sm text-danger">
               {error}
             </p>
           )}
-          <p className="mt-4 text-xs leading-relaxed text-neutral-500">
+          <p className="mt-4 text-xs leading-relaxed text-sub">
             First run downloads a verified {(MODEL_BYTES / 1e6).toFixed(0)} MB
             model plus tokenizer, then caches it. Use a desktop browser with
             enough free memory. Inference stays in a browser worker. This
@@ -450,13 +446,18 @@ export default function SteeringLab() {
           </p>
         </DemoPanel>
       </div>
-      <details open={custom} className="my-6 border border-[var(--line)] p-4">
-        <summary className="cursor-pointer text-sm font-semibold">
-          {custom
-            ? "Build your contrast dataset"
-            : "Inspect the measured direction’s dataset"}{" "}
-          · {settings.positive.length} pairs
-        </summary>
+      <Details
+        defaultOpen={custom}
+        className="my-6"
+        summary={
+          <>
+            {custom
+              ? "Build your contrast dataset"
+              : "Inspect the measured direction’s dataset"}{" "}
+            · {settings.positive.length} pairs
+          </>
+        }
+      >
         <fieldset disabled={busy}>
           <p className="my-4 text-sm leading-relaxed">
             {custom
@@ -482,7 +483,7 @@ export default function SteeringLab() {
               </label>
             ))}
           </div>
-          <p className="mt-4 text-xs text-neutral-500">
+          <p className="mt-4 text-xs text-sub">
             Shared instruction for all conditions: “{CONTINUATION_INSTRUCTION}”
             Your opening is then supplied as the assistant’s unfinished text.
           </p>
@@ -498,7 +499,7 @@ export default function SteeringLab() {
             />
           </label>
         </fieldset>
-      </details>
+      </Details>
       <div className="grid gap-4 xl:grid-cols-3">
         {CONDITIONS.map((condition) => (
           <DemoPanel
@@ -519,11 +520,11 @@ export default function SteeringLab() {
             >
               {text[condition] ? (
                 <>
-                  <span className="text-neutral-500">{settings.prompt}</span>
+                  <span className="text-sub">{settings.prompt}</span>
                   {text[condition]}
                 </>
               ) : (
-                <span className="text-neutral-500">
+                <span className="text-sub">
                   {result
                     ? "The model ended before generating a continuation."
                     : "Run the experiment to generate this continuation."}
@@ -531,7 +532,7 @@ export default function SteeringLab() {
               )}
             </p>
             {result && (
-              <div className="mt-4 border-t border-[var(--line)] pt-3 text-xs text-neutral-500">
+              <div className="mt-4 border-t border-[var(--line)] pt-3 text-xs text-sub">
                 {result.outputs[condition].tokenIds.length} tokens ·{" "}
                 {(result.outputs[condition].milliseconds / 1000).toFixed(1)} s ·{" "}
                 {(result.outputs[condition].repetition * 100).toFixed(1)}%
@@ -575,7 +576,7 @@ export default function SteeringLab() {
                     y={value >= 0 ? 45 - (value / maxDirection) * 40 : 45}
                     width={1}
                     height={Math.abs(value / maxDirection) * 40}
-                    fill={value >= 0 ? "#16804a" : "#c57127"}
+                    style={{ fill: value >= 0 ? "var(--accent-4)" : "var(--accent-2)" }}
                   />
                 ))}
               </svg>
@@ -583,7 +584,7 @@ export default function SteeringLab() {
                 ‖v‖ = {result.directionNorm.toFixed(2)} · ‖αv‖ / ‖h‖ ={" "}
                 {(relative * 100).toFixed(1)}%
               </p>
-              <p className="mt-3 text-xs text-neutral-500">
+              <p className="mt-3 text-xs text-sub">
                 The ratio uses the residual at the measured prediction.
                 Coordinates are not independently labeled concepts.
               </p>
@@ -615,7 +616,7 @@ export default function SteeringLab() {
                   </div>
                 ))}
               </div>
-              <p className="mt-4 text-xs text-neutral-500">
+              <p className="mt-4 text-xs text-sub">
                 Probabilities use softmax at T = 1, before sampling. This
                 measures distribution change, not writing quality.{" "}
                 {actual?.measurementIndex

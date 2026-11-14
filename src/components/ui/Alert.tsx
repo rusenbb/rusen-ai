@@ -30,9 +30,9 @@ const variantStyles: Record<
   { accent: string; iconColor: string; titleColor: string; icon: ReactNode }
 > = {
   error: {
-    accent: "border-l-red-600 dark:border-l-red-400",
-    iconColor: "text-red-600 dark:text-red-400",
-    titleColor: "text-red-700 dark:text-red-300",
+    accent: "border-l-danger",
+    iconColor: "text-danger",
+    titleColor: "text-danger",
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path
@@ -45,9 +45,9 @@ const variantStyles: Record<
     ),
   },
   success: {
-    accent: "border-l-green-600 dark:border-l-green-400",
-    iconColor: "text-green-600 dark:text-green-400",
-    titleColor: "text-green-700 dark:text-green-300",
+    accent: "border-l-signal",
+    iconColor: "text-signal",
+    titleColor: "text-signal",
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path
@@ -60,9 +60,9 @@ const variantStyles: Record<
     ),
   },
   warning: {
-    accent: "border-l-yellow-600 dark:border-l-yellow-400",
-    iconColor: "text-yellow-600 dark:text-yellow-400",
-    titleColor: "text-yellow-700 dark:text-yellow-300",
+    accent: "border-l-accent-2",
+    iconColor: "text-accent-2",
+    titleColor: "text-accent-2",
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path
@@ -75,9 +75,9 @@ const variantStyles: Record<
     ),
   },
   info: {
-    accent: "border-l-blue-600 dark:border-l-blue-400",
-    iconColor: "text-blue-600 dark:text-blue-400",
-    titleColor: "text-blue-700 dark:text-blue-300",
+    accent: "border-l-accent",
+    iconColor: "text-accent",
+    titleColor: "text-accent",
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path

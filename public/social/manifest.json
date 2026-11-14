@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "inputFingerprint": "20e3aa999c77bd27b92517f8538fdc46605bdb3d655fef540f0e05c0f260dbae",
+  "inputFingerprint": "a6236e8288370002e2b5ef95528f7bd719444ec98fc92fea823275774f3550e6",
   "assets": [
     {
       "route": "/",
@@ -103,7 +103,7 @@
       "image": "/social/projects/segment-anything.png",
       "width": 1200,
       "height": 630,
-      "bytes": 25108,
+      "bytes": 24577,
       "format": "png"
     },
     {

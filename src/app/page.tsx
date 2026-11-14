@@ -26,7 +26,7 @@ export default function Home() {
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 leading-tight text-balance">
           Data is eating the world.
         </h1>
-        <p className="text-base sm:text-lg md:text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto text-pretty">
+        <p className="text-base sm:text-lg md:text-xl text-muted max-w-2xl mx-auto text-pretty">
           I&apos;m Rusen, an AI &amp; Data Engineer building tools to make sense of it all.
         </p>
       </section>
@@ -58,7 +58,7 @@ export default function Home() {
       {/* Featured Demos */}
       <section className="mb-12 sm:mb-16 md:mb-20">
         <SectionHeader num="01" title="Featured Demos" href="/demos" />
-        <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-500 mb-5 sm:mb-8">
+        <p className="text-sm sm:text-base text-muted mb-5 sm:mb-8">
           Tools that transform data into insights.
         </p>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -78,7 +78,7 @@ export default function Home() {
       {/* Nerdy Stuff Preview */}
       <section className="mb-12 sm:mb-16 md:mb-20">
         <SectionHeader num="02" title="Under The Hood" href="/nerdy-stuff" />
-        <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-500 mb-5 sm:mb-8">
+        <p className="text-sm sm:text-base text-muted mb-5 sm:mb-8">
           See how the data sausage is made.
         </p>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -98,7 +98,7 @@ export default function Home() {
       {/* Bulletin */}
       <section className="mb-12 sm:mb-16 md:mb-20">
         <SectionHeader num="03" title="Bulletin" href="/bulletin" />
-        <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-500 mb-5 sm:mb-8">
+        <p className="text-sm sm:text-base text-muted mb-5 sm:mb-8">
           Software that lives outside the browser.
         </p>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -118,7 +118,7 @@ export default function Home() {
       {/* Latest Writings */}
       <section className="mb-4 sm:mb-8">
         <SectionHeader num="04" title="Latest Writings" href="/blogs" />
-        <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-500 mb-5 sm:mb-8">
+        <p className="text-sm sm:text-base text-muted mb-5 sm:mb-8">
           Long-form notes on AI and the practice of programming.
         </p>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -165,7 +165,7 @@ function WritingPreview({
         </h3>
         <PostSigil sigil={sigil} />
       </div>
-      <p className="text-neutral-600 dark:text-neutral-400 text-sm leading-relaxed">
+      <p className="text-muted text-sm leading-relaxed">
         {description}
       </p>
       <div className="term-status mt-3">
@@ -213,7 +213,7 @@ function DemoPreview({
       <div className="flex items-start justify-between gap-3 mb-2">
         <h3 className="font-semibold text-base sm:text-lg group-hover:opacity-80 transition">{title}</h3>
       </div>
-      <p className="text-neutral-600 dark:text-neutral-400 text-sm leading-relaxed">{description}</p>
+      <p className="text-muted text-sm leading-relaxed">{description}</p>
       {tag && <p className="term-tags mt-3">{tag}</p>}
     </Link>
   );

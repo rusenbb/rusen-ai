@@ -36,7 +36,7 @@ export default function ThemeToggle({ label }: { label: string }) {
       onClick={handleToggle}
       aria-label={`Switch to ${isDark ? "light" : "dark"} theme`}
       title={`Switch to ${isDark ? "light" : "dark"} theme`}
-      className="theme-toggle group inline-flex items-center justify-center self-center font-mono tabular-nums leading-none text-neutral-700 transition hover:text-neutral-950 dark:text-neutral-300 dark:hover:text-neutral-50"
+      className="theme-toggle group inline-flex items-center justify-center self-center font-mono tabular-nums leading-none text-foreground transition hover:text-foreground"
     >
       <NavWord word={`${label}: ${isDark ? "0" : "1"}`} preserveCase />
       <span className="sr-only">
