@@ -230,7 +230,11 @@ export function VolumeViewer({
     };
     redraw.current = render;
     render();
-    return () => cancelAnimationFrame(request.current);
+    window.addEventListener("rusen-theme-change", render);
+    return () => {
+      window.removeEventListener("rusen-theme-change", render);
+      cancelAnimationFrame(request.current);
+    };
   }, [gallery, index, filter, yaw, pitch, depth, zoom, ghosts, expanded]);
   useEffect(() => {
     const target = canvas.current;
@@ -366,7 +370,7 @@ export function VolumeViewer({
         tabIndex={0}
         aria-label={`Time volume of ${title} at ${seconds} seconds. Drag to ${mode === "orbit" ? "rotate" : "scrub time"}.`}
         aria-describedby={`${id}-help`}
-        className="block w-full cursor-grab select-none border border-[var(--line)] bg-[#090e12] active:cursor-grabbing focus-visible:outline-1 focus-visible:outline-[var(--line-strong)]"
+        className="block w-full cursor-grab select-none border border-[var(--line)] bg-[var(--surface)] active:cursor-grabbing focus-visible:outline-1 focus-visible:outline-[var(--line-strong)]"
         style={{
           height: expanded
             ? "max(140px, calc(100dvh - 210px))"
@@ -580,7 +584,7 @@ export function VolumeViewer({
           e.preventDefault();
           closeExpanded();
         }}
-        className="fixed inset-0 m-0 h-dvh max-h-none w-screen max-w-none overflow-auto border-0 bg-[var(--background)] p-0 text-[var(--foreground)] backdrop:bg-black/80"
+        className="fixed inset-0 m-0 h-dvh max-h-none w-screen max-w-none overflow-auto border-0 bg-[var(--background)] p-0 text-[var(--foreground)] backdrop:bg-[color-mix(in_srgb,var(--background)_80%,transparent)]"
       >
         {expanded && content}
       </dialog>

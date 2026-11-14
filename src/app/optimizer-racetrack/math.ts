@@ -57,10 +57,10 @@ export interface Trajectory {
 }
 
 export const OPTIMIZER_META: Record<OptimizerName, { label: string; color: string; description: string }> = {
-  sgd: { label: "SGD", color: "#06b6d4", description: "Follows the raw slope." },
-  momentum: { label: "Momentum", color: "#f59e0b", description: "Accumulates a running direction." },
-  rmsprop: { label: "RMSProp", color: "#a855f7", description: "Scales directions by recent gradient size." },
-  adam: { label: "Adam", color: "#ec4899", description: "Combines momentum with adaptive scaling." },
+  sgd: { label: "SGD", color: "var(--accent)", description: "Follows the raw slope." },
+  momentum: { label: "Momentum", color: "var(--accent-2)", description: "Accumulates a running direction." },
+  rmsprop: { label: "RMSProp", color: "var(--accent-3)", description: "Scales directions by recent gradient size." },
+  adam: { label: "Adam", color: "var(--accent-5)", description: "Combines momentum with adaptive scaling." },
 };
 
 export const LANDSCAPES: Record<LandscapeId, LossLandscape> = {

@@ -42,10 +42,10 @@ export interface ArithmeticResult {
   nearest: { word: string; similarity: number }[];
 }
 
-// Simple color palette for visualization
+// Theme tokens (CSS custom properties) used for the canvas points.
 export const COLORS = {
-  default: "#6366f1",
-  highlighted: "#f59e0b",
-  arithmeticResult: "#ef4444",
-  axis: "#10b981",
+  default: "--accent",
+  highlighted: "--accent-2",
+  arithmeticResult: "--accent-5",
+  axis: "--accent-4",
 };

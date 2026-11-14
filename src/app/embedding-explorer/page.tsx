@@ -24,7 +24,7 @@ import {
   readExplorerState,
   type ExplorerUrlState,
 } from "./utils/urlState";
-import { Alert, Button, DemoHeader, DemoPage, DemoPanel } from "@/components/ui";
+import { Alert, Button, Card, Chip, DemoHeader, DemoPage, DemoPanel, Segmented, Spinner } from "@/components/ui";
 
 const DEFAULT_WORDS = [
   "king",
@@ -837,14 +837,14 @@ export default function EmbeddingExplorerPage() {
           <div className="space-y-4">
           {isModelLoading ? (
             <>
-              <div className="flex items-center gap-3 text-neutral-500">
-                <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+              <div className="flex items-center gap-3 text-muted">
+                <Spinner size="md" color="currentColor" className="text-accent" />
                 <span>Loading embedding model... {loadProgress}%</span>
               </div>
 
-              <div className="w-full max-w-md h-2 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden">
+              <div className="w-full max-w-md h-2 bg-line rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-indigo-500 transition-all duration-300"
+                  className="h-full bg-accent transition-all duration-300"
                   style={{ width: `${loadProgress}%` }}
                 />
               </div>
@@ -855,7 +855,7 @@ export default function EmbeddingExplorerPage() {
             </Button>
           )}
 
-          <p className="text-sm text-neutral-400">
+          <p className="text-sm text-sub">
             mxbai-embed-xsmall-v1 (24M parameters)
             {backend && ` using ${backend.toUpperCase()}`}
           </p>
@@ -875,12 +875,9 @@ export default function EmbeddingExplorerPage() {
         eyebrow="NLP / Embeddings"
         title="Embedding Explorer"
         actions={
-          <button
-            onClick={handleCopyLink}
-            className="inline-flex items-center justify-center px-3 py-2 text-sm rounded-full border border-neutral-300 dark:border-neutral-700 bg-white/80 dark:bg-neutral-900/80 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-          >
+          <Button size="sm" onClick={handleCopyLink}>
             {copyStatus === "copied" ? "Link copied" : copyStatus === "error" ? "Copy failed" : "Copy share link"}
-          </button>
+          </Button>
         }
         description={
           <>
@@ -889,13 +886,13 @@ export default function EmbeddingExplorerPage() {
           </>
         }
       />
-      <p className="mb-6 -mt-4 text-xs text-neutral-500">
+      <p className="mb-6 -mt-4 text-xs text-sub">
         Model: mxbai-embed-xsmall | {backend?.toUpperCase()} | {cacheSize} cached embeddings
       </p>
 
       {isEmbedding && (
         <Alert variant="info" className="mb-4">
-          <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          <Spinner size="sm" color="currentColor" className="inline-block align-middle text-accent" />
           {" "}
           {embeddingLabel}... {embeddingProgress}%
         </Alert>
@@ -903,135 +900,109 @@ export default function EmbeddingExplorerPage() {
 
       {isProjecting && (
         <Alert variant="warning" className="mb-4">
-          <div className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+          <Spinner size="sm" color="currentColor" className="inline-block align-middle text-accent-2" />
           {" "}
           {projectionNotice}
         </Alert>
       )}
 
-      <div className="grid lg:grid-cols-[320px_1fr] gap-4 sm:gap-6">
+      <div className="grid [&>*]:min-w-0 lg:grid-cols-[320px_1fr] gap-4 sm:gap-6">
         <div className="space-y-4">
-          <div className="p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg space-y-3 bg-white/70 dark:bg-neutral-950/60 backdrop-blur">
+          <Card padding="md" className="space-y-3">
             <div className="flex items-center justify-between gap-4">
               <h3 className="font-medium text-sm">Projection Mode</h3>
-              <span className="text-[11px] uppercase tracking-[0.24em] text-neutral-500">
+              <span className="text-[11px] uppercase tracking-[0.24em] text-sub">
                 {projectionMode === "umap" ? "manifold" : "interpretable"}
               </span>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => setProjectionMode("axes")}
-                className={`px-3 py-2 rounded-lg text-sm border transition-colors ${
-                  projectionMode === "axes"
-                    ? "bg-neutral-900 text-white border-neutral-900 dark:bg-neutral-100 dark:text-neutral-900 dark:border-neutral-100"
-                    : "border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                }`}
-              >
-                Axis View
-              </button>
-              <button
-                onClick={() => setProjectionMode("umap")}
-                className={`px-3 py-2 rounded-lg text-sm border transition-colors ${
-                  projectionMode === "umap"
-                    ? "bg-neutral-900 text-white border-neutral-900 dark:bg-neutral-100 dark:text-neutral-900 dark:border-neutral-100"
-                    : "border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                }`}
-              >
-                UMAP View
-              </button>
-            </div>
-            <p className="text-xs text-neutral-500 leading-relaxed">{projectionNotice}</p>
-          </div>
+            <Segmented
+              label="Projection mode"
+              value={projectionMode}
+              onChange={setProjectionMode}
+              options={[
+                { value: "axes", label: "Axis View" },
+                { value: "umap", label: "UMAP View" },
+              ]}
+            />
+            <p className="text-xs text-sub leading-relaxed">{projectionNotice}</p>
+          </Card>
 
-          <div className="p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg space-y-4 overflow-hidden">
+          <Card padding="md" className="space-y-4 overflow-hidden">
             <h3 className="font-medium text-sm">Define Axes</h3>
 
             <div className="space-y-1">
-              <label className="text-xs text-neutral-500">X Axis (horizontal)</label>
+              <label className="text-xs text-sub">X Axis (horizontal)</label>
               <div className="flex items-center gap-2">
                 <input
                   type="text"
                   value={xAxis.positive}
                   onChange={(e) => handleAxisChange("x", "positive", e.target.value)}
                   placeholder="woman"
-                  className="flex-1 min-w-0 px-2 py-1.5 text-sm border border-neutral-200 dark:border-neutral-700 rounded bg-transparent"
+                  className="flex-1 min-w-0 px-2 py-1.5 text-sm border border-line rounded bg-transparent"
                 />
-                <span className="text-neutral-400 shrink-0">−</span>
+                <span className="text-sub shrink-0">−</span>
                 <input
                   type="text"
                   value={xAxis.negative}
                   onChange={(e) => handleAxisChange("x", "negative", e.target.value)}
                   placeholder="man"
-                  className="flex-1 min-w-0 px-2 py-1.5 text-sm border border-neutral-200 dark:border-neutral-700 rounded bg-transparent"
+                  className="flex-1 min-w-0 px-2 py-1.5 text-sm border border-line rounded bg-transparent"
                 />
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs text-neutral-500">Y Axis (vertical)</label>
+              <label className="text-xs text-sub">Y Axis (vertical)</label>
               <div className="flex items-center gap-2">
                 <input
                   type="text"
                   value={yAxis.positive}
                   onChange={(e) => handleAxisChange("y", "positive", e.target.value)}
                   placeholder="good"
-                  className="flex-1 min-w-0 px-2 py-1.5 text-sm border border-neutral-200 dark:border-neutral-700 rounded bg-transparent"
+                  className="flex-1 min-w-0 px-2 py-1.5 text-sm border border-line rounded bg-transparent"
                 />
-                <span className="text-neutral-400 shrink-0">−</span>
+                <span className="text-sub shrink-0">−</span>
                 <input
                   type="text"
                   value={yAxis.negative}
                   onChange={(e) => handleAxisChange("y", "negative", e.target.value)}
                   placeholder="bad"
-                  className="flex-1 min-w-0 px-2 py-1.5 text-sm border border-neutral-200 dark:border-neutral-700 rounded bg-transparent"
+                  className="flex-1 min-w-0 px-2 py-1.5 text-sm border border-line rounded bg-transparent"
                 />
               </div>
             </div>
 
-            <p className="text-xs text-neutral-500">
+            <p className="text-xs text-sub">
               Axis words embed after a short pause, so typing doesn&apos;t fire a model request on every keystroke.
             </p>
-          </div>
+          </Card>
 
-          <div className="p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg space-y-3">
-            <div className="flex items-center justify-between gap-4">
+          <Card padding="md" className="space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
               <h3 className="font-medium text-sm">Vector Arithmetic</h3>
-              <div className="inline-flex rounded-lg border border-neutral-200 dark:border-neutral-700 p-0.5">
-                <button
-                  onClick={() => setArithmeticMode("classic")}
-                  className={`px-2.5 py-1 text-xs rounded-md transition-colors ${
-                    arithmeticMode === "classic"
-                      ? "bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900"
-                      : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-200"
-                  }`}
-                >
-                  Classic
-                </button>
-                <button
-                  onClick={() => setArithmeticMode("open")}
-                  className={`px-2.5 py-1 text-xs rounded-md transition-colors ${
-                    arithmeticMode === "open"
-                      ? "bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900"
-                      : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-200"
-                  }`}
-                >
-                  Open Form
-                </button>
-              </div>
+              <Segmented
+                label="Arithmetic mode"
+                value={arithmeticMode}
+                onChange={setArithmeticMode}
+                options={[
+                  { value: "classic", label: "Classic" },
+                  { value: "open", label: "Open Form" },
+                ]}
+              />
             </div>
-            <p className="text-xs text-neutral-500">
-              The red point is the true computed vector. Switch to open form to build expressions with as many `+` and `-` terms as you want.
+            <p className="text-xs text-sub">
+              The labelled result point is the true computed vector. Switch to open form to build expressions with as many `+` and `-` terms as you want.
             </p>
 
             <div className="flex flex-wrap gap-1">
               {EXAMPLE_ANALOGIES.map((example) => (
-                <button
+                <Chip
                   key={example.label}
                   onClick={() => handleLoadExample(example)}
-                  className="px-2 py-1 text-xs bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded transition-colors"
+                  className="!normal-case !tracking-normal"
                 >
                   {example.label}
-                </button>
+                </Chip>
               ))}
             </div>
 
@@ -1042,23 +1013,23 @@ export default function EmbeddingExplorerPage() {
                   value={arithmeticInputs.a}
                   onChange={(e) => setArithmeticInputs((prev) => ({ ...prev, a: normalizeTerm(e.target.value) }))}
                   placeholder="king"
-                  className="w-full px-2 py-1.5 text-sm border border-neutral-200 dark:border-neutral-700 rounded bg-transparent"
+                  className="w-full px-2 py-1.5 text-sm border border-line rounded bg-transparent"
                 />
-                <span className="text-neutral-400 shrink-0">−</span>
+                <span className="text-sub shrink-0">−</span>
                 <input
                   type="text"
                   value={arithmeticInputs.b}
                   onChange={(e) => setArithmeticInputs((prev) => ({ ...prev, b: normalizeTerm(e.target.value) }))}
                   placeholder="man"
-                  className="w-full px-2 py-1.5 text-sm border border-neutral-200 dark:border-neutral-700 rounded bg-transparent"
+                  className="w-full px-2 py-1.5 text-sm border border-line rounded bg-transparent"
                 />
-                <span className="text-neutral-400 shrink-0">+</span>
+                <span className="text-sub shrink-0">+</span>
                 <input
                   type="text"
                   value={arithmeticInputs.c}
                   onChange={(e) => setArithmeticInputs((prev) => ({ ...prev, c: normalizeTerm(e.target.value) }))}
                   placeholder="woman"
-                  className="w-full px-2 py-1.5 text-sm border border-neutral-200 dark:border-neutral-700 rounded bg-transparent"
+                  className="w-full px-2 py-1.5 text-sm border border-line rounded bg-transparent"
                 />
               </div>
             ) : (
@@ -1068,7 +1039,7 @@ export default function EmbeddingExplorerPage() {
                     <select
                       value={term.operation}
                       onChange={(e) => handleOpenArithmeticTermChange(index, "operation", e.target.value)}
-                      className="w-16 px-2 py-1.5 text-sm border border-neutral-200 dark:border-neutral-700 rounded bg-transparent"
+                      className="w-16 px-2 py-1.5 text-sm border border-line rounded bg-transparent"
                     >
                       <option value="+">+</option>
                       <option value="-">-</option>
@@ -1078,37 +1049,37 @@ export default function EmbeddingExplorerPage() {
                       value={term.value}
                       onChange={(e) => handleOpenArithmeticTermChange(index, "value", e.target.value)}
                       placeholder={index === 0 ? "king" : "another term"}
-                      className="flex-1 min-w-0 px-2 py-1.5 text-sm border border-neutral-200 dark:border-neutral-700 rounded bg-transparent"
+                      className="flex-1 min-w-0 px-2 py-1.5 text-sm border border-line rounded bg-transparent"
                     />
-                    <button
+                    <Button
+                      size="sm"
                       onClick={() => handleRemoveArithmeticTerm(index)}
-                      className="shrink-0 px-2 py-1.5 text-xs whitespace-nowrap rounded border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                      className="shrink-0 whitespace-nowrap"
                     >
                       Remove
-                    </button>
+                    </Button>
                   </div>
                 ))}
 
-                <button
-                  onClick={handleAddArithmeticTerm}
-                  className="px-3 py-1.5 text-xs rounded border border-dashed border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                >
+                <Button size="sm" onClick={handleAddArithmeticTerm}>
                   Add term
-                </button>
+                </Button>
               </div>
             )}
 
-            <button
+            <Button
+              variant="primary"
+              size="sm"
+              fullWidth
               onClick={handleCompute}
               disabled={!canCompute || isEmbedding}
-              className="w-full px-3 py-1.5 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isEmbedding ? "Embedding..." : "Compute"}
-            </button>
+            </Button>
 
             {arithmeticResult && (
-              <div className="pt-2 border-t border-neutral-200 dark:border-neutral-800">
-                <p className="text-xs text-neutral-500 mb-2">
+              <div className="pt-2 border-t border-line">
+                <p className="text-xs text-sub mb-2">
                   {arithmeticResult.expression} ≈
                 </p>
                 <div className="space-y-1">
@@ -1117,23 +1088,23 @@ export default function EmbeddingExplorerPage() {
                       key={candidate.word}
                       className={`flex justify-between text-sm px-2 py-1 rounded ${
                         index === 0
-                          ? "bg-indigo-50 dark:bg-indigo-950 font-medium"
-                          : "bg-neutral-50 dark:bg-neutral-900"
+                          ? "bg-accent/15 font-medium"
+                          : "bg-foreground/5"
                       }`}
                     >
                       <span>{candidate.word}</span>
-                      <span className="text-neutral-500">{(candidate.similarity * 100).toFixed(1)}%</span>
+                      <span className="text-sub">{(candidate.similarity * 100).toFixed(1)}%</span>
                     </div>
                   ))}
                 </div>
               </div>
             )}
-          </div>
+          </Card>
 
         </div>
 
         <div className="space-y-4">
-          <label className="my-3 flex gap-2 text-sm"><input type="checkbox" checked={fixedScale} onChange={(event) => setFixedScale(event.target.checked)} />Keep UMAP scale fixed to the original words (outlying results may be offscreen)</label>
+          <label className="my-3 flex gap-2 text-sm"><input type="checkbox" className="accent-accent" checked={fixedScale} onChange={(event) => setFixedScale(event.target.checked)} />Keep UMAP scale fixed to the original words (outlying results may be offscreen)</label>
         <Visualization
             points={points}
             projectionMode={projectionMode}
@@ -1144,17 +1115,17 @@ export default function EmbeddingExplorerPage() {
             onHoverWord={setHoveredWord}
           />
 
-          <div className="grid md:grid-cols-[1.4fr_1fr] gap-4">
+          <div className="grid [&>*]:min-w-0 md:grid-cols-[1.4fr_1fr] gap-4">
             <div className="space-y-4">
-              <div className="p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg space-y-4 overflow-hidden">
+              <Card padding="md" className="space-y-4 overflow-hidden">
                 <div className="flex items-center justify-between gap-4">
                   <h3 className="font-medium text-sm">Word Sets</h3>
-                  <span className="text-[11px] uppercase tracking-[0.24em] text-neutral-500">
+                  <span className="text-[11px] uppercase tracking-[0.24em] text-sub">
                     {selectedWordSetIds.length} active
                   </span>
                 </div>
 
-                <p className="text-xs text-neutral-500">
+                <p className="text-xs text-sub">
                   Toggle multiple curated sets to build a more interesting shared vocabulary. Active sets merge together.
                 </p>
 
@@ -1163,40 +1134,37 @@ export default function EmbeddingExplorerPage() {
                     const isActive = selectedWordSetIds.includes(wordSet.id);
 
                     return (
-                      <button
+                      <Chip
                         key={wordSet.id}
+                        selected={isActive}
                         onClick={() => void handleToggleWordSet(wordSet.id)}
                         onMouseEnter={() => setHoveredWordSetId(wordSet.id)}
                         onMouseLeave={() => setHoveredWordSetId(null)}
                         onFocus={() => setHoveredWordSetId(wordSet.id)}
                         onBlur={() => setHoveredWordSetId(null)}
-                        className={`inline-flex items-center rounded-full border px-3 py-1.5 text-sm transition-colors ${
-                          isActive
-                            ? "border-indigo-500 bg-indigo-50 text-indigo-700 dark:border-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-200"
-                            : "border-neutral-300 text-neutral-600 dark:border-neutral-700 dark:text-neutral-300 hover:border-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                        }`}
+                        className="!normal-case !tracking-normal"
                       >
                         {wordSet.title}
-                      </button>
+                      </Chip>
                     );
                   })}
                 </div>
 
-                <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 px-4 py-3 bg-neutral-50/80 dark:bg-neutral-900/60">
+                <div className="border border-line px-4 py-3 bg-foreground/5">
                   <div className="flex items-center justify-between gap-4">
                     <p className="text-sm font-medium">{displayedWordSet.title}</p>
-                    <span className="text-[11px] uppercase tracking-[0.22em] text-neutral-500">
+                    <span className="text-[11px] uppercase tracking-[0.22em] text-sub">
                       {displayedWordSet.words.length} words
                     </span>
                   </div>
-                  <p className="mt-1 text-xs text-neutral-500">
+                  <p className="mt-1 text-xs text-sub">
                     {displayedWordSet.description}
                   </p>
                 </div>
 
-                <div className="pt-3 border-t border-neutral-200 dark:border-neutral-800 space-y-2">
+                <div className="pt-3 border-t border-line space-y-2">
                   <h4 className="font-medium text-sm">Add Words</h4>
-                  <p className="text-xs text-neutral-500">Single words, phrases, or short sentences all work.</p>
+                  <p className="text-xs text-sub">Single words, phrases, or short sentences all work.</p>
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -1204,20 +1172,21 @@ export default function EmbeddingExplorerPage() {
                       onChange={(e) => setNewWord(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && void handleAddWord()}
                       placeholder="Type any word or phrase..."
-                      className="flex-1 px-2 py-1.5 text-sm border border-neutral-200 dark:border-neutral-700 rounded bg-transparent"
+                      className="flex-1 px-2 py-1.5 text-sm border border-line rounded bg-transparent"
                     />
-                    <button
+                    <Button
+                      variant="primary"
+                      size="sm"
                       onClick={() => void handleAddWord()}
                       disabled={!newWord.trim() || isEmbedding}
-                      className="px-3 py-1.5 text-sm bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded hover:bg-neutral-800 dark:hover:bg-neutral-200 disabled:opacity-50"
                     >
                       Add
-                    </button>
+                    </Button>
                   </div>
                 </div>
-              </div>
+              </Card>
 
-              <div className="p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg">
+              <Card padding="md">
                 <div className="flex items-center justify-between mb-2 gap-4">
                   <h3 className="font-medium text-sm">Words ({words.length})</h3>
                   <button
@@ -1225,7 +1194,7 @@ export default function EmbeddingExplorerPage() {
                     setSelectedWordSetIds([DEFAULT_WORD_SET_ID]);
                     setWords(DEFAULT_WORDS);
                   }}
-                  className="text-xs text-neutral-500 hover:text-neutral-700"
+                  className="text-xs text-sub hover:text-foreground cursor-pointer"
                 >
                   Reset
                 </button>
@@ -1236,77 +1205,77 @@ export default function EmbeddingExplorerPage() {
                     key={word}
                     className={`inline-flex items-center gap-1 px-2 py-0.5 text-sm rounded cursor-pointer transition-colors ${
                       selectedWord === word
-                        ? "bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300"
+                        ? "bg-accent/20 text-accent"
                         : hoveredWord === word
-                          ? "bg-neutral-200 dark:bg-neutral-700"
-                          : "bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                          ? "bg-foreground/15"
+                          : "bg-foreground/5 hover:bg-foreground/15"
                     }`}
                     onClick={() => setSelectedWord((prev) => (prev === word ? null : word))}
                     onDoubleClick={() => handleRemoveWord(word)}
                   >
                     {word}
-                    {!embeddingCache.has(normalizeTerm(word)) && <span className="text-yellow-500 text-xs">⏳</span>}
+                    {!embeddingCache.has(normalizeTerm(word)) && <span className="text-accent-2 text-xs">⏳</span>}
                   </span>
                 ))}
                 </div>
-                <p className="text-xs text-neutral-500 mt-2">Click to inspect, double-click to remove.</p>
-              </div>
+                <p className="text-xs text-sub mt-2">Click to inspect, double-click to remove.</p>
+              </Card>
             </div>
 
-            <div className="p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg space-y-3">
+            <Card padding="md" className="space-y-3">
               <h3 className="font-medium text-sm">Word Inspector</h3>
               {selectedWord && selectedWord !== "=result" ? (
                 <>
                   <div>
-                    <p className="text-xs uppercase tracking-[0.24em] text-neutral-500 mb-1">Selected</p>
+                    <p className="text-xs uppercase tracking-[0.24em] text-sub mb-1">Selected</p>
                     <p className="text-lg font-semibold">{selectedWord}</p>
                   </div>
                   <div>
-                    <p className="text-xs uppercase tracking-[0.24em] text-neutral-500 mb-2">Nearest Cached Neighbors</p>
+                    <p className="text-xs uppercase tracking-[0.24em] text-sub mb-2">Nearest Cached Neighbors</p>
                     <div className="space-y-1">
                       {selectedNeighbors.length > 0 ? (
                         selectedNeighbors.map((candidate) => (
-                          <div key={candidate.word} className="flex justify-between text-sm bg-neutral-50 dark:bg-neutral-900 rounded px-2 py-1">
+                          <div key={candidate.word} className="flex justify-between text-sm bg-foreground/5 rounded px-2 py-1">
                             <span>{candidate.word}</span>
-                            <span className="text-neutral-500">{(candidate.similarity * 100).toFixed(1)}%</span>
+                            <span className="text-sub">{(candidate.similarity * 100).toFixed(1)}%</span>
                           </div>
                         ))
                       ) : (
-                        <p className="text-sm text-neutral-500">Embed more items to inspect local neighbors.</p>
+                        <p className="text-sm text-sub">Embed more items to inspect local neighbors.</p>
                       )}
                     </div>
                   </div>
                 </>
               ) : (
-                <p className="text-sm text-neutral-500">
+                <p className="text-sm text-sub">
                   Select a point or word chip to inspect its nearest neighbors inside the current cache.
                 </p>
               )}
-            </div>
+            </Card>
           </div>
         </div>
       </div>
 
       <div className="mt-12 grid md:grid-cols-3 gap-4">
-        <div className="p-5 rounded-lg bg-neutral-50 dark:bg-neutral-900">
+        <Card padding="lg">
           <h3 className="font-semibold mb-2">Two complementary views</h3>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+          <p className="text-sm text-muted">
             Axis view is interpretable: each dimension is a semantic contrast you define. UMAP view is exploratory:
             it preserves local neighborhoods and reveals clusters you might not think to ask for explicitly.
           </p>
-        </div>
-        <div className="p-5 rounded-lg bg-neutral-50 dark:bg-neutral-900">
+        </Card>
+        <Card padding="lg">
           <h3 className="font-semibold mb-2">Real arithmetic geometry</h3>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">
-            The red point now represents the actual vector result. Nearest neighbors are ranked separately, which makes the analogy output much easier to reason about.
+          <p className="text-sm text-muted">
+            The labelled result point now represents the actual vector result. Nearest neighbors are ranked separately, which makes the analogy output much easier to reason about.
           </p>
-        </div>
-        <div className="p-5 rounded-lg bg-neutral-50 dark:bg-neutral-900">
+        </Card>
+        <Card padding="lg">
           <h3 className="font-semibold mb-2">Shareable state</h3>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+          <p className="text-sm text-muted">
             Projection mode, axes, word set, and arithmetic inputs are encoded in the URL, so every interesting view can be copied and shared directly.
           </p>
-        </div>
+        </Card>
       </div>
     </DemoPage>
   );

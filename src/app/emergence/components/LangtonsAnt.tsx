@@ -1,6 +1,8 @@
 "use client";
 
 import { useSimulation } from "./SimulationFrame";
+import { Button, Chip, Slider } from "@/components/ui";
+import { readPalette, mix, usePalette } from "../theme";
 
 import {
   useMemo,
@@ -24,7 +26,7 @@ interface AntState {
 }
 
 interface SimState {
-  /** Sparse grid: only stores black cells. Key = "x,y" */
+  /** Sparse grid: only stores filled cells. Key = "x,y" */
   cells: Set<string>;
   ant: AntState;
   step: number;
@@ -55,10 +57,6 @@ const GRID_SIZE = 200; // logical grid dimension (200x200)
 const HIGHWAY_STEP = 10_500; // step threshold for highway detection
 const FAST_FORWARD_TARGET = 11_000;
 
-const BG_COLOR = "#f7f3eb"; // warm paper-like white cells
-const CELL_COLOR = "#111827"; // deep slate for black cells
-const ANT_COLOR = "#ef4444"; // red-500
-const GRID_LINE_COLOR = "rgba(17, 24, 39, 0.12)";
 
 const SEED_PRESETS: Array<{
   id: SeedPresetId;
@@ -69,19 +67,19 @@ const SEED_PRESETS: Array<{
   {
     id: "blank",
     label: "Blank",
-    description: "Classic empty white plane.",
+    description: "Classic empty plane.",
     cells: [],
   },
   {
     id: "dot",
     label: "Dot",
-    description: "A single black cell at the start.",
+    description: "A single filled cell at the start.",
     cells: [[0, 0]],
   },
   {
     id: "plus",
     label: "Plus",
-    description: "Five black cells centered on the ant.",
+    description: "Five filled cells centered on the ant.",
     cells: [
       [0, 0],
       [1, 0],
@@ -108,7 +106,7 @@ const SEED_PRESETS: Array<{
   {
     id: "stairs",
     label: "Stairs",
-    description: "A tiny staircase of black cells.",
+    description: "A tiny staircase of filled cells.",
     cells: [
       [-1, 0],
       [0, 0],
@@ -121,7 +119,7 @@ const SEED_PRESETS: Array<{
   {
     id: "scatter",
     label: "Scatter-9",
-    description: "A finite scattered seed with nine black cells.",
+    description: "A finite scattered seed with nine filled cells.",
     cells: [
       [-3, -1],
       [-2, 2],
@@ -137,7 +135,7 @@ const SEED_PRESETS: Array<{
   {
     id: "random",
     label: "Random",
-    description: "20\u201360 random black cells within a 20\u00d720 area around the ant.",
+    description: "20\u201360 random filled cells within a 20\u00d720 area around the ant.",
     cells: [], // generated dynamically
   },
 ];
@@ -384,20 +382,20 @@ const DIAGRAM_ARROW_LEN = 20;
 
 function RuleDiagramPanel({
   label,
-  startColor,
-  endColor,
+  startFilled,
+  endFilled,
   turnLabel,
   turnDir,
 }: {
   label: string;
-  startColor: string;
-  endColor: string;
+  startFilled: boolean;
+  endFilled: boolean;
   turnLabel: string;
   turnDir: "right" | "left";
 }): React.ReactElement {
   return (
     <div className="flex flex-col items-center gap-2">
-      <div className="text-xs text-neutral-500 font-mono">{label}</div>
+      <div className="text-xs text-sub font-mono">{label}</div>
       <div className="flex items-center gap-3">
         {/* Before cell */}
         <div className="flex flex-col items-center gap-1">
@@ -406,12 +404,11 @@ function RuleDiagramPanel({
               width={DIAGRAM_CELL_SIZE}
               height={DIAGRAM_CELL_SIZE}
               rx={4}
-              fill={startColor}
-              stroke="#525252"
+              className={`stroke-muted ${startFilled ? "fill-foreground" : "fill-surface"}`}
               strokeWidth={1}
             />
           </svg>
-          <div className="text-[10px] text-neutral-600">before</div>
+          <div className="text-[10px] text-muted">before</div>
         </div>
 
         {/* Arrow */}
@@ -419,7 +416,7 @@ function RuleDiagramPanel({
           width={DIAGRAM_ARROW_LEN + DIAGRAM_GAP}
           height={DIAGRAM_CELL_SIZE}
           aria-hidden="true"
-          className="text-neutral-500"
+          className="text-sub"
         >
           <line
             x1={0}
@@ -442,12 +439,11 @@ function RuleDiagramPanel({
               width={DIAGRAM_CELL_SIZE}
               height={DIAGRAM_CELL_SIZE}
               rx={4}
-              fill={endColor}
-              stroke="#525252"
+              className={`stroke-muted ${endFilled ? "fill-foreground" : "fill-surface"}`}
               strokeWidth={1}
             />
           </svg>
-          <div className="text-[10px] text-neutral-600">after</div>
+          <div className="text-[10px] text-muted">after</div>
         </div>
       </div>
       <div className="flex items-center gap-1.5">
@@ -456,7 +452,7 @@ function RuleDiagramPanel({
           height={14}
           viewBox="0 0 14 14"
           aria-hidden="true"
-          className="text-neutral-400"
+          className="text-muted"
         >
           {turnDir === "right" ? (
             <path
@@ -482,7 +478,7 @@ function RuleDiagramPanel({
             <polygon points="3,4 3,10 1,7" fill="currentColor" />
           )}
         </svg>
-        <span className="text-xs text-neutral-400 font-mono">{turnLabel}</span>
+        <span className="text-xs text-muted font-mono">{turnLabel}</span>
       </div>
     </div>
   );
@@ -490,18 +486,18 @@ function RuleDiagramPanel({
 
 function RuleDiagram(): React.ReactElement {
   return (
-    <div className="flex flex-wrap justify-center gap-8 sm:gap-12 p-4 sm:p-6 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50">
+    <div className="flex flex-wrap justify-center gap-8 sm:gap-12 p-4 sm:p-6 border border-line bg-surface/50">
       <RuleDiagramPanel
-        label="White cell"
-        startColor={BG_COLOR}
-        endColor={CELL_COLOR}
+        label="Empty cell"
+        startFilled={false}
+        endFilled={true}
         turnLabel="Turn right 90°"
         turnDir="right"
       />
       <RuleDiagramPanel
-        label="Black cell"
-        startColor={CELL_COLOR}
-        endColor={BG_COLOR}
+        label="Filled cell"
+        startFilled={true}
+        endFilled={false}
         turnLabel="Turn left 90°"
         turnDir="left"
       />
@@ -516,6 +512,7 @@ function RuleDiagram(): React.ReactElement {
 export default function LangtonsAnt(): React.ReactElement {
   const { active, random } = useSimulation();
   // State
+  const palette = usePalette();
   const [selectedSeed, setSelectedSeed] = useState<SeedPresetId>("blank");
   const [stepCount, setStepCount] = useState<number>(0);
   const [playing, setPlaying] = useState<boolean>(false);
@@ -583,7 +580,8 @@ export default function LangtonsAnt(): React.ReactElement {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     // Clear
-    ctx.fillStyle = BG_COLOR;
+    const palette = readPalette();
+    ctx.fillStyle = palette.surface;
     ctx.fillRect(0, 0, displayW, displayH);
 
     const { cellPixelSize, padding, offsetX, offsetY } = computeViewport(
@@ -594,7 +592,7 @@ export default function LangtonsAnt(): React.ReactElement {
     );
 
     if (cellPixelSize >= 5) {
-      ctx.strokeStyle = GRID_LINE_COLOR;
+      ctx.strokeStyle = mix(palette.foreground, 12);
       ctx.lineWidth = 1;
       ctx.beginPath();
 
@@ -613,8 +611,8 @@ export default function LangtonsAnt(): React.ReactElement {
       ctx.stroke();
     }
 
-    // Draw black cells
-    ctx.fillStyle = CELL_COLOR;
+    // Draw filled cells
+    ctx.fillStyle = palette.foreground;
     for (const key of sim.cells) {
       const [cx, cy] = parseCellKey(key);
       const px = offsetX + (cx - sim.minX + padding) * cellPixelSize;
@@ -645,7 +643,7 @@ export default function LangtonsAnt(): React.ReactElement {
       offsetY + (sim.ant.y - sim.minY + padding) * cellPixelSize;
     const antSize = Math.max(cellPixelSize, 3);
 
-    ctx.fillStyle = ANT_COLOR;
+    ctx.fillStyle = palette.accent5;
     ctx.fillRect(
       Math.floor(antPx - antSize / 2 + cellPixelSize / 2),
       Math.floor(antPy - antSize / 2 + cellPixelSize / 2),
@@ -670,6 +668,11 @@ export default function LangtonsAnt(): React.ReactElement {
     observer.observe(container);
     return () => observer.disconnect();
   }, [drawState]);
+
+  // Redraw when the theme changes
+  useEffect(() => {
+    drawState();
+  }, [drawState, palette]);
 
   const getCellFromPointerEvent = useCallback(
     (event: React.PointerEvent<HTMLCanvasElement>): [number, number] | null => {
@@ -979,60 +982,60 @@ export default function LangtonsAnt(): React.ReactElement {
     <div className="w-full max-w-4xl mx-auto space-y-8">
       {/* Heading */}
       <div>
-        <h2 className="font-mono text-2xl sm:text-3xl font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
+        <h2 className="font-mono text-2xl sm:text-3xl font-semibold text-foreground mb-2">
           Langton&rsquo;s Ant
         </h2>
-        <p className="text-neutral-500 dark:text-neutral-400 text-base sm:text-lg">
+        <p className="text-muted text-base sm:text-lg">
           Two rules. One unexplained mystery.
         </p>
       </div>
 
       {/* Rules explanation */}
-      <div className="space-y-4 text-neutral-700 dark:text-neutral-300 text-sm sm:text-base leading-relaxed">
+      <div className="space-y-4 text-foreground text-sm sm:text-base leading-relaxed">
         <p>
-          A single ant on an infinite grid. Every cell is either white or black.
+          A single ant on an infinite grid. Every cell is either empty or filled.
           The ant follows two rules, and only two:
         </p>
-        <ol className="list-decimal list-inside space-y-1 text-neutral-600 dark:text-neutral-400">
+        <ol className="list-decimal list-inside space-y-1 text-muted">
           <li>
-            On a <strong className="text-neutral-800 dark:text-neutral-200">white</strong> cell: turn
-            90° right, flip the cell to black, move forward.
+            On an <strong className="text-foreground">empty</strong> cell: turn
+            90° right, fill the cell, move forward.
           </li>
           <li>
-            On a <strong className="text-neutral-800 dark:text-neutral-200">black</strong> cell: turn
-            90° left, flip the cell to white, move forward.
+            On a <strong className="text-foreground">filled</strong> cell: turn
+            90° left, empty the cell, move forward.
           </li>
         </ol>
 
-        <p className="text-neutral-600 dark:text-neutral-400">
+        <p className="text-muted">
           The conjecture is stronger than the classic empty-grid story: the
-          highway appears to emerge from <strong className="text-neutral-800 dark:text-neutral-200">any finite starting set of black cells</strong>.
+          highway appears to emerge from <strong className="text-foreground">any finite starting set of filled cells</strong>.
           Try a few seeds below and the plane stays finite, but the long-run
           behavior still appears to settle into the same kind of highway.
         </p>
 
         <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-4">
-            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
+          <div className="rounded-lg border border-line bg-surface/50 p-4">
+            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-sub">
               What It Is
             </div>
-            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
+            <p className="mt-2 text-sm text-foreground">
               One moving agent that writes to the grid as it walks.
             </p>
           </div>
-          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-4">
-            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
+          <div className="rounded-lg border border-line bg-surface/50 p-4">
+            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-sub">
               Why It Matters
             </div>
-            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
+            <p className="mt-2 text-sm text-foreground">
               It is a reminder that deterministic systems can remain opaque long after they stop feeling simple.
             </p>
           </div>
-          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-4">
-            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-neutral-500">
+          <div className="rounded-lg border border-line bg-surface/50 p-4">
+            <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-sub">
               What To Notice
             </div>
-            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
+            <p className="mt-2 text-sm text-foreground">
               The key event is not the early symmetry. It is the abrupt transition from wandering chaos to a stable diagonal highway.
             </p>
           </div>
@@ -1043,19 +1046,19 @@ export default function LangtonsAnt(): React.ReactElement {
 
       {/* Step counter and phase */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6">
-        <div className="font-mono text-3xl sm:text-4xl text-neutral-900 dark:text-neutral-100 tabular-nums tracking-tight">
+        <div className="font-mono text-3xl sm:text-4xl text-foreground tabular-nums tracking-tight">
           {stepCount.toLocaleString()}
-          <span className="text-sm sm:text-base text-neutral-500 dark:text-neutral-600 ml-2">
+          <span className="text-sm sm:text-base text-muted ml-2">
             steps
           </span>
         </div>
         <div
           className={`text-sm font-mono transition-all duration-700 ${
             phase === "highway"
-              ? "text-red-400"
+              ? "text-danger"
               : phase === "pre-highway"
-                ? "text-amber-400"
-                : "text-neutral-500"
+                ? "text-accent-2"
+                : "text-sub"
           }`}
         >
           {phaseText}
@@ -1064,73 +1067,56 @@ export default function LangtonsAnt(): React.ReactElement {
 
       {/* Canvas */}
       <div className="space-y-3">
-        <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-4 space-y-3">
+        <div className="border border-line bg-surface/50 p-4 space-y-3">
           <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <div className="text-xs font-mono uppercase tracking-[0.2em] text-neutral-500">
-                Finite Black Seed
+              <div className="text-xs font-mono uppercase tracking-[0.2em] text-sub">
+                Finite Seed
               </div>
-              <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-                Swap the starting black-cell configuration, then manually paint or erase black cells to make your own finite seed.
+              <p className="mt-1 text-sm text-muted">
+                Swap the starting filled-cell configuration, then manually paint or erase filled cells to make your own finite seed.
               </p>
             </div>
-            <div className="text-xs font-mono text-neutral-500">
-              White grid = infinite background, dark cells = finite seed
+            <div className="text-xs font-mono text-sub">
+              Empty grid = infinite background, filled cells = finite seed
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            {SEED_PRESETS.map((preset) => {
-              const active = preset.id === selectedSeed;
-              return (
-                <button
-                  key={preset.id}
-                  type="button"
-                  onClick={() => handleSeedChange(preset.id)}
-                  className={`rounded-full border px-3 py-1.5 text-xs font-mono transition ${
-                    active
-                      ? "border-cyan-500 bg-cyan-500/10 text-cyan-700 dark:text-cyan-300"
-                      : "border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200"
-                  }`}
-                  title={preset.description}
-                >
-                  {preset.label}
-                </button>
-              );
-            })}
+            {SEED_PRESETS.map((preset) => (
+              <Chip
+                key={preset.id}
+                selected={preset.id === selectedSeed}
+                onClick={() => handleSeedChange(preset.id)}
+                title={preset.description}
+              >
+                {preset.label}
+              </Chip>
+            ))}
           </div>
-          <p className="text-xs text-neutral-500">
+          <p className="text-xs text-sub">
             {SEED_PRESETS.find((preset) => preset.id === selectedSeed)?.description}
           </p>
-          <div className="flex flex-wrap items-center gap-2 border-t border-neutral-200 pt-3 dark:border-neutral-800">
-            <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500">
+          <div className="flex flex-wrap items-center gap-2 border-t pt-3 border-line">
+            <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-sub">
               Tool
             </span>
-            {(["draw", "erase", "pan"] as const).map((tool) => {
-              const active = editTool === tool;
-              return (
-                <button
-                  key={tool}
-                  type="button"
-                  onClick={() => setEditTool(tool)}
-                  className={`rounded-full border px-3 py-1.5 text-xs font-mono transition ${
-                    active
-                      ? "border-cyan-500 bg-cyan-500/10 text-cyan-700 dark:text-cyan-300"
-                      : "border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200"
-                  }`}
-                >
-                  {tool === "draw" ? "Draw black cells" : tool === "erase" ? "Erase black cells" : "Pan view"}
-                </button>
-              );
-            })}
-            <span className="text-xs text-neutral-500 dark:text-neutral-400">
+            {(["draw", "erase", "pan"] as const).map((tool) => (
+              <Chip
+                key={tool}
+                selected={editTool === tool}
+                onClick={() => setEditTool(tool)}
+              >
+                {tool === "draw" ? "Draw filled cells" : tool === "erase" ? "Erase filled cells" : "Pan view"}
+              </Chip>
+            ))}
+            <span className="text-xs text-muted">
               Drag to draw or erase (pause first); drag to pan any time.
             </span>
           </div>
         </div>
         <div
           ref={containerRef}
-          className="w-full rounded-lg border border-neutral-200 dark:border-neutral-800 overflow-hidden"
-          style={{ background: BG_COLOR }}
+          className="w-full border border-line bg-surface overflow-hidden"
         >
           <canvas
             ref={canvasRef}
@@ -1158,119 +1144,71 @@ export default function LangtonsAnt(): React.ReactElement {
         <div className="flex flex-wrap items-center gap-3">
           {/* Playback controls */}
           <div className="flex gap-1.5">
-            <button
-              onClick={doStep}
-              disabled={playing || fastForwarding}
-              className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-300 transition disabled:opacity-40 disabled:cursor-not-allowed"
-            >
+            <Button size="sm" onClick={doStep} disabled={playing || fastForwarding}>
               Step
-            </button>
-            <button
+            </Button>
+            <Button
+              size="sm"
+              variant={playing ? "secondary" : "primary"}
               onClick={() => setPlaying((p) => !p)}
               disabled={fastForwarding}
-              className={`px-3 py-1.5 text-xs font-mono rounded border transition disabled:opacity-40 disabled:cursor-not-allowed ${
-                playing
-                  ? "border-amber-500 dark:border-amber-600 bg-amber-50 dark:bg-amber-600/10 text-amber-700 dark:text-amber-400"
-                  : "border-cyan-500 dark:border-cyan-700 bg-cyan-50 dark:bg-cyan-700/10 text-cyan-700 dark:text-cyan-400 hover:border-cyan-400 dark:hover:border-cyan-500"
-              }`}
             >
               {playing ? "Pause" : "Play"}
-            </button>
-            <button
-              onClick={handleReset}
-              className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-300 transition"
-            >
+            </Button>
+            <Button size="sm" onClick={handleReset}>
               Reset
-            </button>
+            </Button>
           </div>
 
           {/* Divider */}
-          <div className="w-px h-6 bg-neutral-200 dark:bg-neutral-800 hidden sm:block" />
+          <div className="w-px h-6 bg-line hidden sm:block" />
 
           {/* Zoom controls */}
           <div className="flex gap-1.5" role="group" aria-label="Zoom controls">
-            <button
-              type="button"
-              onClick={handleZoomOut}
-              aria-label="Zoom out"
-              title="Zoom out"
-              className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-300 transition"
-            >
+            <Button size="sm" onClick={handleZoomOut} aria-label="Zoom out" title="Zoom out">
               −
-            </button>
-            <button
-              type="button"
-              onClick={handleZoomIn}
-              aria-label="Zoom in"
-              title="Zoom in"
-              className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-300 transition"
-            >
+            </Button>
+            <Button size="sm" onClick={handleZoomIn} aria-label="Zoom in" title="Zoom in">
               +
-            </button>
-            <button
-              type="button"
-              onClick={handleFit}
-              aria-label="Fit view"
-              title="Fit view to bounding box"
-              className="px-3 py-1.5 text-xs font-mono rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-300 transition"
-            >
+            </Button>
+            <Button size="sm" onClick={handleFit} aria-label="Fit view" title="Fit view to bounding box">
               Fit
-            </button>
+            </Button>
           </div>
 
           {/* Divider */}
-          <div className="w-px h-6 bg-neutral-200 dark:bg-neutral-800 hidden sm:block" />
+          <div className="w-px h-6 bg-line hidden sm:block" />
 
           {/* Speed slider */}
-          <div className="flex items-center gap-2">
-            <label
-              className="text-xs text-neutral-500 font-mono"
-              htmlFor="ant-speed"
-            >
-              Steps/frame
-            </label>
-            <input
-              id="ant-speed"
-              type="range"
-              min={1}
-              max={500}
-              value={stepsPerFrame}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setStepsPerFrame(parseInt(e.target.value, 10))
-              }
-              className="w-24 sm:w-32 accent-cyan-500"
-            />
-            <span className="text-xs text-neutral-500 font-mono w-10 tabular-nums">
-              {stepsPerFrame}
-            </span>
-          </div>
+          <Slider
+            className="w-40"
+            label="Steps/frame"
+            min={1}
+            max={500}
+            value={stepsPerFrame}
+            onChange={setStepsPerFrame}
+          />
 
           {/* Divider */}
-          <div className="w-px h-6 bg-neutral-200 dark:bg-neutral-800 hidden sm:block" />
+          <div className="w-px h-6 bg-line hidden sm:block" />
 
           {/* Fast-forward button */}
-          <button
+          <Button
+            size="sm"
+            variant="danger"
             onClick={handleFastForward}
-            disabled={
-              fastForwarding || stepCount >= FAST_FORWARD_TARGET
-            }
-            className={`px-4 py-1.5 text-xs font-mono rounded border transition ${
-              fastForwarding
-                ? "border-amber-500 dark:border-amber-600 bg-amber-50 dark:bg-amber-600/10 text-amber-700 dark:text-amber-400 animate-pulse"
-                : stepCount >= FAST_FORWARD_TARGET
-                  ? "border-neutral-300 dark:border-neutral-800 text-neutral-400 dark:text-neutral-700 cursor-not-allowed"
-                  : "border-red-400 dark:border-red-700 bg-red-50 dark:bg-red-700/10 text-red-600 dark:text-red-400 hover:border-red-500 hover:bg-red-100 dark:hover:bg-red-700/20"
-            } disabled:cursor-not-allowed`}
+            disabled={fastForwarding || stepCount >= FAST_FORWARD_TARGET}
+            className={fastForwarding ? "animate-pulse" : ""}
           >
             {fastForwarding
               ? "Computing..."
               : `Skip to step ${FAST_FORWARD_TARGET.toLocaleString()}`}
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Takeaway */}
-      <div className="text-neutral-700 dark:text-neutral-300 text-sm sm:text-base leading-relaxed space-y-3 border-l-2 border-red-300 dark:border-red-800 pl-4">
+      <div className="text-foreground text-sm sm:text-base leading-relaxed space-y-3 border-l-2 border-danger pl-4">
         <p>
           After approximately 10,000 steps of seemingly random behavior, the ant
           always builds a diagonal highway. A perfectly regular, repeating
@@ -1280,12 +1218,12 @@ export default function LangtonsAnt(): React.ReactElement {
           This has been verified computationally for millions of starting
           configurations. But no one has proven it must always happen.
         </p>
-        <p className="text-neutral-500 dark:text-neutral-400">
+        <p className="text-muted">
           Emergence doesn&rsquo;t just mean &ldquo;complex behavior from simple
           rules.&rdquo; Sometimes it means behavior we can observe but cannot
           explain.
         </p>
-        <p className="text-neutral-500 dark:text-neutral-400">
+        <p className="text-muted">
           That is why this demo matters: it separates seeing a pattern from understanding why the pattern had to appear.
         </p>
       </div>

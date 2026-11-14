@@ -131,7 +131,7 @@ export default function FullAttentionPanel({
       {error && <p role="alert" className="mb-3 text-sm text-[var(--muted)]">{error}</p>}
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
-        <div className="relative aspect-[4/3] w-full overflow-hidden border border-[var(--line)] bg-black">
+        <div className="relative aspect-[4/3] w-full overflow-hidden border border-[var(--line)] bg-[var(--surface)]">
           {mode === "overlay" && (
             <Image
               src={imageUrl}
@@ -227,7 +227,7 @@ function MapRow({ mask, label, active, onClick }: { mask: AttentionMask; label: 
 
 function ThumbHeatmap({ mask }: { mask: AttentionMask }) {
   return (
-    <div className="relative h-9 w-12 shrink-0 overflow-hidden bg-black">
+    <div className="relative h-9 w-12 shrink-0 overflow-hidden bg-[var(--surface)]">
       <HeatmapCanvas
         mask={mask}
         palette="viridis"

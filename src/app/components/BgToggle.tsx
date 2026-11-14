@@ -29,12 +29,12 @@ export default function BgToggle() {
       onClick={onClick}
       aria-label={aria}
       title={aria}
-      className="inline-flex items-center gap-1.5 font-mono text-xs uppercase tracking-[0.12em] text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-50 transition-colors cursor-pointer"
+      className="inline-flex items-center gap-1.5 font-mono text-xs uppercase tracking-[0.12em] text-muted hover:text-foreground transition-colors cursor-pointer"
     >
       <span
         aria-hidden="true"
         className={`inline-block w-1.5 h-1.5 rounded-full ${
-          disabled ? "bg-neutral-400 dark:bg-neutral-600" : "bg-[var(--signal)]"
+          disabled ? "bg-sub" : "bg-[var(--signal)]"
         }`}
       />
       bg:{disabled ? "off" : "on"}

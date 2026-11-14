@@ -51,6 +51,7 @@ export async function decodeRaster(source: string, maxEdge = MAX_RASTER_EDGE): P
   if (!context) throw new Error("This browser does not support 2D canvas processing.");
 
   // Transparent uploads are composited over white before extracting pixel values.
+  // Data scale, not a theme colour.
   context.fillStyle = "#ffffff";
   context.fillRect(0, 0, width, height);
   context.drawImage(image, 0, 0, width, height);

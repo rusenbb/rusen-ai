@@ -113,7 +113,7 @@ export default function ControlsDock() {
               {state.showHelp ? "Hide Help" : "Help"}
             </button>
           </div>
-          <p className="mt-2 text-[10px] text-neutral-500">Measured at the current recursive zoom level; this world uses different time scales at different depths.</p>
+          <p className="mt-2 text-[10px] text-sub">Measured at the current recursive zoom level; this world uses different time scales at different depths.</p>
         </>
       )}
     </div>

@@ -19,10 +19,10 @@ const sizeClasses = {
 };
 
 const colorClasses = {
-  blue: "border-blue-600 border-t-transparent",
-  indigo: "border-indigo-500 border-t-transparent",
-  white: "border-white border-t-transparent",
-  neutral: "border-neutral-600 border-t-transparent dark:border-neutral-400",
+  blue: "border-accent border-t-transparent",
+  indigo: "border-accent-3 border-t-transparent",
+  white: "border-background border-t-transparent",
+  neutral: "border-muted border-t-transparent",
   currentColor: "border-current border-t-transparent",
 };
 

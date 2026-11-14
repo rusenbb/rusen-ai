@@ -6,6 +6,8 @@ import {
   DemoHeader,
   DemoPage,
   DemoPanel,
+  Details,
+  Slider,
 } from "@/components/ui";
 import catalog from "@/content/literary-corpora.json";
 import {
@@ -183,22 +185,19 @@ export default function RusenGram() {
         title="RuseN-Gram"
         description="Let a book teach a language model. Switch from a detective story to a sonnet, then follow the counts behind every next word."
       />
-      <details
-        aria-label="Corpus library"
-        className="mb-6 border border-[var(--line)] p-4"
+      <Details
+        className="mb-6"
+        summary={<>Change book · {edition?.title ?? "Your corpus"}</>}
       >
-        <summary className="cursor-pointer text-sm font-semibold">
-          Change book · {edition?.title ?? "Your corpus"}
-        </summary>
         <div className="my-4 flex flex-wrap items-baseline justify-between gap-3">
           <h2 className="text-lg font-semibold">Choose a voice</h2>
-          <span className="font-mono text-xs text-neutral-500">
+          <span className="font-mono text-xs text-sub">
             12 complete source editions · English
           </span>
         </div>
         {(["Fiction", "Poetry"] as const).map((kind) => (
           <div key={kind} className="mb-4">
-            <p className="mb-2 text-xs uppercase tracking-widest text-neutral-500">
+            <p className="mb-2 text-xs uppercase tracking-widest text-sub">
               {kind === "Fiction" ? "Novels & stories" : "Poetry collections"}
             </p>
             <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-6">
@@ -214,7 +213,7 @@ export default function RusenGram() {
                     <span className="block text-sm font-semibold leading-snug">
                       {book.title}
                     </span>
-                    <span className="mt-2 block text-xs text-neutral-500">
+                    <span className="mt-2 block text-xs text-sub">
                       {book.author}
                     </span>
                   </button>
@@ -228,7 +227,7 @@ export default function RusenGram() {
         >
           Use your own text / small teaching example
         </button>
-      </details>
+      </Details>
       <div className="grid items-start gap-6 lg:grid-cols-[1.5fr_1fr]">
         <DemoPanel
           title={edition?.title ?? "Your corpus"}
@@ -342,13 +341,13 @@ export default function RusenGram() {
                 </span>
               ))}
               {!walk.steps.length && (
-                <span className="text-neutral-500">
+                <span className="text-sub">
                   Sample a token to begin. Click any token later to inspect the
                   context after it.
                 </span>
               )}
             </p>
-            <p className="mt-3 text-xs text-neutral-500">
+            <p className="mt-3 text-xs text-sub">
               {walk.cursor < walk.steps.length
                 ? `Sampling here replaces the ${walk.steps.length - walk.cursor} later tokens. Choose a different continuation to explore a new path.`
                 : "Each step updates the context and next-token distribution. You can also choose a token directly from the table."}
@@ -373,7 +372,7 @@ export default function RusenGram() {
               <div className="grid gap-4">
                 <div className="text-sm leading-relaxed">
                   <p>
-                    <span className="text-neutral-500">
+                    <span className="text-sub">
                       Effective context:{" "}
                     </span>
                     <span className="font-mono">
@@ -381,7 +380,7 @@ export default function RusenGram() {
                     </span>
                   </p>
                   <p>
-                    <span className="text-neutral-500">
+                    <span className="text-sub">
                       {decision.draw === null ? "Manually chosen" : "Sampled"}
                       :{" "}
                     </span>
@@ -424,7 +423,7 @@ export default function RusenGram() {
                     <span>0</span>
                     <span>1</span>
                   </div>
-                  <p className="mt-2 text-xs text-neutral-500">
+                  <p className="mt-2 text-xs text-sub">
                     Intervals follow vocabulary order. The random draw lands
                     inside the chosen token’s interval. Manual choices occupy a
                     position in the same seeded sequence.
@@ -436,7 +435,7 @@ export default function RusenGram() {
           <p
             role="status"
             aria-label="Corpus status"
-            className="mt-3 text-xs text-neutral-500"
+            className="mt-3 text-xs text-sub"
           >
             {loading
               ? "Loading / computing locally…"
@@ -445,12 +444,12 @@ export default function RusenGram() {
                 : "Choose a corpus."}
           </p>
           {error && (
-            <p role="alert" className="mt-3 text-sm text-red-600">
+            <p role="alert" className="mt-3 text-sm text-danger">
               {error}
             </p>
           )}
           {edition && (
-            <p className="mt-3 text-xs leading-relaxed text-neutral-500">
+            <p className="mt-3 text-xs leading-relaxed text-sub">
               <a
                 href={edition.source}
                 target="_blank"
@@ -470,24 +469,19 @@ export default function RusenGram() {
         </DemoPanel>
         <DemoPanel title="How much context?">
           <fieldset disabled={loading} className="space-y-4">
-            <label className="block text-sm">
-              Order n = {order} · remembers up to {order - 1} tokens
-              <input
-                aria-label="N-gram order"
-                type="range"
-                min={1}
-                max={5}
-                value={order}
-                onChange={(e) => {
-                  const next = Number(e.target.value);
-                  if (next !== order) {
-                    beginCorpusChange();
-                    setOrder(next);
-                  }
-                }}
-                className="my-3 w-full"
-              />
-            </label>
+            <Slider
+              label="N-gram order"
+              display={`n = ${order} · remembers up to ${order - 1} tokens`}
+              min={1}
+              max={5}
+              value={order}
+              onChange={(next) => {
+                if (next !== order) {
+                  beginCorpusChange();
+                  setOrder(next);
+                }
+              }}
+            />
             <label className="block text-sm">
               Additive smoothing α
               <input
@@ -504,7 +498,7 @@ export default function RusenGram() {
                 className="ml-3 w-24 border bg-[var(--surface)] p-2"
               />
             </label>
-            <p className="text-sm leading-relaxed text-neutral-500">
+            <p className="text-sm leading-relaxed text-sub">
               Larger n retains longer phrases and can reproduce passages. At n =
               1 the model only knows word frequencies. Smoothing gives every
               known token a chance, including unlikely continuations.
@@ -589,7 +583,7 @@ export default function RusenGram() {
                     <span className="font-mono">
                       {step.context.join(" ") || "∅ unigram"}
                     </span>
-                    <span className="block text-xs text-neutral-500">
+                    <span className="block text-xs text-sub">
                       {step.total.toLocaleString()} continuations ·{" "}
                       {step.total ? "use this context" : "try a shorter suffix"}
                     </span>
@@ -600,11 +594,8 @@ export default function RusenGram() {
           )}
         </DemoPanel>
       </div>
-      <details className="mt-6 border border-[var(--line)] p-4">
-        <summary className="cursor-pointer text-sm">
-          Inspect / edit the training text
-        </summary>
-        <p className="my-3 text-xs text-neutral-500">
+      <Details className="mt-6" summary="Inspect / edit the training text">
+        <p className="my-3 text-xs text-sub">
           Gutenberg boilerplate, front matter and identified back matter are
           excluded from training. Literary boundaries are recorded for each
           edition. Blank lines delimit paragraphs; transitions never cross them.
@@ -629,7 +620,7 @@ export default function RusenGram() {
         >
           Rebuild from edited text
         </Button>
-      </details>
+      </Details>
       <DemoFootnote>
         Count-based generation runs in a local worker. No text is sent to a
         model service. A fixed corpus, order, smoothing and seed reproduce the

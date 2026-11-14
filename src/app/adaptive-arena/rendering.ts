@@ -1,6 +1,7 @@
 import { ARENA_SIZE, type ArenaTile, type MatchState } from "./game";
 
 /** Site colour tokens, read at draw time so the board follows the theme. */
+// Fallbacks below are only used if a token is missing; they are not theme colours.
 function readTokens() {
   const style = getComputedStyle(document.documentElement);
   const token = (name: string, fallback: string) => style.getPropertyValue(name).trim() || fallback;

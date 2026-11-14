@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { DemoFootnote, DemoHeader, DemoPage, DemoPanel } from "@/components/ui";
+import { Button, DemoFootnote, DemoHeader, DemoPage, DemoPanel, Segmented, Slider } from "@/components/ui";
 
 import {
   LANDSCAPES,
@@ -106,18 +106,18 @@ function Track({
   return (
     <svg viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`} className="w-full" role="img" aria-label={`${landscape.label} with optimizer trajectories`}>
       <rect x="0" y="0" width={VIEW_WIDTH} height={VIEW_HEIGHT} className="fill-[var(--surface)]" />
-      {cells.map((cell) => <rect key={cell.id} x={cell.x} y={cell.y} width={cell.width + 1} height={cell.height + 1} fill="#06b6d4" opacity={cell.opacity} />)}
-      <line x1={PADDING} y1={VIEW_HEIGHT - PADDING} x2={VIEW_WIDTH - PADDING} y2={VIEW_HEIGHT - PADDING} className="stroke-neutral-400 dark:stroke-neutral-600" strokeWidth="1" />
-      <line x1={PADDING} y1={PADDING} x2={PADDING} y2={VIEW_HEIGHT - PADDING} className="stroke-neutral-400 dark:stroke-neutral-600" strokeWidth="1" />
-      <text x={VIEW_WIDTH - PADDING} y={VIEW_HEIGHT - 24} textAnchor="end" className="fill-current text-[11px] font-mono text-neutral-500">parameter θ₁</text>
-      <text x="18" y="55" className="fill-current text-[11px] font-mono text-neutral-500">θ₂</text>
-      <text x="58" y="69" className="fill-current text-[10px] font-mono text-neutral-500">higher loss</text>
+      {cells.map((cell) => <rect key={cell.id} x={cell.x} y={cell.y} width={cell.width + 1} height={cell.height + 1} fill="var(--accent)" opacity={cell.opacity} />)}
+      <line x1={PADDING} y1={VIEW_HEIGHT - PADDING} x2={VIEW_WIDTH - PADDING} y2={VIEW_HEIGHT - PADDING} className="stroke-line-strong" strokeWidth="1" />
+      <line x1={PADDING} y1={PADDING} x2={PADDING} y2={VIEW_HEIGHT - PADDING} className="stroke-line-strong" strokeWidth="1" />
+      <text x={VIEW_WIDTH - PADDING} y={VIEW_HEIGHT - 24} textAnchor="end" className="fill-sub text-[11px] font-mono">parameter θ₁</text>
+      <text x="18" y="55" className="fill-sub text-[11px] font-mono">θ₂</text>
+      <text x="58" y="69" className="fill-sub text-[10px] font-mono">higher loss</text>
       {landscape.minima.map((minimum, index) => {
         const target = svgPoint(minimum, landscape.bounds);
-        return <g key={`${minimum.x}-${minimum.y}`}><circle cx={target.x} cy={target.y} r="6" fill="none" className="stroke-neutral-900 dark:stroke-neutral-100" strokeWidth="2" /><text x={target.x + 10} y={target.y - 10} className="fill-current text-[11px] font-mono text-neutral-500">{landscape.minima.length > 1 ? `minimum ${index + 1}` : "minimum"}</text></g>;
+        return <g key={`${minimum.x}-${minimum.y}`}><circle cx={target.x} cy={target.y} r="6" fill="none" className="stroke-foreground" strokeWidth="2" /><text x={target.x + 10} y={target.y - 10} className="fill-sub text-[11px] font-mono">{landscape.minima.length > 1 ? `minimum ${index + 1}` : "minimum"}</text></g>;
       })}
-      <circle cx={startScreen.x} cy={startScreen.y} r="5" fill="none" className="stroke-neutral-700 dark:stroke-neutral-300" strokeWidth="2" />
-      <text x={startScreen.x + 9} y={startScreen.y + 15} className="fill-current text-[10px] font-mono text-neutral-500">start</text>
+      <circle cx={startScreen.x} cy={startScreen.y} r="5" fill="none" className="stroke-muted" strokeWidth="2" />
+      <text x={startScreen.x + 9} y={startScreen.y + 15} className="fill-sub text-[10px] font-mono">start</text>
       {trajectories.map((trajectory) => {
         const meta = OPTIMIZER_META[trajectory.name];
         const shown = trajectory.points.slice(0, Math.min(step + 1, trajectory.points.length));
@@ -140,7 +140,6 @@ function NumberControl({
   max,
   step,
   onChange,
-  tone = "cyan",
 }: {
   label: string;
   value: number;
@@ -148,14 +147,8 @@ function NumberControl({
   max: number;
   step: number;
   onChange: (value: number) => void;
-  tone?: "cyan" | "amber" | "fuchsia";
 }) {
-  const classes = {
-    cyan: "accent-cyan-500 text-cyan-700 dark:text-cyan-300",
-    amber: "accent-amber-500 text-amber-700 dark:text-amber-300",
-    fuchsia: "accent-fuchsia-500 text-fuchsia-700 dark:text-fuchsia-300",
-  }[tone];
-  return <label className="block border border-[var(--line)] px-3 py-2.5"><span className="flex justify-between gap-3 font-mono text-[11px] uppercase tracking-[0.12em] text-neutral-500"><span>{label}</span><strong className={classes}>{formatControl(value)}</strong></span><input type="range" min={min} max={max} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} className={`mt-2 block w-full ${classes.split(" ")[0]}`} /></label>;
+  return <Slider className="border border-[var(--line)] px-3 py-2.5" label={label} value={value} min={min} max={max} step={step} onChange={onChange} display={formatControl(value)} />;
 }
 
 function SettingsPanel({
@@ -178,13 +171,13 @@ function SettingsPanel({
   return (
     <DemoPanel title={`${meta.label} settings`} description={comparisonMode === "matched" ? "The learning rate is copied to every optimizer for a controlled baseline. The optimizer's own mechanics remain editable." : "This optimizer has its own learning rate. This is exploratory tuning, not a controlled benchmark."} padding="md">
       <div className="space-y-3">
-        <NumberControl label={comparisonMode === "matched" ? "matched learning rate η" : `${meta.label} learning rate η`} value={rate} min={0.001} max={focused === "sgd" || focused === "momentum" ? 0.3 : 0.15} step={0.001} onChange={comparisonMode === "matched" ? onSharedLearningRate : (value) => onConfigChange("learningRate", value)} tone="cyan" />
-        {focused === "momentum" && <NumberControl label="momentum β" value={config.momentumBeta} min={0} max={0.99} step={0.01} onChange={(value) => onConfigChange("momentumBeta", value)} tone="amber" />}
-        {focused === "rmsprop" && <><NumberControl label="RMSProp decay ρ" value={config.rmspropDecay} min={0.5} max={0.999} step={0.001} onChange={(value) => onConfigChange("rmspropDecay", value)} tone="fuchsia" /><NumberControl label="RMSProp epsilon ε" value={config.rmspropEpsilon} min={1e-8} max={1e-4} step={1e-8} onChange={(value) => onConfigChange("rmspropEpsilon", value)} tone="fuchsia" /></>}
-        {focused === "adam" && <><NumberControl label="Adam β₁" value={config.adamBeta1} min={0} max={0.99} step={0.01} onChange={(value) => onConfigChange("adamBeta1", value)} tone="fuchsia" /><NumberControl label="Adam β₂" value={config.adamBeta2} min={0.9} max={0.9999} step={0.0001} onChange={(value) => onConfigChange("adamBeta2", value)} tone="fuchsia" /><NumberControl label="Adam epsilon ε" value={config.adamEpsilon} min={1e-8} max={1e-4} step={1e-8} onChange={(value) => onConfigChange("adamEpsilon", value)} tone="fuchsia" /></>}
+        <NumberControl label={comparisonMode === "matched" ? "matched learning rate η" : `${meta.label} learning rate η`} value={rate} min={0.001} max={focused === "sgd" || focused === "momentum" ? 0.3 : 0.15} step={0.001} onChange={comparisonMode === "matched" ? onSharedLearningRate : (value) => onConfigChange("learningRate", value)} />
+        {focused === "momentum" && <NumberControl label="momentum β" value={config.momentumBeta} min={0} max={0.99} step={0.01} onChange={(value) => onConfigChange("momentumBeta", value)} />}
+        {focused === "rmsprop" && <><NumberControl label="RMSProp decay ρ" value={config.rmspropDecay} min={0.5} max={0.999} step={0.001} onChange={(value) => onConfigChange("rmspropDecay", value)} /><NumberControl label="RMSProp epsilon ε" value={config.rmspropEpsilon} min={1e-8} max={1e-4} step={1e-8} onChange={(value) => onConfigChange("rmspropEpsilon", value)} /></>}
+        {focused === "adam" && <><NumberControl label="Adam β₁" value={config.adamBeta1} min={0} max={0.99} step={0.01} onChange={(value) => onConfigChange("adamBeta1", value)} /><NumberControl label="Adam β₂" value={config.adamBeta2} min={0.9} max={0.9999} step={0.0001} onChange={(value) => onConfigChange("adamBeta2", value)} /><NumberControl label="Adam epsilon ε" value={config.adamEpsilon} min={1e-8} max={1e-4} step={1e-8} onChange={(value) => onConfigChange("adamEpsilon", value)} /></>}
       </div>
-      {focused === "sgd" && <p className="mt-4 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">SGD has no momentum or adaptive accumulator. Its only optimizer setting here is the learning rate.</p>}
-      <div className="mt-4 border-t border-[var(--line)] pt-4"><div className="font-mono text-lg text-cyan-700 dark:text-cyan-300">{FORMULAS[focused].equation}</div><p className="mt-2 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">{FORMULAS[focused].explanation}</p></div>
+      {focused === "sgd" && <p className="mt-4 text-sm leading-relaxed text-muted">SGD has no momentum or adaptive accumulator. Its only optimizer setting here is the learning rate.</p>}
+      <div className="mt-4 border-t border-[var(--line)] pt-4"><div className="font-mono text-lg text-accent">{FORMULAS[focused].equation}</div><p className="mt-2 text-sm leading-relaxed text-muted">{FORMULAS[focused].explanation}</p></div>
     </DemoPanel>
   );
 }
@@ -235,37 +228,34 @@ export default function OptimizerRacetrackPage() {
         eyebrow="Optimization / terrain versus update rules"
         title="Optimizer Racetrack"
         description="Question: how do update rules react to the same geometry? Pick a terrain, keep the learning rate matched for a controlled comparison, or tune each optimizer openly."
-        actions={<div className="flex flex-wrap gap-2"><button type="button" onClick={() => { if (effectiveStep >= MAX_STEPS) { setStep(0); setRacing(true); } else setRacing((current) => !current); }} className="border border-cyan-500 bg-cyan-500/10 px-3 py-2 font-mono text-xs uppercase tracking-[0.14em] text-cyan-700 transition hover:bg-cyan-500/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500 dark:text-cyan-300">{effectiveStep >= MAX_STEPS ? "Race again" : isRacing ? "Pause" : "Race"}</button><button type="button" onClick={() => setStep((current) => Math.min(MAX_STEPS, current + 1))} className="border border-[var(--line)] px-3 py-2 font-mono text-xs uppercase tracking-[0.14em] text-neutral-500 transition hover:border-cyan-500/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500">Step</button><button type="button" onClick={resetRace} className="border border-[var(--line)] px-3 py-2 font-mono text-xs uppercase tracking-[0.14em] text-neutral-500 transition hover:border-cyan-500/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500">Reset race</button></div>}
+        actions={<div className="flex flex-wrap gap-2"><Button variant="primary" size="sm" onClick={() => { if (effectiveStep >= MAX_STEPS) { setStep(0); setRacing(true); } else setRacing((current) => !current); }}>{effectiveStep >= MAX_STEPS ? "Race again" : isRacing ? "Pause" : "Race"}</Button><Button size="sm" onClick={() => setStep((current) => Math.min(MAX_STEPS, current + 1))}>Step</Button><Button size="sm" onClick={resetRace}>Reset race</Button></div>}
       />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]">
         <DemoPanel title="Pick a terrain" description="These are analytical losses, so every height and gradient is exact and inspectable." padding="md">
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {Object.values(LANDSCAPES).map((candidate) => <button key={candidate.id} type="button" onClick={() => chooseLandscape(candidate)} aria-pressed={landscape.id === candidate.id} className={`border p-3 text-left transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500 ${landscape.id === candidate.id ? "border-cyan-500 bg-cyan-500/8 text-cyan-700 dark:text-cyan-300" : "border-[var(--line)] text-neutral-500 hover:border-cyan-500/60"}`}><span className="font-mono text-xs uppercase tracking-[0.12em]">{candidate.shortLabel}</span><span className="mt-1 block text-[11px] leading-relaxed">{candidate.description}</span></button>)}
+            {Object.values(LANDSCAPES).map((candidate) => <button key={candidate.id} type="button" onClick={() => chooseLandscape(candidate)} aria-pressed={landscape.id === candidate.id} className={`border p-3 text-left transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${landscape.id === candidate.id ? "border-accent bg-accent/10 text-accent" : "border-[var(--line)] text-sub hover:border-line-strong"}`}><span className="font-mono text-xs uppercase tracking-[0.12em]">{candidate.shortLabel}</span><span className="mt-1 block text-[11px] leading-relaxed">{candidate.description}</span></button>)}
           </div>
         </DemoPanel>
         <DemoPanel title="Choose the comparison rule" description="Both modes are useful when their purpose is explicit." padding="md">
-          <div className="grid grid-cols-2 gap-1">
-            <button type="button" onClick={() => { setComparisonMode("matched"); resetRace(); }} aria-pressed={comparisonMode === "matched"} className={`border px-3 py-2 font-mono text-xs uppercase tracking-[0.1em] transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500 ${comparisonMode === "matched" ? "border-cyan-500 bg-cyan-500/10 text-cyan-700 dark:text-cyan-300" : "border-[var(--line)] text-neutral-500 hover:border-cyan-500/60"}`}>Matched rate</button>
-            <button type="button" onClick={() => { setComparisonMode("tuned"); resetRace(); }} aria-pressed={comparisonMode === "tuned"} className={`border px-3 py-2 font-mono text-xs uppercase tracking-[0.1em] transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500 ${comparisonMode === "tuned" ? "border-cyan-500 bg-cyan-500/10 text-cyan-700 dark:text-cyan-300" : "border-[var(--line)] text-neutral-500 hover:border-cyan-500/60"}`}>Tune each</button>
-          </div>
-          <p className="mt-3 text-sm text-neutral-500">{comparisonMode === "matched" ? "Every trace receives the same η. This isolates the update rules while still letting you adjust their own β, ρ, and ε settings." : "Each optimizer has its own η and its own named settings. Compare performance carefully because this is now a tuning experiment."}</p>
+          <Segmented label="Comparison rule" value={comparisonMode} onChange={(mode) => { setComparisonMode(mode); resetRace(); }} options={[{ value: "matched", label: "Matched rate" }, { value: "tuned", label: "Tune each" }]} />
+          <p className="mt-3 text-sm text-sub">{comparisonMode === "matched" ? "Every trace receives the same η. This isolates the update rules while still letting you adjust their own β, ρ, and ε settings." : "Each optimizer has its own η and its own named settings. Compare performance carefully because this is now a tuning experiment."}</p>
         </DemoPanel>
       </div>
 
       <div className="mt-6 grid gap-6 xl:items-start xl:grid-cols-[minmax(0,1.5fr)_minmax(350px,0.7fr)]">
         <DemoPanel title={landscape.label} description="Pale center means lower loss. Click a trace or its legend to choose the optimizer whose settings you want to inspect." padding="none">
           <Track landscape={landscape} trajectories={trajectories} step={effectiveStep} focused={focused} onFocus={setFocused} />
-          <div className="flex items-center justify-between gap-3 border-t border-[var(--line)] px-3 py-2 font-mono text-[10px] uppercase tracking-[0.12em] text-neutral-500">
+          <div className="flex items-center justify-between gap-3 border-t border-[var(--line)] px-3 py-2 font-mono text-[10px] uppercase tracking-[0.12em] text-sub">
             <span>Inspecting</span>
-            <span className="flex items-center gap-2 text-foreground dark:text-neutral-100">
+            <span className="flex items-center gap-2 text-foreground">
               <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: OPTIMIZER_META[focused].color }} />
               {OPTIMIZER_META[focused].label}
-              <span className="text-neutral-500">open settings</span>
+              <span className="text-sub">open settings</span>
             </span>
           </div>
           <div className="grid grid-cols-2 gap-px border-t border-[var(--line)] bg-[var(--line)] sm:grid-cols-4">
-            {NAMES.map((name) => { const meta = OPTIMIZER_META[name]; const active = focused === name; return <button key={name} type="button" onClick={() => setFocused(name)} aria-pressed={active} className={`bg-[var(--surface)] px-3 py-2 text-left font-mono text-xs transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500 ${active ? "bg-[color-mix(in_srgb,var(--foreground)_5%,transparent)]" : "hover:bg-[color-mix(in_srgb,var(--foreground)_3%,transparent)]"}`}><span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: meta.color }} /><span className="ml-2 uppercase tracking-[0.12em]">{meta.label}</span></button>; })}
+            {NAMES.map((name) => { const meta = OPTIMIZER_META[name]; const active = focused === name; return <button key={name} type="button" onClick={() => setFocused(name)} aria-pressed={active} className={`bg-[var(--surface)] px-3 py-2 text-left font-mono text-xs transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${active ? "bg-[color-mix(in_srgb,var(--foreground)_5%,transparent)]" : "hover:bg-[color-mix(in_srgb,var(--foreground)_3%,transparent)]"}`}><span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: meta.color }} /><span className="ml-2 uppercase tracking-[0.12em]">{meta.label}</span></button>; })}
           </div>
         </DemoPanel>
 
@@ -273,25 +263,25 @@ export default function OptimizerRacetrackPage() {
           <DemoPanel title="Race controls" description="Change where every optimizer starts, then scrub or run the shared clock." padding="md">
             <div className="space-y-3">
               <NumberControl label="start θ₁" value={start.x} min={landscape.bounds.xMin} max={landscape.bounds.xMax} step={0.05} onChange={(value) => updateStart("x", value)} />
-              <NumberControl label="start θ₂" value={start.y} min={landscape.bounds.yMin} max={landscape.bounds.yMax} step={0.05} onChange={(value) => updateStart("y", value)} tone="amber" />
+              <NumberControl label="start θ₂" value={start.y} min={landscape.bounds.yMin} max={landscape.bounds.yMax} step={0.05} onChange={(value) => updateStart("y", value)} />
               {comparisonMode === "matched" && <NumberControl label="shared learning rate η" value={sharedLearningRate} min={0.001} max={0.3} step={0.001} onChange={updateSharedRate} />}
             </div>
-            <label className="mt-5 block font-mono text-xs uppercase tracking-[0.14em] text-neutral-500">clock <span className="ml-2 text-cyan-700 dark:text-cyan-300">{effectiveStep} / {MAX_STEPS}</span><input type="range" min="0" max={MAX_STEPS} step="1" value={effectiveStep} onChange={(event) => { setRacing(false); setStep(Number(event.target.value)); }} className="mt-3 block w-full accent-cyan-500" /></label>
-            {anyDiverged && <p className="mt-4 border border-red-500/30 bg-red-500/5 px-3 py-2 text-xs text-red-700 dark:text-red-300">At least one trace produced a non-finite loss. Leaving the display bounds alone is reported separately as out of view.</p>}
+            <Slider className="mt-5" label="clock" value={effectiveStep} min={0} max={MAX_STEPS} step={1} display={`${effectiveStep} / ${MAX_STEPS}`} onChange={(value) => { setRacing(false); setStep(value); }} />
+            {anyDiverged && <p className="mt-4 border border-danger/30 bg-danger/5 px-3 py-2 text-xs text-danger">At least one trace produced a non-finite loss. Leaving the display bounds alone is reported separately as out of view.</p>}
           </DemoPanel>
           <SettingsPanel focused={focused} config={tunedConfigs[focused]} comparisonMode={comparisonMode} sharedLearningRate={sharedLearningRate} onSharedLearningRate={updateSharedRate} onConfigChange={updateFocusedConfig} />
-          <button type="button" onClick={restoreSettings} className="w-full border border-[var(--line)] px-3 py-2 font-mono text-xs uppercase tracking-[0.14em] text-neutral-500 transition hover:border-cyan-500/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500">Restore default settings for this terrain</button>
+          <Button fullWidth onClick={restoreSettings}>Restore default settings for this terrain</Button>
         </div>
       </div>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(340px,0.85fr)]">
         <DemoPanel title="Live lap board" description="The highlighted row is the path drawn brightest on the terrain." padding="md">
-          <div className="overflow-x-auto"><table className="min-w-[660px] w-full border-collapse font-mono text-xs"><thead className="border-b border-[var(--line)] text-left text-[10px] uppercase tracking-[0.14em] text-neutral-500"><tr><th className="pb-2 font-normal">optimizer</th><th className="pb-2 font-normal">learning rate</th><th className="pb-2 font-normal">current loss</th><th className="pb-2 font-normal">best loss</th><th className="pb-2 text-right font-normal">status</th></tr></thead><tbody>{trajectories.map((trajectory) => { const meta = OPTIMIZER_META[trajectory.name]; const currentLoss = lossAt(trajectory, effectiveStep); const best = Math.min(...trajectory.losses.slice(0, Math.min(effectiveStep + 1, trajectory.losses.length))); const status = statusFor(trajectory); const statusClass = status === "diverged" ? "text-red-600 dark:text-red-400" : status === "stationary" ? "text-emerald-600 dark:text-emerald-400" : status === "racing" ? "text-cyan-700 dark:text-cyan-300" : "text-neutral-500"; return <tr key={trajectory.name} className={`border-b border-[var(--line)] ${focused === trajectory.name ? "bg-[color-mix(in_srgb,var(--foreground)_4%,transparent)]" : ""}`}><td className="py-2.5"><button type="button" onClick={() => setFocused(trajectory.name)} className="flex items-center gap-2 hover:text-cyan-700 dark:hover:text-cyan-300"><span className="h-2 w-2 rounded-full" style={{ backgroundColor: meta.color }} /><span>{meta.label}</span></button></td><td className="py-2.5 tabular-nums text-neutral-500">{effectiveConfigs[trajectory.name].learningRate.toFixed(3)}</td><td className="py-2.5 tabular-nums">{currentLoss.toFixed(5)}</td><td className="py-2.5 tabular-nums text-neutral-500">{best.toFixed(5)}</td><td className={`py-2.5 text-right uppercase tracking-[0.12em] ${statusClass}`}>{status}</td></tr>; })}</tbody></table></div>
+          <div className="overflow-x-auto"><table className="min-w-[660px] w-full border-collapse font-mono text-xs"><thead className="border-b border-[var(--line)] text-left text-[10px] uppercase tracking-[0.14em] text-sub"><tr><th className="pb-2 font-normal">optimizer</th><th className="pb-2 font-normal">learning rate</th><th className="pb-2 font-normal">current loss</th><th className="pb-2 font-normal">best loss</th><th className="pb-2 text-right font-normal">status</th></tr></thead><tbody>{trajectories.map((trajectory) => { const meta = OPTIMIZER_META[trajectory.name]; const currentLoss = lossAt(trajectory, effectiveStep); const best = Math.min(...trajectory.losses.slice(0, Math.min(effectiveStep + 1, trajectory.losses.length))); const status = statusFor(trajectory); const statusClass = status === "diverged" ? "text-danger" : status === "stationary" ? "text-signal" : status === "racing" ? "text-accent" : "text-sub"; return <tr key={trajectory.name} className={`border-b border-[var(--line)] ${focused === trajectory.name ? "bg-[color-mix(in_srgb,var(--foreground)_4%,transparent)]" : ""}`}><td className="py-2.5"><button type="button" onClick={() => setFocused(trajectory.name)} className="flex items-center gap-2 hover:text-accent"><span className="h-2 w-2 rounded-full" style={{ backgroundColor: meta.color }} /><span>{meta.label}</span></button></td><td className="py-2.5 tabular-nums text-sub">{effectiveConfigs[trajectory.name].learningRate.toFixed(3)}</td><td className="py-2.5 tabular-nums">{currentLoss.toFixed(5)}</td><td className="py-2.5 tabular-nums text-sub">{best.toFixed(5)}</td><td className={`py-2.5 text-right uppercase tracking-[0.12em] ${statusClass}`}>{status}</td></tr>; })}</tbody></table></div>
         </DemoPanel>
         <DemoPanel title="What this terrain is testing" padding="md">
-          <div className="border border-cyan-500/25 bg-cyan-500/5 p-3 font-mono text-sm text-cyan-800 dark:text-cyan-200">{landscape.equation}</div>
-          <p className="mt-4 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">{landscape.description}</p>
-          <p className="mt-4 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">No optimizer is universally best. The map lets you separate a controlled same-rate comparison from a transparent tuning exercise, rather than hiding that choice.</p>
+          <div className="border border-accent/25 bg-accent/5 p-3 font-mono text-sm text-accent">{landscape.equation}</div>
+          <p className="mt-4 text-sm leading-relaxed text-muted">{landscape.description}</p>
+          <p className="mt-4 text-sm leading-relaxed text-muted">No optimizer is universally best. The map lets you separate a controlled same-rate comparison from a transparent tuning exercise, rather than hiding that choice.</p>
         </DemoPanel>
       </div>
 
