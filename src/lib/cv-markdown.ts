@@ -93,6 +93,12 @@ export function renderCvMarkdown(
     out.push(`*${x.period} · ${x.location}*`, "", x.description);
   }
 
+  // ── Academic service ─────────────────────────────────────────────────
+  out.push("", `## ${labels.service}`);
+  for (const s of cv.service) {
+    out.push("", `### ${s.url ? `[${s.title}](${s.url})` : s.title}`, `*${s.period} · ${s.venue}*`);
+  }
+
   // ── Courses ──────────────────────────────────────────────────────────
   out.push("", `## ${labels.courses}`);
   for (const c of cv.courses) {
