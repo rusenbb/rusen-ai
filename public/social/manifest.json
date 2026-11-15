@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "inputFingerprint": "a6236e8288370002e2b5ef95528f7bd719444ec98fc92fea823275774f3550e6",
+  "inputFingerprint": "e0a32745857bad972f77e8b2e5f2253c0f0f3572ad66ae8ae812bb81ab08e9ef",
   "assets": [
     {
       "route": "/",
@@ -259,6 +259,22 @@
       "format": "png"
     },
     {
+      "route": "/blogs/we-are-the-bottleneck",
+      "image": "/social/blog/posts/we-are-the-bottleneck.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 25982,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/darbogaz-biziz",
+      "image": "/social/blog/posts/darbogaz-biziz.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 26951,
+      "format": "png"
+    },
+    {
       "route": "/blogs/prompt-is-not-enough-intent-engineering",
       "image": "/social/blog/posts/prompt-is-not-enough-intent-engineering.png",
       "width": 1200,
@@ -327,7 +343,7 @@
       "image": "/social/blog/tags/ai.png",
       "width": 1200,
       "height": 630,
-      "bytes": 18410,
+      "bytes": 18303,
       "format": "png"
     },
     {
@@ -335,7 +351,7 @@
       "image": "/social/blog/tags/yapay-zeka.png",
       "width": 1200,
       "height": 630,
-      "bytes": 21829,
+      "bytes": 21948,
       "format": "png"
     },
     {
@@ -359,7 +375,7 @@
       "image": "/social/blog/tags/agents.png",
       "width": 1200,
       "height": 630,
-      "bytes": 20190,
+      "bytes": 20325,
       "format": "png"
     },
     {
@@ -367,7 +383,15 @@
       "image": "/social/blog/tags/ajanlar.png",
       "width": 1200,
       "height": 630,
-      "bytes": 20699,
+      "bytes": 20810,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/tag/arastirma",
+      "image": "/social/blog/tags/arastirma.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 21653,
       "format": "png"
     },
     {
@@ -475,6 +499,22 @@
       "format": "png"
     },
     {
+      "route": "/blogs/tag/reinforcement-learning",
+      "image": "/social/blog/tags/reinforcement-learning.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 23816,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/tag/research",
+      "image": "/social/blog/tags/research.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 20843,
+      "format": "png"
+    },
+    {
       "route": "/blogs/tag/skill",
       "image": "/social/blog/tags/skill.png",
       "width": 1200,
@@ -503,7 +543,7 @@
       "image": "/social/blog/series/ai-programming.png",
       "width": 1200,
       "height": 630,
-      "bytes": 27258,
+      "bytes": 26645,
       "format": "png"
     },
     {
