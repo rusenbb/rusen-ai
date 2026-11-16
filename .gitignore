@@ -66,6 +66,7 @@ CLAUDE.md
 # generated local data artifacts
 /generated/
 /.photo-build/
+/.wrangler/
 
 # syncthing
 *.sync-conflict-*
