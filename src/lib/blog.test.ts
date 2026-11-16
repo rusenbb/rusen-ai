@@ -1,7 +1,28 @@
 import { describe, expect, it } from "vitest";
-import { getAllPosts, getAllSeries, getTranslation } from "./blog";
+import { getAllPosts, getAllSeries, getPostSigil, getTranslation } from "./blog";
+import { buildSigil } from "./blog-sigil";
 
 describe("blog content contracts", () => {
+  it("shares every translation pair's Turkish sigil without changing the original", () => {
+    const originals = getAllPosts().filter((post) => post.lang === "tr" && post.translationKey);
+    expect(originals.length).toBeGreaterThan(0);
+    for (const original of originals) {
+      const translation = getTranslation(original)!;
+      const existingSigil = buildSigil(original.body);
+      expect(getPostSigil(original)).toEqual(existingSigil);
+      expect(getPostSigil(translation)).toEqual(existingSigil);
+    }
+    expect(new Set(originals.map((post) => JSON.stringify(getPostSigil(post).rows))).size)
+      .toBe(originals.length);
+  });
+
+  it("keeps an untranslated post's own sigil in either language", () => {
+    for (const post of getAllPosts()) {
+      const standalone = { ...post, translationKey: undefined };
+      expect(getPostSigil(standalone)).toEqual(buildSigil(post.body));
+    }
+  });
+
   it("loads complete, route-safe post metadata", () => {
     const posts = getAllPosts();
     expect(posts.length).toBeGreaterThan(0);
