@@ -172,6 +172,38 @@ html[data-blog-lang="tr"] [data-tag-lang="en"]:not([data-blog-force-lang] *) {
   border-left: 2px solid var(--line);
 }
 
+.article-audio {
+  margin: 0 0 2.5rem;
+  padding: 1rem 0;
+  border-block: 1px solid var(--line);
+  font-size: 0.78rem;
+}
+.article-audio-heading,
+.article-audio-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.article-audio-heading { margin-bottom: 0.8rem; }
+.article-audio-heading h2 { margin: 0; font-size: 0.85rem; font-weight: 600; }
+.article-audio-heading span { color: var(--muted); }
+.article-audio audio { display: block; width: 100%; min-width: 0; height: 54px; }
+.article-audio-options { margin-top: 0.8rem; color: var(--muted); }
+.article-audio-options label { display: inline-flex; align-items: center; gap: 0.6rem; }
+.article-audio-options select {
+  font: inherit;
+  color: var(--foreground);
+  background: var(--background);
+  border: 1px solid var(--line);
+  border-radius: 0.25rem;
+  padding: 0.35rem;
+}
+.article-audio-options a { color: var(--foreground); text-underline-offset: 0.2em; }
+.article-audio :is(a, select):focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; }
+.article-audio [role="alert"] { margin: 0.6rem 0; color: var(--foreground); }
+
 /* MDX prose styles - also in operator's-log register.
    data-allow-select on the article re-enables text selection (body sets
    user-select: none site-wide). draggable={false} + -webkit-user-drag: none

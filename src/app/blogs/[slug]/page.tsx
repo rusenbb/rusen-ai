@@ -25,6 +25,7 @@ import {
 } from "@/lib/blog";
 import { blogPostImagePath, buildSocialMetadata, SITE_ORIGIN } from "@/lib/social-metadata";
 import TableOfContents from "../components/TableOfContents";
+import ArticleAudio from "../components/ArticleAudio";
 
 export async function generateStaticParams() {
   return getAllPosts().map((p) => ({ slug: p.slug }));
@@ -223,6 +224,8 @@ export default async function PostPage({
       <p className="post-subtitle" data-allow-select>
         {post.description}
       </p>
+
+      {post.audio && <ArticleAudio key={post.audio.src} audio={post.audio} lang={post.lang} />}
 
       <article className="post-prose" data-allow-select draggable={false}>
         {content}

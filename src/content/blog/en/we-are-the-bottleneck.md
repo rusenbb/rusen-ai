@@ -10,6 +10,9 @@ tags:
 translationKey: "we-are-the-bottleneck"
 seriesId: "ai-programming"
 seriesOrder: 4
+audio:
+  src: "/audio/blog/we-are-the-bottleneck.m4a"
+  durationSeconds: 953
 ---
 
 # We Are the Bottleneck

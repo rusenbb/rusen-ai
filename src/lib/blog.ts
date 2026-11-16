@@ -18,6 +18,7 @@ export interface PostFrontmatter {
   translationKey?: string;
   seriesId?: string;
   seriesOrder?: number;
+  audio?: { src: string; durationSeconds: number };
 }
 
 export interface Post extends PostFrontmatter {
@@ -101,6 +102,20 @@ function readPostFile(lang: Lang, file: string): Post {
   if (!seriesId && seriesOrder !== undefined) {
     throw new Error(`${fullPath}: seriesOrder requires seriesId`);
   }
+  const audio = data.audio as PostFrontmatter["audio"];
+  if (audio !== undefined) {
+    if (
+      !audio || typeof audio !== "object" ||
+      typeof audio.src !== "string" ||
+      !/^\/audio\/blog\/[a-z0-9-]+\.m4a$/.test(audio.src) ||
+      !Number.isInteger(audio.durationSeconds) || audio.durationSeconds <= 0
+    ) {
+      throw new Error(`${fullPath}: audio requires a local /audio/blog/*.m4a source and positive durationSeconds`);
+    }
+    if (!fs.existsSync(path.join(process.cwd(), "public", audio.src))) {
+      throw new Error(`${fullPath}: audio file is missing: ${audio.src}`);
+    }
+  }
 
   const wordCount = countWords(content);
   return {
@@ -113,6 +128,7 @@ function readPostFile(lang: Lang, file: string): Post {
     translationKey,
     seriesId,
     seriesOrder: seriesOrder as number | undefined,
+    audio,
     body: content,
     wordCount,
     readingMinutes: Math.max(1, Math.round(wordCount / READING_WPM)),
