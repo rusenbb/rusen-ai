@@ -3,10 +3,10 @@ import JsonLd from "./components/JsonLd";
 import { PERSON } from "@/lib/agent-docs";
 import AsciiCover from "./components/ascii-cover/AsciiCover";
 import PostSigil from "./blogs/components/PostSigil";
-import { buildSigil, type Sigil } from "@/lib/blog-sigil";
+import type { Sigil } from "@/lib/blog-sigil";
 import BgKickerToggle from "./components/BgKickerToggle";
 import { getFeaturedProjects, getProjectPath } from "@/lib/projects";
-import { getLatestUniquePosts, formatDate, readUnit } from "@/lib/blog";
+import { getLatestUniquePosts, getPostSigil, formatDate, readUnit } from "@/lib/blog";
 import type { Metadata } from "next";
 import { buildStaticPageMetadata } from "@/lib/social-metadata";
 
@@ -132,7 +132,7 @@ export default function Home() {
               date={formatDate(post.date, post.lang)}
               minutes={post.readingMinutes}
               lang={post.lang}
-              sigil={buildSigil(post.body)}
+              sigil={getPostSigil(post)}
             />
           ))}
         </div>
