@@ -1,9 +1,14 @@
 import { expect, test } from "@playwright/test";
+import { getAllPosts } from "../../src/lib/blog";
 
-const editions = [
-  { slug: "we-are-the-bottleneck", label: "English audio edition", speed: "Playback speed", play: "Play audio", pause: "Pause audio", position: "Playback position", forward: "Forward 15 seconds", backward: "Back 15 seconds" },
-  { slug: "darbogaz-biziz", label: "Türkçe sesli sürüm", speed: "Oynatma hızı", play: "Sesi oynat", pause: "Sesi duraklat", position: "Dinleme konumu", forward: "15 saniye ileri", backward: "15 saniye geri" },
-];
+const copy = {
+  en: { label: "English audio edition", speed: "Playback speed", play: "Play audio", pause: "Pause audio", position: "Playback position", forward: "Forward 15 seconds", backward: "Back 15 seconds" },
+  tr: { label: "Türkçe sesli sürüm", speed: "Oynatma hızı", play: "Sesi oynat", pause: "Sesi duraklat", position: "Dinleme konumu", forward: "15 saniye ileri", backward: "15 saniye geri" },
+};
+const posts = getAllPosts();
+const editions = posts.filter((post) => post.audio).map((post) => ({
+  slug: post.slug, durationSeconds: post.audio!.durationSeconds, ...copy[post.lang],
+}));
 
 for (const edition of editions) {
   for (const width of [1280, 320]) {
@@ -25,18 +30,21 @@ for (const edition of editions) {
       await page.getByRole("button", { name: edition.play, exact: true }).click();
       await expect.poll(() => audio.evaluate((element: HTMLAudioElement) => element.currentTime)).toBeGreaterThan(0);
       const duration = await audio.evaluate((element: HTMLAudioElement) => element.duration);
-      expect(duration).toBeGreaterThan(600);
+      expect(Math.abs(duration - edition.durationSeconds)).toBeLessThan(1);
       expect(await audio.evaluate((element: HTMLAudioElement) => element.error)).toBeNull();
       await page.getByLabel(edition.speed).selectOption("1.5");
       expect(await audio.evaluate((element: HTMLAudioElement) => element.playbackRate)).toBe(1.5);
       await page.getByRole("button", { name: edition.forward }).click();
       await expect.poll(() => audio.evaluate((element: HTMLAudioElement) => element.currentTime)).toBeGreaterThan(14);
+      await expect.poll(() => audio.evaluate((element: HTMLAudioElement) => element.seeking)).toBe(false);
       await page.getByRole("button", { name: edition.backward }).click();
       await expect.poll(() => audio.evaluate((element: HTMLAudioElement) => element.currentTime)).toBeLessThan(5);
+      await expect.poll(() => audio.evaluate((element: HTMLAudioElement) => element.seeking)).toBe(false);
       const slider = page.getByRole("slider", { name: edition.position });
       const bounds = (await slider.boundingBox())!;
       await slider.click({ position: { x: bounds.width / 2, y: bounds.height / 2 } });
       await expect.poll(() => audio.evaluate((element: HTMLAudioElement) => element.currentTime)).toBeGreaterThan(duration * 0.4);
+      await expect.poll(() => audio.evaluate((element: HTMLAudioElement) => element.seeking)).toBe(false);
       await page.getByRole("button", { name: edition.pause, exact: true }).click();
       expect(await audio.evaluate((element: HTMLAudioElement) => element.paused)).toBe(true);
       await slider.focus();
@@ -74,11 +82,9 @@ test("a failed audio load shows feedback and can be retried by the listener", as
 });
 
 test("posts without narration do not show an empty audio player", async ({ page }) => {
-  await page.goto("/blogs/");
-  const hrefs = await page.locator('a[href^="/blogs/"]').evaluateAll((links) => links.map((link) => link.getAttribute("href")));
-  const post = hrefs.find((href) => href && !href.includes("/series/") && !href.includes("/tag/") && !editions.some((e) => href.includes(e.slug)) && href !== "/blogs/" && href !== "/blogs/feed.xml");
+  const post = posts.find((post) => !post.audio);
   expect(post).toBeTruthy();
-  await page.goto(post!);
+  await page.goto(`/blogs/${post!.slug}/`);
   await expect(page.locator(".post-prose")).toBeVisible();
   await expect(page.locator(".article-audio")).toHaveCount(0);
 });
