@@ -4,12 +4,12 @@ import type { Metadata } from "next";
 import {
   getAllPosts,
   getAllSeries,
+  getPostSigil,
   formatDate,
   readUnit,
   type Lang,
   type Post,
 } from "@/lib/blog";
-import { buildSigil } from "@/lib/blog-sigil";
 import LangPicker from "./components/LangPicker";
 import BlogSection from "./components/BlogSection";
 import PostRow from "./components/PostRow";
@@ -99,7 +99,7 @@ export default function BlogIndex() {
                       {parts.map((p, i) => (
                         <span key={p.slug} className="series-card__link">
                           {i > 0 && <span className="series-card__dash">──</span>}
-                          <PostSigil sigil={buildSigil(p.body)} />
+                          <PostSigil sigil={getPostSigil(p)} />
                         </span>
                       ))}
                     </div>
@@ -152,7 +152,7 @@ function Archive({
               .map((p) => (
                 <Link key={p.slug} href={`/blogs/${p.slug}`} className="archive-row">
                   <span className="archive-row__date">{formatDate(p.date, lang)}</span>
-                  <PostSigil sigil={buildSigil(p.body)} />
+                  <PostSigil sigil={getPostSigil(p)} />
                   <span className="archive-row__title">{p.title}</span>
                   <span className="archive-row__series">
                     {p.seriesId ? seriesTitle.get(p.seriesId)?.[lang] : ""}

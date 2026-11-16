@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
 import GithubSlugger from "github-slugger";
+import { buildSigil, type Sigil } from "./blog-sigil.ts";
 
 const CONTENT_ROOT = path.join(process.cwd(), "src", "content");
 const BLOG_DIR = path.join(CONTENT_ROOT, "blog");
@@ -206,6 +207,12 @@ export function getTranslation(post: Post): Post | null {
       (p) => p.translationKey === post.translationKey && p.slug !== post.slug
     ) ?? null
   );
+}
+
+/** Translations share the Turkish version's existing pattern, hue and animation letters. */
+export function getPostSigil(post: Post): Sigil {
+  const source = post.lang === "en" ? getTranslation(post) ?? post : post;
+  return buildSigil(source.body);
 }
 
 export function getAllTags(): Array<{ tag: string; lang: Lang; count: number }> {
