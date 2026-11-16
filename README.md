@@ -133,3 +133,12 @@ the website build or the general `uv sync` environment. See
 - [`DOCUMENTATION.md`](./DOCUMENTATION.md) — current architecture and data flows
 - [`CONTRIBUTING.md`](./CONTRIBUTING.md) — change and verification workflow
 - [`PROJECTS.md`](./PROJECTS.md) — human-readable project overview
+
+Article audio is served through `functions/audio/blog/[file].ts`. Pages static
+assets currently ignore HTTP Range requests, which prevents browser seeking.
+The function streams single byte ranges with `206`, `Content-Range` and
+`Accept-Ranges`; `public/_routes.json` limits function invocation to `/audio/blog/*`.
+The audio files remain deployment assets, so no separate bucket is needed.
+To verify the production serving path locally, run
+`wrangler pages dev out --port 8789` after building and test the player there;
+`npm start` alone does not exercise Pages Functions.
