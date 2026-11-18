@@ -1,0 +1,77 @@
+{
+  "tr": {
+    "open": "Fotoğraf laboratuvarı ↗",
+    "close": "Fotoğrafa dön ↙",
+    "title": "Fotoğraf laboratuvarı",
+    "modes": { "original": "Orijinal", "ascii": "ASCII", "dither": "Dither", "newsprint": "Gazete", "particles": "Parçacıklar" },
+    "descriptions": {
+      "original": "Her şey bu kareyle başlıyor.",
+      "ascii": "Her küçük alanın parlaklığı, onu temsil eden karakteri seçer.",
+      "dither": "Siyah ve beyaz noktaların düzeni, gri tonları varmış gibi görünür.",
+      "newsprint": "Baskıdaki gibi: değişen büyüklükte noktalar, fotoğrafın tonlarını kurar.",
+      "particles": "Fotoğraf renkli noktalara ayrılır. Üzerinde gezinin; dağılan noktalar yerlerine döner."
+    },
+    "detail": "Ayrıntı",
+    "contrast": "Kontrast",
+    "compare": "Karşılaştır",
+    "divider": "Orijinal ile efekt arasındaki sınır",
+    "reset": "Sıfırla",
+    "pause": "Hareketi durdur",
+    "play": "Hareketi başlat",
+    "loading": "Fotoğraf hazırlanıyor…",
+    "unavailable": "Bu tarayıcı efektleri gösteremiyor. Orijinal fotoğrafı görüntüleyebilirsiniz.",
+    "imageError": "Fotoğraf yüklenemedi. Başka bir kare deneyin.",
+    "effectLabel": "{title}: {mode} görünümü",
+    "depth": "Parçacıkların derinliğini parlaklık belirler."
+  },
+  "en": {
+    "open": "Photo Lab ↗",
+    "close": "Back to photograph ↙",
+    "title": "Photo Lab",
+    "modes": { "original": "Original", "ascii": "ASCII", "dither": "Dither", "newsprint": "Newsprint", "particles": "Particles" },
+    "descriptions": {
+      "original": "Every experiment starts with this frame.",
+      "ascii": "Each small region becomes a character chosen from its brightness.",
+      "dither": "The arrangement of black and white dots creates the impression of gray.",
+      "newsprint": "Like a printed photograph: dots of different sizes build the tones.",
+      "particles": "The photograph becomes colored points. Move through them; they scatter and return home."
+    },
+    "detail": "Detail",
+    "contrast": "Contrast",
+    "compare": "Compare",
+    "divider": "Boundary between original and effect",
+    "reset": "Reset",
+    "pause": "Pause motion",
+    "play": "Play motion",
+    "loading": "Preparing photograph…",
+    "unavailable": "This browser can’t display these effects. You can still view the original photograph.",
+    "imageError": "The photograph couldn’t load. Try another frame.",
+    "effectLabel": "{title}: {mode} treatment",
+    "depth": "Brightness determines the depth of each particle."
+  },
+  "ja": {
+    "open": "写真ラボ ↗",
+    "close": "写真に戻る ↙",
+    "title": "写真ラボ",
+    "modes": { "original": "オリジナル", "ascii": "ASCII", "dither": "ディザ", "newsprint": "新聞印刷", "particles": "粒子" },
+    "descriptions": {
+      "original": "すべての実験は、この一枚から始まります。",
+      "ascii": "小さな領域ごとに、明るさに応じた文字を選びます。",
+      "dither": "白と黒の点の配置が、灰色の濃淡を生み出します。",
+      "newsprint": "印刷された写真のように、大きさの異なる点で濃淡を表します。",
+      "particles": "写真が色のついた粒子に変わります。触れると散らばり、元の場所に戻ります。"
+    },
+    "detail": "精細さ",
+    "contrast": "コントラスト",
+    "compare": "比較",
+    "divider": "オリジナルと効果の境界",
+    "reset": "リセット",
+    "pause": "動きを止める",
+    "play": "動かす",
+    "loading": "写真を準備しています…",
+    "unavailable": "このブラウザでは効果を表示できません。オリジナルの写真はご覧いただけます。",
+    "imageError": "写真を読み込めませんでした。別の一枚をお試しください。",
+    "effectLabel": "{title}：{mode}",
+    "depth": "明るさが、それぞれの粒子の奥行きを決めます。"
+  }
+}
