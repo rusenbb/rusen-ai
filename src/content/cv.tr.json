@@ -306,7 +306,7 @@
   "publications": [
     {
       "title": "Patching Fails Small, Attribution Fails Large: Component Effects in 16-Bit Language Models",
-      "subtitle": "Transactions on Machine Learning Research (TMLR) - Hakem değerlendirmesinde",
+      "subtitle": "Ön baskı",
       "period": "2026",
       "description": "Tek yazar.\n\nOn dil modelinde bfloat16’nın müdahale tabanlı yorumlanabilirlik ölçümlerine bir hata tabanı koyduğunu, attribution yönteminin ise tekil nöron etkilerinin sırasını ve işaretini koruduğunu (sıra korelasyonu ≥ 0,97) gösteriyor; 16 bit müdahalelere güvenmeden önce bu tabanın ölçülmesini öneriyor.",
       "tags": [

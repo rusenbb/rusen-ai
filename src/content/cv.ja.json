@@ -306,7 +306,7 @@
   "publications": [
     {
       "title": "Patching Fails Small, Attribution Fails Large: Component Effects in 16-Bit Language Models",
-      "subtitle": "Transactions on Machine Learning Research (TMLR) - 査読中",
+      "subtitle": "プレプリント",
       "period": "2026",
       "description": "単著。\n\n10のモデルで、bfloat16が介入に基づく解釈可能性の効果推定に誤差の下限を生じさせる一方、attributionは単一ニューロンの効果の順位と符号を保つこと（順位相関0.97以上）を示し、16ビットでの介入を用いる前にこの下限を測定することを提案。",
       "tags": [

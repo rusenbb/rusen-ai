@@ -307,7 +307,7 @@
   "publications": [
     {
       "title": "Patching Fails Small, Attribution Fails Large: Component Effects in 16-Bit Language Models",
-      "subtitle": "Transactions on Machine Learning Research (TMLR) - Under review",
+      "subtitle": "Preprint",
       "period": "2026",
       "description": "Sole author.\n\nShows across ten language models that bfloat16 puts an error floor under intervention-based interpretability effects, while attribution keeps the ranking and sign of single-neuron effects (rank correlation ≥ 0.97); recommends measuring the floor before trusting 16-bit interventions.",
       "tags": [
