@@ -18,6 +18,7 @@ const eslintConfig = defineConfig([
     "generated/**",
     "output/**",
     "public/runtime/**",
+    "personal-branding/**",
   ]),
 ]);
 
