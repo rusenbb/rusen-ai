@@ -167,17 +167,18 @@ export default async function PostPage({
         <span>
           {post.readingMinutes} {readUnit(post.lang)}
         </span>
-        <span>
-          {post.lang.toUpperCase()}
+      </p>
+      <div className="post-actions">
+        <span className="lang-switch" aria-label={post.lang === "tr" ? "Dil" : "Language"}>
+          <span className="on" aria-current="true">{post.lang.toUpperCase()}</span>
           {sibling && (
-            <>
-              {" / "}
-              <Link href={`/blogs/${sibling.slug}`}>{sibling.lang.toUpperCase()}</Link>
-            </>
+            <Link href={`/blogs/${sibling.slug}`} hrefLang={sibling.lang} lang={sibling.lang}>
+              {sibling.lang.toUpperCase()}
+            </Link>
           )}
         </span>
         <CopyMarkdown markdown={postMarkdown(post)} lang={post.lang} />
-      </p>
+      </div>
       <p className="post-subtitle" data-allow-select>
         {post.description}
       </p>

@@ -92,15 +92,31 @@ html[data-blog-lang="tr"] [data-tag-lang="en"]:not([data-blog-force-lang] *) {
 .prompt-line .p { color: var(--signal); font-weight: 600; }
 .prompt-line .c { color: var(--foreground); }
 
+.post-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin: -0.6rem 0 1.6rem;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.72rem;
+}
+.lang-switch { display: inline-flex; border: 1px solid var(--line-strong); }
+.lang-switch > * { padding: 0.3rem 0.6rem; line-height: 1; text-decoration: none; }
+.lang-switch .on { background: var(--foreground); color: var(--background); }
+.lang-switch a { color: var(--muted); }
+.lang-switch a:hover { color: var(--signal); }
 .copy-md {
   font: inherit;
+  line-height: 1;
   color: var(--muted);
   background: none;
-  border: none;
-  padding: 0;
+  border: 1px solid var(--line-strong);
+  padding: 0.3rem 0.65rem;
   cursor: pointer;
 }
-.copy-md:hover { color: var(--signal); }
+.copy-md::before { content: "⧉ "; }
+.copy-md:hover { color: var(--signal); border-color: var(--signal); }
 
 
 .signal-blip-sm {
