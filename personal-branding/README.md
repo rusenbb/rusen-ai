@@ -37,7 +37,7 @@ YouTube, X ve diğer hesaplarda kullanılan görsel sistem. Buradaki hiçbir şe
 
 ## Banner'lar: kâğıt, mürekkep, mühür
 
-- Kâğıt zemin, siyah mürekkep figür sağda, metin solda: mühür + RUŞEN BİRBEN, söz, alt satırda `AI · EXPLAINERS · ESSAYS`. Banner yazısı İngilizce.
+- Kâğıt zemin, siyah mürekkep figür sağda, metin solda: sadece söz, İngilizce. Mühür, isim ve alt satır yok (profil fotoğrafı ve kullanıcı adı zaten söylüyor).
 - Figür dönüşümlü değişir: Cajal ve Leonardo. Japon figür yok (Hokusai okçu çıkarıldı). Mürekkebi ters çevirip koyu zemine koyma (negatif gibi duruyor).
 - Boyutlar: X 1500×500. YouTube 2560×1440, her cihazda görünen güvenli alan ortadaki 1546×423 (x 507–2053, y 508–931). Her şey bu alanın içinde kalır.
 

@@ -103,26 +103,25 @@ FIGURES = {
 }
 
 
-# Banners are English (X and YouTube reach both audiences). Ruşen's own line.
+# Banners are English (X and YouTube reach both audiences). Only Ruşen's own line and
+# the figure: no seal, name or tagline (the profile picture and handle already say who).
 QUOTE = "Focus on your art,<br>for you're both the art<br>and the artist."
-TAGLINE = "AI · EXPLAINERS · ESSAYS"
 
 
-def _banner(name, w, h, img, fig, tx, ty, ts):
+def _banner(name, w, h, img, fig, tx, cy, ts):
+    """tx: left edge of the quote; cy: vertical centre of the quote; ts: font size."""
     fh, fx, fy = fig
     shot(name, f'''<img src="{(SRC / img).as_uri()}" style="position:absolute;left:{fx}px;top:{fy}px;height:{fh}px">
-<div style="position:absolute;left:{tx}px;top:{ty}px">
- <div style="display:flex;align-items:center;gap:{ts * .4}px;margin-bottom:{ts * .5}px">{seal(int(ts * .9), int(ts * .6))}
-  <div class="m" style="font-weight:600;font-size:{ts * .36}px;letter-spacing:{ts * .08}px;color:{MUTED_PAPER}">RUŞEN BİRBEN</div></div>
- <div class="m" style="font-weight:700;font-size:{ts}px;line-height:1.08;letter-spacing:-{ts * .035}px;color:{PAPER_INK}">{QUOTE}</div>
- <div class="m" style="margin-top:{ts * .55}px;font-weight:500;font-size:{ts * .42}px;letter-spacing:{ts * .08}px;color:{MUTED_PAPER}">{TAGLINE}</div></div>''',
+<div class="m" style="position:absolute;left:{tx}px;top:{cy}px;transform:translateY(-50%);font-weight:700;font-size:{ts}px;line-height:1.12;letter-spacing:-{ts * .035}px;color:{PAPER_INK}">{QUOTE}</div>''',
          w, h, 1, PAPER)
 
 
 def banners():
     for key, (img, xfig, yfig) in FIGURES.items():
-        _banner(f"x-banner-{key}", 1500, 500, img, xfig, 120, 52, 42)
-        _banner(f"youtube-banner-{key}", 2560, 1440, img, yfig, 560, 548, 50)
+        # X: the avatar covers roughly x 40-390, y 320-500, so the quote sits above it.
+        _banner(f"x-banner-{key}", 1500, 500, img, xfig, 150, 200, 54)
+        # YouTube: everything inside the strip every device shows (x 507-2053, y 508-931).
+        _banner(f"youtube-banner-{key}", 2560, 1440, img, yfig, 600, 720, 62)
 
 
 # ---- Thumbnail: koyu zemin, Geist Mono Bold, vurgu kelimesi mühür kırmızısı ---------------
