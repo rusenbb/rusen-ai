@@ -22,7 +22,7 @@ export const PERSON = {
   sameAs: [
     "https://github.com/rusenbb",
     "https://linkedin.com/in/rusenbirben",
-    "https://x.com/rusen1bb",
+    "https://x.com/rusen_ai",
     "https://instagram.com/rusen_birben",
   ],
 };

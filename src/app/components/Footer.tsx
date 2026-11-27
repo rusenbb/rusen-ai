@@ -42,7 +42,7 @@ export default function Footer() {
               </svg>
             </a>
             <a
-              href="https://x.com/rusen1bb"
+              href="https://x.com/rusen_ai"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex min-h-11 min-w-11 items-center justify-center text-muted hover:text-foreground transition"
