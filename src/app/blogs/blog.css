@@ -707,3 +707,33 @@ html { scroll-behavior: smooth; }
   .idx-section-head .dashed-rule { display: none; }
   .idx-section-head .sec-count { grid-column: 2; }
 }
+
+/* GFM footnotes ([^id] in post Markdown) */
+.post-prose sup > a[data-footnote-ref] {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.8em;
+  text-decoration: none;
+  padding: 0 0.15em;
+  color: var(--muted);
+}
+.post-prose sup > a[data-footnote-ref]:hover { color: var(--foreground); }
+.post-prose section[data-footnotes] {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.post-prose section[data-footnotes] > h2#footnote-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.post-prose section[data-footnotes] ol { list-style: decimal; }
+.post-prose section[data-footnotes] li::marker {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.75rem;
+  color: var(--sub);
+}
+.post-prose section[data-footnotes] li p { margin: 0 0 0.4rem; }
+.post-prose a[data-footnote-backref] { text-decoration: none; }

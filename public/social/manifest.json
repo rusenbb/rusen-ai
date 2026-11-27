@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "inputFingerprint": "e0a32745857bad972f77e8b2e5f2253c0f0f3572ad66ae8ae812bb81ab08e9ef",
+  "inputFingerprint": "2b5b594dd98727a2e07ffca5ece9e8865e8d1d6d17bab3c73bf5e5216b85422b",
   "assets": [
     {
       "route": "/",
@@ -259,11 +259,27 @@
       "format": "png"
     },
     {
+      "route": "/blogs/climbing-every-mountain",
+      "image": "/social/blog/posts/climbing-every-mountain.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 33304,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/her-daga-tirmanmak-mi",
+      "image": "/social/blog/posts/her-daga-tirmanmak-mi.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 34225,
+      "format": "png"
+    },
+    {
       "route": "/blogs/we-are-the-bottleneck",
       "image": "/social/blog/posts/we-are-the-bottleneck.png",
       "width": 1200,
       "height": 630,
-      "bytes": 25982,
+      "bytes": 26064,
       "format": "png"
     },
     {
@@ -271,7 +287,7 @@
       "image": "/social/blog/posts/darbogaz-biziz.png",
       "width": 1200,
       "height": 630,
-      "bytes": 26951,
+      "bytes": 26953,
       "format": "png"
     },
     {
@@ -343,7 +359,7 @@
       "image": "/social/blog/tags/ai.png",
       "width": 1200,
       "height": 630,
-      "bytes": 18303,
+      "bytes": 18340,
       "format": "png"
     },
     {
@@ -351,7 +367,7 @@
       "image": "/social/blog/tags/yapay-zeka.png",
       "width": 1200,
       "height": 630,
-      "bytes": 21948,
+      "bytes": 21943,
       "format": "png"
     },
     {
@@ -375,7 +391,7 @@
       "image": "/social/blog/tags/agents.png",
       "width": 1200,
       "height": 630,
-      "bytes": 20325,
+      "bytes": 20324,
       "format": "png"
     },
     {
@@ -383,7 +399,7 @@
       "image": "/social/blog/tags/ajanlar.png",
       "width": 1200,
       "height": 630,
-      "bytes": 20810,
+      "bytes": 20826,
       "format": "png"
     },
     {
@@ -391,7 +407,31 @@
       "image": "/social/blog/tags/arastirma.png",
       "width": 1200,
       "height": 630,
-      "bytes": 21653,
+      "bytes": 21832,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/tag/reinforcement-learning",
+      "image": "/social/blog/tags/reinforcement-learning.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 23754,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/tag/research",
+      "image": "/social/blog/tags/research.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 21022,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/tag/alignment",
+      "image": "/social/blog/tags/alignment.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 20739,
       "format": "png"
     },
     {
@@ -499,19 +539,11 @@
       "format": "png"
     },
     {
-      "route": "/blogs/tag/reinforcement-learning",
-      "image": "/social/blog/tags/reinforcement-learning.png",
+      "route": "/blogs/tag/rsi",
+      "image": "/social/blog/tags/rsi.png",
       "width": 1200,
       "height": 630,
-      "bytes": 23816,
-      "format": "png"
-    },
-    {
-      "route": "/blogs/tag/research",
-      "image": "/social/blog/tags/research.png",
-      "width": 1200,
-      "height": 630,
-      "bytes": 20843,
+      "bytes": 19017,
       "format": "png"
     },
     {
@@ -543,7 +575,15 @@
       "image": "/social/blog/series/ai-programming.png",
       "width": 1200,
       "height": 630,
-      "bytes": 26645,
+      "bytes": 26606,
+      "format": "png"
+    },
+    {
+      "route": "/blogs/series/understanding-ai",
+      "image": "/social/blog/series/understanding-ai.png",
+      "width": 1200,
+      "height": 630,
+      "bytes": 25861,
       "format": "png"
     },
     {

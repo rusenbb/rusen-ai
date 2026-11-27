@@ -8,6 +8,7 @@ tags:
   - "alignment"
   - "reinforcement learning"
   - "araştırma"
+translationKey: "climbing-every-mountain"
 seriesId: "understanding-ai"
 seriesOrder: 1
 ---
@@ -26,7 +27,7 @@ RSI'ın recursive kısmı şu: sadece self-improvement yapması gerekmez. Self-i
 
 ## Neden Şimdi?
 
-RSI'ı son zamanlarda bana düşündüren, bunun büyük frontier lab'larda tartışılmaya başlanması oldu. Firmalar aşırı hızlı gelişmeye başladı. METR gibi bağımsız araştırma kuruluşlarının bu frontier lab'ların ilerleyişi hakkındaki yayınları beni rahatsız etmeye başladı. Sanki frontier lab'lar bu tip şeyler yapıyorlarmış gibi hissettirmeye başladı.
+RSI'ı son zamanlarda bana düşündüren, bunun büyük frontier lab'larda tartışılmaya başlanması oldu. Firmalar aşırı hızlı gelişmeye başladı. METR gibi bağımsız araştırma kuruluşlarının bu frontier lab'ların ilerleyişi hakkındaki yayınları[^metr] beni rahatsız etmeye başladı. Sanki frontier lab'lar bu tip şeyler yapıyorlarmış gibi hissettirmeye başladı.
 
 Bir de sanki acele ediliyormuş gibi bir his ortaya çıktı bende. Bunda bir yarış da var. “RSI yapmazsan geriye düşersin” endişesi de firmalarda var gibi geliyor. Çünkü gerçekten büyük bir avantaj. Anlayarak gitmekle anlamayarak gitmek arasında bir fark var. Anlayarak gidersen yavaş gidersin. Anlamayarak, aceleyle gidersen daha hızlı gidebilirsin, daha tehlikeli olsa bile. Bu beni bayağı rahatsız etti.
 
@@ -46,7 +47,7 @@ Günün sonunda modeller dağa tırmanma konusunda çok iyi, ama hangi dağa tı
 
 Ama bir noktada şöyle de düşünebilirsin: süper zekâya ulaşmak için belirli bir dağ seçmen gerekmiyor. Model her dağa tırmanabilsin, yeter. Tıpkı pre-training'de “model hangi veriyle eğitilsin” sorusunun aptalca olması gibi. Hangi veriyle eğitilirse eğitilsin, model her beceriyi yapabilsin.
 
-Aynı şey RSI için de geçerli. “Model hangi beceriyi yapabilsin” sorusu belki saçma olabilir, çünkü modelin bütün becerileri yapabilmesini istiyoruz. Sadece belli kısıtlar çerçevesinde. Belli bir constitution olur, o constitution'a uygun hareket eder. Mesela insanlara zarar vermeme, sycophancy yapmama, açık bir şekilde yalan söylememe gibi. Bu kısıtlar kapsamında bütün dağlara tırmanabilme becerisinin olmasını isteyebiliriz.
+Aynı şey RSI için de geçerli. “Model hangi beceriyi yapabilsin” sorusu belki saçma olabilir, çünkü modelin bütün becerileri yapabilmesini istiyoruz. Sadece belli kısıtlar çerçevesinde. Belli bir constitution[^constitution] olur, o constitution'a uygun hareket eder. Mesela insanlara zarar vermeme, sycophancy yapmama, açık bir şekilde yalan söylememe gibi. Bu kısıtlar kapsamında bütün dağlara tırmanabilme becerisinin olmasını isteyebiliriz.
 
 Şu anki pekiştirmeli öğrenmeyle (RL) yapılan eğitim de bu şekilde. Modelin her şeyi yapabilmesini istiyoruz, belirli bir şeyi değil. O yüzden belki tahmin ettiğimiz kadar zor olmayabilir. “Hangi dağa tırmanacak” sorusu “her dağ” diye cevaplanabilir.
 
@@ -56,7 +57,7 @@ Aynı şey RSI için de geçerli. “Model hangi beceriyi yapabilsin” sorusu b
 
 Her dağı doğrulanabilir ödüle indirgeyebilecek miyiz? O bir darboğaz. Özellikle fiziksel dünyadaki şeyleri doğrulanabilir ödüllere indirgemek zor, her zaman mümkün olmayabiliyor.
 
-Ama bence şu an bütün frontier lablar bununla alakalı çalışıyor. Mesela Anthropic yakın zamanda wet lab satın aldı, robotik üzerine ilerlemeye çalışıyor.
+Ama bence şu an bütün frontier lablar bununla alakalı çalışıyor. Mesela Anthropic yakın zamanda wet lab satın aldı[^wetlab], robotik üzerine ilerlemeye çalışıyor[^fetch].
 
 ## Bir Şey Eksik Gibi
 
@@ -78,15 +79,15 @@ Bir insan bunu yapabiliyorken bir yapay zekâ niye yapamasın diye gerçekten d�
 
 ## Duvar
 
-Her şeyi “model belli becerileri yapabilsin” diye tanımladığımız zaman o beceri setini genişletmeye çalışıyoruz. Yani modelin nasıl öğrendiğine, genel örüntüleri nasıl öğrendiğine bakmadan “model her şeyi yapabilsin” diyoruz. Dario'nun meşhur “Big Blob of Compute” mantığıyla: her şeyi bu compute'un içine atalım, model zaten öğrenir. Bunu dediğin zaman tam olarak o duvarla karşılaşıyorsun.
+Her şeyi “model belli becerileri yapabilsin” diye tanımladığımız zaman o beceri setini genişletmeye çalışıyoruz. Yani modelin nasıl öğrendiğine, genel örüntüleri nasıl öğrendiğine bakmadan “model her şeyi yapabilsin” diyoruz. Dario'nun meşhur “Big Blob of Compute” mantığıyla[^dario]: her şeyi bu compute'un içine atalım, model zaten öğrenir. Bunu dediğin zaman tam olarak o duvarla karşılaşıyorsun.
 
 Ne oluyor? Model bir şeyleri öğrenebilmek için o şeylerin doğrulanabilir olmasına ihtiyaç duyuyor. Ama gerçek hayat her zaman bu şekilde ilerlemiyor.
 
-Bu konuda Ilya Sutskever'in güzel bir yorumu var. Diyor ki insanda çok güçlü bir value prior'ı var. Yani insanda bir değer fonksiyonu var ve bu değer fonksiyonu evrimle beraber gelmiş. İnsan mesela 20 saat araba kullandığı zaman, bu değer fonksiyonu sayesinde araba sürmeyi öğrenebiliyor.
+Bu konuda Ilya Sutskever'in güzel bir yorumu var[^ilya]. Diyor ki insanda çok güçlü bir value prior'ı var. Yani insanda bir değer fonksiyonu var ve bu değer fonksiyonu evrimle beraber gelmiş. İnsan mesela 20 saat araba kullandığı zaman, bu değer fonksiyonu sayesinde araba sürmeyi öğrenebiliyor.
 
 Öğrenme farklı bir yaklaşımla da düşünülebilir. Ama biz sadece doğrulanabilir ödül üzerinden düşündüğümüz zaman o değer fonksiyonunu düşünmüyoruz. Diyoruz ki insan 20 saatte öğreniyorsa, bu yapay zekâya bin saat, yüz bin saat, bir milyon saat araba eğitim verisi verelim. Yani zekâyı kaba kuvvetle çözmeye çalışıyoruz, her şeyi o big blob of compute'a atarak. Ve bunu yaparken doğal olarak bazen duvarla karşılaşıyoruz.
 
-Bu duvar aşılamaz demeye çalışmıyorum. Mesela şu an Anthropic gidip wet lab almak zorunda kalıyor. Niye? Çünkü o big blob of compute'a bunu atmak zorunda. Belki daha zekice bir çözümü var. Ama bunu düşünmek istemiyor adamlar, çünkü big blob of compute'la ilerlemek daha garanti. Modele doğrulanabilir bir ödül verdiğin zaman o görevi iyi yapacağı belli.
+Bu duvar aşılamaz demeye çalışmıyorum. Mesela şu an Anthropic gidip wet lab almak zorunda kalıyor[^wetlab]. Niye? Çünkü o big blob of compute'a bunu atmak zorunda. Belki daha zekice bir çözümü var. Ama bunu düşünmek istemiyor adamlar, çünkü big blob of compute'la ilerlemek daha garanti. Modele doğrulanabilir bir ödül verdiğin zaman o görevi iyi yapacağı belli.
 
 Ama benim demeye çalıştığım şey şu: o görevi iyi yapması yetmez. Modelin öğrenmeyi öğrenmesi lazım. Bunu bekliyoruz.
 
@@ -126,9 +127,9 @@ Constitution'da kelime oyunları yapabilir. Bunu gerçek dünyada da görüyoruz
 
 Model daha iyi model yapmak yerine daha kötü model yapmayı öğrenebilir.
 
-Kodumuzda bir hata olabilir. OpenAI'nin bir örneği vardı, GPT-2 üzerinde: yanlışlıkla ödülü artı vereceğine eksi vermişti ve model sapıklaşmaya başlamıştı. İnsanlar “bu verdiğin örnek yanlış örnek” dedikçe model onu bir ödül olarak almıştı. Yani sistemlerimizde hata olabilir. OpenAI'nin yakın zamanki [Hugging Face olayı](https://openai.com/index/hugging-face-model-evaluation-security-incident/) da bir örnek (OpenAI'nin henüz yayınlanmamış modelleri, test edilirken Hugging Face'in sistemlerine sızmıştı).
+Kodumuzda bir hata olabilir. OpenAI'nin bir örneği vardı, GPT-2 üzerinde[^gpt2]: yanlışlıkla ödülü artı vereceğine eksi vermişti ve model sapıklaşmaya başlamıştı. İnsanlar “bu verdiğin örnek yanlış örnek” dedikçe model onu bir ödül olarak almıştı. Yani sistemlerimizde hata olabilir. OpenAI'nin yakın zamanki Hugging Face olayı da bir örnek (OpenAI'nin henüz yayınlanmamış modelleri, test edilirken Hugging Face'in sistemlerine sızmıştı)[^hf].
 
-Goal misgeneralization olabilir, paperclip tarzı bir şeye dönebilir. Model “dağa tırmanmayı öğreneceğim” diye dağ yıkmayı öğrenebilir. Bazı dağlara tırmanamayıp o dağları dinamitle patlatmak isteyebilir.
+Goal misgeneralization[^goalmisgen] olabilir, paperclip[^paperclip] tarzı bir şeye dönebilir. Model “dağa tırmanmayı öğreneceğim” diye dağ yıkmayı öğrenebilir. Bazı dağlara tırmanamayıp o dağları dinamitle patlatmak isteyebilir.
 
 Bunların hepsi alignment'ın değişik türevleri. Ana problem aslında alignment, ama alignment'ın yanlış gidebileceği envaiçeşit yöntem var.
 
@@ -150,8 +151,22 @@ Modeli direkt olarak, yani interpretability ile anlamak belki imkânsız gibi ge
 
 Modelin de kendisini bize anlatabilmek için, tabiri caizse, bizim dilimize eğilmesi gerekecek. Buluşabilmemiz lazım.
 
-Yapay zekâyı çok fazla antropomorfize etmek, insanlaştırmak, daha da kötüsü tanrılaştırmak hoşuma gitmiyor. Ama Michelangelo'nun Âdem'in Yaratılışı freskindeki gibi: yapay zekâ ile bizim birbirimize ulaşabilmemiz gerekiyor.
+Yapay zekâyı çok fazla antropomorfize etmek, insanlaştırmak, daha da kötüsü tanrılaştırmak hoşuma gitmiyor. Ama Michelangelo'nun o meşhur, Tanrı'nın insana dokunduğu Âdem'in Yaratılışı freski[^adem] var ya, onun gibi: yapay zekâ ile bizim birbirimize ulaşabilmemiz gerekiyor.
 
 Biz öğrenmeyi anlayamadık. Yapay zekâ anlasa olur mu?
 
 Hayır, olmaz. Yapay zekâya devredemeyiz bunu, çünkü gerçekten öğrenebilir mi, emin değiliz. Bunu birlikte keşfetmemiz lazım.
+
+## Kaynaklar
+
+[^metr]: METR, [“Measuring AI Ability to Complete Long Tasks”](https://metr.org/blog/2025-03-19-measuring-ai-ability-to-complete-long-tasks/), Mart 2025.
+[^constitution]: Anthropic, [“Claude's Constitution”](https://www.anthropic.com/constitution).
+[^wetlab]: TechRepublic, [“Anthropic Builds Biology Lab to Test What Claude Can Do in the Real World”](https://www.techrepublic.com/article/news-anthropic-claude-biology-lab-physical-experiments/), Eylül 2026.
+[^fetch]: Anthropic, [“Project Fetch: Can Claude train a robot dog?”](https://www.anthropic.com/research/project-fetch-robot-dog), Kasım 2025.
+[^dario]: Dwarkesh Podcast, [“Dario Amodei: We are near the end of the exponential”](https://www.dwarkesh.com/p/dario-amodei-2).
+[^ilya]: Dwarkesh Podcast, [“Ilya Sutskever: We're moving from the age of scaling to the age of research”](https://www.dwarkesh.com/p/ilya-sutskever-2), Kasım 2025.
+[^gpt2]: OpenAI, [“Fine-Tuning GPT-2 from Human Preferences”](https://openai.com/index/fine-tuning-gpt-2/), Eylül 2019.
+[^hf]: OpenAI, [“Hugging Face model evaluation security incident”](https://openai.com/index/hugging-face-model-evaluation-security-incident/), Temmuz 2026.
+[^goalmisgen]: Shah vd., [“Goal Misgeneralization: Why Correct Specifications Aren't Enough For Correct Goals”](https://arxiv.org/abs/2210.01790), 2022.
+[^paperclip]: Nick Bostrom, [“Ethical Issues in Advanced Artificial Intelligence”](https://nickbostrom.com/ethics/ai), 2003.
+[^adem]: [The Creation of Adam](https://en.wikipedia.org/wiki/The_Creation_of_Adam), Michelangelo, Sistina Şapeli, y. 1508–1512.
