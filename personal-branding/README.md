@@ -79,3 +79,7 @@ python3 personal-branding/render.py banner    # sadece banner'lar
 ```
 
 `numpy`, `opencv-python`, node + Playwright gerekir (`npx playwright install chromium`). Fontlar Google Fonts'tan gelir. `out/` git'e girmez; `examples/` içindekiler sıkıştırılmış önizlemelerdir, yüklemek için `out/` içindeki PNG'leri kullan. Yeni thumbnail için `render.py` içindeki `thumbnails()` fonksiyonunu kopyalayıp başlığı değiştirmen yeterli.
+
+## Yüklemeye hazır
+
+`upload/` içinde tam boyutlu, yüklenecek dosyalar: X kapağı (`x-banner-cajal.png`, 1500×500), YouTube banner (`youtube-banner-cajal.png`, 2560×1440) ve profil fotoğrafı (`avatar-seal.png`, 800×800).
