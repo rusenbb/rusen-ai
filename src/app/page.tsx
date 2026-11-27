@@ -22,11 +22,11 @@ export default function Home() {
       <JsonLd data={{ "@context": "https://schema.org", "@type": "Person", ...PERSON }} />
       {/* Hero */}
       <section className="text-center">
-        <h1 className="brand-display text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 leading-tight text-balance">
-          Data is eating the world.
+        <h1 className="brand-display text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 leading-tight text-balance max-w-4xl mx-auto">
+          Focus on your art, for you&apos;re both the art and the artist.
         </h1>
-        <p className="text-base sm:text-lg md:text-xl text-muted max-w-2xl mx-auto text-pretty">
-          I&apos;m Rusen, an AI &amp; Data Engineer building tools to make sense of it all.
+        <p className="font-mono text-sm sm:text-base tracking-[0.18em] text-muted">
+          — RUŞEN BİRBEN
         </p>
       </section>
 

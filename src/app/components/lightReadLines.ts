@@ -1,8 +1,10 @@
 /**
  * Sentences the home background reveals under a slow cursor. Each one is
- * quoted verbatim from a post on this site; `from` is the post slug.
+ * Ruşen's own: quoted verbatim from a post on this site (`from` is the post
+ * slug) or one of their sayings (`from: "quote"`).
  */
 export const LIGHT_READ_LINES: readonly { text: string; from: string }[] = [
+  { text: "Focus on your art, for you're both the art and the artist.", from: "quote" },
   { text: "Models are very good at climbing mountains, but not so good at choosing which mountain to climb.", from: "climbing-every-mountain" },
   { text: "En azından ben kendi adıma konuşayım, bayağı bir darboğazım.", from: "darbogaz-biziz" },
   { text: "I think we're the bottleneck now.", from: "we-are-the-bottleneck" },
