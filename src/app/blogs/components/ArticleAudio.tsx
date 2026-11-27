@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useRef, useState, type CSSProperties } from "react";
-import { FiDownload, FiHeadphones, FiPause, FiPlay, FiRotateCcw, FiRotateCw } from "react-icons/fi";
+import { FiDownload, FiHeadphones, FiPause, FiPlay, FiRotateCcw, FiRotateCw, FiYoutube } from "react-icons/fi";
 import type { Lang, PostFrontmatter } from "@/lib/blog";
 
 const COPY = {
@@ -10,6 +10,7 @@ const COPY = {
     label: "English audio edition",
     speed: "Playback speed",
     download: "Download audio",
+    youtube: "Watch on YouTube",
     error: "The audio could not be loaded. Try the download link below.",
     play: "Play audio",
     pause: "Pause audio",
@@ -23,6 +24,7 @@ const COPY = {
     label: "Türkçe sesli sürüm",
     speed: "Oynatma hızı",
     download: "Sesi indir",
+    youtube: "YouTube'da izle",
     error: "Ses yüklenemedi. Aşağıdaki indirme bağlantısını deneyebilirsin.",
     play: "Sesi oynat",
     pause: "Sesi duraklat",
@@ -38,9 +40,10 @@ function timeLabel(seconds: number) {
   return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}`;
 }
 
-export default function ArticleAudio({ audio, lang }: {
+export default function ArticleAudio({ audio, lang, youtube }: {
   audio: NonNullable<PostFrontmatter["audio"]>;
   lang: Lang;
+  youtube?: string;
 }) {
   const ref = useRef<HTMLAudioElement>(null);
   const id = useId();
@@ -152,6 +155,7 @@ export default function ArticleAudio({ audio, lang }: {
                 <option key={speed} value={speed}>{speed}×</option>
               ))}
             </select>
+            {youtube && <a href={`https://www.youtube.com/watch?v=${youtube}`} target="_blank" rel="noopener noreferrer" aria-label={copy.youtube} title={copy.youtube}><FiYoutube aria-hidden="true" /></a>}
             <a href={audio.src} download aria-label={copy.download} title={copy.download}><FiDownload aria-hidden="true" /></a>
           </div>
         </div>

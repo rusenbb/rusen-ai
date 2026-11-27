@@ -11,6 +11,7 @@ tags:
 translationKey: "intent-engineering"
 seriesId: "ai-programming"
 seriesOrder: 3
+youtube: "WsgPToxRZ9s"
 audio:
   src: "/audio/blog/prompt-is-not-enough-intent-engineering.m4a"
   durationSeconds: 580

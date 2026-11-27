@@ -9,6 +9,7 @@ tags:
 translationKey: "building-in-the-age-of-ai"
 seriesId: "ai-programming"
 seriesOrder: 2
+youtube: "B4jiUAgLbHY"
 audio:
   src: "/audio/blog/yapay-zeka-ile-birlikte-insa-etme.m4a"
   durationSeconds: 893

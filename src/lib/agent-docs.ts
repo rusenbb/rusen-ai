@@ -24,6 +24,7 @@ export const PERSON = {
     "https://linkedin.com/in/rusenbirben",
     "https://x.com/rusen_ai",
     "https://instagram.com/rusen_birben",
+    "https://www.youtube.com/@rusenbirben",
   ],
 };
 

@@ -11,6 +11,7 @@ tags:
 translationKey: "intent-engineering"
 seriesId: "ai-programming"
 seriesOrder: 3
+youtube: "C376-k5z4BE"
 audio:
   src: "/audio/blog/prompt-yetmez-intent-engineering.m4a"
   durationSeconds: 552

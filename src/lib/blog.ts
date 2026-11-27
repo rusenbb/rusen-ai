@@ -19,6 +19,8 @@ export interface PostFrontmatter {
   seriesId?: string;
   seriesOrder?: number;
   audio?: { src: string; durationSeconds: number; waveform: number[] };
+  /** YouTube video id of the narrated edition. */
+  youtube?: string;
 }
 
 export interface Post extends PostFrontmatter {
@@ -102,6 +104,10 @@ function readPostFile(lang: Lang, file: string): Post {
   if (!seriesId && seriesOrder !== undefined) {
     throw new Error(`${fullPath}: seriesOrder requires seriesId`);
   }
+  const youtube = optionalFrontmatterString(data, "youtube", fullPath);
+  if (youtube !== undefined && !/^[A-Za-z0-9_-]{11}$/.test(youtube)) {
+    throw new Error(`${fullPath}: youtube must be an 11-character YouTube video id`);
+  }
   const audio = data.audio as PostFrontmatter["audio"];
   if (audio !== undefined) {
     if (
@@ -131,6 +137,7 @@ function readPostFile(lang: Lang, file: string): Post {
     seriesId,
     seriesOrder: seriesOrder as number | undefined,
     audio,
+    youtube,
     body: content,
     wordCount,
     readingMinutes: Math.max(1, Math.round(wordCount / READING_WPM)),

@@ -11,6 +11,7 @@ tags:
 translationKey: "climbing-every-mountain"
 seriesId: "understanding-ai"
 seriesOrder: 1
+youtube: "ax3VP4ZUX8c"
 audio:
   src: "/audio/blog/her-daga-tirmanmak-mi.m4a"
   durationSeconds: 934

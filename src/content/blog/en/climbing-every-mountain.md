@@ -11,6 +11,7 @@ tags:
 translationKey: "climbing-every-mountain"
 seriesId: "understanding-ai"
 seriesOrder: 1
+youtube: "y1FUNGpWVMM"
 audio:
   src: "/audio/blog/climbing-every-mountain.m4a"
   durationSeconds: 940

@@ -6,6 +6,7 @@ tags: ["yapay zeka", "programlama", "yetenek", "dönüşüm", "insan"]
 translationKey: "ai-future-programming"
 seriesId: "ai-programming"
 seriesOrder: 1
+youtube: "mbXilXCjYaM"
 audio:
   src: "/audio/blog/yapay-zeka-ve-programlamanin-gelecegi.m4a"
   durationSeconds: 1121

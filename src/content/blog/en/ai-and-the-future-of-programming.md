@@ -6,6 +6,7 @@ tags: ["ai", "programming", "skill", "transformation", "human"]
 translationKey: "ai-future-programming"
 seriesId: "ai-programming"
 seriesOrder: 1
+youtube: "5NyIvAXQKvE"
 audio:
   src: "/audio/blog/ai-and-the-future-of-programming.m4a"
   durationSeconds: 1162

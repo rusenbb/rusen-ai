@@ -10,6 +10,7 @@ tags:
 translationKey: "we-are-the-bottleneck"
 seriesId: "ai-programming"
 seriesOrder: 4
+youtube: "mqPxUF6HBd8"
 audio:
   src: "/audio/blog/darbogaz-biziz.m4a"
   durationSeconds: 789

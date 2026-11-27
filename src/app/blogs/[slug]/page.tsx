@@ -185,7 +185,7 @@ export default async function PostPage({
         {post.description}
       </p>
 
-      {post.audio && <ArticleAudio key={post.audio.src} audio={post.audio} lang={post.lang} />}
+      {post.audio && <ArticleAudio key={post.audio.src} audio={post.audio} lang={post.lang} youtube={post.youtube} />}
 
       <article className="post-prose" data-allow-select draggable={false}>
         {content}

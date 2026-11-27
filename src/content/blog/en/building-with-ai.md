@@ -9,6 +9,7 @@ tags:
 translationKey: "building-in-the-age-of-ai"
 seriesId: "ai-programming"
 seriesOrder: 2
+youtube: "U_ZtBl96iRM"
 audio:
   src: "/audio/blog/building-with-ai.m4a"
   durationSeconds: 937
