@@ -8,8 +8,8 @@ tags:
   - "alignment"
   - "reinforcement learning"
   - "araştırma"
-seriesId: "ai-programming"
-seriesOrder: 5
+seriesId: "understanding-ai"
+seriesOrder: 1
 ---
 
 # Her Dağa Tırmanmak mı, Tırmanmayı Öğrenmek mi?
