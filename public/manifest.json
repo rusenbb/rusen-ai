@@ -1,7 +1,7 @@
 {
-  "name": "Rusen.ai",
-  "short_name": "Rusen.ai",
-  "description": "Interactive AI demos and experiments by Rusen Birben",
+  "name": "rusen.ai",
+  "short_name": "rusen.ai",
+  "description": "Interactive AI demos, essays and research by Ruşen Birben",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0b0a09",

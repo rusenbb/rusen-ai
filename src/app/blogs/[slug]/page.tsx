@@ -63,17 +63,17 @@ export async function generateMetadata({
     ...(sibling ? { [sibling.lang]: `/blogs/${sibling.slug}` } : {}),
   };
   const meta = buildSocialMetadata({
-    title: `${post.title} | Rusen.ai`,
+    title: `${post.title} · rusen.ai`,
     description: post.description,
     path: `/blogs/${post.slug}`,
     image: blogPostImagePath(post.slug),
-    imageAlt: `${post.title} — Rusen.ai blog`,
+    imageAlt: `${post.title} — rusen.ai blog`,
     type: "article",
     locale: post.lang === "tr" ? "tr_TR" : "en_US",
     languages,
     article: {
       publishedTime: post.date,
-      authors: ["Rusen Birben"],
+      authors: [PERSON.name],
       tags: post.tags,
     },
   });

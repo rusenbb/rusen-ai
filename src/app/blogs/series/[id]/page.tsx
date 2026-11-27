@@ -28,11 +28,11 @@ export async function generateMetadata({
   if (!series) return {};
   const description = `${series.posts.length} connected essays in the ${series.title.en} series.`;
   return buildSocialMetadata({
-    title: `${series.title.en} | Rusen.ai`,
+    title: `${series.title.en} · rusen.ai`,
     description,
     path: `/blogs/series/${series.id}`,
     image: blogSeriesImagePath(series.id),
-    imageAlt: `${series.title.en} — Rusen.ai essay series`,
+    imageAlt: `${series.title.en} — rusen.ai essay series`,
   });
 }
 

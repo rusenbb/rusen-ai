@@ -11,7 +11,7 @@ export function buildProjectMetadata(projectKey: string): Metadata {
 
   const path = getProjectPath(project);
   const imagePath = `/social/projects/${project.slug}.png`;
-  const title = `${project.title} | ${SITE_NAME}`;
+  const title = `${project.title} · ${SITE_NAME}`;
   const description = project.summary;
 
   return buildSocialMetadata({

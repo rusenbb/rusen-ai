@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import socialPages from "@/content/social-pages.json";
 
-export const SITE_NAME = "Rusen.ai";
+export const SITE_NAME = "rusen.ai";
 export const SITE_ORIGIN = "https://rusen.ai";
 export const SOCIAL_IMAGE_WIDTH = 1200;
 export const SOCIAL_IMAGE_HEIGHT = 630;

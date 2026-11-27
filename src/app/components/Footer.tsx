@@ -81,7 +81,7 @@ export default function Footer() {
           <div className="flex items-center gap-4">
             <BgToggle />
             <p className="text-xs sm:text-sm text-muted">
-              &copy; {new Date().getFullYear()} Rusen Birben
+              &copy; {new Date().getFullYear()} Ruşen Birben
             </p>
           </div>
         </div>

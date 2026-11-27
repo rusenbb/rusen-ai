@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "inputFingerprint": "a818932cff59eb2dac2498a56fc199a3e0c9219b7107b6cc178ad16870d93fcd",
+  "inputFingerprint": "3782d7c242bc6011636ce2f099a4fa1215443c451ef5e4ca7089ca27d7d5afcb",
   "assets": [
     {
       "route": "/",
       "image": "/social/pages/home.png",
       "width": 1200,
       "height": 630,
-      "bytes": 22386,
+      "bytes": 24170,
       "format": "png"
     },
     {
@@ -47,7 +47,7 @@
       "image": "/social/pages/cv.png",
       "width": 1200,
       "height": 630,
-      "bytes": 20871,
+      "bytes": 22592,
       "format": "png"
     },
     {
@@ -55,7 +55,7 @@
       "image": "/social/pages/cv-tr.png",
       "width": 1200,
       "height": 630,
-      "bytes": 21199,
+      "bytes": 24366,
       "format": "png"
     },
     {
@@ -63,7 +63,7 @@
       "image": "/social/pages/cv-ja.png",
       "width": 1200,
       "height": 630,
-      "bytes": 20027,
+      "bytes": 22078,
       "format": "png"
     },
     {

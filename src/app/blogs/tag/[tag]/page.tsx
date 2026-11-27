@@ -40,15 +40,15 @@ export async function generateMetadata({
   const postCount = matching.reduce((sum, item) => sum + item.count, 0);
   const metadataLang = matching[0].lang;
   const description = metadataLang === "tr"
-    ? `Rusen.ai üzerinde #${displayTag} etiketiyle yayımlanan ${postCount} yazı.`
-    : `${postCount} ${postCount === 1 ? "essay" : "essays"} filed under #${displayTag} on Rusen.ai.`;
+    ? `rusen.ai üzerinde #${displayTag} etiketiyle yayımlanan ${postCount} yazı.`
+    : `${postCount} ${postCount === 1 ? "essay" : "essays"} filed under #${displayTag} on rusen.ai.`;
 
   return buildSocialMetadata({
-    title: `#${displayTag} | Rusen.ai Blog`,
+    title: `#${displayTag} · rusen.ai blog`,
     description,
     path: `/blogs/tag/${tag}`,
     image: blogTagImagePath(tag),
-    imageAlt: `#${displayTag} — Rusen.ai blog archive`,
+    imageAlt: `#${displayTag} — rusen.ai blog archive`,
     locale: metadataLang === "tr" ? "tr_TR" : "en_US",
   });
 }

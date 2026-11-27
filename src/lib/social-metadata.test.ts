@@ -36,7 +36,7 @@ describe("social metadata", () => {
     const metadata = buildProjectMetadata("emergence");
     const image = firstOpenGraphImage(metadata);
 
-    expect(metadata.title).toBe("Emergence | Rusen.ai");
+    expect(metadata.title).toBe("Emergence · rusen.ai");
     expect(metadata.alternates?.canonical).toBe("/emergence");
     expect(image).toMatchObject({
       url: "/social/projects/emergence.png",
