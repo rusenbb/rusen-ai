@@ -13,6 +13,7 @@
     "protobufjs": "7.6.5"
   },
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks 2>/dev/null || true",
     "dev": "next dev",
     "prebuild": "node scripts/copy-steering-runtime.mjs && npm run content:check && npm run social:verify",
     "build": "next build",

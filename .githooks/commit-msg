@@ -1,0 +1,16 @@
+#!/bin/sh
+# Removes AI attribution trailers from commit messages and refuses AI identities.
+msg_file="$1"
+pattern='^[[:space:]]*(co-authored-by:.*(claude|anthropic)|claude-session:|.*generated (with|by) \[?claude code|.*claude\.ai/code)'
+
+tmp="$msg_file.tmp.$$"
+grep -v -i -E "$pattern" "$msg_file" > "$tmp" || true
+mv "$tmp" "$msg_file"
+
+for ident in "$(git var GIT_AUTHOR_IDENT)" "$(git var GIT_COMMITTER_IDENT)"; do
+  if printf '%s' "$ident" | grep -q -i -E '^claude |anthropic\.com'; then
+    echo "commit-msg: refusing commit with identity: $ident" >&2
+    echo "Set: git config user.name rusenbb && git config user.email 70446242+rusenbb@users.noreply.github.com" >&2
+    exit 1
+  fi
+done
