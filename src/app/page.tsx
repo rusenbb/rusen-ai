@@ -4,7 +4,6 @@ import { PERSON } from "@/lib/agent-docs";
 import AsciiCover from "./components/ascii-cover/AsciiCover";
 import PostSigil from "./blogs/components/PostSigil";
 import type { Sigil } from "@/lib/blog-sigil";
-import BgKickerToggle from "./components/BgKickerToggle";
 import { getFeaturedProjects, getProjectPath } from "@/lib/projects";
 import { getLatestUniquePosts, getPostSigil, formatDate, readUnit } from "@/lib/blog";
 import type { Metadata } from "next";
@@ -31,29 +30,12 @@ export default function Home() {
         </p>
       </section>
 
-      {/* Reserved viewport space for the ASCII background's DATA pulse -
-          AsciiDataBackground anchors the letters to this element so they
-          sit between the hero and the cards instead of behind them. */}
+      {/* Open band between the hero and the cards where the ink-flow
+          background shows through. */}
       <div
-        data-bg-anchor="data"
         aria-hidden="true"
-        className="h-40 sm:h-48 md:h-56 mt-10 sm:mt-12"
+        className="h-40 sm:h-48 md:h-56 mt-10 sm:mt-12 mb-12 sm:mb-16 md:mb-20"
       />
-
-      {/* Caption for the DATA pulse - flanking dashes give it the look of a
-          deliberate label, not a stray badge. The kicker itself toggles the
-          bg (mirrors the footer toggle). */}
-      <div className="flex items-center justify-center gap-4 mb-12 sm:mb-16 md:mb-20">
-        <span
-          aria-hidden="true"
-          className="h-px w-10 sm:w-16 bg-[var(--line-strong)] opacity-25"
-        />
-        <BgKickerToggle />
-        <span
-          aria-hidden="true"
-          className="h-px w-10 sm:w-16 bg-[var(--line-strong)] opacity-25"
-        />
-      </div>
 
       {/* Featured Demos */}
       <section className="mb-12 sm:mb-16 md:mb-20">
