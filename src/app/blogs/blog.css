@@ -594,10 +594,11 @@ html { scroll-behavior: smooth; }
 }
 
 .idx-head h1 {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 2rem;
   font-weight: 700;
   margin: 0 0 0.6rem;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.045em;
 }
 .idx-head .lede {
   color: var(--muted);
@@ -629,9 +630,6 @@ html { scroll-behavior: smooth; }
 }
 .idx-section-head .dashed-rule {
   flex: 1;
-  height: 1px;
-  opacity: 0.3;
-  background: repeating-linear-gradient(90deg, var(--line-strong) 0 6px, transparent 6px 10px);
 }
 .idx-section-head .sec-count {
   font-family: var(--font-geist-mono), ui-monospace, monospace;

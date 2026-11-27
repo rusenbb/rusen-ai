@@ -16,6 +16,13 @@ import sharp from "sharp";
 
 import { getAllPosts, getAllSeries, getAllTags, tagDisplay, tagSlug } from "../src/lib/blog.ts";
 import { getProjectPath, PROJECTS } from "../src/lib/projects.ts";
+import {
+  HIKARI_GLYPHS,
+  HIKARI_PATH,
+  HIKARI_SEAL_TRANSFORM,
+  SEAL_PAPER,
+  SEAL_RED,
+} from "../src/app/components/hikariGlyph.ts";
 
 type StaticSocialPage = {
   path: string;
@@ -70,6 +77,14 @@ const ROOT = process.cwd();
 const WIDTH = 1200;
 const HEIGHT = 630;
 const MAX_BYTES = 1_500_000;
+// Bump when the card design changes so the verify step asks for a rebuild.
+const CARD_STYLE = "hikari-1";
+
+// Brand palette: ink, paper/candle text, seal red. See src/app/globals.css.
+const INK = "#0b0a09";
+const CANDLE = "#f3e6c8";
+const DIM = "#a99f8c";
+const SEAL = "#e0533a";
 
 const STATIC_PAGES = JSON.parse(
   readFileSync(resolve(ROOT, "src/content/social-pages.json"), "utf8"),
@@ -144,20 +159,22 @@ function titleFontSize(lines: string[]): number {
   return 80;
 }
 
-function signalCells(seed: string): string {
-  const seedValue = hash(seed);
-  const cells: string[] = [];
-  for (let row = 0; row < 6; row += 1) {
-    for (let column = 0; column < 5; column += 1) {
-      const active = ((seedValue >>> ((row * 5 + column) % 24)) & 1) === 1;
-      const x = 925 + column * 43;
-      const y = 152 + row * 43;
-      cells.push(
-        `<rect x="${x}" y="${y}" width="29" height="29" rx="2" fill="${active ? "#79f29b" : "none"}" fill-opacity="${active ? "0.24" : "0"}" stroke="#79f29b" stroke-opacity="${active ? "0.48" : "0.14"}"/>`,
-      );
-    }
-  }
-  return cells.join("");
+/** The 光 mark drawn in characters: stroke weight becomes glyph density. */
+function asciiHikari(x: number, y: number, cellW: number, cellH: number): string {
+  const ramp = " .:-=+*#%@";
+  const glyph = HIKARI_GLYPHS[0];
+  return glyph
+    .map((row, r) => {
+      const line = Array.from(row, (digit) => ramp[Number(digit)]).join("");
+      return `<text x="${x}" y="${y + r * cellH}" class="ascii" textLength="${row.length * cellW}" lengthAdjust="spacing" xml:space="preserve">${xml(line)}</text>`;
+    })
+    .join("");
+}
+
+/** The 光 seal at (x, y) with the given side length. */
+function seal(x: number, y: number, size: number): string {
+  const scale = size / 512;
+  return `<g transform="translate(${x} ${y}) scale(${scale})"><rect width="512" height="512" rx="36" fill="${SEAL_RED}"/><path d="${HIKARI_PATH}" transform="${HIKARI_SEAL_TRANSFORM}" fill="${SEAL_PAPER}"/></g>`;
 }
 
 function titleMarkup(lines: string[], fontSize: number): string {
@@ -198,34 +215,23 @@ function renderCardSvg(spec: CardSpec): Buffer {
   return Buffer.from(`
     <svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}">
       <defs>
-        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#0b0e0c"/>
-          <stop offset="1" stop-color="#050706"/>
-        </linearGradient>
-        <linearGradient id="rail" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stop-color="#79f29b" stop-opacity="0.78"/>
-          <stop offset="0.42" stop-color="#79f29b" stop-opacity="0.14"/>
-          <stop offset="1" stop-color="#79f29b" stop-opacity="0"/>
-        </linearGradient>
         <style>
           text { font-family: "Geist Mono", "SFMono-Regular", Menlo, Consolas, monospace; }
-          .micro { fill: #a6aca8; font-size: 16px; font-weight: 600; letter-spacing: 3px; }
-          .title { fill: #f2f4ef; font-weight: 700; letter-spacing: -2px; }
-          .description { fill: #b9bfba; font-size: 24px; font-weight: 450; letter-spacing: -0.25px; }
-          .register { fill: #79f29b; font-size: 17px; font-weight: 650; letter-spacing: 2px; }
+          .micro { fill: ${DIM}; font-size: 16px; font-weight: 600; letter-spacing: 3px; }
+          .title { fill: ${CANDLE}; font-weight: 700; letter-spacing: -2px; }
+          .description { fill: ${DIM}; font-size: 24px; font-weight: 450; letter-spacing: -0.25px; }
+          .register { fill: ${SEAL}; font-size: 17px; font-weight: 650; letter-spacing: 2px; }
+          .ascii { fill: ${CANDLE}; fill-opacity: 0.6; font-size: 10px; font-weight: 700; }
         </style>
       </defs>
-      <rect width="1200" height="630" fill="url(#bg)"/>
-      <rect x="38" y="38" width="1124" height="554" rx="2" fill="none" stroke="#b9c1ba" stroke-opacity="0.2"/>
-      <path d="M38 106H1162" stroke="#b9c1ba" stroke-opacity="0.18"/>
-      <path d="M38 536H1162" stroke="#b9c1ba" stroke-opacity="0.18"/>
-      <rect x="38" y="105" width="760" height="2" fill="url(#rail)"/>
-      <rect x="72" y="68" width="10" height="10" rx="1" fill="#79f29b"/>
-      <text x="98" y="79" class="micro">${xml(spec.label.toUpperCase())}</text>
+      <rect width="1200" height="630" fill="${INK}"/>
+      <rect x="38" y="38" width="1124" height="554" rx="2" fill="none" stroke="${CANDLE}" stroke-opacity="0.16"/>
+      <path d="M38 106H1162" stroke="${CANDLE}" stroke-opacity="0.14"/>
+      <path d="M38 536H1162" stroke="${CANDLE}" stroke-opacity="0.14"/>
+      ${seal(70, 58, 30)}
+      <text x="114" y="79" class="micro">${xml(spec.label.toUpperCase())}</text>
       <text x="1124" y="79" class="micro" text-anchor="end">${variantCode}::${code}</text>
-      <g aria-hidden="true">${signalCells(spec.seed)}</g>
-      <path d="M902 137V437H1147" fill="none" stroke="#79f29b" stroke-opacity="0.12"/>
-      <text x="1034" y="462" class="micro" text-anchor="middle" fill-opacity="0.42">0 · 1 · 0</text>
+      <g aria-hidden="true">${asciiHikari(944, 150, 6, 13)}</g>
       ${titleMarkup(spec.title, fontSize)}
       ${descriptionMarkup(spec.description, spec.title, fontSize)}
       <text x="78" y="570" class="register">[ ${xml(spec.register.toUpperCase())} ]</text>
@@ -249,9 +255,9 @@ async function writePhotoCard(page: StaticSocialPage): Promise<void> {
     <svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}">
       <defs>
         <linearGradient id="shade" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stop-color="#020403" stop-opacity="0.88"/>
-          <stop offset="0.5" stop-color="#020403" stop-opacity="0.24"/>
-          <stop offset="1" stop-color="#020403" stop-opacity="0.08"/>
+          <stop offset="0" stop-color="#0b0a09" stop-opacity="0.88"/>
+          <stop offset="0.5" stop-color="#0b0a09" stop-opacity="0.24"/>
+          <stop offset="1" stop-color="#0b0a09" stop-opacity="0.08"/>
         </linearGradient>
         <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0.58" stop-color="#000" stop-opacity="0"/>
@@ -262,7 +268,7 @@ async function writePhotoCard(page: StaticSocialPage): Promise<void> {
           .micro { fill: #f2f4ef; font-size: 15px; font-weight: 600; letter-spacing: 3px; }
           .title { fill: #f7f6ef; font-size: 76px; font-weight: 700; letter-spacing: -2px; }
           .detail { fill: #e2e2dc; font-size: 20px; font-weight: 500; letter-spacing: 0.5px; }
-          .register { fill: #79f29b; font-size: 17px; font-weight: 650; letter-spacing: 2px; }
+          .register { fill: ${SEAL}; font-size: 17px; font-weight: 650; letter-spacing: 2px; }
         </style>
       </defs>
       <rect width="1200" height="630" fill="url(#shade)"/>
@@ -270,8 +276,8 @@ async function writePhotoCard(page: StaticSocialPage): Promise<void> {
       <rect x="38" y="38" width="1124" height="554" rx="2" fill="none" stroke="#fff" stroke-opacity="0.28"/>
       <path d="M38 106H1162" stroke="#fff" stroke-opacity="0.22"/>
       <path d="M38 536H1162" stroke="#fff" stroke-opacity="0.22"/>
-      <rect x="72" y="68" width="10" height="10" rx="1" fill="#79f29b"/>
-      <text x="98" y="79" class="micro">${xml(page.label)}</text>
+      ${seal(70, 58, 30)}
+      <text x="114" y="79" class="micro">${xml(page.label)}</text>
       <text x="1124" y="79" class="micro" text-anchor="end">FRAME::01/${String(PHOTO_COUNT).padStart(2, "0")}</text>
       <text x="72" y="332" class="title">${xml(page.headline[0])}</text>
       <text x="72" y="408" class="title">${xml(page.headline[1] ?? "")}</text>
@@ -321,7 +327,7 @@ function blogSpecs(): CardSpec[] {
     route: `/blogs/${post.slug}`,
     output: `/social/blog/posts/${post.slug}.png`,
     label: `BLOG / ${post.lang.toUpperCase()} / ${post.date}`,
-    title: wrapText(post.title.toUpperCase(), 27, 3),
+    title: wrapText(post.title.toLocaleUpperCase(post.lang === "tr" ? "tr-TR" : "en-US"), 27, 3),
     description: post.description,
     register: `${post.readingMinutes} MIN READ / ARTICLE`,
     seed: post.slug,
@@ -384,7 +390,7 @@ function socialImageFiles(directory = resolve(ROOT, "public/social")): string[] 
 function inputFingerprint(): string {
   const specs = [...staticSpecs(), ...projectSpecs(), ...blogSpecs()];
   return createHash("sha256")
-    .update(JSON.stringify({ specs, photos: STATIC_PAGES.photos, photoCount: PHOTO_COUNT }))
+    .update(JSON.stringify({ style: CARD_STYLE, specs, photos: STATIC_PAGES.photos, photoCount: PHOTO_COUNT }))
     .update(readFileSync(PHOTO_SOURCE))
     .digest("hex");
 }

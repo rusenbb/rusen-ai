@@ -10,7 +10,7 @@ export default function DemosPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-10 sm:py-12 md:py-16">
-      <h1 className="text-3xl sm:text-4xl font-bold mb-3 sm:mb-4">Demos</h1>
+      <h1 className="brand-display text-3xl sm:text-4xl font-bold mb-3 sm:mb-4">Demos</h1>
       <p className="text-sm sm:text-base text-muted mb-8 sm:mb-12 max-w-2xl text-pretty">
         Interactive AI tools you can try right now.
       </p>

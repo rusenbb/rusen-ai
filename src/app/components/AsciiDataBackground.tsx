@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { getPalette, getResolvedTheme, readTokenRgb, THEME_EVENT } from "./theme";
+import { HIKARI, HIKARI_GLYPHS } from "./hikariGlyph";
 
 const DENSITY_RAMP = " .·:-=+*#%@";
 const CELL_W = 10;
@@ -93,7 +94,8 @@ type Props = {
    *  letter pulse are both suppressed. Defaults to true. */
   noise?: boolean;
   /** Word to pulse in the background. Defaults to "DATA". Characters without
-   *  a pattern in `letterPatterns` are silently skipped. */
+   *  a pattern in `letterPatterns` are silently skipped. The brand mark "光"
+   *  is special: it is drawn as one weighted glyph that breathes slowly. */
   word?: string;
 };
 
@@ -145,6 +147,8 @@ export default function AsciiDataBackground({
     let rows = 0;
     let startC = 0;
     const letterMap = new Map<string, number>();
+    // Per-cell stroke weight (0-1) for the 光 glyph; empty for letter words.
+    const glyphWeight = new Map<string, number>();
     let dpr = window.devicePixelRatio || 1;
     // Optional page-anchored y position for the DATA pulse. When the page
     // includes <div data-bg-anchor="data" />, the letters render centered on
@@ -200,9 +204,36 @@ export default function AsciiDataBackground({
     };
     layout();
 
-    const rebuildLetterMap = (startR: number, centerX: number) => {
+    /** Fills the letter map around (centerX, centerY) and returns the
+     *  sub-cell offsets that keep the word exactly centered. */
+    const rebuildLetterMap = (centerX: number, centerY: number, maxH: number, maxW: number) => {
       letterMap.clear();
+      glyphWeight.clear();
       const word = wordRef.current;
+      if (word === HIKARI) {
+        const fits = HIKARI_GLYPHS.find(
+          (g) => g.length * CELL_H <= maxH && g[0].length * CELL_W <= maxW,
+        );
+        const glyph = fits ?? HIKARI_GLYPHS[HIKARI_GLYPHS.length - 1];
+        const gRows = glyph.length;
+        const gCols = glyph[0].length;
+        const startR = Math.floor(centerY / CELL_H - gRows / 2);
+        startC = Math.floor(centerX / CELL_W - gCols / 2);
+        for (let r = 0; r < gRows; r++) {
+          for (let c = 0; c < gCols; c++) {
+            const weight = Number(glyph[r][c]) / 9;
+            if (weight <= 0) continue;
+            const key = `${startC + c},${startR + r}`;
+            letterMap.set(key, 0);
+            glyphWeight.set(key, weight);
+          }
+        }
+        return {
+          x: centerX - (startC + gCols / 2) * CELL_W,
+          y: centerY - (startR + gRows / 2) * CELL_H,
+        };
+      }
+      const startR = Math.floor(centerY / CELL_H - PATTERN_ROWS / 2);
       const totalW = word.length * PATTERN_COLS + (word.length - 1) * LETTER_GAP_COLS;
       startC = Math.floor(centerX / CELL_W - totalW / 2);
       for (let i = 0; i < word.length; i++) {
@@ -215,7 +246,10 @@ export default function AsciiDataBackground({
           }
         }
       }
-      return centerX - (startC + totalW / 2) * CELL_W;
+      return {
+        x: centerX - (startC + totalW / 2) * CELL_W,
+        y: centerY - (startR + PATTERN_ROWS / 2) * CELL_H,
+      };
     };
 
     const startTime = performance.now();
@@ -280,16 +314,20 @@ export default function AsciiDataBackground({
       }
       let centerX = w / 2;
       let centerY = h / 2;
+      let maxH = h * 0.4;
       if (anchorEl) {
         const rect = anchorEl.getBoundingClientRect();
         const canvasRect = canvas.getBoundingClientRect();
         centerX = (rect.left + rect.right) / 2 - canvasRect.left;
         centerY = (rect.top + rect.bottom) / 2 - canvasRect.top;
+        maxH = rect.height;
       }
-      const startR = Math.floor(centerY / CELL_H - PATTERN_ROWS / 2);
       // Keep the word exactly centered, even between grid cells.
-      const letterOffsetX = rebuildLetterMap(startR, centerX);
-      const letterOffsetY = centerY - (startR + PATTERN_ROWS / 2) * CELL_H;
+      const letterOffset = rebuildLetterMap(centerX, centerY, maxH, w - 32);
+      const letterOffsetX = letterOffset.x;
+      const letterOffsetY = letterOffset.y;
+      // The 光 glyph breathes once per cycle instead of pulsing letter by letter.
+      const breath = 0.5 - 0.5 * Math.cos((cycleT / CYCLE_DURATION) * Math.PI * 2);
 
       const noiseOn = noiseRef.current;
       for (let r = 0; r < rows; r++) {
@@ -300,7 +338,10 @@ export default function AsciiDataBackground({
 
           const li = letterMap.get(`${c},${r}`);
           const isLetter = li !== undefined && noiseOn;
-          if (isLetter) {
+          const weight = isLetter ? glyphWeight.get(`${c},${r}`) : undefined;
+          if (weight !== undefined) {
+            density += 0.12 + weight * (0.5 + 0.38 * breath);
+          } else if (isLetter) {
             const start = (li as number) * LETTER_DURATION;
             if (cycleT >= start && cycleT < start + LETTER_DURATION) {
               const p = (cycleT - start) / LETTER_DURATION;

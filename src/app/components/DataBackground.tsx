@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import AsciiDataBackground from "./AsciiDataBackground";
+import { HIKARI } from "./hikariGlyph";
 import {
   isBgDisabled,
   subscribeBgToggle,
@@ -43,5 +44,5 @@ export default function DataBackground() {
 
   if (disabled || !hasBackground(pathname, notFoundActive)) return null;
 
-  return <AsciiDataBackground noise word={notFoundActive ? "404" : "DATA"} />;
+  return <AsciiDataBackground noise word={notFoundActive ? "404" : HIKARI} />;
 }

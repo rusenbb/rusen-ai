@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import navigation from "@/content/navigation.json";
 import NavWord from "./NavWord";
 import ThemeToggle from "./ThemeToggle";
+import HikariSeal from "./HikariSeal";
 import { useHydrated } from "./useHydrated";
 
 const { home, items: links, ui: navUi } = navigation;
@@ -81,7 +82,8 @@ export default function Header() {
     <header className="ui-surface sticky top-0 z-[90] border-b border-line backdrop-blur-sm">
       <nav className="relative max-w-6xl mx-auto px-4 py-3 sm:py-4 md:py-3" ref={mobileMenuRef}>
         <div className="flex items-center justify-between gap-3 md:justify-center">
-          <Link href="/" className="text-lg sm:text-xl font-bold hover:opacity-80 transition md:hidden">
+          <Link href="/" className="inline-flex items-center gap-2 text-lg sm:text-xl font-bold hover:opacity-80 transition md:hidden">
+            <HikariSeal className="site-seal" />
             <BrandWordmark />
           </Link>
 
@@ -93,6 +95,7 @@ export default function Header() {
               aria-label={home.label}
               aria-current={pathname === home.href ? "page" : undefined}
             >
+              <HikariSeal className="site-seal" />
               <NavWord word={home.word} accentGlyph={home.accentGlyph} preserveCase />
             </Link>
             {links.map((item, index) => {

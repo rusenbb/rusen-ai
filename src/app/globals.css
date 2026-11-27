@@ -6,17 +6,18 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  /* Light mode is paper-warm (cream tones) instead of pure white to drop the
-     blue cast and reduce eye strain; fits the terminal/notebook aesthetic. */
-  --background: #f7f4ee;
-  --surface:    #fdfaf4;
-  --foreground: #1c1a16;
+  /* Brand palette: paper and ink, with the 光 seal red as the one signal
+     colour. Light mode is paper, dark mode is ink; the demo data colours
+     (--accent*) are a separate categorical set and stay as they are. */
+  --background: #f1eadb;
+  --surface:    #f8f3e8;
+  --foreground: #14110d;
   /* Terminal / Data-Ops design tokens (shared across CV, home, cards, bg). */
-  --line: rgba(0, 0, 0, 0.10);
-  --line-strong: #1c1a16;
-  --muted: #525252;
-  --sub: #6d6d6d;
-  --signal: #15803d;
+  --line: rgba(20, 17, 13, 0.12);
+  --line-strong: #14110d;
+  --muted: #4f483d;
+  --sub: #6b6252;
+  --signal: #c0391f;
   /* Data colours for demos: the primary series, its contrast, then three more
      categorical series for charts with many groups. --danger is for errors. */
   --accent: #0e7490;
@@ -50,14 +51,14 @@
 /* System preference fallback */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0c0c0f;
-    --surface:    #131316;
-    --foreground: #ededed;
-    --line: rgba(255, 255, 255, 0.10);
-    --line-strong: #ededed;
-    --muted: #a3a3a3;
-    --sub: #85858b;
-    --signal: #4ade80;
+    --background: #0b0a09;
+    --surface:    #151310;
+    --foreground: #eee5d1;
+    --line: rgba(243, 230, 200, 0.11);
+    --line-strong: #eee5d1;
+    --muted: #a99f8c;
+    --sub: #8a8170;
+    --signal: #e0533a;
     --accent: #22d3ee;
     --accent-2: #fbbf24;
     --accent-3: #a78bfa;
@@ -68,14 +69,14 @@
 }
 
 html[data-theme="light"] {
-  --background: #f7f4ee;
-  --surface:    #fdfaf4;
-  --foreground: #1c1a16;
-  --line: rgba(0, 0, 0, 0.10);
-  --line-strong: #1c1a16;
-  --muted: #525252;
-  --sub: #6d6d6d;
-  --signal: #15803d;
+  --background: #f1eadb;
+  --surface:    #f8f3e8;
+  --foreground: #14110d;
+  --line: rgba(20, 17, 13, 0.12);
+  --line-strong: #14110d;
+  --muted: #4f483d;
+  --sub: #6b6252;
+  --signal: #c0391f;
   --accent: #0e7490;
   --accent-2: #b45309;
   --accent-3: #6d28d9;
@@ -86,14 +87,14 @@ html[data-theme="light"] {
 }
 
 html[data-theme="dark"] {
-  --background: #0c0c0f;
-  --surface:    #131316;
-  --foreground: #ededed;
-  --line: rgba(255, 255, 255, 0.10);
-  --line-strong: #ededed;
-  --muted: #a3a3a3;
-  --sub: #85858b;
-  --signal: #4ade80;
+  --background: #0b0a09;
+  --surface:    #151310;
+  --foreground: #eee5d1;
+  --line: rgba(243, 230, 200, 0.11);
+  --line-strong: #eee5d1;
+  --muted: #a99f8c;
+  --sub: #8a8170;
+  --signal: #e0533a;
   --accent: #22d3ee;
   --accent-2: #fbbf24;
   --accent-3: #a78bfa;
@@ -264,6 +265,23 @@ body[data-game-life-fullscreen="on"] header {
   display: none !important;
 }
 
+/* The 光 seal beside the wordmark: the one solid block of brand red. */
+.site-seal {
+  width: 1.15em;
+  height: 1.15em;
+  flex: none;
+}
+
+.site-nav-home {
+  grid-auto-flow: column;
+  gap: 1rem;
+}
+
+.site-nav-home .site-seal {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
 /* Restrained terminal navigation: stable words, active brackets, and one read/write scan. */
 .site-brand-dot {
   color: var(--signal);
@@ -339,7 +357,6 @@ body[data-game-life-fullscreen="on"] header {
   left: -0.18rem;
   width: 1px;
   background: var(--signal);
-  box-shadow: 0 0 0.32rem color-mix(in srgb, var(--signal) 60%, transparent);
   opacity: 0;
   pointer-events: none;
 }
@@ -710,15 +727,22 @@ body[data-game-life-fullscreen="on"] header {
   color: var(--foreground);
   white-space: nowrap;
 }
+/* ASCII section rule: character density falls off away from the heading,
+   the way light does. Purely decorative, clipped to the available width. */
 .dashed-rule {
   flex: 1;
-  height: 1px;
-  background: repeating-linear-gradient(
-    90deg,
-    var(--line-strong) 0, var(--line-strong) 6px,
-    transparent 6px, transparent 10px
-  );
-  opacity: 0.3;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.78rem;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  color: var(--sub);
+}
+
+.dashed-rule::before {
+  content: "#%*+=-:-·:·.·:·.·· ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .";
 }
 
 
@@ -841,3 +865,10 @@ html.dark .term-cover {
 .ui-details summary::-webkit-details-marker { display: none; }
 .ui-details[open] .ui-details__mark { transform: rotate(45deg); }
 .ui-details__mark { display: inline-block; transition: transform 0.15s ease; }
+
+/* Display headings use the brand face: Geist Mono Bold, tightly tracked,
+   the same setting as the banners and video thumbnails. */
+.brand-display {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  letter-spacing: -0.045em;
+}

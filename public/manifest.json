@@ -4,8 +4,8 @@
   "description": "Interactive AI demos and experiments by Rusen Birben",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0c0c0f",
-  "theme_color": "#4ade80",
+  "background_color": "#0b0a09",
+  "theme_color": "#d6402b",
   "icons": [
     {
       "src": "/icon.svg",

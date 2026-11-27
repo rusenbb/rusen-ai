@@ -23,7 +23,7 @@ export default function Home() {
       <JsonLd data={{ "@context": "https://schema.org", "@type": "Person", ...PERSON }} />
       {/* Hero */}
       <section className="text-center">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 leading-tight text-balance">
+        <h1 className="brand-display text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 leading-tight text-balance">
           Data is eating the world.
         </h1>
         <p className="text-base sm:text-lg md:text-xl text-muted max-w-2xl mx-auto text-pretty">
