@@ -12,7 +12,7 @@ import rehypePrettyCode from "rehype-pretty-code";
 import rehypeSlug from "rehype-slug";
 
 import {
-  dropRepeatedLede,
+  dropRepeatedOpening,
   getAllPosts,
   getPostBySlug,
   getTranslation,
@@ -103,11 +103,12 @@ export default async function PostPage({
   const seriesTotal = seriesPosts.length;
   const seriesOrder = post.seriesOrder ?? 0;
 
-  const headings = extractHeadings(post.body);
+  const body = dropRepeatedOpening(post.body, post.title, post.description);
+  const headings = extractHeadings(body);
   const tocLabel = post.lang === "tr" ? "İçindekiler" : "Contents";
 
   const { content } = await compileMDX({
-    source: escapeForMdx(dropRepeatedLede(post.body, post.description)),
+    source: escapeForMdx(body),
     components: {
       // Demote body h1 to h2 - frontmatter title is the only real h1 on the page.
       h1: (props) => <h2 {...props} />,
@@ -152,76 +153,31 @@ export default async function PostPage({
         <TableOfContents headings={headings} label={tocLabel} />
       )}
 
-      <div className="prompt-line">
-        <span className="p">rusen@rusen.ai</span>
-        :<span style={{ color: "var(--muted)" }}>/blogs</span>${" "}
-        <span className="c">cat {post.slug}.md</span>
-      </div>
-
-      <div className="ascii-frame">
-        <div className="ascii-frame-head">
-          <span>MANIFEST · post.md</span>
-          <span>
-            <span className="signal-blip-sm" />
-            PUBLISHED
-          </span>
-        </div>
-        <div className="ascii-frame-body">
-          <dl>
-            <dt>Date</dt>
-            <dd>{formatDate(post.date, post.lang)}</dd>
-            {series && (
-              <>
-                <dt>Series</dt>
-                <dd>
-                  <Link
-                    href={`/blogs/series/${series.id}`}
-                    style={{ color: "var(--foreground)" }}
-                  >
-                    {series.title[post.lang]}
-                  </Link>{" "}
-                  · part {String(seriesOrder).padStart(2, "0")} /{" "}
-                  {String(seriesTotal).padStart(2, "0")}
-                </dd>
-              </>
-            )}
-            <dt>Tags</dt>
-            <dd>
-              {post.tags.map((t, i) => (
-                <span key={t}>
-                  {i > 0 && " · "}
-                  <Link href={`/blogs/tag/${tagSlug(t)}`}>{tagDisplay(t)}</Link>
-                </span>
-              ))}
-            </dd>
-            <dt>Read</dt>
-            <dd>
-              {post.readingMinutes} {readUnit(post.lang)} · {post.wordCount.toLocaleString()}{" "}
-              {post.lang === "tr" ? "kelime" : "words"}
-            </dd>
-            <dt>Source</dt>
-            <dd>
-              <CopyMarkdown markdown={postMarkdown(post)} lang={post.lang} />
-            </dd>
-            <dt>Lang</dt>
-            <dd>
-              {post.lang.toUpperCase()}
-              {sibling && (
-                <>
-                  {" · "}
-                  <Link href={`/blogs/${sibling.slug}`}>
-                    [ ⇄ {sibling.lang.toUpperCase()} ]
-                  </Link>
-                </>
-              )}
-            </dd>
-          </dl>
-        </div>
-      </div>
-
       <h1 className="post-title" data-allow-select>
         {post.title}
       </h1>
+      <p className="post-meta">
+        <span>{formatDate(post.date, post.lang)}</span>
+        {series && (
+          <span>
+            <Link href={`/blogs/series/${series.id}`}>{series.title[post.lang]}</Link>
+            {seriesTotal > 1 && ` ${seriesOrder}/${seriesTotal}`}
+          </span>
+        )}
+        <span>
+          {post.readingMinutes} {readUnit(post.lang)}
+        </span>
+        <span>
+          {post.lang.toUpperCase()}
+          {sibling && (
+            <>
+              {" / "}
+              <Link href={`/blogs/${sibling.slug}`}>{sibling.lang.toUpperCase()}</Link>
+            </>
+          )}
+        </span>
+        <CopyMarkdown markdown={postMarkdown(post)} lang={post.lang} />
+      </p>
       <p className="post-subtitle" data-allow-select>
         {post.description}
       </p>
@@ -231,6 +187,14 @@ export default async function PostPage({
       <article className="post-prose" data-allow-select draggable={false}>
         {content}
       </article>
+
+      <p className="post-tags">
+        {post.tags.map((t) => (
+          <Link key={t} href={`/blogs/tag/${tagSlug(t)}`}>
+            #{tagDisplay(t)}
+          </Link>
+        ))}
+      </p>
 
       <div className="post-foot">
         {prev ? (

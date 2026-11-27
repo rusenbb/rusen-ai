@@ -422,23 +422,30 @@ export function readUnit(lang: Lang): string {
 }
 
 /**
- * Some posts open with the description as an italic lede under the title. The
- * page already shows the description as the subtitle, so drop that paragraph
- * when it repeats the description (ignoring emphasis markers and whitespace).
+ * Posts open with "# Title" and often an italic lede that repeats the
+ * description. The page already shows both above the body, so drop the
+ * leading H1 when it matches the title and the next paragraph when it matches
+ * the description (ignoring emphasis markers and whitespace).
  */
-export function dropRepeatedLede(body: string, description: string): string {
-  const norm = (s: string) => s.replace(/[*_]/g, "").replace(/\s+/g, " ").trim();
-  const target = norm(description);
-  if (!target) return body;
+export function dropRepeatedOpening(body: string, title: string, description: string): string {
+  const norm = (s: string) => s.replace(/[*_]/g, "").replace(/\s+/g, " ").trim().toLowerCase();
   const lines = body.split("\n");
-  let i = 0;
-  while (i < lines.length && lines[i].trim() === "") i++;
-  if (i < lines.length && /^#\s/.test(lines[i])) {
-    i++;
+  const skipBlank = (i: number) => {
     while (i < lines.length && lines[i].trim() === "") i++;
+    return i;
+  };
+  let i = skipBlank(0);
+  const out = lines.slice(0, i);
+  if (i < lines.length && /^#\s/.test(lines[i]) && norm(lines[i].replace(/^#\s+/, "")) === norm(title)) {
+    i = skipBlank(i + 1);
+  } else if (i < lines.length && /^#\s/.test(lines[i])) {
+    out.push(lines[i], "");
+    i = skipBlank(i + 1);
   }
   let end = i;
   while (end < lines.length && lines[end].trim() !== "") end++;
-  if (end === i || norm(lines.slice(i, end).join(" ")) !== target) return body;
-  return [...lines.slice(0, i), ...lines.slice(end + 1)].join("\n");
+  if (end > i && description && norm(lines.slice(i, end).join(" ")) === norm(description)) {
+    i = skipBlank(end);
+  }
+  return [...out, ...lines.slice(i)].join("\n");
 }

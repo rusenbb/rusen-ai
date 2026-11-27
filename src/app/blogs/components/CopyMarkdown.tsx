@@ -22,7 +22,7 @@ export default function CopyMarkdown({ markdown, lang }: { markdown: string; lan
 
   return (
     <button type="button" className="copy-md" onClick={onClick} aria-live="polite">
-      [ {labels[state]} ]
+      {labels[state]}
     </button>
   );
 }
