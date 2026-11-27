@@ -84,7 +84,9 @@ export default function Header() {
         <div className="flex items-center justify-between gap-3 md:justify-center">
           <Link href="/" className="inline-flex items-center gap-2 text-lg sm:text-xl font-bold hover:opacity-80 transition md:hidden">
             <HikariSeal className="site-seal" />
-            <BrandWordmark />
+            <span>
+              <BrandWordmark />
+            </span>
           </Link>
 
           <div className="site-nav-row hidden md:flex">
