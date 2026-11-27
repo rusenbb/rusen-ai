@@ -40,7 +40,7 @@
       "company": "METU Applied NLP Group",
       "period": "03/2026 - Present",
       "location": "Ankara, TR",
-      "description": "Co-organize the [SIGTURK 2027 Shared Task](https://sigturk.github.io/workshops/2027/shared-task/) at the SIGTURK 2027 Workshop (ACL 2027) with Çağrı Toraman, Evren Ayberk Munis, and İlker Kesen. Built the Text/LLM track: 1,000 culturally grounded items in five Turkic languages (Turkish, Azerbaijani, Kazakh, Uzbek, Uyghur) across four tasks, selected from 1,750 candidates and grounded in 620 sources; wrote the evaluator, ran the baselines, and built the shared-task website.\n\nContribute to GemmaTurk, a 1.6B-parameter Turkish LLM: built a Turkish YouTube caption corpus (1.34M documents, 6.1B tokens), generated synthetic instruction and reasoning data, ran mid-training data-mix experiments, and run continued pre-training with long-context extension to 64K tokens.\n\nUpcoming: TurkBench 2, an agentic extension of the TurkBench Turkish LLM benchmark, in collaboration with Turkcell.",
+      "description": "Co-organize the [SIGTURK 2027 Shared Task](https://sigturk.github.io/workshops/2027/shared-task/) at the SIGTURK 2027 Workshop (ACL 2027) with Çağrı Toraman, Evren Ayberk Munis, and İlker Kesen. Built the Text/LLM track: 1,000 culturally grounded items in five Turkic languages (Turkish, Azerbaijani, Kazakh, Uzbek, Uyghur) across four tasks, selected from 1,750 candidates and grounded in 620 sources; wrote the evaluator, ran the baselines, and built the shared-task website.\n\nContribute to Karatavuk, a 1.6B-parameter Turkish LLM: built a Turkish YouTube caption corpus (1.34M documents, 6.1B tokens), generated synthetic instruction and reasoning data, ran mid-training data-mix experiments, and run continued pre-training with long-context extension to 64K tokens.\n\nUpcoming: TurkBench 2, an agentic extension of the TurkBench Turkish LLM benchmark, in collaboration with Turkcell.",
       "link": "https://nlp.ceng.metu.edu.tr",
       "category": "research"
     },
@@ -307,7 +307,7 @@
   "publications": [
     {
       "title": "Patching Fails Small, Attribution Fails Large: Component Effects in 16-Bit Language Models",
-      "subtitle": "Transactions on Machine Learning Research (TMLR) - Under review",
+      "subtitle": "Preprint - [rusen.ai/precision.pdf](https://rusen.ai/precision.pdf)",
       "period": "2026",
       "description": "Sole author.\n\nShows across ten language models that bfloat16 puts an error floor under intervention-based interpretability effects, while attribution keeps the ranking and sign of single-neuron effects (rank correlation ≥ 0.97); recommends measuring the floor before trusting 16-bit interventions.",
       "tags": [

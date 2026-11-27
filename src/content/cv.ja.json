@@ -40,7 +40,7 @@
       "company": "中東工科大学 応用NLPグループ",
       "period": "03/2026 - 現在",
       "location": "アンカラ、トルコ",
-      "description": "Çağrı Toraman、Evren Ayberk Munis、İlker Kesenとともに、SIGTURK 2027 Workshop（ACL 2027）の[SIGTURK 2027 Shared Task](https://sigturk.github.io/workshops/2027/shared-task/)を共同主催。テキスト/LLM部門を構築：5つのテュルク諸語（トルコ語、アゼルバイジャン語、カザフ語、ウズベク語、ウイグル語）・4タスクにわたり、1,750件の候補から選び620の情報源に基づく文化的設問1,000件を作成。評価ツールの実装、ベースライン評価、Webサイト構築も担当。\n\n16億パラメータのトルコ語LLMであるGemmaTurkで、トルコ語YouTube字幕コーパス（134万文書、61億トークン）を構築し、合成インストラクション・推論データの生成、mid-trainingのデータ配合実験、64Kトークンへの長文脈拡張を含む継続事前学習を担当。\n\n予定：Turkcellとの共同プロジェクトで、トルコ語LLMベンチマークTurkBenchをエージェント型タスクへ拡張するTurkBench 2。",
+      "description": "Çağrı Toraman、Evren Ayberk Munis、İlker Kesenとともに、SIGTURK 2027 Workshop（ACL 2027）の[SIGTURK 2027 Shared Task](https://sigturk.github.io/workshops/2027/shared-task/)を共同主催。テキスト/LLM部門を構築：5つのテュルク諸語（トルコ語、アゼルバイジャン語、カザフ語、ウズベク語、ウイグル語）・4タスクにわたり、1,750件の候補から選び620の情報源に基づく文化的設問1,000件を作成。評価ツールの実装、ベースライン評価、Webサイト構築も担当。\n\n16億パラメータのトルコ語LLMであるKaratavukで、トルコ語YouTube字幕コーパス（134万文書、61億トークン）を構築し、合成インストラクション・推論データの生成、mid-trainingのデータ配合実験、64Kトークンへの長文脈拡張を含む継続事前学習を担当。\n\n予定：Turkcellとの共同プロジェクトで、トルコ語LLMベンチマークTurkBenchをエージェント型タスクへ拡張するTurkBench 2。",
       "link": "https://nlp.ceng.metu.edu.tr",
       "category": "research"
     },
@@ -306,7 +306,7 @@
   "publications": [
     {
       "title": "Patching Fails Small, Attribution Fails Large: Component Effects in 16-Bit Language Models",
-      "subtitle": "Transactions on Machine Learning Research (TMLR) - 査読中",
+      "subtitle": "プレプリント - [rusen.ai/precision.pdf](https://rusen.ai/precision.pdf)",
       "period": "2026",
       "description": "単著。\n\n10のモデルで、bfloat16が介入に基づく解釈可能性の効果推定に誤差の下限を生じさせる一方、attributionは単一ニューロンの効果の順位と符号を保つこと（順位相関0.97以上）を示し、16ビットでの介入を用いる前にこの下限を測定することを提案。",
       "tags": [
