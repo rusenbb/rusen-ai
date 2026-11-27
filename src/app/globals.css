@@ -879,28 +879,22 @@ html.dark .term-cover {
   display: none;
 }
 
-/* The brush-stroke sword laid over "art" in the home hero. */
-.hero-sword-word {
-  position: relative;
-  display: inline-block;
-}
-
-.hero-sword {
-  position: absolute;
-  left: -1.6em;
-  top: -0.62em;
-  width: 4.4em;
+/* The brush cut between the hero quote and the name: one stroke that
+   lands wet and leaves like a blade, swept in once. */
+.hero-cut {
+  display: block;
+  width: min(34rem, 80%);
   height: auto;
-  transform: rotate(-2deg);
-  pointer-events: none;
-  animation: hero-sword-draw 700ms cubic-bezier(0.2, 0.7, 0.2, 1) 250ms both;
+  margin: 0.4rem auto 1.4rem;
+  color: var(--foreground);
+  animation: hero-cut-draw 520ms cubic-bezier(0.16, 1, 0.3, 1) 200ms both;
 }
 
-@keyframes hero-sword-draw {
+@keyframes hero-cut-draw {
   from { clip-path: inset(0 100% 0 0); }
   to { clip-path: inset(0 0 0 0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-sword { animation: none; }
+  .hero-cut { animation: none; }
 }

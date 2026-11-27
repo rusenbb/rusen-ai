@@ -1,6 +1,6 @@
 import Link from "next/link";
 import JsonLd from "./components/JsonLd";
-import BrushSword from "./components/BrushSword";
+import BrushCut from "./components/BrushCut";
 import { PERSON } from "@/lib/agent-docs";
 import AsciiCover from "./components/ascii-cover/AsciiCover";
 import PostSigil from "./blogs/components/PostSigil";
@@ -23,17 +23,15 @@ export default function Home() {
       <JsonLd data={{ "@context": "https://schema.org", "@type": "Person", ...PERSON }} />
       {/* Hero: centred in the first screen, the background shows around it. */}
       <section className="flex min-h-[calc(100svh-12rem)] flex-col items-center justify-center text-center mb-12 sm:mb-16 md:mb-20">
-        <h1 data-bg-quiet className="brand-display text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 leading-tight text-balance max-w-4xl mx-auto">
-          Focus on your{" "}
-          <span className="hero-sword-word">
-            art
-            <BrushSword className="hero-sword" />
-          </span>
-          , for you&apos;re both the art and the artist.
-        </h1>
-        <p data-bg-quiet className="font-mono text-sm sm:text-base tracking-[0.18em] text-muted">
-          RUŞEN BİRBEN
-        </p>
+        <div data-bg-quiet className="px-2 sm:px-6">
+          <h1 className="brand-display text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 leading-tight text-balance max-w-4xl mx-auto">
+            Focus on your art, for you&apos;re both the art and the artist.
+          </h1>
+          <BrushCut className="hero-cut" />
+          <p className="font-mono text-sm sm:text-base tracking-[0.18em] text-muted">
+            RUŞEN BİRBEN
+          </p>
+        </div>
       </section>
 
       {/* Featured Demos */}
