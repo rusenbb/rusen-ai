@@ -31,7 +31,7 @@ describe("public CV Markdown", () => {
       expect(professionalStart).toBeGreaterThan(projectsStart);
       const research = text.slice(researchStart, projectsStart);
       expect(research).toContain("SIGTURK 2027");
-      expect(research).toContain("GemmaTurk");
+      expect(research).toContain("Karatavuk");
       expect(research).not.toContain("https://www.youtube.com/@metunlpconnect");
       const serviceStart = text.indexOf(`## ${labels.service}`);
       expect(serviceStart).toBeGreaterThan(professionalStart);

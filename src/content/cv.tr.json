@@ -40,7 +40,7 @@
       "company": "ODTÜ Uygulamalı NLP Grubu",
       "period": "03/2026 - Bugün",
       "location": "Ankara, TR",
-      "description": "Çağrı Toraman, Evren Ayberk Munis ve İlker Kesen ile SIGTURK 2027 Workshop’u (ACL 2027) kapsamındaki [SIGTURK 2027 Shared Task](https://sigturk.github.io/workshops/2027/shared-task/) ortak organizatörlüğü. Metin/LLM kısmının tamamının geliştirilmesi: beş Türk dilinde (Türkçe, Azerbaycanca, Kazakça, Özbekçe, Uygurca) dört görevde, 1.750 aday arasından seçilen ve 620 kaynağa dayanan 1.000 kültürel soru; değerlendirme aracının yazılması, baseline koşuları ve görevin web sitesi.\n\nTürkçe LLM GemmaTurk’te (1,6B parametre) çalışma: Türkçe YouTube altyazı korpusunun oluşturulması (1,34M doküman, 6,1B token), sentetik instruction ve reasoning verisi üretimi, mid-training veri karışımı deneyleri ve 64K bağlam uzunluğuna genişletmeyle continual pre-training.\n\nYakında: Turkcell iş birliğiyle, Türkçe LLM benchmark’ı TurkBench’in agentic görevlere genişletilmiş hâli olan TurkBench 2.",
+      "description": "Çağrı Toraman, Evren Ayberk Munis ve İlker Kesen ile SIGTURK 2027 Workshop’u (ACL 2027) kapsamındaki [SIGTURK 2027 Shared Task](https://sigturk.github.io/workshops/2027/shared-task/) ortak organizatörlüğü. Metin/LLM kısmının tamamının geliştirilmesi: beş Türk dilinde (Türkçe, Azerbaycanca, Kazakça, Özbekçe, Uygurca) dört görevde, 1.750 aday arasından seçilen ve 620 kaynağa dayanan 1.000 kültürel soru; değerlendirme aracının yazılması, baseline koşuları ve görevin web sitesi.\n\nTürkçe LLM Karatavuk’ta (1,6B parametre) çalışma: Türkçe YouTube altyazı korpusunun oluşturulması (1,34M doküman, 6,1B token), sentetik instruction ve reasoning verisi üretimi, mid-training veri karışımı deneyleri ve 64K bağlam uzunluğuna genişletmeyle continual pre-training.\n\nYakında: Turkcell iş birliğiyle, Türkçe LLM benchmark’ı TurkBench’in agentic görevlere genişletilmiş hâli olan TurkBench 2.",
       "link": "https://nlp.ceng.metu.edu.tr",
       "category": "research"
     },
@@ -306,7 +306,7 @@
   "publications": [
     {
       "title": "Patching Fails Small, Attribution Fails Large: Component Effects in 16-Bit Language Models",
-      "subtitle": "Transactions on Machine Learning Research (TMLR) - Hakem değerlendirmesinde",
+      "subtitle": "Ön baskı - [rusen.ai/precision.pdf](https://rusen.ai/precision.pdf)",
       "period": "2026",
       "description": "Tek yazar.\n\nOn dil modelinde bfloat16’nın müdahale tabanlı yorumlanabilirlik ölçümlerine bir hata tabanı koyduğunu, attribution yönteminin ise tekil nöron etkilerinin sırasını ve işaretini koruduğunu (sıra korelasyonu ≥ 0,97) gösteriyor; 16 bit müdahalelere güvenmeden önce bu tabanın ölçülmesini öneriyor.",
       "tags": [
