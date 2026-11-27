@@ -85,7 +85,7 @@ export function DemoHeader({
             {eyebrow}
           </p>
         )}
-        <h1 className="text-3xl font-bold sm:text-4xl">{title}</h1>
+        <h1 className="brand-display text-3xl font-bold sm:text-4xl">{title}</h1>
         {description && (
           <p
             data-allow-select

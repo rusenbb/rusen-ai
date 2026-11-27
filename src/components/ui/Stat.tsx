@@ -14,7 +14,7 @@ export function Stat({ label, value, note, size = "md", className = "" }: StatPr
   return (
     <div className={`min-w-0 ${className}`}>
       <div className="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-[var(--sub)]">{label}</div>
-      <div className={`mt-1 font-semibold tabular-nums text-[var(--foreground)] ${size === "lg" ? "text-4xl sm:text-5xl" : "text-2xl"}`}>
+      <div className={`mt-1 font-mono font-semibold tabular-nums text-[var(--foreground)] ${size === "lg" ? "text-4xl sm:text-5xl" : "text-2xl"}`}>
         {value}
       </div>
       {note && <div className="mt-1 text-sm text-[var(--muted)]">{note}</div>}

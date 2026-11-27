@@ -4,7 +4,7 @@
    Inherits tokens from globals.css.
    ======================================== */
 
-:root {
+.container {
   --bul-bg: var(--surface);
   --bul-surface: color-mix(in srgb, var(--foreground) 4%, transparent);
   --bul-border: var(--line);
@@ -15,7 +15,7 @@
   --bul-accent: var(--signal);
   --bul-border-thick: 1px;
   --bul-font-mono: var(--font-geist-mono), "Courier New", monospace;
-  --bul-font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --bul-font-sans: var(--font-geist-serif), Georgia, serif;
 }
 
 .container {

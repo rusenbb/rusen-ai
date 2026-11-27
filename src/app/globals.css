@@ -46,6 +46,7 @@
   --color-danger: var(--danger);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-geist-serif);
 }
 
 /* System preference fallback */
@@ -180,7 +181,8 @@ body {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), "Segoe UI", sans-serif;
+  /* Reading text is serif; headings, nav and labels carry the mono voice. */
+  font-family: var(--font-geist-serif), Georgia, serif;
   line-height: 1.5;
   overflow-x: hidden;
   transition: background-color 220ms ease, color 220ms ease;
@@ -897,4 +899,20 @@ html.dark .term-cover {
 
 @media (prefers-reduced-motion: reduce) {
   .hero-cut { animation: none; }
+}
+
+/* "Focus" in the home hero: a hidden button that looks like the rest of the
+   quote. Only the keyboard focus ring gives it away. */
+.focus-egg {
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: inherit;
+}
+.focus-egg:focus-visible {
+  outline: 1px solid var(--signal);
+  outline-offset: 0.15em;
 }

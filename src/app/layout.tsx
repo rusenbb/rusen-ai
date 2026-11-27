@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -14,6 +15,15 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+// Reading text. Geist Serif is not on Google Fonts yet, so it ships from the
+// repo (Vercel's OFL release, variable weight).
+const geistSerif = localFont({
+  src: "./fonts/GeistSerifVF.woff2",
+  variable: "--font-geist-serif",
+  weight: "100 900",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -74,7 +84,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
+        className={`${geistSans.variable} ${geistMono.variable} ${geistSerif.variable} antialiased min-h-screen flex flex-col`}
       >
         <a className="skip-link" href="#main-content">
           Skip to content

@@ -163,7 +163,7 @@ html[data-blog-lang="tr"] [data-tag-lang="en"]:not([data-blog-force-lang] *) {
   font-weight: 400;
 }
 .post-subtitle {
-  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-geist-serif), Georgia, serif;
   font-size: 1.04rem;
   color: var(--muted);
   margin: 0 0 2.5rem;
@@ -276,10 +276,10 @@ html[data-blog-lang="tr"] [data-tag-lang="en"]:not([data-blog-force-lang] *) {
    data-allow-select on the article re-enables text selection (body sets
    user-select: none site-wide). draggable={false} + -webkit-user-drag: none
    on descendants stops readers from dragging links or images out. */
-/* Body text is set in Geist Sans for long reading; headings, the manifest
+/* Body text is set in Geist Serif for long reading; headings, the manifest
    and code keep the mono voice. */
 .post-prose {
-  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-geist-serif), Georgia, serif;
   font-size: 1.04rem;
   line-height: 1.75;
 }

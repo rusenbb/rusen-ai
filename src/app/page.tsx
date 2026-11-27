@@ -1,6 +1,7 @@
 import Link from "next/link";
 import JsonLd from "./components/JsonLd";
 import BrushCut from "./components/BrushCut";
+import FocusWord from "./components/FocusWord";
 import { PERSON } from "@/lib/agent-docs";
 import AsciiCover from "./components/ascii-cover/AsciiCover";
 import PostSigil from "./blogs/components/PostSigil";
@@ -25,7 +26,7 @@ export default function Home() {
       <section className="flex min-h-[calc(100svh-7rem)] sm:min-h-[calc(100svh-12rem)] flex-col items-center justify-center text-center mb-12 sm:mb-16 md:mb-20">
         <div data-bg-quiet className="px-2 sm:px-6">
           <h1 className="brand-display text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 leading-tight text-balance max-w-4xl mx-auto">
-            Focus on your art, for you&apos;re both the art and the artist.
+            <FocusWord />{" "}on your art, for you&apos;re both the art and the artist.
           </h1>
           <BrushCut className="hero-cut" />
           <p className="font-mono text-sm sm:text-base tracking-[0.18em] text-muted">

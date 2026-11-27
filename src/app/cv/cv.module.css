@@ -4,7 +4,7 @@
    Inherits tokens from globals.css so it tracks the rest of the site.
    ======================================== */
 
-:root {
+.container {
   --cbg: var(--surface);
   --csurface: color-mix(in srgb, var(--foreground) 4%, transparent);
   --cborder: var(--line);
@@ -15,7 +15,8 @@
   --caccent: var(--signal);
   --border-thick: 1px;
   --font-mono: var(--font-geist-mono), "Courier New", monospace;
-  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  /* Body face; serif like the rest of the site's reading text. */
+  --font-sans: var(--font-geist-serif), Georgia, serif;
 }
 
 /* Container */
@@ -1028,9 +1029,9 @@
   text-transform: uppercase;
 }
 .heroName {
-  font-family: var(--font-sans);
+  font-family: var(--font-mono);
   font-size: clamp(2rem, 6vw, 2.75rem);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.045em;
   margin-bottom: 0.5rem;
 }
 .heroRole {

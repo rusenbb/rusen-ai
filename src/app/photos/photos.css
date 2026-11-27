@@ -262,10 +262,11 @@
 .photo-hero-copy h1 {
   max-width: 11.5ch;
   margin: 0;
+  font-family: var(--font-geist-serif), Georgia, serif;
   font-size: clamp(3.2rem, 7.4vw, 7rem);
-  font-weight: 650;
-  line-height: 0.84;
-  letter-spacing: -0.075em;
+  font-weight: 400;
+  line-height: 0.88;
+  letter-spacing: -0.065em;
   text-wrap: balance;
   animation: photo-copy-arrive 850ms 420ms ease-out both;
 }
@@ -315,7 +316,7 @@
 .photo-prologue h2 {
   max-width: 10ch;
   margin: 0;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-geist-serif), Georgia, serif;
   font-size: clamp(3.1rem, 7vw, 7.6rem);
   font-weight: 400;
   line-height: 0.88;
@@ -373,7 +374,7 @@
 .photo-section-heading h2 {
   max-width: 10ch;
   margin: 0;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-geist-serif), Georgia, serif;
   font-size: clamp(3.5rem, 8vw, 8.5rem);
   font-weight: 400;
   line-height: 0.85;
@@ -432,7 +433,7 @@
 .photo-series-heading h2 {
   max-width: 10ch;
   margin: 0;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-geist-serif), Georgia, serif;
   font-size: clamp(2.75rem, 4.8vw, 5.4rem);
   font-weight: 400;
   line-height: 0.9;
@@ -549,7 +550,7 @@
 
 .photo-caption h3 {
   margin: 0;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-geist-serif), Georgia, serif;
   font-size: clamp(1.08rem, 1.7vw, 1.55rem);
   font-weight: 400;
   line-height: 1.05;
@@ -614,7 +615,7 @@
 }
 
 .photo-ending-handle {
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-geist-serif), Georgia, serif;
   font-size: clamp(1.5rem, 3vw, 2.8rem);
   letter-spacing: -0.04em;
 }
@@ -673,7 +674,7 @@
 .photo-lightbox aside h2 {
   max-width: 9ch;
   margin: 2rem 0 1.5rem;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-geist-serif), Georgia, serif;
   font-size: clamp(2.4rem, 4vw, 4.75rem);
   font-weight: 400;
   line-height: 0.9;
@@ -740,7 +741,7 @@
 }
 
 .photo-lightbox-close span {
-  font-family: var(--font-geist-sans), sans-serif;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 1.55rem;
   font-weight: 200;
   line-height: 0.7;

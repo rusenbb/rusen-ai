@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { getPalette, getResolvedTheme, readTokenRgb, THEME_EVENT } from "./theme";
 import { LIGHT_READ_LINES } from "./lightReadLines";
+import { FOCUS_EVENT, type FocusEggDetail } from "./focusEgg";
 
 /**
  * Home background: a field of scrambled characters. The cursor is a light;
@@ -25,6 +26,12 @@ const FOCUS_FALL = 0.22;
 const ACTIVE_FRAME_MS = 1000 / 30;
 const IDLE_FRAME_MS = 1000 / 5;
 const SEPARATOR = "   ·   ";
+// Easter egg: pressing "Focus" in the hero lights the whole field for a
+// moment. The light spreads from the word, holds, then the field scrambles.
+const BLOOM_SPEED = 1100; // px/s
+const BLOOM_EDGE = 220; // px of soft edge on the spreading front
+const BLOOM_HOLD = 3800; // ms fully lit after the front has crossed the screen
+const BLOOM_FADE = 2600; // ms to scramble back
 
 function hash2(a: number, b: number, c = 0): number {
   let h = Math.imul(a, 374761393) ^ Math.imul(b, 668265263) ^ Math.imul(c, 2246822519);
@@ -74,6 +81,10 @@ export default function LightReadBackground() {
     let speed = 0;
     let focus = 0;
     let touchRelease = 0;
+    // Bloom (easter egg) state.
+    let bloomAt = -Infinity;
+    let bx = 0;
+    let by = 0;
 
     const buildAtlas = () => {
       const fam = getComputedStyle(document.body).getPropertyValue("--font-geist-mono").trim();
@@ -158,7 +169,22 @@ export default function LightReadBackground() {
       ctx.textBaseline = "middle";
       ctx.fillStyle = `rgb(${rgb})`;
 
-      const lit = focus > 0.01;
+      // Bloom: radius of the spreading light and how much of it is left.
+      let bloomR = 0;
+      let bloomLeft = 0;
+      const since = now - bloomAt;
+      if (since >= 0) {
+        const reach = Math.hypot(Math.max(bx, width - bx), Math.max(by, height - by)) + BLOOM_EDGE;
+        const travel = reducedMotion ? 0 : (reach / BLOOM_SPEED) * 1000;
+        const fadeFrom = travel + BLOOM_HOLD;
+        if (since < fadeFrom + BLOOM_FADE) {
+          bloomR = reducedMotion ? reach : Math.min(reach, (since / 1000) * BLOOM_SPEED);
+          bloomLeft = since < fadeFrom ? 1 : reducedMotion ? 0 : 1 - (since - fadeFrom) / BLOOM_FADE;
+        }
+      }
+      const blooming = bloomLeft > 0;
+
+      const lit = focus > 0.01 || blooming;
       // Clear the field behind marked content (the hero), with no hard edge:
       // characters thin out over an oval around it, the way light falls off.
       const canvasRect = canvas.getBoundingClientRect();
@@ -190,9 +216,14 @@ export default function LightReadBackground() {
           const h = hash2(c, r);
           let light = 0;
           if (lit) {
-            const dx = (c * CELL_W + CELL_W / 2 - px) / LIGHT_RX;
+            const x = c * CELL_W + CELL_W / 2;
+            const dx = (x - px) / LIGHT_RX;
             const d2 = dx * dx + dy * dy;
             if (d2 < 1) light = (1 - d2) * focus * open;
+            if (blooming) {
+              const front = (bloomR - Math.hypot(x - bx, cy - by)) / BLOOM_EDGE;
+              if (front > 0) light = Math.max(light, Math.min(1, front) * 0.75 * bloomLeft * open);
+            }
           }
 
           if (textRow && light > 0) {
@@ -221,7 +252,7 @@ export default function LightReadBackground() {
         }
       }
       ctx.globalAlpha = 1;
-      return lit || focus !== target;
+      return lit || focus !== target || since < 0;
     };
 
     let raf = 0;
@@ -305,6 +336,14 @@ export default function LightReadBackground() {
     const onVisibility = () => {
       if (!document.hidden) wake();
     };
+    const onFocusEgg = (e: Event) => {
+      const detail = (e as CustomEvent<FocusEggDetail>).detail;
+      const rect = canvas.getBoundingClientRect();
+      bx = (detail?.x ?? width / 2) - rect.left;
+      by = (detail?.y ?? height / 2) - rect.top;
+      bloomAt = performance.now();
+      wake();
+    };
     const onMotion = (e: MediaQueryListEvent) => {
       reducedMotion = e.matches;
       wake();
@@ -319,6 +358,7 @@ export default function LightReadBackground() {
     window.addEventListener("pointerup", onUp, { passive: true });
     document.documentElement.addEventListener("pointerleave", onLeave);
     window.addEventListener(THEME_EVENT, wake);
+    window.addEventListener(FOCUS_EVENT, onFocusEgg);
     document.addEventListener("visibilitychange", onVisibility);
     motionQuery.addEventListener("change", onMotion);
 
@@ -330,6 +370,7 @@ export default function LightReadBackground() {
       window.removeEventListener("pointerup", onUp);
       document.documentElement.removeEventListener("pointerleave", onLeave);
       window.removeEventListener(THEME_EVENT, wake);
+      window.removeEventListener(FOCUS_EVENT, onFocusEgg);
       document.removeEventListener("visibilitychange", onVisibility);
       motionQuery.removeEventListener("change", onMotion);
     };
