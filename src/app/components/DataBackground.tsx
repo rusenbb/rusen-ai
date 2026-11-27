@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import AsciiDataBackground from "./AsciiDataBackground";
+import LightReadBackground from "./LightReadBackground";
 import {
   isBgDisabled,
   subscribeBgToggle,
@@ -43,5 +44,6 @@ export default function DataBackground() {
 
   if (disabled || !hasBackground(pathname, notFoundActive)) return null;
 
-  return <AsciiDataBackground noise word={notFoundActive ? "404" : ""} />;
+  if (notFoundActive) return <AsciiDataBackground noise word="404" />;
+  return <LightReadBackground />;
 }
