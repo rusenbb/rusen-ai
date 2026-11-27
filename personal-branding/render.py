@@ -121,7 +121,7 @@ def _banner(name, w, h, img, fig, tx, ty, ts):
 
 def banners():
     for key, (img, xfig, yfig) in FIGURES.items():
-        _banner(f"x-banner-{key}", 1500, 500, img, xfig, 120, 95, 44)
+        _banner(f"x-banner-{key}", 1500, 500, img, xfig, 120, 52, 42)
         _banner(f"youtube-banner-{key}", 2560, 1440, img, yfig, 560, 548, 50)
 
 
