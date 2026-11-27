@@ -43,5 +43,5 @@ export default function DataBackground() {
 
   if (disabled || !hasBackground(pathname, notFoundActive)) return null;
 
-  return <AsciiDataBackground noise word={notFoundActive ? "404" : "DATA"} />;
+  return <AsciiDataBackground noise word={notFoundActive ? "404" : ""} />;
 }

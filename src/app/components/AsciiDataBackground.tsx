@@ -78,6 +78,36 @@ const MAX_RIPPLES = 10;
 const NUM_ALPHA_BUCKETS = 16;
 const FRAME_INTERVAL_MS = 1000 / 30;
 
+/**
+ * Ink flow: the ambient field. Character density follows thin filaments, like
+ * ink dropped in water, that drift and bend slowly; a second, larger wave
+ * decides where the ink pools darker. A handful of sines per cell, no noise
+ * tables, so it stays cheap at 30 fps.
+ */
+function inkDensity(c: number, r: number, t: number): number {
+  // Cells are 10x16 px, so scale rows up to keep the flow isotropic.
+  const x = c * 0.045;
+  const y = r * 0.072;
+  // Where the ink pools: slow, large blobs that set stroke weight.
+  const pool = 0.5 + 0.5 * Math.sin(x * 0.35 + t * 0.03) * Math.sin(y * 0.5 - t * 0.04);
+  // Two warped families of filaments crossing at an angle, like ink
+  // threads spreading in water. Wider and darker where the ink pools.
+  const u =
+    x * 1.3
+    + 1.7 * Math.sin(y * 0.9 + t * 0.07)
+    + 0.8 * Math.sin(x * 0.6 - y * 0.4 + t * 0.05);
+  const v =
+    y * 1.1
+    + 1.4 * Math.sin(x * 0.7 - t * 0.06)
+    + 0.9 * Math.sin(x * 0.3 + y * 0.5 + t * 0.04);
+  const sharp = 14 - 9 * pool;
+  const a = Math.pow(1 - Math.abs(Math.sin(u)), sharp);
+  const b = Math.pow(1 - Math.abs(Math.sin(v * 0.8 + 1.3)), sharp + 4);
+  const filament = Math.max(a, b * 0.8);
+  const wash = pool * pool * pool * 0.08;
+  return 0.02 + wash + filament * (0.1 + 0.6 * pool * pool);
+}
+
 type Ripple = { x: number; y: number; t: number };
 type LiveRipple = {
   x: number;
@@ -268,7 +298,6 @@ export default function AsciiDataBackground({
 
       const elapsed = (now - startTime) / 1000;
       const cycleT = elapsed % CYCLE_DURATION;
-      const noisePhase = elapsed * 0.55;
       const rampLast = DENSITY_RAMP.length - 1;
       const rippleCount = liveRipples.length;
 
@@ -294,9 +323,8 @@ export default function AsciiDataBackground({
       const noiseOn = noiseRef.current;
       for (let r = 0; r < rows; r++) {
         const rowY = r * CELL_H + CELL_H / 2;
-        const rowPhase = r * 0.22 + noisePhase;
         for (let c = 0; c < cols; c++) {
-          let density = noiseOn ? 0.06 + 0.05 * Math.sin(c * 0.18 + rowPhase) : 0;
+          let density = noiseOn ? inkDensity(c, r, elapsed) : 0;
 
           const li = letterMap.get(`${c},${r}`);
           const isLetter = li !== undefined && noiseOn;
