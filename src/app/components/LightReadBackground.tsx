@@ -159,6 +159,17 @@ export default function LightReadBackground() {
       ctx.fillStyle = `rgb(${rgb})`;
 
       const lit = focus > 0.01;
+      // Keep a clear field behind marked content (the hero headline).
+      const canvasRect = canvas.getBoundingClientRect();
+      const quiet = Array.from(document.querySelectorAll("[data-bg-quiet]"), (el) => {
+        const q = el.getBoundingClientRect();
+        return {
+          c0: Math.floor((q.left - canvasRect.left - 12) / CELL_W),
+          c1: Math.ceil((q.right - canvasRect.left + 12) / CELL_W),
+          r0: Math.floor((q.top - canvasRect.top - 6) / CELL_H),
+          r1: Math.ceil((q.bottom - canvasRect.top + 6) / CELL_H),
+        };
+      });
       for (let r = 0; r < rows; r++) {
         const cy = r * CELL_H + CELL_H / 2;
         const dy = (cy - py) / LIGHT_RY;
@@ -166,6 +177,14 @@ export default function LightReadBackground() {
         const text = texts[r];
         const off = offsets[r];
         for (let c = 0; c < cols; c++) {
+          let inQuiet = false;
+          for (const q of quiet) {
+            if (r >= q.r0 && r < q.r1 && c >= q.c0 && c < q.c1) {
+              inQuiet = true;
+              break;
+            }
+          }
+          if (inQuiet) continue;
           const h = hash2(c, r);
           let light = 0;
           if (lit) {

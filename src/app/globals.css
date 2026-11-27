@@ -878,3 +878,29 @@ html.dark .term-cover {
 .site-mobile-nav-home .site-nav-word-bracket {
   display: none;
 }
+
+/* The brush-stroke sword laid over "art" in the home hero. */
+.hero-sword-word {
+  position: relative;
+  display: inline-block;
+}
+
+.hero-sword {
+  position: absolute;
+  left: -1.6em;
+  top: -0.62em;
+  width: 4.4em;
+  height: auto;
+  transform: rotate(-2deg);
+  pointer-events: none;
+  animation: hero-sword-draw 700ms cubic-bezier(0.2, 0.7, 0.2, 1) 250ms both;
+}
+
+@keyframes hero-sword-draw {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-sword { animation: none; }
+}

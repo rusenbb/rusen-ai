@@ -1,5 +1,6 @@
 import Link from "next/link";
 import JsonLd from "./components/JsonLd";
+import BrushSword from "./components/BrushSword";
 import { PERSON } from "@/lib/agent-docs";
 import AsciiCover from "./components/ascii-cover/AsciiCover";
 import PostSigil from "./blogs/components/PostSigil";
@@ -20,22 +21,20 @@ export default function Home() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-10 sm:py-12 md:py-16">
       <JsonLd data={{ "@context": "https://schema.org", "@type": "Person", ...PERSON }} />
-      {/* Hero */}
-      <section className="text-center">
-        <h1 className="brand-display text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 leading-tight text-balance max-w-4xl mx-auto">
-          Focus on your art, for you&apos;re both the art and the artist.
+      {/* Hero: centred in the first screen, the background shows around it. */}
+      <section className="flex min-h-[calc(100svh-12rem)] flex-col items-center justify-center text-center mb-12 sm:mb-16 md:mb-20">
+        <h1 data-bg-quiet className="brand-display text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 leading-tight text-balance max-w-4xl mx-auto">
+          Focus on your{" "}
+          <span className="hero-sword-word">
+            art
+            <BrushSword className="hero-sword" />
+          </span>
+          , for you&apos;re both the art and the artist.
         </h1>
-        <p className="font-mono text-sm sm:text-base tracking-[0.18em] text-muted">
-          — RUŞEN BİRBEN
+        <p data-bg-quiet className="font-mono text-sm sm:text-base tracking-[0.18em] text-muted">
+          RUŞEN BİRBEN
         </p>
       </section>
-
-      {/* Open band between the hero and the cards where the ink-flow
-          background shows through. */}
-      <div
-        aria-hidden="true"
-        className="h-40 sm:h-48 md:h-56 mt-10 sm:mt-12 mb-12 sm:mb-16 md:mb-20"
-      />
 
       {/* Featured Demos */}
       <section className="mb-12 sm:mb-16 md:mb-20">
