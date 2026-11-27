@@ -159,15 +159,16 @@ export default function LightReadBackground() {
       ctx.fillStyle = `rgb(${rgb})`;
 
       const lit = focus > 0.01;
-      // Keep a clear field behind marked content (the hero headline).
+      // Clear the field behind marked content (the hero), with no hard edge:
+      // characters thin out over an oval around it, the way light falls off.
       const canvasRect = canvas.getBoundingClientRect();
       const quiet = Array.from(document.querySelectorAll("[data-bg-quiet]"), (el) => {
         const q = el.getBoundingClientRect();
         return {
-          c0: Math.floor((q.left - canvasRect.left - 12) / CELL_W),
-          c1: Math.ceil((q.right - canvasRect.left + 12) / CELL_W),
-          r0: Math.floor((q.top - canvasRect.top - 6) / CELL_H),
-          r1: Math.ceil((q.bottom - canvasRect.top + 6) / CELL_H),
+          cx: (q.left + q.right) / 2 - canvasRect.left,
+          cy: (q.top + q.bottom) / 2 - canvasRect.top,
+          rx: q.width / 2 + 40,
+          ry: q.height / 2 + 30,
         };
       });
       for (let r = 0; r < rows; r++) {
@@ -177,20 +178,21 @@ export default function LightReadBackground() {
         const text = texts[r];
         const off = offsets[r];
         for (let c = 0; c < cols; c++) {
-          let inQuiet = false;
+          // 0 deep inside a quiet oval, 1 well outside it.
+          let open = 1;
           for (const q of quiet) {
-            if (r >= q.r0 && r < q.r1 && c >= q.c0 && c < q.c1) {
-              inQuiet = true;
-              break;
-            }
+            const qx = (c * CELL_W + CELL_W / 2 - q.cx) / q.rx;
+            const qy = (cy - q.cy) / q.ry;
+            const e = Math.sqrt(qx * qx + qy * qy);
+            if (e < 1.45) open = Math.min(open, Math.max(0, (e - 0.8) / 0.65));
           }
-          if (inQuiet) continue;
+          if (open <= 0) continue;
           const h = hash2(c, r);
           let light = 0;
           if (lit) {
             const dx = (c * CELL_W + CELL_W / 2 - px) / LIGHT_RX;
             const d2 = dx * dx + dy * dy;
-            if (d2 < 1) light = (1 - d2) * focus;
+            if (d2 < 1) light = (1 - d2) * focus * open;
           }
 
           if (textRow && light > 0) {
@@ -206,7 +208,7 @@ export default function LightReadBackground() {
 
           // Leave air: only some cells carry a scrambled glyph, and the light
           // clears the rows between sentences so the text reads cleanly.
-          if (h > 0.4) continue;
+          if (h > 0.4 * open) continue;
           const clear = textRow ? 1 : 1 - Math.min(1, light * 1.6);
           if (clear <= 0.05) continue;
           const slot = Math.floor(t * 0.5 + h * 9);
