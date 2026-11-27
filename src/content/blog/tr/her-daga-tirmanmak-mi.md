@@ -11,6 +11,10 @@ tags:
 translationKey: "climbing-every-mountain"
 seriesId: "understanding-ai"
 seriesOrder: 1
+audio:
+  src: "/audio/blog/her-daga-tirmanmak-mi.m4a"
+  durationSeconds: 934
+  waveform: [0.932, 0.854, 0.946, 0.922, 0.921, 0.915, 0.89, 0.926, 0.88, 0.879, 0.894, 0.854, 0.788, 0.921, 0.95, 0.916, 0.934, 0.88, 0.977, 0.906, 0.907, 0.957, 0.915, 0.963, 0.943, 0.911, 0.961, 0.94, 0.923, 0.89, 0.912, 0.98, 0.877, 0.897, 0.912, 0.923, 0.894, 0.971, 0.905, 0.951, 0.957, 0.934, 0.974, 0.879, 0.875, 0.963, 0.929, 0.974, 0.994, 0.941, 0.959, 0.982, 0.939, 0.877, 0.932, 0.909, 0.905, 0.907, 0.916, 0.918, 0.937, 0.847, 0.966, 0.94, 0.989, 0.95, 0.915, 0.918, 0.895, 0.964, 0.942, 0.928, 1.0, 0.956, 0.947, 0.917, 0.951, 0.887, 0.977, 0.858]
 ---
 
 # Her Dağa Tırmanmak mı, Tırmanmayı Öğrenmek mi?
@@ -37,6 +41,11 @@ RSI kullanmak nükleer silahlanmaya benziyor: RSI yapma becerin varsa, yapmak zo
 
 Bana bu, sirkte ip üzerinde yürüyen ustaların yaptığı iş gibi geliyor. Yapmak çok zor ama imkânsız değil, ve düzgün bir düzenek üzerinde yapılması gerekiyor.
 
+<figure className="post-figure">
+  <img src="/images/blog/climbing-every-mountain/blondin-niagara.webp" alt="Charles Blondin, Niagara Nehri üzerine gerilmiş ipte elinde denge sopasıyla yürüyor" width="1100" height="1054" loading="lazy" decoding="async" />
+  <figcaption>Charles Blondin, Niagara Nehri'ni ip üzerinde geçerken. Fotoğraf: William England, 1859. <a href="https://commons.wikimedia.org/wiki/File:William_England_-_Blondin_crossing_Niagara_river.jpg">Kamu malı, Wikimedia Commons</a></figcaption>
+</figure>
+
 RSI ile birlikte yanlış gidebilecek çok fazla şey var. Ama başarılabilir. Günün sonunda düzgün bir şekilde ilerlenirse yüksek başarımlı modeller üretilip, o yüksek başarımlı modellerle daha yüksek başarımlı modeller, onlarla da daha yüksek başarımlı modeller yapılıp sonsuz bir döngüye yakın bir şey yapılabilir.
 
 Kesinlikle mümkün olduğunu düşünüyorum. Ama yapmak gerçekten çok zor.
@@ -44,6 +53,11 @@ Kesinlikle mümkün olduğunu düşünüyorum. Ama yapmak gerçekten çok zor.
 ## Hangi Dağ?
 
 Günün sonunda modeller dağa tırmanma konusunda çok iyi, ama hangi dağa tırmanacağını seçme konusunda o kadar iyi değiller. Ve RSI aslında hangi dağa tırmanacağını seçme sorusu. Böyle düşündüğün zaman çok mümkün değil gibi geliyor.
+
+<figure className="post-figure">
+  <img src="/images/blog/climbing-every-mountain/wanderer-above-the-sea-of-fog.webp" alt="Sırtı dönük bir gezgin, kayalık bir zirvede sis denizine bakıyor" width="1249" height="1600" loading="lazy" decoding="async" />
+  <figcaption>Caspar David Friedrich, <em>Sisler Denizi Üzerindeki Gezgin</em>, y. 1817. Hamburger Kunsthalle. <a href="https://commons.wikimedia.org/wiki/File:Caspar_David_Friedrich_-_Wanderer_above_the_sea_of_fog.jpg">Kamu malı, Wikimedia Commons</a></figcaption>
+</figure>
 
 Ama bir noktada şöyle de düşünebilirsin: süper zekâya ulaşmak için belirli bir dağ seçmen gerekmiyor. Model her dağa tırmanabilsin, yeter. Tıpkı pre-training'de “model hangi veriyle eğitilsin” sorusunun aptalca olması gibi. Hangi veriyle eğitilirse eğitilsin, model her beceriyi yapabilsin.
 
@@ -152,6 +166,11 @@ Modeli direkt olarak, yani interpretability ile anlamak belki imkânsız gibi ge
 Modelin de kendisini bize anlatabilmek için, tabiri caizse, bizim dilimize eğilmesi gerekecek. Buluşabilmemiz lazım.
 
 Yapay zekâyı çok fazla antropomorfize etmek, insanlaştırmak, daha da kötüsü tanrılaştırmak hoşuma gitmiyor. Ama Michelangelo'nun o meşhur, Tanrı'nın insana dokunduğu Âdem'in Yaratılışı freski[^adem] var ya, onun gibi: yapay zekâ ile bizim birbirimize ulaşabilmemiz gerekiyor.
+
+<figure className="post-figure">
+  <img src="/images/blog/climbing-every-mountain/creation-of-adam.webp" alt="Tanrı ile Âdem'in birbirine uzanan, neredeyse değen parmakları" width="1600" height="726" loading="lazy" decoding="async" />
+  <figcaption>Michelangelo, <em>Âdem'in Yaratılışı</em>, y. 1508–1512. Sistina Şapeli, Vatikan. <a href="https://commons.wikimedia.org/wiki/File:Michelangelo_-_Creation_of_Adam_(cropped).jpg">Kamu malı, Wikimedia Commons</a></figcaption>
+</figure>
 
 Biz öğrenmeyi anlayamadık. Yapay zekâ anlasa olur mu?
 

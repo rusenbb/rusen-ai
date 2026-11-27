@@ -11,6 +11,10 @@ tags:
 translationKey: "climbing-every-mountain"
 seriesId: "understanding-ai"
 seriesOrder: 1
+audio:
+  src: "/audio/blog/climbing-every-mountain.m4a"
+  durationSeconds: 940
+  waveform: [0.922, 0.863, 0.886, 0.902, 0.904, 0.877, 0.868, 0.892, 0.909, 0.99, 0.986, 0.91, 0.852, 0.889, 0.921, 0.864, 0.884, 0.888, 0.892, 0.916, 0.929, 0.905, 0.914, 0.957, 0.892, 0.875, 0.919, 0.919, 0.903, 0.921, 0.918, 0.858, 0.918, 0.875, 0.945, 0.961, 0.874, 0.926, 0.922, 0.936, 0.892, 0.88, 0.969, 0.997, 0.912, 0.95, 0.922, 0.866, 0.932, 1.0, 0.916, 0.911, 0.948, 0.97, 0.915, 0.939, 0.962, 0.921, 0.879, 0.915, 0.939, 0.936, 0.941, 0.919, 0.916, 0.963, 0.9, 0.928, 0.888, 0.917, 0.93, 0.961, 0.997, 0.957, 0.957, 0.921, 0.92, 0.911, 0.903, 0.852]
 ---
 
 # Climbing Every Mountain, or Learning How to Climb?
@@ -37,6 +41,11 @@ Using RSI is like a nuclear arms race: if you have the capability to do RSI, you
 
 To me, this feels like what master tightrope walkers do in a circus. It's very hard to do, but not impossible, and it has to be done on a proper setup.
 
+<figure className="post-figure">
+  <img src="/images/blog/climbing-every-mountain/blondin-niagara.webp" alt="Charles Blondin walking a tightrope stretched over the Niagara River, holding a balancing pole" width="1100" height="1054" loading="lazy" decoding="async" />
+  <figcaption>Charles Blondin crossing the Niagara River on a tightrope. Photograph by William England, 1859. <a href="https://commons.wikimedia.org/wiki/File:William_England_-_Blondin_crossing_Niagara_river.jpg">Public domain, via Wikimedia Commons</a></figcaption>
+</figure>
+
 There is so much that can go wrong with RSI. But it can be pulled off. At the end of the day, if done properly, high-performing models can be produced, and with those high-performing models, even higher-performing models, and with those, even higher-performing ones—creating something close to an infinite loop.
 
 I definitely think it's possible. But it is genuinely very hard to do.
@@ -44,6 +53,11 @@ I definitely think it's possible. But it is genuinely very hard to do.
 ## Which Mountain?
 
 At the end of the day, models are very good at climbing mountains, but not so good at choosing which mountain to climb. And RSI is actually the question of choosing which mountain to climb. When you think about it that way, it doesn't seem very possible.
+
+<figure className="post-figure">
+  <img src="/images/blog/climbing-every-mountain/wanderer-above-the-sea-of-fog.webp" alt="A wanderer seen from behind, standing on a rocky summit above a sea of fog" width="1249" height="1600" loading="lazy" decoding="async" />
+  <figcaption>Caspar David Friedrich, <em>Wanderer above the Sea of Fog</em>, c. 1817. Hamburger Kunsthalle. <a href="https://commons.wikimedia.org/wiki/File:Caspar_David_Friedrich_-_Wanderer_above_the_sea_of_fog.jpg">Public domain, via Wikimedia Commons</a></figcaption>
+</figure>
 
 But at some point, you can also think of it like this: to reach superintelligence, you don't need to pick a specific mountain. It's enough for the model to be able to climb every mountain. Just like how in pre-training, the question "which data should the model be trained on?" is silly. Regardless of what data it's trained on, the model should be able to perform every skill.
 
@@ -152,6 +166,11 @@ Understanding the model directly—that is, through interpretability—might see
 The model, too, will have to stoop to our language, so to speak, to be able to explain itself to us. We need to be able to meet.
 
 I don't like anthropomorphizing AI too much, humanizing it, or even worse, deifying it. But just like in Michelangelo's *The Creation of Adam* fresco[^adem]: AI and we need to be able to reach each other.
+
+<figure className="post-figure">
+  <img src="/images/blog/climbing-every-mountain/creation-of-adam.webp" alt="The nearly touching fingers of God and Adam reaching toward each other" width="1600" height="726" loading="lazy" decoding="async" />
+  <figcaption>Michelangelo, <em>The Creation of Adam</em>, c. 1508–1512. Sistine Chapel, Vatican City. <a href="https://commons.wikimedia.org/wiki/File:Michelangelo_-_Creation_of_Adam_(cropped).jpg">Public domain, via Wikimedia Commons</a></figcaption>
+</figure>
 
 We haven't been able to understand learning. What if AI understands it—would that be okay?
 

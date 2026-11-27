@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "inputFingerprint": "2b5b594dd98727a2e07ffca5ece9e8865e8d1d6d17bab3c73bf5e5216b85422b",
+  "inputFingerprint": "435ca699cb253bb8359afa0517fc0787219bba50a889b051ec0176f71f3304d1",
   "assets": [
     {
       "route": "/",
@@ -263,7 +263,7 @@
       "image": "/social/blog/posts/climbing-every-mountain.png",
       "width": 1200,
       "height": 630,
-      "bytes": 33304,
+      "bytes": 33271,
       "format": "png"
     },
     {
@@ -271,7 +271,7 @@
       "image": "/social/blog/posts/her-daga-tirmanmak-mi.png",
       "width": 1200,
       "height": 630,
-      "bytes": 34225,
+      "bytes": 34208,
       "format": "png"
     },
     {
