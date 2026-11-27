@@ -178,15 +178,15 @@ export default function LightReadBackground() {
         const text = texts[r];
         const off = offsets[r];
         for (let c = 0; c < cols; c++) {
-          // 0 deep inside a quiet oval, 1 well outside it.
+          // 0 deep inside a quiet oval, 1 well outside it. The oval only
+          // thins and dims the field; it never empties it.
           let open = 1;
           for (const q of quiet) {
             const qx = (c * CELL_W + CELL_W / 2 - q.cx) / q.rx;
             const qy = (cy - q.cy) / q.ry;
             const e = Math.sqrt(qx * qx + qy * qy);
-            if (e < 1.45) open = Math.min(open, Math.max(0, (e - 0.8) / 0.65));
+            if (e < 1.6) open = Math.min(open, Math.max(0, (e - 0.5) / 1.1));
           }
-          if (open <= 0) continue;
           const h = hash2(c, r);
           let light = 0;
           if (lit) {
@@ -208,12 +208,13 @@ export default function LightReadBackground() {
 
           // Leave air: only some cells carry a scrambled glyph, and the light
           // clears the rows between sentences so the text reads cleanly.
-          if (h > 0.4 * open) continue;
+          const keep = 0.55 + 0.45 * open;
+          if (h > 0.4 * keep) continue;
           const clear = textRow ? 1 : 1 - Math.min(1, light * 1.6);
           if (clear <= 0.05) continue;
           const slot = Math.floor(t * 0.5 + h * 9);
           const gi = Math.floor(hash2(c, r, slot) * SCRAMBLE.length);
-          const alpha = base * clear;
+          const alpha = base * clear * keep;
           const step = Math.min(ALPHA_STEPS - 1, Math.max(0, Math.round(alpha * ALPHA_STEPS) - 1));
           ctx.globalAlpha = 1;
           ctx.drawImage(atlas[step][gi], c * CELL_W, r * CELL_H, CELL_W, CELL_H);
