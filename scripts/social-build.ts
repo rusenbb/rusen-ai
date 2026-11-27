@@ -17,7 +17,6 @@ import sharp from "sharp";
 import { getAllPosts, getAllSeries, getAllTags, tagDisplay, tagSlug } from "../src/lib/blog.ts";
 import { getProjectPath, PROJECTS } from "../src/lib/projects.ts";
 import {
-  HIKARI_GLYPHS,
   HIKARI_PATH,
   HIKARI_SEAL_TRANSFORM,
   SEAL_PAPER,
@@ -78,7 +77,7 @@ const WIDTH = 1200;
 const HEIGHT = 630;
 const MAX_BYTES = 1_500_000;
 // Bump when the card design changes so the verify step asks for a rebuild.
-const CARD_STYLE = "hikari-1";
+const CARD_STYLE = "hikari-2";
 
 // Brand palette: ink, paper/candle text, seal red. See src/app/globals.css.
 const INK = "#0b0a09";
@@ -159,16 +158,20 @@ function titleFontSize(lines: string[]): number {
   return 80;
 }
 
-/** The 光 mark drawn in characters: stroke weight becomes glyph density. */
-function asciiHikari(x: number, y: number, cellW: number, cellH: number): string {
-  const ramp = " .:-=+*#%@";
-  const glyph = HIKARI_GLYPHS[0];
-  return glyph
-    .map((row, r) => {
-      const line = Array.from(row, (digit) => ramp[Number(digit)]).join("");
-      return `<text x="${x}" y="${y + r * cellH}" class="ascii" textLength="${row.length * cellW}" lengthAdjust="spacing" xml:space="preserve">${xml(line)}</text>`;
-    })
-    .join("");
+function signalCells(seed: string): string {
+  const seedValue = hash(seed);
+  const cells: string[] = [];
+  for (let row = 0; row < 6; row += 1) {
+    for (let column = 0; column < 5; column += 1) {
+      const active = ((seedValue >>> ((row * 5 + column) % 24)) & 1) === 1;
+      const x = 925 + column * 43;
+      const y = 152 + row * 43;
+      cells.push(
+        `<rect x="${x}" y="${y}" width="29" height="29" rx="2" fill="${active ? SEAL : "none"}" fill-opacity="${active ? "0.24" : "0"}" stroke="${active ? SEAL : CANDLE}" stroke-opacity="${active ? "0.5" : "0.14"}"/>`,
+      );
+    }
+  }
+  return cells.join("");
 }
 
 /** The 光 seal at (x, y) with the given side length. */
@@ -221,7 +224,6 @@ function renderCardSvg(spec: CardSpec): Buffer {
           .title { fill: ${CANDLE}; font-weight: 700; letter-spacing: -2px; }
           .description { fill: ${DIM}; font-size: 24px; font-weight: 450; letter-spacing: -0.25px; }
           .register { fill: ${SEAL}; font-size: 17px; font-weight: 650; letter-spacing: 2px; }
-          .ascii { fill: ${CANDLE}; fill-opacity: 0.6; font-size: 10px; font-weight: 700; }
         </style>
       </defs>
       <rect width="1200" height="630" fill="${INK}"/>
@@ -231,7 +233,7 @@ function renderCardSvg(spec: CardSpec): Buffer {
       ${seal(70, 58, 30)}
       <text x="114" y="79" class="micro">${xml(spec.label.toUpperCase())}</text>
       <text x="1124" y="79" class="micro" text-anchor="end">${variantCode}::${code}</text>
-      <g aria-hidden="true">${asciiHikari(944, 150, 6, 13)}</g>
+      <g aria-hidden="true">${signalCells(spec.seed)}</g>
       ${titleMarkup(spec.title, fontSize)}
       ${descriptionMarkup(spec.description, spec.title, fontSize)}
       <text x="78" y="570" class="register">[ ${xml(spec.register.toUpperCase())} ]</text>

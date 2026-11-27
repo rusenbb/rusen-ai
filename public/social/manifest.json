@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "inputFingerprint": "5606856a2a4214baa18ba8e1cc56d93e3d645a8f9ae92196e845c09a39ef441d",
+  "inputFingerprint": "a818932cff59eb2dac2498a56fc199a3e0c9219b7107b6cc178ad16870d93fcd",
   "assets": [
     {
       "route": "/",
       "image": "/social/pages/home.png",
       "width": 1200,
       "height": 630,
-      "bytes": 24689,
+      "bytes": 22386,
       "format": "png"
     },
     {
@@ -15,7 +15,7 @@
       "image": "/social/pages/demos.png",
       "width": 1200,
       "height": 630,
-      "bytes": 23139,
+      "bytes": 20851,
       "format": "png"
     },
     {
@@ -23,7 +23,7 @@
       "image": "/social/pages/nerdy-stuff.png",
       "width": 1200,
       "height": 630,
-      "bytes": 21968,
+      "bytes": 19750,
       "format": "png"
     },
     {
@@ -31,7 +31,7 @@
       "image": "/social/pages/bulletin.png",
       "width": 1200,
       "height": 630,
-      "bytes": 23626,
+      "bytes": 21402,
       "format": "png"
     },
     {
@@ -39,7 +39,7 @@
       "image": "/social/pages/blogs.png",
       "width": 1200,
       "height": 630,
-      "bytes": 25225,
+      "bytes": 22883,
       "format": "png"
     },
     {
@@ -47,7 +47,7 @@
       "image": "/social/pages/cv.png",
       "width": 1200,
       "height": 630,
-      "bytes": 23124,
+      "bytes": 20871,
       "format": "png"
     },
     {
@@ -55,7 +55,7 @@
       "image": "/social/pages/cv-tr.png",
       "width": 1200,
       "height": 630,
-      "bytes": 23480,
+      "bytes": 21199,
       "format": "png"
     },
     {
@@ -63,7 +63,7 @@
       "image": "/social/pages/cv-ja.png",
       "width": 1200,
       "height": 630,
-      "bytes": 22296,
+      "bytes": 20027,
       "format": "png"
     },
     {
@@ -71,7 +71,7 @@
       "image": "/social/projects/video-volume.png",
       "width": 1200,
       "height": 630,
-      "bytes": 20975,
+      "bytes": 18841,
       "format": "png"
     },
     {
@@ -79,7 +79,7 @@
       "image": "/social/projects/sampling-lab.png",
       "width": 1200,
       "height": 630,
-      "bytes": 22191,
+      "bytes": 19884,
       "format": "png"
     },
     {
@@ -87,7 +87,7 @@
       "image": "/social/projects/decision-boundary.png",
       "width": 1200,
       "height": 630,
-      "bytes": 23525,
+      "bytes": 21203,
       "format": "png"
     },
     {
@@ -95,7 +95,7 @@
       "image": "/social/projects/classify-anything.png",
       "width": 1200,
       "height": 630,
-      "bytes": 21505,
+      "bytes": 19112,
       "format": "png"
     },
     {
@@ -103,7 +103,7 @@
       "image": "/social/projects/segment-anything.png",
       "width": 1200,
       "height": 630,
-      "bytes": 20453,
+      "bytes": 18185,
       "format": "png"
     },
     {
@@ -111,7 +111,7 @@
       "image": "/social/projects/vision-anything.png",
       "width": 1200,
       "height": 630,
-      "bytes": 21243,
+      "bytes": 19019,
       "format": "png"
     },
     {
@@ -119,7 +119,7 @@
       "image": "/social/projects/curve-fitter.png",
       "width": 1200,
       "height": 630,
-      "bytes": 19520,
+      "bytes": 17207,
       "format": "png"
     },
     {
@@ -127,7 +127,7 @@
       "image": "/social/projects/convolution-lab.png",
       "width": 1200,
       "height": 630,
-      "bytes": 22297,
+      "bytes": 20143,
       "format": "png"
     },
     {
@@ -135,7 +135,7 @@
       "image": "/social/projects/pathfinding-showdown.png",
       "width": 1200,
       "height": 630,
-      "bytes": 22297,
+      "bytes": 20019,
       "format": "png"
     },
     {
@@ -143,7 +143,7 @@
       "image": "/social/projects/pulse-board.png",
       "width": 1200,
       "height": 630,
-      "bytes": 20928,
+      "bytes": 18694,
       "format": "png"
     },
     {
@@ -151,7 +151,7 @@
       "image": "/social/projects/emergence.png",
       "width": 1200,
       "height": 630,
-      "bytes": 19599,
+      "bytes": 17360,
       "format": "png"
     },
     {
@@ -159,7 +159,7 @@
       "image": "/social/projects/game-of-life.png",
       "width": 1200,
       "height": 630,
-      "bytes": 19553,
+      "bytes": 17393,
       "format": "png"
     },
     {
@@ -167,7 +167,7 @@
       "image": "/social/projects/embedding-explorer.png",
       "width": 1200,
       "height": 630,
-      "bytes": 23367,
+      "bytes": 21141,
       "format": "png"
     },
     {
@@ -175,7 +175,7 @@
       "image": "/social/projects/rusenizer.png",
       "width": 1200,
       "height": 630,
-      "bytes": 20377,
+      "bytes": 18135,
       "format": "png"
     },
     {
@@ -183,7 +183,7 @@
       "image": "/social/projects/adaptive-arena.png",
       "width": 1200,
       "height": 630,
-      "bytes": 18799,
+      "bytes": 16538,
       "format": "png"
     },
     {
@@ -191,7 +191,7 @@
       "image": "/social/projects/outguess.png",
       "width": 1200,
       "height": 630,
-      "bytes": 19191,
+      "bytes": 16866,
       "format": "png"
     },
     {
@@ -199,7 +199,7 @@
       "image": "/social/projects/fourier-sketch.png",
       "width": 1200,
       "height": 630,
-      "bytes": 21237,
+      "bytes": 18927,
       "format": "png"
     },
     {
@@ -207,7 +207,7 @@
       "image": "/social/projects/optimizer-racetrack.png",
       "width": 1200,
       "height": 630,
-      "bytes": 22259,
+      "bytes": 19879,
       "format": "png"
     },
     {
@@ -215,7 +215,7 @@
       "image": "/social/projects/steering-llms.png",
       "width": 1200,
       "height": 630,
-      "bytes": 20609,
+      "bytes": 18320,
       "format": "png"
     },
     {
@@ -223,7 +223,7 @@
       "image": "/social/projects/sentence-surgeon.png",
       "width": 1200,
       "height": 630,
-      "bytes": 21465,
+      "bytes": 19141,
       "format": "png"
     },
     {
@@ -231,7 +231,7 @@
       "image": "/social/projects/rusen-gram.png",
       "width": 1200,
       "height": 630,
-      "bytes": 20373,
+      "bytes": 18152,
       "format": "png"
     },
     {
@@ -239,7 +239,7 @@
       "image": "/social/projects/eduport.png",
       "width": 1200,
       "height": 630,
-      "bytes": 19826,
+      "bytes": 17422,
       "format": "png"
     },
     {
@@ -247,7 +247,7 @@
       "image": "/social/projects/vaultdb.png",
       "width": 1200,
       "height": 630,
-      "bytes": 19663,
+      "bytes": 17471,
       "format": "png"
     },
     {
@@ -255,7 +255,7 @@
       "image": "/social/projects/metuclass.png",
       "width": 1200,
       "height": 630,
-      "bytes": 19845,
+      "bytes": 17583,
       "format": "png"
     },
     {
@@ -263,7 +263,7 @@
       "image": "/social/blog/posts/climbing-every-mountain.png",
       "width": 1200,
       "height": 630,
-      "bytes": 28705,
+      "bytes": 26242,
       "format": "png"
     },
     {
@@ -271,7 +271,7 @@
       "image": "/social/blog/posts/her-daga-tirmanmak-mi.png",
       "width": 1200,
       "height": 630,
-      "bytes": 29783,
+      "bytes": 27605,
       "format": "png"
     },
     {
@@ -279,7 +279,7 @@
       "image": "/social/blog/posts/we-are-the-bottleneck.png",
       "width": 1200,
       "height": 630,
-      "bytes": 21691,
+      "bytes": 19416,
       "format": "png"
     },
     {
@@ -287,7 +287,7 @@
       "image": "/social/blog/posts/darbogaz-biziz.png",
       "width": 1200,
       "height": 630,
-      "bytes": 22328,
+      "bytes": 19972,
       "format": "png"
     },
     {
@@ -295,7 +295,7 @@
       "image": "/social/blog/posts/prompt-is-not-enough-intent-engineering.png",
       "width": 1200,
       "height": 630,
-      "bytes": 26569,
+      "bytes": 24155,
       "format": "png"
     },
     {
@@ -303,7 +303,7 @@
       "image": "/social/blog/posts/prompt-yetmez-intent-engineering.png",
       "width": 1200,
       "height": 630,
-      "bytes": 24583,
+      "bytes": 22247,
       "format": "png"
     },
     {
@@ -311,7 +311,7 @@
       "image": "/social/blog/posts/ai-recommendations.png",
       "width": 1200,
       "height": 630,
-      "bytes": 24344,
+      "bytes": 22113,
       "format": "png"
     },
     {
@@ -319,7 +319,7 @@
       "image": "/social/blog/posts/yapay-zeka-onerileri.png",
       "width": 1200,
       "height": 630,
-      "bytes": 22380,
+      "bytes": 20081,
       "format": "png"
     },
     {
@@ -327,7 +327,7 @@
       "image": "/social/blog/posts/building-with-ai.png",
       "width": 1200,
       "height": 630,
-      "bytes": 22025,
+      "bytes": 19672,
       "format": "png"
     },
     {
@@ -335,7 +335,7 @@
       "image": "/social/blog/posts/yapay-zeka-ile-birlikte-insa-etme.png",
       "width": 1200,
       "height": 630,
-      "bytes": 26433,
+      "bytes": 24022,
       "format": "png"
     },
     {
@@ -343,7 +343,7 @@
       "image": "/social/blog/posts/ai-and-the-future-of-programming.png",
       "width": 1200,
       "height": 630,
-      "bytes": 26145,
+      "bytes": 23870,
       "format": "png"
     },
     {
@@ -351,7 +351,7 @@
       "image": "/social/blog/posts/yapay-zeka-ve-programlamanin-gelecegi.png",
       "width": 1200,
       "height": 630,
-      "bytes": 28647,
+      "bytes": 25986,
       "format": "png"
     },
     {
@@ -359,7 +359,7 @@
       "image": "/social/blog/tags/ai.png",
       "width": 1200,
       "height": 630,
-      "bytes": 14372,
+      "bytes": 12088,
       "format": "png"
     },
     {
@@ -367,7 +367,7 @@
       "image": "/social/blog/tags/yapay-zeka.png",
       "width": 1200,
       "height": 630,
-      "bytes": 17524,
+      "bytes": 15156,
       "format": "png"
     },
     {
@@ -375,7 +375,7 @@
       "image": "/social/blog/tags/programlama.png",
       "width": 1200,
       "height": 630,
-      "bytes": 18192,
+      "bytes": 15816,
       "format": "png"
     },
     {
@@ -383,7 +383,7 @@
       "image": "/social/blog/tags/programming.png",
       "width": 1200,
       "height": 630,
-      "bytes": 18599,
+      "bytes": 16265,
       "format": "png"
     },
     {
@@ -391,7 +391,7 @@
       "image": "/social/blog/tags/agents.png",
       "width": 1200,
       "height": 630,
-      "bytes": 16374,
+      "bytes": 14147,
       "format": "png"
     },
     {
@@ -399,7 +399,7 @@
       "image": "/social/blog/tags/ajanlar.png",
       "width": 1200,
       "height": 630,
-      "bytes": 16545,
+      "bytes": 14294,
       "format": "png"
     },
     {
@@ -407,7 +407,7 @@
       "image": "/social/blog/tags/arastirma.png",
       "width": 1200,
       "height": 630,
-      "bytes": 17471,
+      "bytes": 15187,
       "format": "png"
     },
     {
@@ -415,7 +415,7 @@
       "image": "/social/blog/tags/reinforcement-learning.png",
       "width": 1200,
       "height": 630,
-      "bytes": 19649,
+      "bytes": 17287,
       "format": "png"
     },
     {
@@ -423,7 +423,7 @@
       "image": "/social/blog/tags/research.png",
       "width": 1200,
       "height": 630,
-      "bytes": 16965,
+      "bytes": 14771,
       "format": "png"
     },
     {
@@ -431,7 +431,7 @@
       "image": "/social/blog/tags/alignment.png",
       "width": 1200,
       "height": 630,
-      "bytes": 16524,
+      "bytes": 14302,
       "format": "png"
     },
     {
@@ -439,7 +439,7 @@
       "image": "/social/blog/tags/change.png",
       "width": 1200,
       "height": 630,
-      "bytes": 15992,
+      "bytes": 13694,
       "format": "png"
     },
     {
@@ -447,7 +447,7 @@
       "image": "/social/blog/tags/deep-learning.png",
       "width": 1200,
       "height": 630,
-      "bytes": 17332,
+      "bytes": 15126,
       "format": "png"
     },
     {
@@ -455,7 +455,7 @@
       "image": "/social/blog/tags/degisim.png",
       "width": 1200,
       "height": 630,
-      "bytes": 16220,
+      "bytes": 13956,
       "format": "png"
     },
     {
@@ -463,7 +463,7 @@
       "image": "/social/blog/tags/derin-ogrenme.png",
       "width": 1200,
       "height": 630,
-      "bytes": 17959,
+      "bytes": 15643,
       "format": "png"
     },
     {
@@ -471,7 +471,7 @@
       "image": "/social/blog/tags/donusum.png",
       "width": 1200,
       "height": 630,
-      "bytes": 16758,
+      "bytes": 14551,
       "format": "png"
     },
     {
@@ -479,7 +479,7 @@
       "image": "/social/blog/tags/guide.png",
       "width": 1200,
       "height": 630,
-      "bytes": 15193,
+      "bytes": 12885,
       "format": "png"
     },
     {
@@ -487,7 +487,7 @@
       "image": "/social/blog/tags/human.png",
       "width": 1200,
       "height": 630,
-      "bytes": 15337,
+      "bytes": 13054,
       "format": "png"
     },
     {
@@ -495,7 +495,7 @@
       "image": "/social/blog/tags/insan.png",
       "width": 1200,
       "height": 630,
-      "bytes": 15568,
+      "bytes": 13293,
       "format": "png"
     },
     {
@@ -503,7 +503,7 @@
       "image": "/social/blog/tags/intent-engineering.png",
       "width": 1200,
       "height": 630,
-      "bytes": 17619,
+      "bytes": 15283,
       "format": "png"
     },
     {
@@ -511,7 +511,7 @@
       "image": "/social/blog/tags/machine-learning.png",
       "width": 1200,
       "height": 630,
-      "bytes": 18739,
+      "bytes": 16475,
       "format": "png"
     },
     {
@@ -519,7 +519,7 @@
       "image": "/social/blog/tags/makine-ogrenmesi.png",
       "width": 1200,
       "height": 630,
-      "bytes": 19505,
+      "bytes": 17144,
       "format": "png"
     },
     {
@@ -527,7 +527,7 @@
       "image": "/social/blog/tags/prompt.png",
       "width": 1200,
       "height": 630,
-      "bytes": 16022,
+      "bytes": 13780,
       "format": "png"
     },
     {
@@ -535,7 +535,7 @@
       "image": "/social/blog/tags/rehber.png",
       "width": 1200,
       "height": 630,
-      "bytes": 15155,
+      "bytes": 12876,
       "format": "png"
     },
     {
@@ -543,7 +543,7 @@
       "image": "/social/blog/tags/rsi.png",
       "width": 1200,
       "height": 630,
-      "bytes": 14982,
+      "bytes": 12728,
       "format": "png"
     },
     {
@@ -551,7 +551,7 @@
       "image": "/social/blog/tags/skill.png",
       "width": 1200,
       "height": 630,
-      "bytes": 14938,
+      "bytes": 12739,
       "format": "png"
     },
     {
@@ -559,7 +559,7 @@
       "image": "/social/blog/tags/transformation.png",
       "width": 1200,
       "height": 630,
-      "bytes": 19054,
+      "bytes": 16768,
       "format": "png"
     },
     {
@@ -567,7 +567,7 @@
       "image": "/social/blog/tags/yetenek.png",
       "width": 1200,
       "height": 630,
-      "bytes": 15268,
+      "bytes": 13058,
       "format": "png"
     },
     {
@@ -575,7 +575,7 @@
       "image": "/social/blog/series/ai-programming.png",
       "width": 1200,
       "height": 630,
-      "bytes": 21978,
+      "bytes": 19578,
       "format": "png"
     },
     {
@@ -583,7 +583,7 @@
       "image": "/social/blog/series/understanding-ai.png",
       "width": 1200,
       "height": 630,
-      "bytes": 21354,
+      "bytes": 18927,
       "format": "png"
     },
     {
