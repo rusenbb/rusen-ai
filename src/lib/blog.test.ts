@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getAllPosts, getAllSeries, getPostSigil, getTranslation } from "./blog";
+import { dropRepeatedLede, getAllPosts, getAllSeries, getPostSigil, getTranslation } from "./blog";
 import { buildSigil } from "./blog-sigil";
 
 describe("blog content contracts", () => {
@@ -54,5 +54,17 @@ describe("blog content contracts", () => {
         );
       }
     }
+  });
+});
+
+describe("dropRepeatedLede", () => {
+  const desc = "First line. Second line.";
+  it("drops an italic lede that repeats the description", () => {
+    const body = "\n# Title\n\n*First line. Second line.*\n\nReal start.";
+    expect(dropRepeatedLede(body, desc)).toBe("\n# Title\n\nReal start.");
+  });
+  it("keeps a first paragraph that differs", () => {
+    const body = "# Title\n\nSomething else.\n\nMore.";
+    expect(dropRepeatedLede(body, desc)).toBe(body);
   });
 });

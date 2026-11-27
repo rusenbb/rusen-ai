@@ -12,6 +12,7 @@ import rehypePrettyCode from "rehype-pretty-code";
 import rehypeSlug from "rehype-slug";
 
 import {
+  dropRepeatedLede,
   getAllPosts,
   getPostBySlug,
   getTranslation,
@@ -106,7 +107,7 @@ export default async function PostPage({
   const tocLabel = post.lang === "tr" ? "İçindekiler" : "Contents";
 
   const { content } = await compileMDX({
-    source: escapeForMdx(post.body),
+    source: escapeForMdx(dropRepeatedLede(post.body, post.description)),
     components: {
       // Demote body h1 to h2 - frontmatter title is the only real h1 on the page.
       h1: (props) => <h2 {...props} />,

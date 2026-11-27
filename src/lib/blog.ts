@@ -420,3 +420,25 @@ export function formatDate(iso: string, lang: Lang): string {
 export function readUnit(lang: Lang): string {
   return lang === "tr" ? "dk" : "min";
 }
+
+/**
+ * Some posts open with the description as an italic lede under the title. The
+ * page already shows the description as the subtitle, so drop that paragraph
+ * when it repeats the description (ignoring emphasis markers and whitespace).
+ */
+export function dropRepeatedLede(body: string, description: string): string {
+  const norm = (s: string) => s.replace(/[*_]/g, "").replace(/\s+/g, " ").trim();
+  const target = norm(description);
+  if (!target) return body;
+  const lines = body.split("\n");
+  let i = 0;
+  while (i < lines.length && lines[i].trim() === "") i++;
+  if (i < lines.length && /^#\s/.test(lines[i])) {
+    i++;
+    while (i < lines.length && lines[i].trim() === "") i++;
+  }
+  let end = i;
+  while (end < lines.length && lines[end].trim() !== "") end++;
+  if (end === i || norm(lines.slice(i, end).join(" ")) !== target) return body;
+  return [...lines.slice(0, i), ...lines.slice(end + 1)].join("\n");
+}
