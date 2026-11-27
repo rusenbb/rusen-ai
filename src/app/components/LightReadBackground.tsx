@@ -39,15 +39,17 @@ function hash2(a: number, b: number, c = 0): number {
   return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
 }
 
-/** One long line per text row, starting at a different sentence each time. */
+/**
+ * One long line per text row: every sentence once, in an order of its own
+ * (a seeded shuffle), so neighbouring rows never repeat the same run.
+ */
 function rowText(row: number): string {
-  const n = LIGHT_READ_LINES.length;
-  const start = (row * 5) % n;
-  let out = "";
-  for (let i = 0; i < n; i++) {
-    out += LIGHT_READ_LINES[(start + i) % n].text + SEPARATOR;
+  const order = LIGHT_READ_LINES.map((_, i) => i);
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(hash2(row, i, 11) * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
   }
-  return out;
+  return order.map((i) => LIGHT_READ_LINES[i].text + SEPARATOR).join("");
 }
 
 export default function LightReadBackground() {
@@ -127,7 +129,7 @@ export default function LightReadBackground() {
       offsets.length = 0;
       for (let r = 0; r < rows; r++) {
         texts.push(rowText(r >> 1));
-        offsets.push(Math.floor(hash2(r, 7) * 400));
+        offsets.push(Math.floor(hash2(r, 7) * texts[r].length));
       }
       buildAtlas();
     };
