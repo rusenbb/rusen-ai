@@ -79,33 +79,25 @@ const NUM_ALPHA_BUCKETS = 16;
 const FRAME_INTERVAL_MS = 1000 / 30;
 
 /**
- * Ink flow: the ambient field. Character density follows thin filaments, like
- * ink dropped in water, that drift and bend slowly; a second, larger wave
- * decides where the ink pools darker. A handful of sines per cell, no noise
- * tables, so it stays cheap at 30 fps.
+ * Ink flow: the ambient field. Soft, mostly horizontal waves of ink roll
+ * slowly across the page; each wave swells and thins along its length.
+ * A handful of sines per cell, no noise tables, so it stays cheap at 30 fps.
  */
 function inkDensity(c: number, r: number, t: number): number {
-  // Cells are 10x16 px, so scale rows up to keep the flow isotropic.
-  const x = c * 0.045;
-  const y = r * 0.072;
-  // Where the ink pools: slow, large blobs that set stroke weight.
-  const pool = 0.5 + 0.5 * Math.sin(x * 0.35 + t * 0.03) * Math.sin(y * 0.5 - t * 0.04);
-  // Two warped families of filaments crossing at an angle, like ink
-  // threads spreading in water. Wider and darker where the ink pools.
-  const u =
-    x * 1.3
-    + 1.7 * Math.sin(y * 0.9 + t * 0.07)
-    + 0.8 * Math.sin(x * 0.6 - y * 0.4 + t * 0.05);
+  // Cells are 10x16 px, so scale rows up to keep the curves round.
+  const x = c * 0.04;
+  const y = r * 0.064;
+  // One wave every ~16 rows (about 250 px), bending gently as it rolls.
   const v =
-    y * 1.1
-    + 1.4 * Math.sin(x * 0.7 - t * 0.06)
-    + 0.9 * Math.sin(x * 0.3 + y * 0.5 + t * 0.04);
-  const sharp = 14 - 9 * pool;
-  const a = Math.pow(1 - Math.abs(Math.sin(u)), sharp);
-  const b = Math.pow(1 - Math.abs(Math.sin(v * 0.8 + 1.3)), sharp + 4);
-  const filament = Math.max(a, b * 0.8);
-  const wash = pool * pool * pool * 0.08;
-  return 0.02 + wash + filament * (0.1 + 0.6 * pool * pool);
+    y * 3.1
+    + 1.5 * Math.sin(x * 0.55 + t * 0.12)
+    + 0.45 * Math.sin(x * 1.1 - t * 0.08 + y * 0.6);
+  const s = 1 - Math.abs(Math.sin(v));
+  const s2 = s * s;
+  const wave = s2 * s2 * s;
+  // Each wave swells and thins along its length, drifting the other way.
+  const swell = 0.5 + 0.5 * Math.sin(x * 0.3 - y * 0.15 - t * 0.06);
+  return 0.015 + wave * (0.12 + 0.48 * swell);
 }
 
 type Ripple = { x: number; y: number; t: number };
