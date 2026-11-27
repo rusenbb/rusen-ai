@@ -2,10 +2,10 @@
 
 YouTube, X ve diğer hesaplarda kullanılan görsel sistem. Buradaki hiçbir şey sitenin build'ine girmez (`public/` dışında, lint'ten hariç).
 
-**Söz:** Hızlanmadan önce anlamak.
+**Söz (banner, İngilizce):** "Focus on your art, for you're both the art and the artist." Ruşen'in kendi cümlesi.
 **İşaret:** 光 (hikari, "ışık"). Ruşen'in anlamı aydınlık.
 
-![X banner](examples/x-banner-hokusai.webp)
+![X banner](examples/x-banner-cajal.webp)
 
 ## Palet
 
@@ -37,13 +37,12 @@ YouTube, X ve diğer hesaplarda kullanılan görsel sistem. Buradaki hiçbir şe
 
 ## Banner'lar: kâğıt, mürekkep, mühür
 
-- Kâğıt zemin, siyah mürekkep figür sağda, metin solda: mühür + RUŞEN BİRBEN, söz, alt satırda `YAPAY ZEKÂ · AÇIKLAMALAR · DÜŞÜNCELER`.
-- Figür dönüşümlü değişir; Japon figürler sadece bir seçenek, sürekli değil. Mürekkebi ters çevirip koyu zemine koyma (negatif gibi duruyor).
+- Kâğıt zemin, siyah mürekkep figür sağda, metin solda: mühür + RUŞEN BİRBEN, söz, alt satırda `AI · EXPLAINERS · ESSAYS`. Banner yazısı İngilizce.
+- Figür dönüşümlü değişir: Cajal ve Leonardo. Japon figür yok (Hokusai okçu çıkarıldı). Mürekkebi ters çevirip koyu zemine koyma (negatif gibi duruyor).
 - Boyutlar: X 1500×500. YouTube 2560×1440, her cihazda görünen güvenli alan ortadaki 1546×423 (x 507–2053, y 508–931). Her şey bu alanın içinde kalır.
 
 | Figür | Kaynak | Durum |
 | --- | --- | --- |
-| Okçu | Katsushika Hokusai, *Kyūjutsu* (Hokusai Manga), 1817. Wikimedia Commons: `Archers_(Kyujutsu)_Page_7_by_Katsushika_Hokusai_1817.png` | Kamu malı |
 | Purkinje hücresi | Santiago Ramón y Cajal, 1899. Wikimedia Commons: `PurkinjeCell.jpg` | Kamu malı |
 | Oranlı baş | Leonardo da Vinci, profilden erkek başı ve oranlar, y. 1490. Wikimedia Commons: `Leonardo_da_vinci,_Male_head_in_profile_with_proportions.jpg` | Kamu malı |
 

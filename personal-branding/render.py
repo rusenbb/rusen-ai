@@ -98,10 +98,14 @@ def avatars():
 # YouTube 2560x1440; her cihazda görünen güvenli alan 1546x423, ortada (x 507-2053, y 508-931).
 FIGURES = {
     #          dosya                 X: yükseklik, x, y     YouTube: yükseklik, x, y
-    "hokusai": ("hokusai-archer.webp", (470, 1000, 22), (412, 1640, 514)),
     "cajal": ("cajal-purkinje.webp", (480, 1080, 12), (412, 1660, 514)),
     "leonardo": ("leonardo-head.webp", (490, 1140, 6), (412, 1720, 514)),
 }
+
+
+# Banners are English (X and YouTube reach both audiences). Ruşen's own line.
+QUOTE = "Focus on your art,<br>for you're both the art<br>and the artist."
+TAGLINE = "AI · EXPLAINERS · ESSAYS"
 
 
 def _banner(name, w, h, img, fig, tx, ty, ts):
@@ -110,15 +114,15 @@ def _banner(name, w, h, img, fig, tx, ty, ts):
 <div style="position:absolute;left:{tx}px;top:{ty}px">
  <div style="display:flex;align-items:center;gap:{ts * .4}px;margin-bottom:{ts * .5}px">{seal(int(ts * .9), int(ts * .6))}
   <div class="m" style="font-weight:600;font-size:{ts * .36}px;letter-spacing:{ts * .08}px;color:{MUTED_PAPER}">RUŞEN BİRBEN</div></div>
- <div class="m" style="font-weight:700;font-size:{ts}px;line-height:1.05;letter-spacing:-{ts * .035}px;color:{PAPER_INK}">Hızlanmadan önce<br>anlamak.</div>
- <div class="m" style="margin-top:{ts * .45}px;font-weight:500;font-size:{ts * .3}px;letter-spacing:{ts * .06}px;color:{MUTED_PAPER}">YAPAY ZEKÂ · AÇIKLAMALAR · DÜŞÜNCELER</div></div>''',
+ <div class="m" style="font-weight:700;font-size:{ts}px;line-height:1.08;letter-spacing:-{ts * .035}px;color:{PAPER_INK}">{QUOTE}</div>
+ <div class="m" style="margin-top:{ts * .55}px;font-weight:500;font-size:{ts * .42}px;letter-spacing:{ts * .08}px;color:{MUTED_PAPER}">{TAGLINE}</div></div>''',
          w, h, 1, PAPER)
 
 
 def banners():
     for key, (img, xfig, yfig) in FIGURES.items():
-        _banner(f"x-banner-{key}", 1500, 500, img, xfig, 120, 95, 56)
-        _banner(f"youtube-banner-{key}", 2560, 1440, img, yfig, 560, 560, 64)
+        _banner(f"x-banner-{key}", 1500, 500, img, xfig, 120, 95, 44)
+        _banner(f"youtube-banner-{key}", 2560, 1440, img, yfig, 560, 548, 50)
 
 
 # ---- Thumbnail: koyu zemin, Geist Mono Bold, vurgu kelimesi mühür kırmızısı ---------------
