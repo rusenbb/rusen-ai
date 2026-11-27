@@ -22,7 +22,7 @@ export default function Home() {
     <div className="max-w-6xl mx-auto px-4 py-10 sm:py-12 md:py-16">
       <JsonLd data={{ "@context": "https://schema.org", "@type": "Person", ...PERSON }} />
       {/* Hero: centred in the first screen, the background shows around it. */}
-      <section className="flex min-h-[calc(100svh-12rem)] flex-col items-center justify-center text-center mb-12 sm:mb-16 md:mb-20">
+      <section className="flex min-h-[calc(100svh-7rem)] sm:min-h-[calc(100svh-12rem)] flex-col items-center justify-center text-center mb-12 sm:mb-16 md:mb-20">
         <div data-bg-quiet className="px-2 sm:px-6">
           <h1 className="brand-display text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 leading-tight text-balance max-w-4xl mx-auto">
             Focus on your art, for you&apos;re both the art and the artist.
