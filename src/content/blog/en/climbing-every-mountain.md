@@ -134,8 +134,8 @@ Teaching how to learn—that's the truly promising path. If instead of doing tha
 In an RSI loop, the model might fail to understand what we actually want and optimize for the wrong thing. And there are limitless, infinite ways to fail when optimizing for the wrong thing.
 
 <figure className="post-figure">
-  <img src="/images/blog/climbing-every-mountain/sorcerers-apprentice.webp" alt="The sorcerer's apprentice casting a spell to bring a broom to life" width="900" height="993" loading="lazy" decoding="async" />
-  <figcaption>Ferdinand Barth, illustration for Goethe's <em>The Sorcerer's Apprentice</em>, 1882. <a href="https://commons.wikimedia.org/wiki/File:Tovenaarsleerling_S_Barth.png">Public domain, via Wikimedia Commons</a></figcaption>
+  <img src="/images/blog/climbing-every-mountain/midas-daughter.webp" alt="King Midas looking at his daughter, turned to gold by his touch" width="816" height="1210" loading="lazy" decoding="async" />
+  <figcaption>Midas wished that everything he touched would turn to gold, and his daughter turned to gold too. He got exactly what he asked for, not what he wanted. Walter Crane, 1893. <a href="https://commons.wikimedia.org/wiki/File:Midas_gold.jpg">Public domain, via Wikimedia Commons</a></figcaption>
 </figure>
 
 For example, while maximizing doing something quickly, the model might maximize doing nothing. Because the easiest way to do something quickly is not to do it at all. Just to give up immediately.
@@ -160,7 +160,7 @@ There is a bottleneck in communication. We need to have communication with the m
 
 <figure className="post-figure">
   <img src="/images/blog/climbing-every-mountain/tower-of-babel.webp" alt="The vast, unfinished Tower of Babel with people watching its construction in the foreground" width="1280" height="937" loading="lazy" decoding="async" />
-  <figcaption>Pieter Bruegel the Elder, <em>The Tower of Babel</em>, 1563. Kunsthistorisches Museum, Vienna. <a href="https://commons.wikimedia.org/wiki/File:Pieter_Bruegel_the_Elder_-_The_Tower_of_Babel_(Vienna)_-_Google_Art_Project_-_edited.jpg">Public domain, via Wikimedia Commons</a></figcaption>
+  <figcaption>The builders reaching for the heavens can no longer understand one another, and the tower is left unfinished. Pieter Bruegel the Elder, <em>The Tower of Babel</em>, 1563. <a href="https://commons.wikimedia.org/wiki/File:Pieter_Bruegel_the_Elder_-_The_Tower_of_Babel_(Vienna)_-_Google_Art_Project_-_edited.jpg">Public domain, via Wikimedia Commons</a></figcaption>
 </figure>
 
 And that is also very hard. It might even be harder than recursive self-improvement itself. Because at some point, we might create a system smarter than ourselves, yet we will need to be able to understand what it's doing.

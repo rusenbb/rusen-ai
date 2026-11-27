@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "inputFingerprint": "435ca699cb253bb8359afa0517fc0787219bba50a889b051ec0176f71f3304d1",
+  "inputFingerprint": "693d0dff8f7e9ed7fa5d8a6666b0d9eb9d4db94495ff65da6bdcd5ee5fa25245",
   "assets": [
     {
       "route": "/",
@@ -263,7 +263,7 @@
       "image": "/social/blog/posts/climbing-every-mountain.png",
       "width": 1200,
       "height": 630,
-      "bytes": 33271,
+      "bytes": 33264,
       "format": "png"
     },
     {

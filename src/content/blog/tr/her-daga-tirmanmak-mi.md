@@ -134,8 +134,8 @@ Gerçek hayat böyle. Her şeyi öğretemezsin. Her şeyi öğrenebilmeyi öğre
 RSI döngüsünde model, bizim tam olarak istediğimiz şeyi anlamayıp yanlış bir şeyi optimize edebilir. Ve yanlış şeyi optimize etmenin sınırsız, sonsuz sayıda hatası var.
 
 <figure className="post-figure">
-  <img src="/images/blog/climbing-every-mountain/sorcerers-apprentice.webp" alt="Büyücünün çırağı, süpürgeyi büyüyle canlandırıyor" width="900" height="993" loading="lazy" decoding="async" />
-  <figcaption>Ferdinand Barth, Goethe'nin <em>Büyücünün Çırağı</em> şiiri için çizim, 1882. <a href="https://commons.wikimedia.org/wiki/File:Tovenaarsleerling_S_Barth.png">Kamu malı, Wikimedia Commons</a></figcaption>
+  <img src="/images/blog/climbing-every-mountain/midas-daughter.webp" alt="Kral Midas, dokunuşuyla altına dönüşmüş kızına bakıyor" width="816" height="1210" loading="lazy" decoding="async" />
+  <figcaption>Dokunduğu her şeyin altına dönüşmesini dileyen Midas, kızını da altına çevirir. Dileği aynen gerçekleşir, ama istediği bu değildir. Walter Crane, 1893. <a href="https://commons.wikimedia.org/wiki/File:Midas_gold.jpg">Kamu malı, Wikimedia Commons</a></figcaption>
 </figure>
 
 Mesela model bir şeyi hızlı yapmayı maksimize ederken bir şey yapmamayı maksimize edebilir. Çünkü bir şeyi hızlı yapmanın en kolay yolu o şeyi yapmamaktır. Direkt pes etmektir.
@@ -160,7 +160,7 @@ Her aşamada bizim ne olduğunu anlayabilmemiz. Yanlış gidebilecek sonsuz say�
 
 <figure className="post-figure">
   <img src="/images/blog/climbing-every-mountain/tower-of-babel.webp" alt="Yarım kalmış, devasa Babil Kulesi ve önünde inşaatı izleyen insanlar" width="1280" height="937" loading="lazy" decoding="async" />
-  <figcaption>Pieter Bruegel (Yaşlı), <em>Babil Kulesi</em>, 1563. Kunsthistorisches Museum, Viyana. <a href="https://commons.wikimedia.org/wiki/File:Pieter_Bruegel_the_Elder_-_The_Tower_of_Babel_(Vienna)_-_Google_Art_Project_-_edited.jpg">Kamu malı, Wikimedia Commons</a></figcaption>
+  <figcaption>Göğe ulaşmak isteyenlerin dilleri karışır. Birbirlerini anlayamayınca kule yarım kalır. Pieter Bruegel (Yaşlı), <em>Babil Kulesi</em>, 1563. <a href="https://commons.wikimedia.org/wiki/File:Pieter_Bruegel_the_Elder_-_The_Tower_of_Babel_(Vienna)_-_Google_Art_Project_-_edited.jpg">Kamu malı, Wikimedia Commons</a></figcaption>
 </figure>
 
 Bu da çok zor bir şey. Belki recursive self-improvement'ın kendisinden bile daha zor olabilir. Çünkü bir noktada belki kendimizden daha zeki bir sistem oluşturacağız, ama onun ne yaptığını anlayabilmemiz gerekecek.
