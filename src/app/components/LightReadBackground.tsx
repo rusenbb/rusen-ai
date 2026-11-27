@@ -253,7 +253,19 @@ export default function LightReadBackground() {
       const rect = canvas.getBoundingClientRect();
       return [e.clientX - rect.left, e.clientY - rect.top] as const;
     };
+    // Over cards, links and controls the pointer is busy with the page, not
+    // the background: put the light out there.
+    const QUIET_TARGETS = "a, button, input, textarea, select, label, header, footer, .term-card, [data-no-bg-light]";
     const onMove = (e: PointerEvent) => {
+      const target = e.target;
+      if (target instanceof Element && target.closest(QUIET_TARGETS)) {
+        if (present) {
+          present = false;
+          wake();
+        }
+        lastMove = 0;
+        return;
+      }
       const [x, y] = toCanvas(e);
       const now = performance.now();
       if (present && lastMove) {
@@ -269,6 +281,7 @@ export default function LightReadBackground() {
     };
     const onDown = (e: PointerEvent) => {
       if (e.pointerType !== "touch") return;
+      if (e.target instanceof Element && e.target.closest(QUIET_TARGETS)) return;
       const [x, y] = toCanvas(e);
       present = true;
       touchRelease = 0;
