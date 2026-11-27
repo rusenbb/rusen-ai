@@ -98,9 +98,9 @@ def avatars():
 # YouTube 2560x1440; her cihazda görünen güvenli alan 1546x423, ortada (x 507-2053, y 508-931).
 FIGURES = {
     #          dosya                 X: yükseklik, x, y     YouTube: yükseklik, x, y
-    # Cajal runs edge to edge: it bleeds off the top and bottom of the X banner and of
-    # YouTube's visible strip (y 508-931).
-    "cajal": ("cajal-purkinje.webp", (600, 1060, -48), (500, 1640, 468)),
+    # Cajal runs exactly edge to edge: the drawing touches the top and bottom of the X
+    # banner and of YouTube's visible strip (y 508-931), without being cut.
+    "cajal": ("cajal-purkinje.webp", (508, 1092, -5), (430, 1665, 504)),
     "leonardo": ("leonardo-head.webp", (490, 1140, 6), (412, 1720, 514)),
 }
 
