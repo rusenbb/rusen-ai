@@ -156,28 +156,30 @@ export default async function PostPage({
       <h1 className="post-title" data-allow-select>
         {post.title}
       </h1>
-      <p className="post-meta">
-        <span>{formatDate(post.date, post.lang)}</span>
-        {series && (
-          <span>
-            <Link href={`/blogs/series/${series.id}`}>{series.title[post.lang]}</Link>
-            {seriesTotal > 1 && ` ${seriesOrder}/${seriesTotal}`}
-          </span>
-        )}
-        <span>
-          {post.readingMinutes} {readUnit(post.lang)}
-        </span>
-      </p>
-      <div className="post-actions">
-        <span className="lang-switch" aria-label={post.lang === "tr" ? "Dil" : "Language"}>
-          <span className="on" aria-current="true">{post.lang.toUpperCase()}</span>
-          {sibling && (
-            <Link href={`/blogs/${sibling.slug}`} hrefLang={sibling.lang} lang={sibling.lang}>
-              {sibling.lang.toUpperCase()}
-            </Link>
+      <div className="post-metarow">
+        <p className="post-meta">
+          <span>{formatDate(post.date, post.lang)}</span>
+          {series && (
+            <span>
+              <Link href={`/blogs/series/${series.id}`}>{series.title[post.lang]}</Link>
+              {seriesTotal > 1 && ` ${seriesOrder}/${seriesTotal}`}
+            </span>
           )}
-        </span>
-        <CopyMarkdown markdown={postMarkdown(post)} lang={post.lang} />
+          <span>
+            {post.readingMinutes} {readUnit(post.lang)}
+          </span>
+        </p>
+        <div className="post-actions">
+          <span className="lang-switch" aria-label={post.lang === "tr" ? "Dil" : "Language"}>
+            <span className="on" aria-current="true">{post.lang.toUpperCase()}</span>
+            {sibling && (
+              <Link href={`/blogs/${sibling.slug}`} hrefLang={sibling.lang} lang={sibling.lang}>
+                {sibling.lang.toUpperCase()}
+              </Link>
+            )}
+          </span>
+          <CopyMarkdown markdown={postMarkdown(post)} lang={post.lang} />
+        </div>
       </div>
       <p className="post-subtitle" data-allow-select>
         {post.description}
