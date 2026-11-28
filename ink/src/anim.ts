@@ -2,6 +2,7 @@
 // so any frame can be rendered on its own (seek, snapshot, undo all work).
 import type { Node, State } from "./node.ts";
 import type { Camera } from "./camera.ts";
+import { type Vec, arcLengths } from "./geom.ts";
 
 export type Ease = (t: number) => number;
 export const ease = {
@@ -28,6 +29,9 @@ export type Anim = {
   /** Node is introduced by this animation (not visible before it starts). */
   introduces?: boolean;
   removes?: boolean;
+  /** Nodes taken off the page when this starts / put on it when it ends (morph). */
+  hideAtStart?: Node[];
+  showAtEnd?: Node[];
   apply(p: number): void;
 };
 
@@ -82,9 +86,20 @@ export const scaleTo = (n: Node, s: number, o: Opts = {}) => tween("scaleTo", n,
 export const rotateTo = (n: Node, r: number, o: Opts = {}) => tween("rotateTo", n, { rotation: r }, o);
 export const opacityTo = (n: Node, a: number, o: Opts = {}) => tween("opacityTo", n, { opacity: a }, o);
 
-/** Re-ink a node in another colour (snaps at the midpoint of the animation). */
+/** Re-ink a node in another colour, blending smoothly; null returns it to its own inks. */
 export function recolor(n: Node, color: string | null, o: Opts = {}): Anim {
-  return { kind: "recolor", targets: [n], duration: o.duration ?? 0.3, ease: o.ease ?? ease.linear, apply: (p) => { if (p >= 0.5) n.state.color = color; } };
+  return {
+    kind: "recolor", targets: [n], duration: o.duration ?? 0.6, ease: o.ease ?? ease.smooth,
+    apply: (p) => {
+      const st = n.state;
+      if (color) {
+        // blend from whatever tint it had (none = its own ink)
+        const from = st.color && st.color !== color ? null : st.color ? st.tint : 0;
+        if (from === null) { st.tint = 1 - p; if (p >= 0.5) { st.color = color; st.tint = (p - 0.5) * 2; } else st.tint = 1 - p * 2; }
+        else { st.color = color; st.tint = from + (1 - from) * p; }
+      } else if (st.color) st.tint *= 1 - p;
+    },
+  };
 }
 
 /** Briefly scale up and back, optionally in red, to point at something. */
@@ -118,3 +133,26 @@ export function custom(targets: Node[], apply: (p: number) => void, o: Opts = {}
 
 /** Apply one animation to many nodes at once: s.play(...each(nodes, fadeOut)). */
 export const each = (nodes: Node[], f: (n: Node) => Anim): Anim[] => nodes.map((n) => f(n));
+
+/** Draw only part of a node (e.g. a bar that fills to 30 %). */
+export function drawTo(n: Node, to: number, o: Opts & { from?: number } = {}): Anim {
+  const from = o.from ?? 0;
+  return { kind: "drawTo", targets: [n], duration: o.duration ?? 1, ease: o.ease ?? ease.smooth, introduces: from === 0, apply: (p) => { n.state.drawn = from + (to - from) * p; } };
+}
+
+/** Move a node along a path (scene coordinates), at constant speed. */
+export function moveAlong(n: Node, path: Vec[], o: Opts = {}): Anim {
+  const L = arcLengths(path);
+  const total = L[L.length - 1] || 1;
+  return {
+    kind: "moveAlong", targets: [n], duration: o.duration ?? 2, ease: o.ease ?? ease.linear,
+    apply: (p) => {
+      const target = p * total;
+      let i = 1;
+      while (i < L.length - 1 && L[i] < target) i++;
+      const t = (target - L[i - 1]) / (L[i] - L[i - 1] || 1);
+      n.state.x = path[i - 1].x + (path[i].x - path[i - 1].x) * t;
+      n.state.y = path[i - 1].y + (path[i].y - path[i - 1].y) * t;
+    },
+  };
+}

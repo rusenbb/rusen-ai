@@ -53,13 +53,15 @@ animation, to sync with narration) all work without replaying a video.
 | `path3d(...).behind(surface)` | a path on the surface that hides behind hills |
 | `pin(label, fig3d, [x, y, z])` | 2D label stuck to a 3D point |
 
-Animations: `draw`, `undraw`, `fadeIn`, `fadeOut`, `moveTo`, `shift`,
-`scaleTo`, `rotateTo`, `opacityTo`, `recolor`, `indicate`, `cameraTo`, `each`
+Animations: `draw`, `drawTo` (partial, e.g. a bar filling to 30 %), `undraw`,
+`fadeIn`, `fadeOut`, `moveTo`, `moveAlong(node, path)`, `shift`, `scaleTo`,
+`rotateTo`, `opacityTo`, `recolor` (smooth ink blend), `indicate`, `cameraTo`,
+`morph(a, b)` (stroke-by-stroke transform; arrays allowed; uses base positions), `each`
 (2D `cx, cy, zoom`; 3D `yaw, pitch, dist`), `custom`. `play(a, b)` runs them
 together; `play(a, { duration: 2 })` sets the length; easings in `ease`.
 
-A full worked example, one concept end to end with captions, is
-`examples/rational-agent.ts` (~90 s).
+A full worked example, one concept shown end to end with almost no words, is
+`examples/rational-agent.ts` (~56 s).
 
 ## Building step by step (CLI)
 

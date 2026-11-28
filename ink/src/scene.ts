@@ -83,6 +83,8 @@ export class Scene {
             if (a.introduces && (!appear.has(n) || vanish.has(n))) { appear.set(n, t); vanish.delete(n); }
             if (a.removes) vanish.set(n, t + d);
           }
+          for (const n of a.hideAtStart ?? []) vanish.set(n, t);
+          for (const n of a.showAtEnd ?? []) { appear.set(n, t + d); vanish.delete(n); }
         }
         t += len;
       }

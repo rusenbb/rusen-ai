@@ -3,7 +3,7 @@
 // and what's left is inked with the same pen as everything else.
 // Far lines get thinner, so depth reads the way it does in an engraving.
 import { type Vec, polar, rot, sub, norm, add, mul } from "./geom.ts";
-import { Node, type RenderCtx } from "./node.ts";
+import { Node, type RenderCtx, type Tint, mixColor, tintOf } from "./node.ts";
 import { type Mat, matMul, pen, renderStroke } from "./stroke.ts";
 import type { Camera } from "./camera.ts";
 import { palette } from "./style.ts";
@@ -41,12 +41,12 @@ export class Figure3D extends Node {
   inkLength() { return this.lines.reduce((a, l) => a + approxLen(l.pts) * this.unit * 0.8 + (l.dot ? 8 : 0), 0); }
   strokeCount() { return this.lines.length; }
 
-  render(rc: RenderCtx, parent: Mat, share: number, opacity: number, color: string | null) {
+  render(rc: RenderCtx, parent: Mat, share: number, opacity: number, color: Tint) {
     const cam: Camera = (rc as RenderCtx & { scene: { camera: Camera } }).scene.camera;
     const st = this.state;
     const d = st.drawn * share;
     const op = opacity * st.opacity;
-    const col = st.color ?? color;
+    const col = tintOf(st, color);
     if (d <= 0 || op <= 0) return;
     const m = matMul(parent, this.localMatrix());
     const P = (p: V3): Proj => { const q = cam.project(p, { x: 0, y: 0 }, this.unit); return { x: q.x, y: q.y, d: q.depth, f: q.f }; };
@@ -63,7 +63,7 @@ export class Figure3D extends Node {
       budget -= lens[i] + lift;
       const prog = d >= 1 ? 1 : Math.min(1, (share * (lens[i] + lift)) / Math.max(1e-6, lens[i]));
       const pp = L.pts.map(P);
-      const c = col ?? L.color ?? palette.ink;
+      const c = mixColor(L.color ?? palette.ink, col);
       const alpha = (L.alpha ?? 0.92);
       if (L.dot) {
         const q = pp[0];
@@ -318,12 +318,12 @@ export class Pinned extends Node {
   children() { return [this.child]; }
   inkLength() { return this.child.inkLength(); }
   strokeCount() { return this.child.strokeCount(); }
-  render(rc: RenderCtx, parent: Mat, share: number, opacity: number, color: string | null) {
+  render(rc: RenderCtx, parent: Mat, share: number, opacity: number, color: Tint) {
     const cam: Camera = (rc as RenderCtx & { scene: { camera: Camera } }).scene.camera;
     const q = cam.project(this.point, { x: this.fig.state.x, y: this.fig.state.y }, this.fig.unit);
     const st = this.state;
     const m: Mat = [1, 0, 0, 1, q.x + this.offset.x, q.y + this.offset.y];
-    this.child.render(rc, matMul(parent, m), st.drawn * share, opacity * st.opacity, st.color ?? color);
+    this.child.render(rc, matMul(parent, m), st.drawn * share, opacity * st.opacity, tintOf(st, color));
   }
 }
 export const pin = (child: Node, fig: Figure3D, point: V3, offset = { x: 0, y: 0 }) => new Pinned(child, fig, point, offset);

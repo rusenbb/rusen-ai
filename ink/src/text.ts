@@ -4,7 +4,7 @@
 import { GlobalFonts } from "@napi-rs/canvas";
 import { fileURLToPath } from "node:url";
 import { type Mat, matMul } from "./stroke.ts";
-import { Node, type RenderCtx } from "./node.ts";
+import { Node, type RenderCtx, type Tint, mixColor, tintOf } from "./node.ts";
 import { palette } from "./style.ts";
 
 const here = (p: string) => fileURLToPath(new URL(p, import.meta.url));
@@ -70,7 +70,7 @@ export class Text extends Node {
     return `${size}px "Geist Serif", "STIX Two Text", FreeSerif`;
   }
 
-  render(rc: RenderCtx, parent: Mat, share: number, opacity: number, color: string | null) {
+  render(rc: RenderCtx, parent: Mat, share: number, opacity: number, color: Tint) {
     const st = this.state;
     const d = st.drawn * share;
     const op = opacity * st.opacity;
@@ -91,7 +91,7 @@ export class Text extends Node {
       ctx.clip();
     }
     ctx.globalAlpha = this.o.alpha * op;
-    ctx.fillStyle = st.color ?? color ?? this.o.color;
+    ctx.fillStyle = mixColor(this.o.color, tintOf(st, color));
     let x = x0;
     this.runs.forEach((r, i) => {
       ctx.font = this.fontFor(r.level);

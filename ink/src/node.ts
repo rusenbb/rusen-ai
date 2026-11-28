@@ -11,9 +11,23 @@ export type State = {
   drawn: number;
   /** Override ink colour (e.g. turn a part red). null = keep. */
   color: string | null;
+  /** How far ink is blended towards `color` (0..1), for smooth recolouring. */
+  tint: number;
 };
 
-export const defaultState = (): State => ({ x: 0, y: 0, scale: 1, rotation: 0, opacity: 1, drawn: 1, color: null });
+export const defaultState = (): State => ({ x: 0, y: 0, scale: 1, rotation: 0, opacity: 1, drawn: 1, color: null, tint: 1 });
+
+/** A colour a parent hands down: blend each stroke `a` of the way to `c`. */
+export type Tint = { c: string; a: number } | null;
+export const tintOf = (st: State, parent: Tint): Tint => (st.color ? { c: st.color, a: st.tint } : parent);
+const rgb = (h: string) => { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
+export function mixColor(base: string, t: Tint): string {
+  if (!t || t.a <= 0) return base;
+  if (t.a >= 1 || !base.startsWith("#") || !t.c.startsWith("#")) return t.c;
+  const a = rgb(base), b = rgb(t.c);
+  const m = a.map((x, i) => Math.round(x + (b[i] - x) * t.a));
+  return `#${m.map((x) => x.toString(16).padStart(2, "0")).join("")}`;
+}
 
 let ids = 0;
 
@@ -51,7 +65,7 @@ export abstract class Node {
   }
 
   /** Render with a share of ink `share` (0..1) handed down from the parent. */
-  abstract render(rc: RenderCtx, parent: Mat, share: number, opacity: number, color: string | null): void;
+  abstract render(rc: RenderCtx, parent: Mat, share: number, opacity: number, color: Tint): void;
 
   /** Bake the current transform into a matrix (for export/inspection). */
   world(): Mat {
@@ -72,12 +86,12 @@ export class Figure extends Node {
   inkLength() { return this.lengths().reduce((a, b) => a + b, 0); }
   strokeCount() { return this.strokes.length; }
 
-  render(rc: RenderCtx, parent: Mat, share: number, opacity: number, color: string | null) {
+  render(rc: RenderCtx, parent: Mat, share: number, opacity: number, color: Tint) {
     const st = this.state;
     const m = matMul(parent, this.localMatrix());
     const d = st.drawn * share;
     const op = opacity * st.opacity;
-    const col = st.color ?? color;
+    const col = tintOf(st, color);
     if (d <= 0 || op <= 0) return;
     const lens = this.lengths();
     const total = lens.reduce((a, b) => a + b, 0) + rc.lift * this.strokes.length;
@@ -88,7 +102,7 @@ export class Figure extends Node {
       const p = Math.min(1, budget / L);
       budget -= L;
       const drawP = Math.min(1, (p * L) / Math.max(lens[i], 1e-6));
-      renderStroke(rc.ctx, col ? { ...s, color: col } : s, m, d >= 1 ? 1 : drawP, op);
+      renderStroke(rc.ctx, col ? { ...s, color: mixColor(s.color, col) } : s, m, d >= 1 ? 1 : drawP, op);
     }
   }
 }
@@ -100,7 +114,12 @@ export class Group extends Node {
   constructor(items: Node[] = []) {
     super();
     this.items = items;
-    for (const i of items) i.parent = this;
+    for (const i of items) {
+      // A node lives in exactly one group. Re-grouping silently breaks when it appears;
+      // to act on nodes that are already placed, use each(nodes, anim) or pass arrays.
+      if (i.parent && process.env.INK_STRICT !== "0") console.warn(`ink: node${i.name ? ` "${i.name}"` : ""} moved into a second group; use each() or an array instead`);
+      i.parent = this;
+    }
   }
   add(...n: Node[]) { for (const i of n) { i.parent = this; this.items.push(i); } return this; }
   children() { return this.items; }
@@ -108,12 +127,12 @@ export class Group extends Node {
   strokeCount() { return this.items.reduce((a, n) => a + n.strokeCount(), 0); }
   withLag(l: number) { this.lag = l; return this; }
 
-  render(rc: RenderCtx, parent: Mat, share: number, opacity: number, color: string | null) {
+  render(rc: RenderCtx, parent: Mat, share: number, opacity: number, color: Tint) {
     const st = this.state;
     const m = matMul(parent, this.localMatrix());
     const d = st.drawn * share;
     const op = opacity * st.opacity;
-    const col = st.color ?? color;
+    const col = tintOf(st, color);
     if (d <= 0 || op <= 0) return;
     const ws = this.items.map((n) => n.inkLength() + rc.lift * n.strokeCount());
     const total = ws.reduce((a, b) => a + b, 0) || 1;
