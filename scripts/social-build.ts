@@ -277,36 +277,44 @@ function renderCoverOverlaySvg(spec: CardSpec): Buffer {
   `);
 }
 
-/** The drawing's ink as an RGBA layer (paper made transparent), trimmed to the ink. */
-async function inkLayer(file: string): Promise<{ buffer: Buffer; width: number; height: number }> {
-  const { data, info } = await sharp(file).greyscale().raw().toBuffer({ resolveWithObject: true });
-  const sorted = Uint8Array.from(data).sort();
-  const paper = sorted[Math.floor(sorted.length * 0.6)];
-  const rgba = Buffer.alloc(info.width * info.height * 4);
+/** The drawing cut to its ink (plus a margin), with edges feathered into the card's paper. */
+async function drawingLayer(file: string): Promise<{ buffer: Buffer; width: number; height: number }> {
+  const { data, info } = await sharp(file).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  const n = info.width * info.height;
+  const luma = new Uint8Array(n);
+  for (let i = 0; i < n; i += 1) luma[i] = Math.round(0.299 * data[i * 3] + 0.587 * data[i * 3 + 1] + 0.114 * data[i * 3 + 2]);
+  const paper = Uint8Array.from(luma).sort()[Math.floor(n * 0.6)];
   let x0 = info.width, y0 = info.height, x1 = 0, y1 = 0;
-  for (let i = 0; i < info.width * info.height; i += 1) {
-    const alpha = Math.max(0, Math.min(255, Math.round(((paper - 12 - data[i]) * 255) / Math.max(1, paper - 60))));
-    rgba[i * 4] = 0x16; rgba[i * 4 + 1] = 0x13; rgba[i * 4 + 2] = 0x0f; rgba[i * 4 + 3] = alpha;
-    if (alpha > 60) {
+  for (let i = 0; i < n; i += 1) {
+    if (luma[i] < paper - 40) {
       const x = i % info.width, y = Math.floor(i / info.width);
       if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
     }
   }
-  const buffer = await sharp(rgba, { raw: { width: info.width, height: info.height, channels: 4 } })
-    .extract({ left: x0, top: y0, width: x1 - x0 + 1, height: y1 - y0 + 1 })
+  const pad = 44;
+  x0 = Math.max(0, x0 - pad); y0 = Math.max(0, y0 - pad);
+  x1 = Math.min(info.width - 1, x1 + pad); y1 = Math.min(info.height - 1, y1 + pad);
+  const width = x1 - x0 + 1, height = y1 - y0 + 1;
+  const feather = Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><defs><filter id="f"><feGaussianBlur stdDeviation="${pad / 2.2}"/></filter></defs><rect x="${pad}" y="${pad}" width="${width - 2 * pad}" height="${height - 2 * pad}" fill="#fff" filter="url(#f)"/></svg>`,
+  );
+  const buffer = await sharp(file)
+    .extract({ left: x0, top: y0, width, height })
+    .ensureAlpha()
+    .composite([{ input: feather, blend: "dest-in" }])
     .png()
     .toBuffer();
-  return { buffer, width: x1 - x0 + 1, height: y1 - y0 + 1 };
+  return { buffer, width, height };
 }
 
 async function writeCoverCard(spec: CardSpec & { cover: string }, outputPath: string): Promise<void> {
   const drawing = resolve(ROOT, "public", coverImagePath(spec.cover).replace(/^\//, ""));
-  const ink = await inkLayer(drawing);
+  const layer = await drawingLayer(drawing);
   // the drawing sits in the right part of the card, the title on clean paper at the left
   const box = { x: 560, y: 70, w: 590, h: 470 };
-  const k = Math.min(box.w / ink.width, box.h / ink.height);
-  const w = Math.round(ink.width * k), h = Math.round(ink.height * k);
-  const placed = await sharp(ink.buffer).resize(w, h).toBuffer();
+  const k = Math.min(box.w / layer.width, box.h / layer.height);
+  const w = Math.round(layer.width * k), h = Math.round(layer.height * k);
+  const placed = await sharp(layer.buffer).resize(w, h).toBuffer();
   await sharp({ create: { width: WIDTH, height: HEIGHT, channels: 3, background: PAPER } })
     .composite([
       { input: placed, left: box.x + Math.round((box.w - w) / 2), top: box.y + Math.round((box.h - h) / 2) },
