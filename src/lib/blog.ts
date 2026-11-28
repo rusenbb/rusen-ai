@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
@@ -19,6 +20,16 @@ const BLOG_COVERS = JSON.parse(fs.readFileSync(COVERS_FILE, "utf8")) as Record<s
 /** Public path of a post's ink cover drawing. */
 export function coverImagePath(key: string): string {
   return `/blog/covers/${key}.webp`;
+}
+
+/**
+ * URL of a post's ink cover for pages, with a short content hash so a redrawn
+ * cover is fetched again instead of being served from the browser's cache.
+ */
+export function coverImageUrl(key: string): string {
+  const file = path.join(process.cwd(), "public", coverImagePath(key));
+  const hash = createHash("sha256").update(fs.readFileSync(file)).digest("hex").slice(0, 10);
+  return `${coverImagePath(key)}?v=${hash}`;
 }
 
 export function getCover(key: string): BlogCover {

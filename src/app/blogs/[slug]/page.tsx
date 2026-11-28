@@ -19,7 +19,7 @@ import {
   getPrevNextInSeries,
   getAllSeries,
   getCover,
-  coverImagePath,
+  coverImageUrl,
   extractHeadings,
   formatDate,
   readUnit,
@@ -159,7 +159,7 @@ export default async function PostPage({
         <figure className="post-cover">
           {/* eslint-disable-next-line @next/next/no-img-element -- static export, pre-sized webp */}
           <img
-            src={coverImagePath(post.cover)}
+            src={coverImageUrl(post.cover)}
             alt={getCover(post.cover).alt[post.lang]}
             width={1600}
             height={900}
