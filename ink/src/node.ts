@@ -21,7 +21,8 @@ export type RenderCtx = {
   ctx: any;
   /** Pen lift between strokes, in px of "virtual" length. */
   lift: number;
-  project3d?: (n: Node, m: Mat, opts: { drawn: number; opacity: number; color: string | null }) => void;
+  /** Scene visibility test; groups skip children that haven't appeared yet. */
+  visible?: (n: Node) => boolean;
 };
 
 export abstract class Node {
@@ -124,6 +125,7 @@ export class Group extends Node {
     for (let i = 0; i < this.items.length; i++) {
       const t = d * end;
       const p = span[i] > 0 ? Math.max(0, Math.min(1, (t - starts[i]) / span[i])) : 1;
+      if (rc.visible && !rc.visible(this.items[i])) continue;
       this.items[i].render(rc, m, d >= 1 ? 1 : p, op, col);
     }
   }

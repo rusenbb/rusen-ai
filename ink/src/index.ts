@@ -11,3 +11,4 @@ export { palette } from "./style.ts";
 export { rng } from "./rng.ts";
 export * from "./three.ts";
 export * from "./session.ts";
+export * from "./captions.ts";

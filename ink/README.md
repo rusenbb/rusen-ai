@@ -43,7 +43,8 @@ animation, to sync with narration) all work without replaying a video.
 | `hatch(region, bbox, { angle, spacing, tone, cross })` | Leonardo hatching, tone-driven |
 | `stipple(inside, bbox, { tone })` | dotted tone |
 | `text(s)` / `tex("w_1 x^2")` | Geist Serif prose / STIX italic math with `_` `^` |
-| `group(...).withLag(0.5)` | draw children one after another (or overlapping) |
+| `group(...).withLag(0.5)` | draw children one after another (or overlapping). A node lives in one group; to animate several existing nodes together use `s.play(...each(nodes, fadeOut))` |
+| `captions(scene)` → `say(text, hold)`, `clear()`, `srt(path)` | pen-written captions at the bottom, plus a matching `.srt` subtitle file |
 
 | 3D (projected through `scene.camera`, hidden lines removed, far lines thinner) | |
 | --- | --- |
@@ -53,9 +54,12 @@ animation, to sync with narration) all work without replaying a video.
 | `pin(label, fig3d, [x, y, z])` | 2D label stuck to a 3D point |
 
 Animations: `draw`, `undraw`, `fadeIn`, `fadeOut`, `moveTo`, `shift`,
-`scaleTo`, `rotateTo`, `opacityTo`, `recolor`, `indicate`, `cameraTo`
+`scaleTo`, `rotateTo`, `opacityTo`, `recolor`, `indicate`, `cameraTo`, `each`
 (2D `cx, cy, zoom`; 3D `yaw, pitch, dist`), `custom`. `play(a, b)` runs them
 together; `play(a, { duration: 2 })` sets the length; easings in `ease`.
+
+A full worked example, one concept end to end with captions, is
+`examples/rational-agent.ts` (~90 s).
 
 ## Building step by step (CLI)
 

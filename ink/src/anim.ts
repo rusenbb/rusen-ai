@@ -115,3 +115,6 @@ export function cameraTo(cam: Camera, to: Partial<Camera["base"]>, o: Opts = {})
 export function custom(targets: Node[], apply: (p: number) => void, o: Opts = {}): Anim {
   return { kind: "custom", targets, duration: o.duration ?? 1, ease: o.ease ?? ease.inOut, apply };
 }
+
+/** Apply one animation to many nodes at once: s.play(...each(nodes, fadeOut)). */
+export const each = (nodes: Node[], f: (n: Node) => Anim): Anim[] => nodes.map((n) => f(n));

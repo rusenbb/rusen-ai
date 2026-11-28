@@ -87,6 +87,18 @@ export class Scene {
         t += len;
       }
     }
+    // A group that was never introduced itself (e.g. made later just to erase
+    // several things at once) exists from when its first descendant appears.
+    const firstAppear = (n: Node): number | undefined => {
+      const own = appear.get(n);
+      if (own !== undefined) return own;
+      let m: number | undefined;
+      for (const c of n.children()) { const a = firstAppear(c); if (a !== undefined) m = m === undefined ? a : Math.min(m, a); }
+      return m;
+    };
+    for (const s of sched) for (const n of s.anim.targets) {
+      if (!appear.has(n)) { const a = firstAppear(n); if (a !== undefined) appear.set(n, a); }
+    }
     return { sched, appear, vanish, total: t };
   }
 
@@ -103,12 +115,14 @@ export class Scene {
       const p = s.duration > 0 ? Math.min(1, (time - s.start) / s.duration) : 1;
       s.anim.apply(s.anim.ease(p));
     }
+    // Appearance is inherited from the nearest ancestor that has one;
+    // removal of any ancestor removes the whole subtree.
     const visible = (n: Node) => {
-      for (let c: Node | null = n; c; c = c.parent) {
-        const a = appear.get(c);
-        if (a !== undefined && a <= time) { const v = vanish.get(c); return v === undefined || v > time; }
-      }
-      return false;
+      let a: number | undefined;
+      for (let c: Node | null = n; c && a === undefined; c = c.parent) a = appear.get(c);
+      if (a === undefined || a > time) return false;
+      for (let c: Node | null = n; c; c = c.parent) { const v = vanish.get(c); if (v !== undefined && v <= time) return false; }
+      return true;
     };
     return { roots: [...roots], visible };
   }
@@ -126,7 +140,7 @@ export class Scene {
     ictx.setTransform(1, 0, 0, 1, 0, 0);
     ictx.globalCompositeOperation = "source-over";
     ictx.clearRect(0, 0, W, H);
-    const rc: RenderCtx = { ctx: ictx, lift: 10 };
+    const rc: RenderCtx = { ctx: ictx, lift: 10, visible };
     const cam = this.camera.matrix(W);
     const walk = (n: Node) => {
       // A node may be shown on its own even if its parent is not yet visible.
@@ -202,8 +216,10 @@ export class Scene {
     const frames = Math.ceil((to - from) * fps);
     for (let i = 0; i <= frames; i++) {
       const cv = this.frame(Math.min(to, from + i / fps), W, transparent);
-      const data = cv.getContext("2d").getImageData(0, 0, W, H).data;
-      if (!ff.stdin.write(Buffer.from(data.buffer, data.byteOffset, data.byteLength))) await new Promise((r) => ff.stdin.once("drain", r));
+      // copy out of the canvas (it is reused next frame) without going through ImageData
+      const px = Buffer.from((cv as unknown as { data(): Buffer }).data());
+      if (!ff.stdin.write(px)) await new Promise((r) => ff.stdin.once("drain", r));
+      if (i % 120 === 0 && process.env.INK_DEBUG) console.error(`frame ${i}/${frames} rss ${(process.memoryUsage().rss / 1e6) | 0}MB`);
     }
     ff.stdin.end();
     await done;
