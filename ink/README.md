@@ -41,9 +41,12 @@ Everything is built from the layer below it, nothing skips a layer:
 | --- | --- | --- |
 | 0 · pen | `stroke.ts` | a stroke: pressure, tremor, taper, ink pooling |
 | 1 · primitives | `primitives.ts`, `text.ts` | `line curve arc circle box dot arrow polyline hatch stipple text tex` |
-| 2 · components | `components.ts`, `neuron.ts`, `three.ts` | `node brace bubble bar waves signal robot dirt axes(.plot .vec .scatter) matrix table`, `neuron`, `surface axes3d points3d path3d` |
-| 3 · figures | `figures.ts` | characters and compound diagrams: `agent({ aligned })`, `network([3, 4, 4, 2])` |
+| 2 · components | `components.ts`, `neuron.ts`, `portrait.ts`, `three.ts` | `node brace bubble bar waves signal robot dirt axes(.plot .vec .scatter) matrix table`, `neuron`, `portrait(tone)`, `surface axes3d points3d path3d` |
+| 3 · figures | `figures.ts` | characters and compound diagrams: the agent family `reflexAgent learningAgent agent({ aligned }) agi superintelligence`, `sandbox`, `person("turing")`, `network([3, 4, 4, 2])` |
 | 4 · patterns | `patterns.ts` | storytelling moves: `sense`, `travel`, `loop`, `forward`, `backprop`, `columns`, `crown` |
+
+`occlude(node, other.inside)` hides the lines of `node` that lie behind
+another figure (2D hidden lines); the agent family exposes `.inside`.
 
 `examples/catalog.ts` renders one sheet per layer; `examples/backprop.ts` shows
 layers 3 and 4 together. Components return groups with named parts
@@ -57,7 +60,25 @@ Animations: `draw`, `drawTo` (partial, e.g. a bar filling to 30 %), `undraw`,
 together; `play(a, { duration: 2 })` sets the length; easings in `ease`.
 
 A full worked example, one concept shown end to end with almost no words, is
-`examples/rational-agent.ts` (~56 s).
+`examples/rational-agent.ts` (~56 s). `examples/agents-family.ts` (~40 s) draws
+Turing as an engraving, the agent family, and a superintelligence that does
+not fit in its sandbox.
+
+### Portraits from photos
+
+```ts
+const p = (await person("turing", { height: 900 })).at(960, 540);   // or person("photo.jpg")
+s.play(draw(p.outline, { duration: 3.5 }));                          // contours and features
+s.play(draw(p.shade, { duration: 8 }));                              // 4 layers of hatching
+```
+
+The photo becomes a darkness map (levels, gamma, local contrast, an oval
+vignette). The outline is iso-lines of that map plus feature lines (lids,
+lips) from a difference of blurs. The shading is four layers of evenly spaced
+hatching, each starting at a darker tone and crossing the last; lines follow
+the form and swell in shadow, like a burin. Photos and their licences live in
+`assets/people/` (see its README for adding someone). Big figures cache their
+finished strokes, so a 3,000-stroke portrait renders at ~30 ms a frame.
 
 ## Building step by step (CLI)
 
@@ -78,7 +99,9 @@ Ops: `draw`, `add`, `fadeIn` (these create: `make` + `args` + `at`), `wait`,
 `remove`, `undraw`, `fadeOut`, `move`, `shift`, `scale`, `rotate`, `opacity`,
 `recolor`, `indicate`, `camera`, `together`. `id.part` addresses parts
 (`cell.axon`). Makers: `neuron node circle dot line arrow curve box text tex
-surface axes3d points3d path3d` (`surface` takes `"f": "Math.sin(x)*z"`).
+surface axes3d points3d path3d agent reflexAgent learningAgent agi
+superintelligence sandbox network person` (`surface` takes `"f": "Math.sin(x)*z"`,
+`person` takes `"who": "turing"` or a photo path).
 Colours: `ink sepia faded red` or any hex.
 
 ## Video

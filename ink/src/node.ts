@@ -1,6 +1,10 @@
 // Scene graph. A Node has a transform and two animatable channels:
 // `drawn` (how much of its ink is on the page, 0..1) and `opacity`.
 import { type Mat, type Stroke, I, matMul, renderStroke, strokeLength } from "./stroke.ts";
+import { createCanvas, type Canvas } from "@napi-rs/canvas";
+
+/** Figures with at least this many strokes cache their finished strokes on a bitmap. */
+const CACHE_MIN = 150;
 
 export type State = {
   x: number;
@@ -80,6 +84,7 @@ export abstract class Node {
 export class Figure extends Node {
   strokes: Stroke[];
   private _len: number[] | null = null;
+  private _cache: { canvas: Canvas; key: string; n: number; w: number; h: number } | null = null;
   constructor(strokes: Stroke[] = []) { super(); this.strokes = strokes; }
 
   lengths() { return (this._len ??= this.strokes.map(strokeLength)); }
@@ -96,7 +101,40 @@ export class Figure extends Node {
     const lens = this.lengths();
     const total = lens.reduce((a, b) => a + b, 0) + rc.lift * this.strokes.length;
     let budget = d * total;
-    for (let i = 0; i < this.strokes.length && budget > 0; i++) {
+    let i0 = 0;
+    if (this.strokes.length >= CACHE_MIN) {
+      // Big figures (portraits, dense hatching) keep the strokes already finished
+      // on their own bitmap and only add the new ones each frame.
+      let full = 0, b = budget;
+      while (full < this.strokes.length && b >= lens[full] + rc.lift) { b -= lens[full] + rc.lift; full++; }
+      if (d >= 1) full = this.strokes.length;
+      if (full > 0) {
+        const cv = (rc.ctx as any).canvas as { width: number; height: number } | undefined;
+        if (cv) {
+          const key = `${m.join(",")}|${op}|${col ?? ""}|${cv.width}x${cv.height}`;
+          let c = this._cache;
+          if (!c || c.key !== key || c.n > full) {
+            if (!c || c.w !== cv.width || c.h !== cv.height) c = { canvas: createCanvas(cv.width, cv.height), key, n: 0, w: cv.width, h: cv.height };
+            const cx = c.canvas.getContext("2d");
+            cx.setTransform(1, 0, 0, 1, 0, 0);
+            cx.clearRect(0, 0, c.w, c.h);
+            c.key = key; c.n = 0;
+            this._cache = c;
+          }
+          const cx = c.canvas.getContext("2d");
+          for (let j = c.n; j < full; j++) {
+            const s = this.strokes[j];
+            renderStroke(cx as any, col ? { ...s, color: mixColor(s.color, col) } : s, m, 1, op);
+          }
+          c.n = full;
+          rc.ctx.globalAlpha = 1;
+          (rc.ctx as any).drawImage(c.canvas, 0, 0);
+          for (let j = 0; j < full; j++) budget -= lens[j] + rc.lift;
+          i0 = full;
+        }
+      }
+    }
+    for (let i = i0; i < this.strokes.length && budget > 0; i++) {
       const s = this.strokes[i];
       const L = lens[i] + rc.lift;
       const p = Math.min(1, budget / L);

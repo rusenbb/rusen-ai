@@ -8,6 +8,8 @@ import { neuron } from "./neuron.ts";
 import { Scene } from "./scene.ts";
 import { arrow, box, circle, curve, dot, line } from "./primitives.ts";
 import { node } from "./components.ts";
+import { agent, agi, learningAgent, network, personPath, personSync, reflexAgent, sandbox, superintelligence } from "./figures.ts";
+import { loadTone } from "./portrait.ts";
 import { palette } from "./style.ts";
 import { tex, text } from "./text.ts";
 import { axes3d, path3d, points3d, surface, type V3, type Figure3D } from "./three.ts";
@@ -33,6 +35,15 @@ export const makers: Record<string, (a: any, reg: Map<string, Node>) => Node> = 
   surface: (a) => surface(new Function("x", "z", `return (${a.f});`) as (x: number, z: number) => number, { ...a, color: color(a.color) }, a.unit ?? 120),
   axes3d: (a) => axes3d(a.size ?? 3, a.unit ?? 120, { ...a, color: color(a.color) }),
   points3d: (a) => points3d(a.points as V3[], { ...a, color: color(a.color), colors: a.colors?.map(color) }, a.unit ?? 120),
+  agent: (a) => agent(v(0, 0), { ...a, color: color(a.color) }),
+  reflexAgent: (a) => reflexAgent(v(0, 0), a),
+  learningAgent: (a) => learningAgent(v(0, 0), a),
+  agi: (a) => agi(v(0, 0), a),
+  superintelligence: (a) => superintelligence(v(0, 0), a),
+  sandbox: (a) => sandbox(v(0, 0), a),
+  network: (a) => network(v(0, 0), a.sizes ?? [3, 4, 2], a),
+  /** {"who": "turing"} or {"who": "path/to/photo.jpg"}, plus portrait options */
+  person: (a) => personSync(a.who, a),
   path3d: (a, reg) => {
     const f = path3d(a.points as V3[], { ...a, color: color(a.color) }, a.unit ?? 120);
     if (a.behind) f.behind(reg.get(a.behind) as Figure3D);
@@ -91,6 +102,17 @@ function anims(op: Op, s: Scene, reg: Map<string, Node>): A.Anim[] | "step" {
     }
     default: throw new Error(`unknown op "${op.op}"`);
   }
+}
+
+/** Images decode asynchronously: read every photo a session uses before building it. */
+export async function preload(file: SessionFile) {
+  const walk = async (ops: Op[]) => {
+    for (const op of ops) {
+      if (op.make === "person" && op.args?.who) await loadTone(personPath(op.args.who));
+      if (op.ops) await walk(op.ops);
+    }
+  };
+  await walk(file.ops);
 }
 
 export function build(file: SessionFile): { scene: Scene; reg: Map<string, Node> } {

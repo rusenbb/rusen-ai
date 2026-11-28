@@ -3,7 +3,7 @@ import {
   Scene, text, palette, v, draw, type Node,
   line, curve, arc, circle, box, dot, arrow, hatch, stipple, polyline, tex,
   node, brace, bubble, bar, waves, signal, robot, dirt, axes, matrix, table, neuron, surface, axes3d, points3d, rng, type V3,
-  agent, network,
+  agent, network, reflexAgent, learningAgent, agi, superintelligence, sandbox, occlude, person, people,
 } from "../src/index.ts";
 
 function sheet(title: string, cells: [string, (cx: number, cy: number) => Node[]][], file: string, cols = 4) {
@@ -62,4 +62,27 @@ s3.add(text("agent · aligned", { size: 22, font: "mono", color: palette.faded }
 const net = network(v(1330, 420), [3, 4, 4, 2], { seed: 3, width: 760, height: 380, r: 24, labels: [["x_1", "x_2", "x_3"], [], [], ["y_1", "y_2"]] });
 s3.add(net, text("network([3, 4, 4, 2])", { size: 22, font: "mono", color: palette.faded }).at(1330, 700));
 s3.snap("out/catalog-3-figures.png");
+
+// ---------------------------------------------------------------- 3b. the agent family
+const s4 = new Scene();
+const cap = (t: string, x: number, y: number) => text(t, { size: 22, font: "mono", color: palette.faded }).at(x, y);
+s4.add(text("3 · FIGURES · AGENTS", { size: 40, font: "mono", color: palette.faded }).at(960, 60));
+const fy = 520;
+s4.add(reflexAgent(v(170, fy), { seed: 3, size: 130 }), cap("reflexAgent", 170, 700));
+s4.add(learningAgent(v(420, fy), { seed: 4, size: 130 }), cap("learningAgent", 420, 700));
+s4.add(agent(v(660, fy), { seed: 5, size: 130 }), cap("agent", 660, 700));
+s4.add(agent(v(880, fy), { seed: 6, size: 130, aligned: false }), cap("agent · unaligned", 880, 700));
+s4.add(agi(v(1140, fy - 10), { seed: 7, size: 210 }), cap("agi", 1140, 800));
+const box4 = sandbox(v(1590, 640), { seed: 9, w: 420, h: 280 });
+const si = superintelligence(v(1590, 700), { seed: 8, size: 330 });
+occlude(box4, si.inside);
+s4.add(box4, si, cap("superintelligence in a sandbox", 1590, 1010));
+s4.snap("out/catalog-4-agents.png");
+
+// ---------------------------------------------------------------- people (portraits from photos)
+const s5 = new Scene();
+s5.add(text("PEOPLE · portrait(photo)", { size: 40, font: "mono", color: palette.faded }).at(960, 60));
+s5.add((await person("turing", { height: 860 })).at(960, 570));
+s5.add(text(`${people.turing.name}, ${people.turing.years}`, { size: 30, color: palette.sepia }).at(1420, 960));
+s5.snap("out/catalog-5-people.png");
 void draw;

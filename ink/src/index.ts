@@ -10,6 +10,7 @@ export * from "./patterns.ts";
 export * from "./figures.ts";
 export * from "./text.ts";
 export * from "./neuron.ts";
+export * from "./portrait.ts";
 export { palette } from "./style.ts";
 export { rng } from "./rng.ts";
 export * from "./three.ts";

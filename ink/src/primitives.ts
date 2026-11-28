@@ -190,4 +190,33 @@ export function stipple(inside: (p: Vec) => boolean, bbox: { x: number; y: numbe
   return new Figure(strokes);
 }
 
+/**
+ * Hidden lines in 2D: cut away every part of `target`'s strokes that lies
+ * inside `inside` (a test in scene coordinates), e.g. a frame behind a figure.
+ * Call it once both are placed. Changes `target` in place and returns it.
+ */
+export function occlude<T extends Node>(target: T, inside: (p: Vec) => boolean): T {
+  const walk = (n: Node) => {
+    if (n instanceof Figure) {
+      const m = n.world();
+      const out: Stroke[] = [];
+      for (const s of n.strokes) {
+        let run: Stroke["pts"] = [];
+        const flush = () => { if (run.length > 2) out.push({ ...s, pts: run }); run = []; };
+        for (const q of s.pts) {
+          const x = m[0] * q.x + m[2] * q.y + m[4], y = m[1] * q.x + m[3] * q.y + m[5];
+          if (inside(v(x, y))) flush(); else run.push(q);
+        }
+        flush();
+      }
+      n.strokes = out;
+      (n as any)._len = null;
+      (n as any)._cache = null;
+    }
+    for (const c of n.children()) walk(c);
+  };
+  walk(target);
+  return target;
+}
+
 export { palette };

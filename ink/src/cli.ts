@@ -7,7 +7,9 @@
 //   ink render s.json out.mp4|out.mov|out.webm [--width 1280 --fps 30]
 //   ink timeline s.json
 import { existsSync } from "node:fs";
-import { build, load, save, type Op } from "./session.ts";
+import { build as buildSync, load, preload, save, type Op, type SessionFile } from "./session.ts";
+
+const build = async (f: SessionFile) => { await preload(f); return buildSync(f); };
 
 const [cmd, file, ...rest] = process.argv.slice(2);
 const flag = (k: string) => { const i = rest.indexOf(`--${k}`); return i >= 0 ? rest[i + 1] : undefined; };
@@ -36,7 +38,7 @@ switch (cmd) {
     f.ops.push(...ops);
     f.redo = [];
     // validate by building; roll back on error
-    try { const { scene } = build(f); save(file, f); console.log(`ok: ${f.ops.length} ops, ${scene.duration.toFixed(2)}s`); }
+    try { const { scene } = await build(f); save(file, f); console.log(`ok: ${f.ops.length} ops, ${scene.duration.toFixed(2)}s`); }
     catch (e) { console.error(`rejected: ${(e as Error).message}`); process.exit(1); }
     break;
   }
@@ -59,22 +61,22 @@ switch (cmd) {
     break;
   }
   case "snap": {
-    const { scene } = build(load(file));
+    const { scene } = await build(load(file));
     console.log(scene.snap(rest[0] ?? "out/snap.png", { time: num("at"), width: num("width"), transparent: rest.includes("--transparent") }));
     break;
   }
   case "board": {
-    const { scene } = build(load(file));
+    const { scene } = await build(load(file));
     console.log(scene.storyboard(rest[0] ?? "out/board.png", Number(rest[1] ?? 6)));
     break;
   }
   case "render": {
-    const { scene } = build(load(file));
+    const { scene } = await build(load(file));
     console.log(await scene.render(rest[0] ?? "out/scene.mp4", { width: num("width"), fps: num("fps"), tail: num("tail") }));
     break;
   }
   case "timeline": {
-    const { scene } = build(load(file));
+    const { scene } = await build(load(file));
     console.log(JSON.stringify(scene.timeline(), null, 1));
     break;
   }
