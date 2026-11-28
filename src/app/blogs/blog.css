@@ -137,12 +137,10 @@ html[data-blog-lang="tr"] [data-tag-lang="en"]:not([data-blog-force-lang] *) {
   vertical-align: middle;
 }
 
-/* Optional ink cover drawn from one of my own photos (frontmatter `cover`). */
+/* Optional ink cover drawn from one of my own photos (frontmatter `cover`).
+   No box: the drawing's ragged edge is transparent, so the page shows through. */
 .post-cover {
   margin: 0 0 1.6rem;
-  border: 1px solid var(--line);
-  border-radius: 2px;
-  overflow: hidden;
 }
 .post-cover img {
   display: block;

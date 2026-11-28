@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "inputFingerprint": "44d272cc11741ad7071cd8385b6ceb38e8995b722ed1028bfe6a38883ab196d5",
+  "inputFingerprint": "397231751cf9f1872b41444fdd9f657770f19229ed940cd8bdd6418274627dad",
   "assets": [
     {
       "route": "/",
@@ -263,7 +263,7 @@
       "image": "/social/blog/posts/climbing-every-mountain.png",
       "width": 1200,
       "height": 630,
-      "bytes": 328798,
+      "bytes": 325547,
       "format": "png"
     },
     {
@@ -271,7 +271,7 @@
       "image": "/social/blog/posts/her-daga-tirmanmak-mi.png",
       "width": 1200,
       "height": 630,
-      "bytes": 327325,
+      "bytes": 324878,
       "format": "png"
     },
     {
@@ -279,7 +279,7 @@
       "image": "/social/blog/posts/we-are-the-bottleneck.png",
       "width": 1200,
       "height": 630,
-      "bytes": 352455,
+      "bytes": 352037,
       "format": "png"
     },
     {
@@ -287,7 +287,7 @@
       "image": "/social/blog/posts/darbogaz-biziz.png",
       "width": 1200,
       "height": 630,
-      "bytes": 353142,
+      "bytes": 351447,
       "format": "png"
     },
     {
@@ -295,7 +295,7 @@
       "image": "/social/blog/posts/prompt-is-not-enough-intent-engineering.png",
       "width": 1200,
       "height": 630,
-      "bytes": 250649,
+      "bytes": 250305,
       "format": "png"
     },
     {
@@ -303,7 +303,7 @@
       "image": "/social/blog/posts/prompt-yetmez-intent-engineering.png",
       "width": 1200,
       "height": 630,
-      "bytes": 254948,
+      "bytes": 252701,
       "format": "png"
     },
     {
@@ -311,7 +311,7 @@
       "image": "/social/blog/posts/ai-recommendations.png",
       "width": 1200,
       "height": 630,
-      "bytes": 288630,
+      "bytes": 287725,
       "format": "png"
     },
     {
@@ -319,7 +319,7 @@
       "image": "/social/blog/posts/yapay-zeka-onerileri.png",
       "width": 1200,
       "height": 630,
-      "bytes": 289257,
+      "bytes": 287079,
       "format": "png"
     },
     {
@@ -327,7 +327,7 @@
       "image": "/social/blog/posts/building-with-ai.png",
       "width": 1200,
       "height": 630,
-      "bytes": 229220,
+      "bytes": 228225,
       "format": "png"
     },
     {
@@ -335,7 +335,7 @@
       "image": "/social/blog/posts/yapay-zeka-ile-birlikte-insa-etme.png",
       "width": 1200,
       "height": 630,
-      "bytes": 228973,
+      "bytes": 230515,
       "format": "png"
     },
     {
@@ -343,7 +343,7 @@
       "image": "/social/blog/posts/ai-and-the-future-of-programming.png",
       "width": 1200,
       "height": 630,
-      "bytes": 192582,
+      "bytes": 191083,
       "format": "png"
     },
     {
@@ -351,7 +351,7 @@
       "image": "/social/blog/posts/yapay-zeka-ve-programlamanin-gelecegi.png",
       "width": 1200,
       "height": 630,
-      "bytes": 191278,
+      "bytes": 193970,
       "format": "png"
     },
     {
