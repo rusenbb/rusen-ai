@@ -5,10 +5,13 @@ notebooks, Cajal's neurons. Cream paper, black and sepia ink, red only as the
 accent. Every mark is a pen stroke with pressure and a little tremor, so
 everything animates as *drawing*, not as fading shapes.
 
-Nothing here is part of the site build.
+The code lives here; the figure library (photos of people, logos, renders,
+catalogs) lives in a data folder that is synced with Google Drive
+(`Projects/YouTube/ink/`). Point `INK_DATA` at it. Without it, the small
+sample in `sample/` is used (Turing only).
 
 ```sh
-cd ink && npm install
+npm install
 node --experimental-strip-types examples/neuron.ts --video     # out/neuron.mp4
 ```
 
@@ -42,7 +45,7 @@ Everything is built from the layer below it, nothing skips a layer:
 | 0 · pen | `stroke.ts` | a stroke: pressure, tremor, taper, ink pooling |
 | 1 · primitives | `primitives.ts`, `text.ts` | `line curve arc circle box dot arrow polyline hatch stipple text tex` |
 | 2 · components | `components.ts`, `neuron.ts`, `portrait.ts`, `three.ts` | `node brace bubble bar waves signal robot dirt axes(.plot .vec .scatter) matrix table`, `neuron`, `portrait(tone)`, `surface axes3d points3d path3d` |
-| 3 · figures | `figures.ts` | characters and compound diagrams: the agent family `reflexAgent learningAgent agent({ aligned }) agi superintelligence`, `sandbox`, `person("turing")`, `network([3, 4, 4, 2])` |
+| 3 · figures | `figures.ts` | characters and compound diagrams: the agent family `reflexAgent learningAgent agent({ aligned }) agi superintelligence`, `sandbox`, `person("turing")`, `logo("openai")`, `network([3, 4, 4, 2])` |
 | 4 · patterns | `patterns.ts` | storytelling moves: `sense`, `travel`, `loop`, `forward`, `backprop`, `columns`, `crown` |
 
 `occlude(node, other.inside)` hides the lines of `node` that lie behind
@@ -74,11 +77,36 @@ s.play(draw(p.shade, { duration: 8 }));                              // 4 layers
 
 The photo becomes a darkness map (levels, gamma, local contrast, an oval
 vignette). The outline is iso-lines of that map plus feature lines (lids,
-lips) from a difference of blurs. The shading is four layers of evenly spaced
-hatching, each starting at a darker tone and crossing the last; lines follow
-the form and swell in shadow, like a burin. Photos and their licences live in
-`assets/people/` (see its README for adding someone). Big figures cache their
-finished strokes, so a 3,000-stroke portrait renders at ~30 ms a frame.
+lips) from a difference of blurs, plus the subject's silhouette. The shading is
+four layers of evenly spaced hatching, each starting at a darker tone and
+crossing the last; lines follow the form and swell in shadow, like a burin.
+Big figures cache their finished strokes, so a 3,000-stroke portrait renders at
+~30 ms a frame.
+
+### Logos
+
+`await logo("anthropic", { fit: [400, 150] })`: a company logo outlined and
+hatched. Logos are trademarks of their owners, for editorial and educational
+use only.
+
+### The data folder
+
+```
+$INK_DATA/
+  people/people.json     key -> file, name, years, group, author, license, page, portrait opts
+  people/<key>.jpg       the photo (free licence only: public domain, CC0, CC BY, CC BY-SA)
+  people/<key>.mask.png  the subject cut out, made by tools/mask.py
+  logos/logos.json       key -> file, name, source page, licence note
+  logos/<key>.png
+```
+
+Adding someone: save a freely licensed photo as `people/<key>.jpg`, run
+`python3 tools/mask.py people/<key>.jpg` (cuts the background away; U²-Net,
+downloaded once), add an entry to `people.json` with the author, licence and
+source page, then check it with `INK_DATA=... node --experimental-strip-types
+examples/people.ts` (one contact sheet per group). CC BY and CC BY-SA photos
+need their author and licence credited where the video is published (the
+description); CC BY-SA also means the drawing is shared under CC BY-SA.
 
 ## Building step by step (CLI)
 

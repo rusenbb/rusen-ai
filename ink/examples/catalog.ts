@@ -83,6 +83,6 @@ s4.snap("out/catalog-4-agents.png");
 const s5 = new Scene();
 s5.add(text("PEOPLE · portrait(photo)", { size: 40, font: "mono", color: palette.faded }).at(960, 60));
 s5.add((await person("turing", { height: 860 })).at(960, 570));
-s5.add(text(`${people.turing.name}, ${people.turing.years}`, { size: 30, color: palette.sepia }).at(1420, 960));
+s5.add(text(`${people().turing.name}, ${people().turing.years}`, { size: 30, color: palette.sepia }).at(1420, 960));
 s5.snap("out/catalog-5-people.png");
 void draw;

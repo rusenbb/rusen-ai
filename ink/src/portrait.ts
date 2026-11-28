@@ -24,8 +24,8 @@ export type Tone = { w: number; h: number; d: Float32Array };
 const tones = new Map<string, Tone>();
 
 /** Read an image file (jpg/png/webp) into a darkness map, at most `maxSize` px on its long side. */
-export async function loadTone(path: string, o: { maxSize?: number } = {}): Promise<Tone> {
-  const key = `${path}@${o.maxSize ?? 900}`;
+export async function loadTone(path: string, o: { maxSize?: number; mode?: "luma" | "ink" } = {}): Promise<Tone> {
+  const key = `${path}@${o.maxSize ?? 900}${o.mode === "ink" ? ":ink" : ""}`;
   const hit = tones.get(key);
   if (hit) return hit;
   const img = new Image();
@@ -43,15 +43,17 @@ export async function loadTone(path: string, o: { maxSize?: number } = {}): Prom
   ctx.drawImage(img, 0, 0, w, h);
   const px = ctx.getImageData(0, 0, w, h).data;
   const d = new Float32Array(w * h);
-  for (let i = 0; i < w * h; i++) d[i] = 1 - (0.299 * px[i * 4] + 0.587 * px[i * 4 + 1] + 0.114 * px[i * 4 + 2]) / 255;
+  // "ink": any colour counts as ink (a yellow logo is as solid as a black one)
+  if (o.mode === "ink") for (let i = 0; i < w * h; i++) d[i] = 1 - Math.min(px[i * 4], px[i * 4 + 1], px[i * 4 + 2]) / 255;
+  else for (let i = 0; i < w * h; i++) d[i] = 1 - (0.299 * px[i * 4] + 0.587 * px[i * 4 + 1] + 0.114 * px[i * 4 + 2]) / 255;
   const t = { w, h, d };
   tones.set(key, t);
   return t;
 }
 
 /** A darkness map that `loadTone` already read (images decode asynchronously, so sync code needs this). */
-export function cachedTone(path: string, o: { maxSize?: number } = {}): Tone {
-  const t = tones.get(`${path}@${o.maxSize ?? 900}`);
+export function cachedTone(path: string, o: { maxSize?: number; mode?: "luma" | "ink" } = {}): Tone {
+  const t = tones.get(`${path}@${o.maxSize ?? 900}${o.mode === "ink" ? ":ink" : ""}`);
   if (!t) throw new Error(`image not loaded yet: ${path} (await loadTone() first)`);
   return t;
 }
@@ -96,8 +98,23 @@ function percentile(d: Float32Array, q: number) {
   return s[Math.floor(clamp(q) * (s.length - 1))];
 }
 
+/** Cut out part of a darkness map; the box is in fractions of its size: [x, y, w, h]. */
+export function cropTone(t: Tone, box: [number, number, number, number]): Tone {
+  const x0 = Math.round(box[0] * t.w), y0 = Math.round(box[1] * t.h);
+  const w = Math.max(1, Math.min(t.w - x0, Math.round(box[2] * t.w))), h = Math.max(1, Math.min(t.h - y0, Math.round(box[3] * t.h)));
+  const d = new Float32Array(w * h);
+  for (let y = 0; y < h; y++) d.set(t.d.subarray((y0 + y) * t.w + x0, (y0 + y) * t.w + x0 + w), y * w);
+  return { w, h, d };
+}
+
 export type PortraitOpts = {
   seed?: number;
+  /** Cut-out of the subject (white = keep), e.g. from tools/mask.py; same size as the photo. */
+  mask?: Tone;
+  /** Draw the mask's edge as a contour too. */
+  silhouette?: boolean;
+  /** Use only this part of the photo: [x, y, w, h] as fractions. */
+  crop?: [number, number, number, number];
   /** Output height in px; width follows the photo. */
   height?: number;
   /** Tone levels as percentiles of the photo: [paper, black]. */
@@ -134,29 +151,37 @@ export type Portrait = Group & { outline: Figure; shade: Group; layers: Figure[]
 
 /** An engraved portrait of a darkness map; centred on its origin, so `.at(x, y)` places its middle. */
 export function portrait(src: Tone, o: PortraitOpts = {}): Portrait {
+  let mask = o.mask && o.mask.w === src.w && o.mask.h === src.h ? o.mask : undefined;
+  if (o.mask && !mask) console.warn("ink: portrait mask size differs from the photo; ignored");
+  if (o.crop) { src = cropTone(src, o.crop); if (mask) mask = cropTone(mask, o.crop); }
+  // a mask is stored as an image: white (darkness 0) = subject
+  const keep = mask ? blurTone({ w: mask.w, h: mask.h, d: mask.d.map((x) => 1 - x) }, 1.5) : null;
   const seed = o.seed ?? 7;
   const H = o.height ?? 760;
   const k = H / src.h; // output px per source px
   const W = src.w * k;
   // ---- tone: levels, gamma, vignette
   const [qlo, qhi] = o.levels ?? [0.15, 0.99];
-  const lo = percentile(src.d, qlo), hi = percentile(src.d, qhi);
+  const subject = keep ? src.d.filter((_, i) => keep.d[i] > 0.5) : src.d;
+  const lo = percentile(subject.length > 100 ? subject : src.d, qlo), hi = percentile(subject.length > 100 ? subject : src.d, qhi);
   const g = o.gamma ?? 1.5;
   const vg = o.vignette === false ? null : { cx: 0.5, cy: 0.46, rx: 0.5, ry: 0.52, soft: 0.16, ...(o.vignette ?? {}) };
   const noise = rng(seed + 3);
   const lobes = Array.from({ length: 7 }, () => [noise.range(0, 6.28), noise.range(0.02, 0.06)]);
+  const vigAt = (x: number, y: number) => {
+    if (!vg) return 1;
+    const dx = (x / src.w - vg.cx) / vg.rx, dy = (y / src.h - vg.cy) / vg.ry;
+    const a = Math.atan2(dy, dx);
+    let wob = 0;
+    for (let i = 0; i < lobes.length; i++) wob += lobes[i][1] * Math.sin((i + 2) * a + lobes[i][0]);
+    return clamp((1 - Math.hypot(dx, dy) * (1 + wob)) / vg.soft);
+  };
   const base: Tone = { w: src.w, h: src.h, d: new Float32Array(src.d.length) };
   for (let y = 0; y < src.h; y++) for (let x = 0; x < src.w; x++) {
     let t = clamp((src.d[y * src.w + x] - lo) / Math.max(1e-6, hi - lo));
     t = Math.pow(t, g);
-    if (vg) {
-      const dx = (x / src.w - vg.cx) / vg.rx, dy = (y / src.h - vg.cy) / vg.ry;
-      const a = Math.atan2(dy, dx);
-      let wob = 0;
-      for (let i = 0; i < lobes.length; i++) wob += lobes[i][1] * Math.sin((i + 2) * a + lobes[i][0]);
-      const r = Math.hypot(dx, dy) * (1 + wob);
-      t *= clamp((1 - r) / vg.soft);
-    }
+    if (vg) t *= vigAt(x, y);
+    if (keep) t *= clamp((keep.d[y * src.w + x] - 0.15) / 0.6);
     base.d[y * src.w + x] = t;
   }
   const det = o.detail ?? 0.8;
@@ -232,6 +257,24 @@ export function portrait(src: Tone, o: PortraitOpts = {}): Portrait {
       if (L < (o.minOutline ?? 26) * (closed ? 2 : 0.8)) continue;
       for (const part of splitPath(pts, 120 + R() * 80)) {
         outlineStrokes.push(pen(part, { seed: seed + 5000 + outlineStrokes.length * 7, width: width * 1.25, wobble: 0.3, taper: [0.15, 0.3], blot: 0.1, alpha: 0.9, color }));
+      }
+    }
+  }
+  if (keep && (o.silhouette ?? true)) {
+    for (const path of isolines(blurTone(keep, Math.max(1.5, 2 / k)), 0.5, 2)) {
+      const pts = smoothPath(path.map((q) => v((q.x - src.w / 2) * k, (q.y - src.h / 2) * k)), 4);
+      // skip the parts that run along the photo's edge, and anything faded out by the vignette
+      const runs: Vec[][] = [];
+      let run: Vec[] = [];
+      for (const q of pts) {
+        const sx = q.x / k + src.w / 2, sy = q.y / k + src.h / 2;
+        const edge = sx < 4 || sy < 4 || sx > src.w - 5 || sy > src.h - 5;
+        const vis = !vg || vigAt(sx, sy) > 0.35;
+        if (edge || !vis) { if (run.length > 6) runs.push(run); run = []; } else run.push(q);
+      }
+      if (run.length > 6) runs.push(run);
+      for (const r of runs) for (const part of splitPath(r, 160 + R() * 100)) {
+        outlineStrokes.push(pen(part, { seed: seed + 8000 + outlineStrokes.length * 7, width: width * 1.2, wobble: 0.35, taper: [0.2, 0.3], blot: 0.1, alpha: 0.75, color }));
       }
     }
   }

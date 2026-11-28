@@ -8,8 +8,7 @@ import { neuron } from "./neuron.ts";
 import { Scene } from "./scene.ts";
 import { arrow, box, circle, curve, dot, line } from "./primitives.ts";
 import { node } from "./components.ts";
-import { agent, agi, learningAgent, network, personPath, personSync, reflexAgent, sandbox, superintelligence } from "./figures.ts";
-import { loadTone } from "./portrait.ts";
+import { agent, agi, learningAgent, network, preloadPerson, personSync, reflexAgent, sandbox, superintelligence } from "./figures.ts";
 import { palette } from "./style.ts";
 import { tex, text } from "./text.ts";
 import { axes3d, path3d, points3d, surface, type V3, type Figure3D } from "./three.ts";
@@ -108,7 +107,7 @@ function anims(op: Op, s: Scene, reg: Map<string, Node>): A.Anim[] | "step" {
 export async function preload(file: SessionFile) {
   const walk = async (ops: Op[]) => {
     for (const op of ops) {
-      if (op.make === "person" && op.args?.who) await loadTone(personPath(op.args.who));
+      if (op.make === "person" && op.args?.who) await preloadPerson(op.args.who);
       if (op.ops) await walk(op.ops);
     }
   };

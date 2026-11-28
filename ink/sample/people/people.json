@@ -1,0 +1,20 @@
+{
+ "turing": {
+  "file": "turing.jpg",
+  "name": "Alan Turing",
+  "years": "1912–1954",
+  "group": "pioneer",
+  "author": "Elliott & Fry",
+  "license": "Public domain (PD-UK-unknown, PD-URAA)",
+  "licenseUrl": "",
+  "page": "https://commons.wikimedia.org/wiki/File:Alan_Turing_(1951)_(crop).jpg",
+  "opts": {
+   "vignette": {
+    "cy": 0.46,
+    "rx": 0.5,
+    "ry": 0.52,
+    "soft": 0.16
+   }
+  }
+ }
+}

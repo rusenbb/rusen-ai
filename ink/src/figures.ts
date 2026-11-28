@@ -3,10 +3,12 @@
 // a signal can flow through), so patterns can animate them directly.
 import { type Vec, v } from "./geom.ts";
 import { Figure, Group, type Node } from "./node.ts";
-import { arc, box, circleStroke, dotStrokes, hatch, line, lineStroke, stipple, type Mark } from "./primitives.ts";
+import { arc, box, circleStroke, dotStrokes, hatch, line, lineStroke, type Mark } from "./primitives.ts";
 import { node } from "./components.ts";
 import { cachedTone, loadTone, portrait, type PortraitOpts, type Portrait } from "./portrait.ts";
 import { rng } from "./rng.ts";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { pen } from "./stroke.ts";
 import { palette } from "./style.ts";
 
@@ -81,14 +83,15 @@ const kin = (o: Kin, def: number) => {
 };
 
 /**
- * Simple reflex agent: one eye, a straight mouth, stiff arms. It sees only
- * the present and answers with a rule. Parts: head, eye, mouth, antenna, body, arms, rule.
+ * Simple reflex agent: plain dot eyes, a straight mouth, lever arms and a
+ * switch on its chest: it maps what it sees now to an action, by a rule.
+ * Parts: antenna, head, eyes, mouth, body, arms, rule.
  */
 export function reflexAgent(c: Vec, o: Kin = {}) {
   const { k, w, P, seed } = kin(o, 100);
   const head = new Figure([circleStroke(P(0, -62), 34 * k, { seed, width: w })]);
-  const eye = new Figure([circleStroke(P(0, -66), 10 * k, { seed: seed + 1, width: w * 0.8 }), ...dotStrokes(P(0, -66), 4.4 * k, { seed: seed + 2 })]);
-  const mouth = line(P(-11, -47), P(11, -47), { seed: seed + 3, width: w, wobble: 0.15 });
+  const eyes = new Figure([...dotStrokes(P(-12, -66), 4 * k, { seed: seed + 1 }), ...dotStrokes(P(12, -66), 4 * k, { seed: seed + 2 })]);
+  const mouth = line(P(-10, -50), P(10, -50), { seed: seed + 3, width: w, wobble: 0.15 });
   const antenna = new Figure([lineStroke(P(0, -96), P(0, -116), { seed: seed + 4, width: w }), lineStroke(P(-8, -116), P(8, -116), { seed: seed + 5, width: w })]);
   const body = box(-30 * k, -24 * k, 60 * k, 74 * k, { seed: seed + 6, width: w });
   // arms bent at right angles, like levers
@@ -102,22 +105,22 @@ export function reflexAgent(c: Vec, o: Kin = {}) {
     lineStroke(P(-12, 14), P(10, 2), { seed: seed + 10, width: w * 0.8 }),
     ...dotStrokes(P(14, 14), 3.4 * k, { seed: seed + 11 }),
   ]);
-  const g = withSilhouette(parts({ antenna, head, eye, mouth, body, arms, rule }), k, 34, [-30, -24, 60, 74]);
+  const g = withSilhouette(parts({ antenna, head, eyes, mouth, body, arms, rule }), k, 34, [-30, -24, 60, 74]);
   g.at(c.x, c.y);
   return g;
 }
 
 /**
- * Learning agent: two eyes and a raised brow (curious), a bulb on the
- * antenna, and a rising learning curve on its chest.
- * Parts: antenna, head, eyes, brow, mouth, body, curve, arms.
+ * Learning agent: looks up at the idea bulb on its antenna, a pencil in its
+ * raised hand, and a rising learning curve on its chest.
+ * Parts: antenna, head, eyes, mouth, body, curve, arms, pencil.
  */
 export function learningAgent(c: Vec, o: Kin = {}) {
   const { k, w, P, seed } = kin(o, 100);
   const head = new Figure([circleStroke(P(0, -62), 34 * k, { seed, width: w })]);
-  const eyes = new Figure([...dotStrokes(P(-12, -64), 4.2 * k, { seed: seed + 1 }), ...dotStrokes(P(12, -64), 4.2 * k, { seed: seed + 2 })]);
-  const brow = new Figure([pen([P(5, -76), P(12, -80), P(20, -78)], { seed: seed + 3, width: w * 0.9, wobble: 0.15 })]);
-  const mouth = arc(P(0, -58), 11 * k, Math.PI * 0.25, Math.PI * 0.75, { seed: seed + 4, width: w });
+  // pupils up and to the side: looking at the bulb
+  const eyes = new Figure([...dotStrokes(P(-10, -70), 4.2 * k, { seed: seed + 1 }), ...dotStrokes(P(14, -70), 4.2 * k, { seed: seed + 2 })]);
+  const mouth = arc(P(2, -60), 10 * k, Math.PI * 0.25, Math.PI * 0.75, { seed: seed + 4, width: w });
   const antenna = new Figure([
     lineStroke(P(0, -96), P(0, -112), { seed: seed + 5, width: w }),
     circleStroke(P(0, -124), 9 * k, { seed: seed + 6, width: w * 0.8 }),
@@ -131,39 +134,64 @@ export function learningAgent(c: Vec, o: Kin = {}) {
   ]);
   const arms = new Figure([
     pen([P(-30, -14), P(-52, 8), P(-50, 30)], { seed: seed + 12, width: w }),
-    pen([P(30, -14), P(50, -30), P(56, -48)], { seed: seed + 13, width: w }), // hand up: "I can try that"
+    pen([P(30, -14), P(50, -24), P(54, -40)], { seed: seed + 13, width: w }),
   ]);
-  const g = withSilhouette(parts({ antenna, head, eyes, brow, mouth, body, curve, arms }), k, 34, [-30, -24, 60, 74]);
+  // a pencil held up, tip pointing to the sky
+  const pencil = new Figure([
+    lineStroke(P(51, -32), P(60, -62), { seed: seed + 14, width: w * 1.6 }),
+    lineStroke(P(60, -62), P(62, -70), { seed: seed + 15, width: w * 0.6 }),
+  ]);
+  const g = withSilhouette(parts({ antenna, head, eyes, mouth, body, curve, arms, pencil }), k, 34, [-30, -24, 60, 74]);
   g.at(c.x, c.y);
   return g;
 }
 
 /**
- * AGI: the same character, grown up. Large and calm: half-closed eyes, a
- * slight smile, hands folded, shaded volume. Parts: antenna, head, eyes, mouth, body, shade, arms.
+ * AGI, general intelligence: one agent that can do any task. Grown up and
+ * calm, its chest split into four skills (craft, art, writing, science).
+ * Parts: antenna, head, eyes, mouth, body, shade, panes, skills, arms.
  */
 export function agi(c: Vec, o: Kin = {}) {
   const { k, w, P, seed } = kin(o, 190);
+  const t = w * 0.75;
   const head = new Figure([circleStroke(P(0, -62), 36 * k, { seed, width: w })]);
-  const lid = (x: number, s: number) => [
-    pen(Array.from({ length: 9 }, (_, i) => { const a = Math.PI * (1.1 + 0.8 * (i / 8)); return P(x + 7 * Math.cos(a), -64 - 2.2 * Math.sin(a)); }), { seed: s, width: w * 0.8, wobble: 0.1 }),
-    ...dotStrokes(P(x, -62), 3 * k, { seed: s + 1 }),
-  ];
-  const eyes = new Figure([...lid(-13, seed + 1), ...lid(13, seed + 3)]);
-  const mouth = arc(P(0, -60), 14 * k, Math.PI * 0.33, Math.PI * 0.67, { seed: seed + 5, width: w * 0.9 });
+  const eyes = new Figure([...dotStrokes(P(-13, -65), 3.8 * k, { seed: seed + 1 }), ...dotStrokes(P(13, -65), 3.8 * k, { seed: seed + 2 })]);
+  const mouth = arc(P(0, -60), 13 * k, Math.PI * 0.3, Math.PI * 0.7, { seed: seed + 5, width: w * 0.9 });
   const antenna = new Figure([lineStroke(P(0, -98), P(0, -114), { seed: seed + 6, width: w }), circleStroke(P(0, -120), 5.5 * k, { seed: seed + 7, width: w * 0.8 })]);
   const body = box(-34 * k, -24 * k, 68 * k, 80 * k, { seed: seed + 8, width: w });
-  const shade = hatch((q) => q.x > 12 * k && q.x < 31 * k && q.y > -20 * k && q.y < 52 * k, { x: 10 * k, y: -22 * k, w: 24 * k, h: 76 * k }, { seed: seed + 9, spacing: 4.5 * Math.sqrt(k), width: 0.9, tone: (q) => (q.x - 10 * k) / (22 * k) });
-  // arms at rest, a little away from the body, open hands
-  const arms = new Figure([
-    pen([P(-34, -14), P(-46, 6), P(-48, 34)], { seed: seed + 10, width: w }),
-    pen([P(-48, 34), P(-52, 40)], { seed: seed + 12, width: w * 0.8 }),
-    pen([P(-48, 34), P(-45, 41)], { seed: seed + 13, width: w * 0.8 }),
-    pen([P(34, -14), P(46, 6), P(48, 34)], { seed: seed + 11, width: w }),
-    pen([P(48, 34), P(52, 40)], { seed: seed + 14, width: w * 0.8 }),
-    pen([P(48, 34), P(45, 41)], { seed: seed + 15, width: w * 0.8 }),
+  const shade = hatch((q) => q.x > 27 * k && q.x < 32 * k && q.y > -20 * k && q.y < 54 * k, { x: 26 * k, y: -22 * k, w: 8 * k, h: 78 * k }, { seed: seed + 9, spacing: 3.6 * Math.sqrt(k), width: 0.9 });
+  // its chest is four panes, one skill in each: craft (gear), art (note),
+  // writing (pencil), science (a plotted curve). One mind, every domain.
+  const panes = new Figure([
+    lineStroke(P(-26, 18), P(26, 18), { seed: seed + 20, width: t * 0.7 }),
+    lineStroke(P(0, -16), P(0, 50), { seed: seed + 21, width: t * 0.7 }),
   ]);
-  const g = withSilhouette(parts({ antenna, head, eyes, mouth, body, shade, arms }), k, 36, [-34, -24, 68, 80]);
+  const gear = (cx: number, cy: number) => [
+    circleStroke(P(cx, cy), 6 * k, { seed: seed + 30, width: t }),
+    circleStroke(P(cx, cy), 2 * k, { seed: seed + 31, width: t * 0.8 }),
+    ...Array.from({ length: 8 }, (_, i) => { const a = (i / 8) * Math.PI * 2; return lineStroke(P(cx + 6 * Math.cos(a), cy + 6 * Math.sin(a)), P(cx + 9 * Math.cos(a), cy + 9 * Math.sin(a)), { seed: seed + 32 + i, width: t * 1.3 }); }),
+  ];
+  const note = (cx: number, cy: number) => [
+    ...dotStrokes(P(cx - 3, cy + 6), 3.2 * k, { seed: seed + 50 }),
+    lineStroke(P(cx, cy + 6), P(cx, cy - 9), { seed: seed + 51, width: t }),
+    pen([P(cx, cy - 9), P(cx + 5, cy - 5), P(cx + 6, cy - 1)], { seed: seed + 52, width: t, wobble: 0.1 }),
+  ];
+  const pencil = (cx: number, cy: number) => [
+    lineStroke(P(cx + 7, cy - 8), P(cx - 3, cy + 5), { seed: seed + 60, width: t * 1.8 }),
+    lineStroke(P(cx - 3, cy + 5), P(cx - 6, cy + 9), { seed: seed + 61, width: t * 0.6 }),
+    pen([P(cx - 10, cy + 11), P(cx - 4, cy + 12), P(cx + 2, cy + 10), P(cx + 8, cy + 12)], { seed: seed + 62, width: t * 0.6, wobble: 0.1 }),
+  ];
+  const plot = (cx: number, cy: number) => [
+    lineStroke(P(cx - 9, cy - 9), P(cx - 9, cy + 9), { seed: seed + 70, width: t * 0.7 }),
+    lineStroke(P(cx - 9, cy + 9), P(cx + 10, cy + 9), { seed: seed + 71, width: t * 0.7 }),
+    pen(Array.from({ length: 12 }, (_, i) => { const u = i / 11; return P(cx - 7 + 16 * u, cy + 6 - 13 * Math.sin(u * Math.PI * 0.85)); }), { seed: seed + 72, width: t, wobble: 0.1 }),
+  ];
+  const skills = new Figure([...gear(-13, 1), ...note(13, 1), ...pencil(-13, 34), ...plot(13, 34)]);
+  const arms = new Figure([
+    pen([P(-34, -14), P(-50, 4), P(-56, 30)], { seed: seed + 10, width: w }),
+    pen([P(34, -14), P(50, 4), P(56, 30)], { seed: seed + 11, width: w }),
+  ]);
+  const g = withSilhouette(parts({ antenna, head, eyes, mouth, body, shade, panes, skills, arms }), k, 36, [-34, -24, 68, 80]);
   g.at(c.x, c.y);
   return g;
 }
@@ -171,15 +199,13 @@ export function agi(c: Vec, o: Kin = {}) {
 /**
  * Superintelligence: the same character at a scale nothing was built for.
  * Default size is huge on purpose: place it so it spills out of a sandbox or
- * the screen. Detailed irises, a stippled head, a field of antennae.
- * Parts: antennae, head, eyes, mouth, body, arms.
+ * the screen. A crown of antennae, deep irises, a flat mouth, and a galaxy
+ * turning on its chest. Parts: antennae, head, eyes, mouth, body, shade, galaxy, arms.
  */
 export function superintelligence(c: Vec, o: Kin = {}) {
   const { k, w, P, seed } = kin(o, 520);
   const R = rng(seed);
   const head = new Figure([circleStroke(P(0, -62), 34 * k, { seed, width: w })]);
-  const tex = stipple((q) => Math.hypot(q.x, q.y + 62 * k) < 33 * k && q.x + q.y * 0.4 > -2 * k, { x: -34 * k, y: -96 * k, w: 68 * k, h: 68 * k }, { seed: seed + 20, count: Math.round(260 * k), size: 1.5, tone: (q) => Math.max(0, (q.x + 10 * k) / (44 * k)) ** 1.5 });
-  head.strokes.push(...tex.strokes);
   const iris = (x: number, s: number) => [
     circleStroke(P(x, -66), 8 * k, { seed: s, width: w * 0.5 }),
     ...Array.from({ length: 22 }, (_, i) => { const a = (i / 22) * Math.PI * 2 + R() * 0.1; return lineStroke(P(x + 3.4 * Math.cos(a), -66 + 3.4 * Math.sin(a)), P(x + 7.2 * Math.cos(a), -66 + 7.2 * Math.sin(a)), { seed: s + 1 + i, width: w * 0.22, wobble: 0.1 }); }),
@@ -194,11 +220,25 @@ export function superintelligence(c: Vec, o: Kin = {}) {
     return [lineStroke(base, tip, { seed: seed + 300 + i, width: w * 0.6 }), ...dotStrokes(tip, 2.2 * k, { seed: seed + 320 + i })];
   }).flat());
   const body = box(-30 * k, -24 * k, 60 * k, 74 * k, { seed: seed + 6, width: w });
+  // volume: hatching down the right side of the body
+  const shade = hatch((q) => q.x > 18 * k && q.x < 28 * k && q.y > -22 * k && q.y < 48 * k, { x: 16 * k, y: -24 * k, w: 14 * k, h: 74 * k }, { seed: seed + 9, spacing: 3.2 * Math.sqrt(k), width: 1, tone: (q) => (q.x - 16 * k) / (12 * k) });
+  // a spiral galaxy: two arms of ink around a bright core, and a few stars
+  const galaxy = new Figure([
+    ...[0, Math.PI].map((ph, j) => pen(Array.from({ length: 60 }, (_, i) => {
+      const tt = i / 59, a = ph + tt * Math.PI * 2.4, r = 2 + tt * 15;
+      return P(Math.cos(a) * r, 12 + Math.sin(a) * r * 0.62);
+    }), { seed: seed + 400 + j, width: w * 0.5, wobble: 0.1, taper: [0.1, 0.5] })),
+    circleStroke(P(0, 12), 2.2 * k, { seed: seed + 410, width: w * 0.5 }),
+    ...Array.from({ length: 14 }, (_, i) => {
+      const a = R() * Math.PI * 2, r = R.range(6, 22);
+      return dotStrokes(P(Math.cos(a) * r, 12 + Math.sin(a) * r * 0.62), R.range(0.25, 0.5) * k, { seed: seed + 420 + i });
+    }).flat(),
+  ]);
   const arms = new Figure([
     pen([P(-30, -14), P(-58, 4), P(-62, 34)], { seed: seed + 7, width: w }),
     pen([P(30, -14), P(58, 4), P(62, 34)], { seed: seed + 8, width: w }),
   ]);
-  const g = withSilhouette(parts({ antennae, head, eyes, mouth, body, arms }), k, 34, [-30, -24, 60, 74]);
+  const g = withSilhouette(parts({ antennae, head, eyes, mouth, body, shade, galaxy, arms }), k, 34, [-30, -24, 60, 74]);
   g.at(c.x, c.y);
   return g;
 }
@@ -245,25 +285,89 @@ export function sandbox(c: Vec, o: Mark & { w?: number; h?: number; band?: numbe
 }
 
 // ---------------------------------------------------------------- people
+// Photos live in the data folder (INK_DATA, synced with Google Drive), not in
+// the repo: <data>/people/people.json lists who is there, with the source and
+// licence of each photo, and <key>.mask.png (tools/mask.py) cuts out the
+// background. Without INK_DATA the small sample in ./sample is used.
 
-/** Portraits the library knows. Photos live in assets/people with their source and licence in README.md. */
-export const people: Record<string, { file: string; name: string; years: string; opts?: PortraitOpts }> = {
-  turing: { file: "turing-1951.jpg", name: "Alan Turing", years: "1912–1954" },
+export type PersonEntry = {
+  file: string; name: string; years: string; group?: string;
+  author?: string; license?: string; licenseUrl?: string; page?: string;
+  opts?: PortraitOpts;
 };
 
-export const personPath = (who: string) => (people[who] ? new URL(`../assets/people/${people[who].file}`, import.meta.url).pathname : who);
+/** The data folder: $INK_DATA, else the sample that ships with the library. */
+export const dataDir = () => process.env.INK_DATA ?? new URL("../sample", import.meta.url).pathname;
+
+/** Everyone in <data>/people/people.json. */
+export function people(): Record<string, PersonEntry> {
+  const f = join(dataDir(), "people", "people.json");
+  return existsSync(f) ? JSON.parse(readFileSync(f, "utf8")) : {};
+}
+
+const resolvePerson = (who: string) => {
+  const e = people()[who];
+  const path = e ? join(dataDir(), "people", e.file) : who;
+  const m = path.replace(/\.[a-z]+$/i, ".mask.png");
+  return { e, path, mask: existsSync(m) ? m : null };
+};
+
+/** Load the photos a later personSync() call will need (images decode asynchronously). */
+export async function preloadPerson(who: string) {
+  const r = resolvePerson(who);
+  await loadTone(r.path);
+  if (r.mask) await loadTone(r.mask);
+}
+
+const personOpts = (who: string, o: PortraitOpts): [string, PortraitOpts] => {
+  const r = resolvePerson(who);
+  const mask = r.mask ? cachedTone(r.mask) : undefined;
+  // with a cut-out, the vignette only has to fade the shoulders out
+  const vignette = mask ? { cy: 0.45, rx: 0.6, ry: 0.56, soft: 0.2 } : undefined;
+  return [r.path, { ...(vignette ? { vignette } : {}), ...(r.e?.opts ?? {}), ...(mask ? { mask } : {}), ...o }];
+};
 
 /**
- * An engraved portrait of a known person (see `people`) or of any image file:
+ * An engraved portrait of someone in people.json, or of any photo path:
  * `await person("turing")`. Parts: outline, shade (layer1..layer4). Centred on its origin.
  */
 export async function person(who: string, o: PortraitOpts = {}): Promise<Portrait> {
-  return portrait(await loadTone(personPath(who)), { ...(people[who]?.opts ?? {}), ...o });
+  await preloadPerson(who);
+  return personSync(who, o);
 }
 
-/** person() for code that cannot await; the image must have been loaded with loadTone(personPath(who)). */
+/** person() for code that cannot await; call preloadPerson(who) first. */
 export function personSync(who: string, o: PortraitOpts = {}): Portrait {
-  return portrait(cachedTone(personPath(who)), { ...(people[who]?.opts ?? {}), ...o });
+  const [path, opts] = personOpts(who, o);
+  return portrait(cachedTone(path), opts);
+}
+
+// ---------------------------------------------------------------- logos
+// Company logos, redrawn in ink for editorial use (trademarks of their owners).
+// Files and their sources: <data>/logos/logos.json.
+
+export type LogoEntry = { file: string; name: string; page?: string; license?: string; note?: string; opts?: PortraitOpts };
+
+export function logos(): Record<string, LogoEntry> {
+  const f = join(dataDir(), "logos", "logos.json");
+  return existsSync(f) ? JSON.parse(readFileSync(f, "utf8")) : {};
+}
+
+/**
+ * A logo engraved: its outline, then the solid parts hatched.
+ * `await logo("anthropic", { height: 80 })`. Parts: outline, shade. Centred on its origin.
+ */
+export async function logo(which: string, o: PortraitOpts & { fit?: [number, number] } = {}): Promise<Portrait> {
+  const e = logos()[which];
+  const path = e ? join(dataDir(), "logos", e.file) : which;
+  const t = await loadTone(path, { mode: "ink", maxSize: 1200 });
+  // fit: largest size inside a [w, h] box, so wordmarks and symbols line up
+  const height = o.fit ? Math.min(o.fit[1], (o.fit[0] * t.h) / t.w) : o.height;
+  return portrait(t, {
+    vignette: false, detail: 0, gamma: 1, levels: [0, 1], features: 0, outline: [0.5], outlineBlur: 0.8, minOutline: 6,
+    flow: 0, angle: -Math.PI * 0.3, layers: [{ at: 0.5, angle: 0, spacing: 3.4 }], width: 1.1,
+    ...(e?.opts ?? {}), ...o, ...(height ? { height } : {}),
+  });
 }
 
 export type Network = Group & {

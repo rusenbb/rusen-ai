@@ -13,7 +13,7 @@ const s = new Scene();
 const turing = (await person("turing", { height: 900 })).at(960, 540);
 s.play(draw(turing.outline, { duration: 3.5 }));
 s.play(draw(turing.shade, { duration: 8 }));
-const name = text(`${people.turing.name}`, { size: 34, color: palette.sepia }).at(960, 1030);
+const name = text(`${people().turing.name}`, { size: 34, color: palette.sepia }).at(960, 1030);
 s.play(fadeIn(name, { duration: 0.8 }));
 s.wait(1.2);
 
@@ -24,7 +24,7 @@ const reflex = reflexAgent(v(700, fy), { seed: 3, size: 95 });
 const learner = learningAgent(v(930, fy), { seed: 4, size: 110 });
 const fam = [reflex, learner, agent(v(1170, fy), { seed: 5, size: 125 }), agi(v(1500, fy - 20), { seed: 7, size: 200 })];
 for (const f of fam) s.play(draw(f, { duration: 1.6 }));
-s.play(indicate(reflex.eye, { duration: 0.8 }));
+s.play(indicate(reflex.eyes, { duration: 0.8 }));
 s.play(indicate(learner.curve, { duration: 0.8 }));
 s.wait(1.2);
 
