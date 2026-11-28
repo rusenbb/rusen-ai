@@ -1,3 +1,0 @@
-#!/usr/bin/env sh
-here="$(cd "$(dirname "$0")/.." && pwd)"
-exec node --experimental-strip-types --no-warnings "$here/src/cli.ts" "$@"

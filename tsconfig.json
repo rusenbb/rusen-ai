@@ -42,7 +42,6 @@
     "functions",
     "worktrees",
     "out",
-    "output",
-    "ink"
+    "output"
   ]
 }
