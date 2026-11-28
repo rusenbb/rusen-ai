@@ -1,4 +1,5 @@
-// Primitive marks, all built from pen strokes so they animate as drawing.
+// Layer 1, primitives: the marks a pen makes. Each is built only from pen
+// strokes (layer 0), so everything animates as drawing.
 import { type Vec, add, dist, inPoly, lerpV, mul, norm, perp, polar, quad, rot, spline, sub, v } from "./geom.ts";
 import { Figure, Group, type Node } from "./node.ts";
 import { rng } from "./rng.ts";
@@ -95,7 +96,19 @@ export function arrow(a: Vec, b: Vec, o: Mark & { bend?: number; head?: number; 
   return new Figure([pen(shaft, { wobble: 0.5, ...o, seed }), barb(1), barb(-1)]);
 }
 
-/** Wavy brace, rectangle, frame. */
+/** An arc of a circle from angle a0 to a1 (radians). */
+export function arc(c: Vec, r: number, a0: number, a1: number, o: Mark = {}) {
+  const n = Math.max(8, Math.ceil((Math.abs(a1 - a0) * r) / 6));
+  return new Figure([pen(Array.from({ length: n + 1 }, (_, i) => add(c, polar(a0 + ((a1 - a0) * i) / n, r))), { wobble: 0.3, taper: [0.04, 0.12], ...o, seed: seedOf(o) })]);
+}
+
+/** Straight segments through points, each a separate pen stroke (a corner = a pen lift). */
+export function polyline(pts: Vec[], o: Mark = {}) {
+  const seed = seedOf(o);
+  return new Figure(pts.slice(1).map((p, i) => lineStroke(pts[i], p, { ...o, seed: seed + i })));
+}
+
+/** Rectangle drawn as four ruled sides. */
 export function box(x: number, y: number, w: number, h: number, o: Mark = {}) {
   const seed = seedOf(o);
   const R = rng(seed);
@@ -175,21 +188,6 @@ export function stipple(inside: (p: Vec) => boolean, bbox: { x: number; y: numbe
     strokes.push(pen([p, add(p, polar(a, l))], { width: o.size ?? 2, wobble: 0, taper: [0, 0], blot: 0, ...o, seed: seed + i }));
   }
   return new Figure(strokes);
-}
-
-/** A circle with a label inside: the basic node of every diagram. */
-export function node(c: Vec, r: number, label = "", o: Mark & { shade?: boolean; textOpts?: TextOpts } = {}): Group {
-  const seed = seedOf(o);
-  const parts: Node[] = [new Figure([circleStroke(v(0, 0), r, { ...o, seed })]).named("ring")];
-  if (o.shade) {
-    // crescent of hatching on the lower right, light from the upper left
-    const inside = (p: Vec) => Math.hypot(p.x, p.y) < r - 3 && Math.hypot(p.x + r * 0.35, p.y + r * 0.35) > r * 0.95;
-    parts.push(hatch(inside, { x: -r, y: -r, w: 2 * r, h: 2 * r }, { seed: seed + 5, spacing: Math.max(3, r / 11), width: 0.9, color: o.color }).named("shade"));
-  }
-  if (label) parts.push(text(label, { size: r * 0.8, ...o.textOpts }).named("label"));
-  const g = new Group(parts);
-  g.at(c.x, c.y);
-  return g;
 }
 
 export { palette };

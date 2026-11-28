@@ -5,7 +5,7 @@ import { type Vec, add, lerp, mul, polar, rot, spline, v } from "./geom.ts";
 import { Figure, Group } from "./node.ts";
 import { rng, type Rng } from "./rng.ts";
 import { type Stroke, pen } from "./stroke.ts";
-import { hatch, dotStrokes } from "./shapes.ts";
+import { hatch, dotStrokes } from "./primitives.ts";
 import { palette } from "./style.ts";
 
 export type NeuronOpts = {

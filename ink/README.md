@@ -33,25 +33,21 @@ Every frame is a pure function of time, so `snap` at any moment, `storyboard`
 (a contact sheet), `undo`/`redo` and `timeline()` (start/end of every
 animation, to sync with narration) all work without replaying a video.
 
-### Pieces
+### Layers
 
-| 2D | |
-| --- | --- |
-| `neuron({ kind, size, reach, dendrites, axonAngle, axonLength, spines, seed })` | Cajal-style cell; parts `soma`, `dendrites`, `axon` |
-| `node(c, r, label, { shade })` | circle + label, optional hatched shadow |
-| `arrow(a, b, { bend, head })`, `line`, `curve(points)`, `circle`, `box`, `dot` | hand-drawn marks |
-| `hatch(region, bbox, { angle, spacing, tone, cross })` | Leonardo hatching, tone-driven |
-| `stipple(inside, bbox, { tone })` | dotted tone |
-| `text(s)` / `tex("w_1 x^2")` | Geist Serif prose / STIX italic math with `_` `^` |
-| `group(...).withLag(0.5)` | draw children one after another (or overlapping). A node lives in one group; to animate several existing nodes together use `s.play(...each(nodes, fadeOut))` |
-| `captions(scene)` → `say(text, hold)`, `clear()`, `srt(path)` | pen-written captions at the bottom, plus a matching `.srt` subtitle file |
+Everything is built from the layer below it, nothing skips a layer:
 
-| 3D (projected through `scene.camera`, hidden lines removed, far lines thinner) | |
-| --- | --- |
-| `surface(f, { range, grid, shade, contours })` | loss landscape `y = f(x, z)` |
-| `axes3d(size)`, `points3d(points)`, `path3d(points, { arrow })` | embedding spaces, vectors, trajectories |
-| `path3d(...).behind(surface)` | a path on the surface that hides behind hills |
-| `pin(label, fig3d, [x, y, z])` | 2D label stuck to a 3D point |
+| Layer | File | What |
+| --- | --- | --- |
+| 0 · pen | `stroke.ts` | a stroke: pressure, tremor, taper, ink pooling |
+| 1 · primitives | `primitives.ts`, `text.ts` | `line curve arc circle box dot arrow polyline hatch stipple text tex` |
+| 2 · components | `components.ts`, `neuron.ts`, `three.ts` | `node brace bubble bar waves signal robot dirt axes(.plot .vec .scatter) matrix table`, `neuron`, `surface axes3d points3d path3d` |
+| 3 · figures | `figures.ts` | characters and compound diagrams: `agent({ aligned })`, `network([3, 4, 4, 2])` |
+| 4 · patterns | `patterns.ts` | storytelling moves: `sense`, `travel`, `loop`, `forward`, `backprop`, `columns`, `crown` |
+
+`examples/catalog.ts` renders one sheet per layer; `examples/backprop.ts` shows
+layers 3 and 4 together. Components return groups with named parts
+(`bar.fill`, `node.ring`, `net.edges[l][i][j]`), so a scene can animate a part.
 
 Animations: `draw`, `drawTo` (partial, e.g. a bar filling to 30 %), `undraw`,
 `fadeIn`, `fadeOut`, `moveTo`, `moveAlong(node, path)`, `shift`, `scaleTo`,
