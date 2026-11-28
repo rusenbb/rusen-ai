@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "inputFingerprint": "3df96fe065e4da1591c520126e2277c557b8189c9fcfe40202feddd5bdb1dfc0",
+  "inputFingerprint": "87800fd9a294fb3e7251bfa0a571206a496534cc3b0f61dfeb56459960b337e5",
   "assets": [
     {
       "route": "/",
@@ -263,7 +263,7 @@
       "image": "/social/blog/posts/climbing-every-mountain.png",
       "width": 1200,
       "height": 630,
-      "bytes": 220308,
+      "bytes": 213772,
       "format": "png"
     },
     {
@@ -271,7 +271,7 @@
       "image": "/social/blog/posts/her-daga-tirmanmak-mi.png",
       "width": 1200,
       "height": 630,
-      "bytes": 218126,
+      "bytes": 213227,
       "format": "png"
     },
     {
@@ -279,7 +279,7 @@
       "image": "/social/blog/posts/we-are-the-bottleneck.png",
       "width": 1200,
       "height": 630,
-      "bytes": 371187,
+      "bytes": 347316,
       "format": "png"
     },
     {
@@ -287,7 +287,7 @@
       "image": "/social/blog/posts/darbogaz-biziz.png",
       "width": 1200,
       "height": 630,
-      "bytes": 372113,
+      "bytes": 347645,
       "format": "png"
     },
     {
