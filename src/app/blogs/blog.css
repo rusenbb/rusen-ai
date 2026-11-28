@@ -137,6 +137,20 @@ html[data-blog-lang="tr"] [data-tag-lang="en"]:not([data-blog-force-lang] *) {
   vertical-align: middle;
 }
 
+/* Optional ink cover drawn from one of my own photos (frontmatter `cover`). */
+.post-cover {
+  margin: 0 0 1.6rem;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  overflow: hidden;
+  background: #ebe4d3;
+}
+.post-cover img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
 .post-title {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 1.65rem;

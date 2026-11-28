@@ -8,6 +8,7 @@ tags:
   - "derin öğrenme"
   - "makine öğrenmesi"
 translationKey: "ai-recommendations"
+cover: "sapling"
 ---
 
 > *yazan [rusen birben](http://rusenbirben.com) [@fictionstudios](http://fictionstudios.ai)*

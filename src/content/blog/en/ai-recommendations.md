@@ -8,6 +8,7 @@ tags:
   - "deep-learning"
   - "machine-learning"
 translationKey: "ai-recommendations"
+cover: "sapling"
 ---
 
 > *by [rusen birben](http://rusenbirben.com) [@fictionstudios](http://fictionstudios.ai)*

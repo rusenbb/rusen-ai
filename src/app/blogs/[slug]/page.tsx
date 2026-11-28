@@ -18,6 +18,8 @@ import {
   getTranslation,
   getPrevNextInSeries,
   getAllSeries,
+  getCover,
+  coverImagePath,
   extractHeadings,
   formatDate,
   readUnit,
@@ -151,6 +153,19 @@ export default async function PostPage({
       />
       {headings.length >= 2 && (
         <TableOfContents headings={headings} label={tocLabel} />
+      )}
+
+      {post.cover && (
+        <figure className="post-cover">
+          {/* eslint-disable-next-line @next/next/no-img-element -- static export, pre-sized webp */}
+          <img
+            src={coverImagePath(post.cover)}
+            alt={getCover(post.cover).alt[post.lang]}
+            width={1600}
+            height={900}
+            fetchPriority="high"
+          />
+        </figure>
       )}
 
       <h1 className="post-title" data-allow-select>

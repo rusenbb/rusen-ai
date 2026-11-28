@@ -1,0 +1,38 @@
+{
+  "jet-monument": {
+    "alt": {
+      "en": "Ink drawing from my photo of a fighter jet monument inscribed 'İstikbal göklerdedir' (the future is in the skies)",
+      "tr": "Kendi fotoğrafımdan mürekkep çizim: 'İstikbal göklerdedir' yazan savaş uçağı anıtı"
+    }
+  },
+  "ant": {
+    "alt": {
+      "en": "Ink drawing from my photo of an ant crossing cracked stone",
+      "tr": "Kendi fotoğrafımdan mürekkep çizim: çatlak taşın üstünde yürüyen bir karınca"
+    }
+  },
+  "sapling": {
+    "alt": {
+      "en": "Ink drawing from my photo of a young sapling on the shore",
+      "tr": "Kendi fotoğrafımdan mürekkep çizim: kıyıda filizlenen genç bir fidan"
+    }
+  },
+  "spider": {
+    "alt": {
+      "en": "Ink drawing from my photo of an orb spider on its web",
+      "tr": "Kendi fotoğrafımdan mürekkep çizim: ağının ortasında bir örümcek"
+    }
+  },
+  "own-shadow": {
+    "alt": {
+      "en": "Ink drawing from my photo of my own shadow on a running track by the sea",
+      "tr": "Kendi fotoğrafımdan mürekkep çizim: deniz kenarında koşu pistine düşen kendi gölgem"
+    }
+  },
+  "mountain-lake": {
+    "alt": {
+      "en": "Ink drawing from my photo of mountains reflected in Uzungöl",
+      "tr": "Kendi fotoğrafımdan mürekkep çizim: Uzungöl'de suya yansıyan dağlar"
+    }
+  }
+}

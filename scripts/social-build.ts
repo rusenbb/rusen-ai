@@ -14,7 +14,7 @@ import { dirname, extname, relative, resolve } from "node:path";
 
 import sharp from "sharp";
 
-import { getAllPosts, getAllSeries, getAllTags, tagDisplay, tagSlug } from "../src/lib/blog.ts";
+import { coverImagePath, getAllPosts, getAllSeries, getAllTags, tagDisplay, tagSlug } from "../src/lib/blog.ts";
 import { getProjectPath, PROJECTS } from "../src/lib/projects.ts";
 import {
   HIKARI_PATH,
@@ -43,6 +43,8 @@ type CardSpec = {
   register: string;
   seed: string;
   variant: "system" | "project" | "editorial" | "document";
+  /** Blog cover key: the card is laid on the post's ink drawing instead of the generated pattern. */
+  cover?: string;
 };
 
 type GeneratedAsset = {
@@ -77,7 +79,7 @@ const WIDTH = 1200;
 const HEIGHT = 630;
 const MAX_BYTES = 1_500_000;
 // Bump when the card design changes so the verify step asks for a rebuild.
-const CARD_STYLE = "hikari-2";
+const CARD_STYLE = "hikari-3";
 
 // Brand palette: ink, paper/candle text, seal red. See src/app/globals.css.
 const INK = "#0b0a09";
@@ -242,9 +244,82 @@ function renderCardSvg(spec: CardSpec): Buffer {
   `);
 }
 
+// Cover cards: the ink drawing on its own paper, the title set in ink on the left.
+const PAPER = "#ebe4d3";
+const INK_TEXT = "#16130f";
+const INK_DIM = "#6f6556";
+
+function renderCoverOverlaySvg(spec: CardSpec): Buffer {
+  const lines = wrapText(spec.title.join(" "), 16, 4);
+  const size = lines.length >= 4 ? 44 : lines.some((line) => line.length > 14) ? 48 : 54;
+  const lineHeight = Math.round(size * 1.08);
+  const startY = 315 - ((lines.length - 1) * lineHeight) / 2;
+  const title = lines
+    .map((line, index) => `<text x="78" y="${startY + index * lineHeight}" class="title" font-size="${size}">${xml(line)}</text>`)
+    .join("");
+  return Buffer.from(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}">
+      <defs>
+        <style>
+          text { font-family: "Geist Mono", "SFMono-Regular", Menlo, Consolas, monospace; }
+          .micro { fill: ${INK_DIM}; font-size: 16px; font-weight: 600; letter-spacing: 3px; }
+          .title { fill: ${INK_TEXT}; font-weight: 700; letter-spacing: -1.5px; }
+          .register { fill: ${SEAL}; font-size: 17px; font-weight: 650; letter-spacing: 2px; }
+        </style>
+      </defs>
+      <rect x="38" y="38" width="1124" height="554" rx="2" fill="none" stroke="${INK_TEXT}" stroke-opacity="0.22"/>
+      ${seal(70, 58, 30)}
+      <text x="114" y="79" class="micro">${xml(spec.label.toUpperCase())}</text>
+      ${title}
+      <text x="78" y="570" class="register">[ ${xml(spec.register.toUpperCase())} ]</text>
+      <text x="1124" y="570" class="micro" text-anchor="end">rusen.ai</text>
+    </svg>
+  `);
+}
+
+/** The drawing's ink as an RGBA layer (paper made transparent), trimmed to the ink. */
+async function inkLayer(file: string): Promise<{ buffer: Buffer; width: number; height: number }> {
+  const { data, info } = await sharp(file).greyscale().raw().toBuffer({ resolveWithObject: true });
+  const sorted = Uint8Array.from(data).sort();
+  const paper = sorted[Math.floor(sorted.length * 0.6)];
+  const rgba = Buffer.alloc(info.width * info.height * 4);
+  let x0 = info.width, y0 = info.height, x1 = 0, y1 = 0;
+  for (let i = 0; i < info.width * info.height; i += 1) {
+    const alpha = Math.max(0, Math.min(255, Math.round(((paper - 12 - data[i]) * 255) / Math.max(1, paper - 60))));
+    rgba[i * 4] = 0x16; rgba[i * 4 + 1] = 0x13; rgba[i * 4 + 2] = 0x0f; rgba[i * 4 + 3] = alpha;
+    if (alpha > 60) {
+      const x = i % info.width, y = Math.floor(i / info.width);
+      if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+    }
+  }
+  const buffer = await sharp(rgba, { raw: { width: info.width, height: info.height, channels: 4 } })
+    .extract({ left: x0, top: y0, width: x1 - x0 + 1, height: y1 - y0 + 1 })
+    .png()
+    .toBuffer();
+  return { buffer, width: x1 - x0 + 1, height: y1 - y0 + 1 };
+}
+
+async function writeCoverCard(spec: CardSpec & { cover: string }, outputPath: string): Promise<void> {
+  const drawing = resolve(ROOT, "public", coverImagePath(spec.cover).replace(/^\//, ""));
+  const ink = await inkLayer(drawing);
+  // the drawing sits in the right part of the card, the title on clean paper at the left
+  const box = { x: 560, y: 70, w: 590, h: 470 };
+  const k = Math.min(box.w / ink.width, box.h / ink.height);
+  const w = Math.round(ink.width * k), h = Math.round(ink.height * k);
+  const placed = await sharp(ink.buffer).resize(w, h).toBuffer();
+  await sharp({ create: { width: WIDTH, height: HEIGHT, channels: 3, background: PAPER } })
+    .composite([
+      { input: placed, left: box.x + Math.round((box.w - w) / 2), top: box.y + Math.round((box.h - h) / 2) },
+      { input: renderCoverOverlaySvg(spec) },
+    ])
+    .png({ compressionLevel: 9, palette: true, quality: 90 })
+    .toFile(outputPath);
+}
+
 async function writePng(spec: CardSpec): Promise<void> {
   const outputPath = resolve(ROOT, `public${spec.output}`);
   mkdirSync(dirname(outputPath), { recursive: true });
+  if (spec.cover) return writeCoverCard(spec as CardSpec & { cover: string }, outputPath);
   await sharp(renderCardSvg(spec))
     .png({ compressionLevel: 9, palette: true, quality: 100 })
     .toFile(outputPath);
@@ -334,6 +409,7 @@ function blogSpecs(): CardSpec[] {
     register: `${post.readingMinutes} MIN READ / ARTICLE`,
     seed: post.slug,
     variant: "editorial",
+    ...(post.cover ? { cover: post.cover } : {}),
   }));
 
   const seenTagSlugs = new Set<string>();
@@ -391,10 +467,13 @@ function socialImageFiles(directory = resolve(ROOT, "public/social")): string[] 
 
 function inputFingerprint(): string {
   const specs = [...staticSpecs(), ...projectSpecs(), ...blogSpecs()];
-  return createHash("sha256")
+  const digest = createHash("sha256")
     .update(JSON.stringify({ style: CARD_STYLE, specs, photos: STATIC_PAGES.photos, photoCount: PHOTO_COUNT }))
-    .update(readFileSync(PHOTO_SOURCE))
-    .digest("hex");
+    .update(readFileSync(PHOTO_SOURCE));
+  for (const cover of [...new Set(specs.flatMap((spec) => (spec.cover ? [spec.cover] : [])))].sort()) {
+    digest.update(readFileSync(resolve(ROOT, "public", coverImagePath(cover).replace(/^\//, ""))));
+  }
+  return digest.digest("hex");
 }
 
 function verifyManifest(expected: Array<{ route: string; image: string }>): void {

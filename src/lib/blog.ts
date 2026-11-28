@@ -7,6 +7,21 @@ import { buildSigil, type Sigil } from "./blog-sigil.ts";
 const CONTENT_ROOT = path.join(process.cwd(), "src", "content");
 const BLOG_DIR = path.join(CONTENT_ROOT, "blog");
 const SERIES_FILE = path.join(CONTENT_ROOT, "series.json");
+const COVERS_FILE = path.join(CONTENT_ROOT, "blog-covers.json");
+
+export type BlogCover = { alt: Record<Lang, string> };
+const BLOG_COVERS = JSON.parse(fs.readFileSync(COVERS_FILE, "utf8")) as Record<string, BlogCover>;
+
+/** Public path of a post's ink cover drawing. */
+export function coverImagePath(key: string): string {
+  return `/blog/covers/${key}.webp`;
+}
+
+export function getCover(key: string): BlogCover {
+  const cover = BLOG_COVERS[key];
+  if (!cover) throw new Error(`Unknown blog cover ${key}`);
+  return cover;
+}
 
 export type Lang = "en" | "tr";
 
@@ -21,6 +36,8 @@ export interface PostFrontmatter {
   audio?: { src: string; durationSeconds: number; waveform: number[] };
   /** YouTube video id of the narrated edition. */
   youtube?: string;
+  /** Key of an ink drawing in /blog/covers/<key>.webp, described in src/content/blog-covers.json. */
+  cover?: string;
 }
 
 export interface Post extends PostFrontmatter {
@@ -108,6 +125,15 @@ function readPostFile(lang: Lang, file: string): Post {
   if (youtube !== undefined && !/^[A-Za-z0-9_-]{11}$/.test(youtube)) {
     throw new Error(`${fullPath}: youtube must be an 11-character YouTube video id`);
   }
+  const cover = optionalFrontmatterString(data, "cover", fullPath);
+  if (cover !== undefined) {
+    if (!/^[a-z0-9-]+$/.test(cover) || !BLOG_COVERS[cover]) {
+      throw new Error(`${fullPath}: cover must be a key of src/content/blog-covers.json`);
+    }
+    if (!fs.existsSync(path.join(process.cwd(), "public", coverImagePath(cover)))) {
+      throw new Error(`${fullPath}: cover image is missing: ${coverImagePath(cover)}`);
+    }
+  }
   const audio = data.audio as PostFrontmatter["audio"];
   if (audio !== undefined) {
     if (
@@ -138,6 +164,7 @@ function readPostFile(lang: Lang, file: string): Post {
     seriesOrder: seriesOrder as number | undefined,
     audio,
     youtube,
+    cover,
     body: content,
     wordCount,
     readingMinutes: Math.max(1, Math.round(wordCount / READING_WPM)),
