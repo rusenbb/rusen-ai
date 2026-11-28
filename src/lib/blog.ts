@@ -9,7 +9,11 @@ const BLOG_DIR = path.join(CONTENT_ROOT, "blog");
 const SERIES_FILE = path.join(CONTENT_ROOT, "series.json");
 const COVERS_FILE = path.join(CONTENT_ROOT, "blog-covers.json");
 
-export type BlogCover = { alt: Record<Lang, string> };
+export type BlogCover = {
+  alt: Record<Lang, string>;
+  /** Horizontal point of the drawing (0..1) kept in view on the link preview card, which shows a narrower slice. Default 0.5. */
+  cardFocus?: number;
+};
 const BLOG_COVERS = JSON.parse(fs.readFileSync(COVERS_FILE, "utf8")) as Record<string, BlogCover>;
 
 /** Public path of a post's ink cover drawing. */

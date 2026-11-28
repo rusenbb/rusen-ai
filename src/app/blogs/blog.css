@@ -143,7 +143,6 @@ html[data-blog-lang="tr"] [data-tag-lang="en"]:not([data-blog-force-lang] *) {
   border: 1px solid var(--line);
   border-radius: 2px;
   overflow: hidden;
-  background: #ebe4d3;
 }
 .post-cover img {
   display: block;

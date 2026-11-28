@@ -14,7 +14,7 @@ import { dirname, extname, relative, resolve } from "node:path";
 
 import sharp from "sharp";
 
-import { coverImagePath, getAllPosts, getAllSeries, getAllTags, tagDisplay, tagSlug } from "../src/lib/blog.ts";
+import { coverImagePath, getCover, getAllPosts, getAllSeries, getAllTags, tagDisplay, tagSlug } from "../src/lib/blog.ts";
 import { getProjectPath, PROJECTS } from "../src/lib/projects.ts";
 import {
   HIKARI_PATH,
@@ -249,9 +249,13 @@ const PAPER = "#ebe4d3";
 const INK_TEXT = "#16130f";
 const INK_DIM = "#6f6556";
 
+/** Left edge of the cover drawing on a link preview card; the drawing runs from here to the right edge. */
+const COVER_PANEL_X = 540;
+
 function renderCoverOverlaySvg(spec: CardSpec): Buffer {
-  const lines = wrapText(spec.title.join(" "), 16, 4);
-  const size = lines.length >= 4 ? 44 : lines.some((line) => line.length > 14) ? 48 : 54;
+  // the title must stay on the paper, left of the drawing
+  const lines = wrapText(spec.title.join(" "), 14, 5);
+  const size = lines.length >= 4 ? 42 : 48;
   const lineHeight = Math.round(size * 1.08);
   const startY = 315 - ((lines.length - 1) * lineHeight) / 2;
   const title = lines
@@ -267,57 +271,27 @@ function renderCoverOverlaySvg(spec: CardSpec): Buffer {
           .register { fill: ${SEAL}; font-size: 17px; font-weight: 650; letter-spacing: 2px; }
         </style>
       </defs>
-      <rect x="38" y="38" width="1124" height="554" rx="2" fill="none" stroke="${INK_TEXT}" stroke-opacity="0.22"/>
       ${seal(70, 58, 30)}
       <text x="114" y="79" class="micro">${xml(spec.label.toUpperCase())}</text>
       ${title}
-      <text x="78" y="570" class="register">[ ${xml(spec.register.toUpperCase())} ]</text>
-      <text x="1124" y="570" class="micro" text-anchor="end">rusen.ai</text>
+      <text x="78" y="540" class="register">[ ${xml(spec.register.toUpperCase())} ]</text>
+      <text x="78" y="574" class="micro">rusen.ai</text>
     </svg>
   `);
 }
 
-/** The drawing cut to its ink (plus a margin), with edges feathered into the card's paper. */
-async function drawingLayer(file: string): Promise<{ buffer: Buffer; width: number; height: number }> {
-  const { data, info } = await sharp(file).removeAlpha().raw().toBuffer({ resolveWithObject: true });
-  const n = info.width * info.height;
-  const luma = new Uint8Array(n);
-  for (let i = 0; i < n; i += 1) luma[i] = Math.round(0.299 * data[i * 3] + 0.587 * data[i * 3 + 1] + 0.114 * data[i * 3 + 2]);
-  const paper = Uint8Array.from(luma).sort()[Math.floor(n * 0.6)];
-  let x0 = info.width, y0 = info.height, x1 = 0, y1 = 0;
-  for (let i = 0; i < n; i += 1) {
-    if (luma[i] < paper - 40) {
-      const x = i % info.width, y = Math.floor(i / info.width);
-      if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
-    }
-  }
-  const pad = 44;
-  x0 = Math.max(0, x0 - pad); y0 = Math.max(0, y0 - pad);
-  x1 = Math.min(info.width - 1, x1 + pad); y1 = Math.min(info.height - 1, y1 + pad);
-  const width = x1 - x0 + 1, height = y1 - y0 + 1;
-  const feather = Buffer.from(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><defs><filter id="f"><feGaussianBlur stdDeviation="${pad / 2.2}"/></filter></defs><rect x="${pad}" y="${pad}" width="${width - 2 * pad}" height="${height - 2 * pad}" fill="#fff" filter="url(#f)"/></svg>`,
-  );
-  const buffer = await sharp(file)
-    .extract({ left: x0, top: y0, width, height })
-    .ensureAlpha()
-    .composite([{ input: feather, blend: "dest-in" }])
-    .png()
-    .toBuffer();
-  return { buffer, width, height };
-}
-
 async function writeCoverCard(spec: CardSpec & { cover: string }, outputPath: string): Promise<void> {
   const drawing = resolve(ROOT, "public", coverImagePath(spec.cover).replace(/^\//, ""));
-  const layer = await drawingLayer(drawing);
-  // the drawing sits in the right part of the card, the title on clean paper at the left
-  const box = { x: 560, y: 70, w: 590, h: 470 };
-  const k = Math.min(box.w / layer.width, box.h / layer.height);
-  const w = Math.round(layer.width * k), h = Math.round(layer.height * k);
-  const placed = await sharp(layer.buffer).resize(w, h).toBuffer();
+  // the drawing fills the whole right panel, edge to edge; the title sits on clean paper at the left
+  const panel = { x: COVER_PANEL_X, w: WIDTH - COVER_PANEL_X, h: HEIGHT };
+  // the panel is narrower than the drawing: keep the part around the cover's card focus
+  const scaled = await sharp(drawing).resize({ height: panel.h }).toBuffer({ resolveWithObject: true });
+  const focus = getCover(spec.cover).cardFocus ?? 0.5;
+  const left = Math.max(0, Math.min(scaled.info.width - panel.w, Math.round(focus * scaled.info.width - panel.w / 2)));
+  const placed = await sharp(scaled.data).extract({ left, top: 0, width: panel.w, height: panel.h }).toBuffer();
   await sharp({ create: { width: WIDTH, height: HEIGHT, channels: 3, background: PAPER } })
     .composite([
-      { input: placed, left: box.x + Math.round((box.w - w) / 2), top: box.y + Math.round((box.h - h) / 2) },
+      { input: placed, left: panel.x, top: 0 },
       { input: renderCoverOverlaySvg(spec) },
     ])
     .png({ compressionLevel: 9, palette: true, quality: 90 })
@@ -373,7 +347,7 @@ async function writePhotoCard(page: StaticSocialPage): Promise<void> {
   `);
 
   await sharp(PHOTO_SOURCE)
-    .resize(WIDTH, HEIGHT, { fit: "cover", position: "centre" })
+    .resize(WIDTH, HEIGHT, { fit: "cover", position: sharp.strategy.attention })
     .composite([{ input: overlay }])
     .jpeg({ quality: 90, chromaSubsampling: "4:4:4", mozjpeg: true })
     .toFile(outputPath);
@@ -480,6 +454,7 @@ function inputFingerprint(): string {
     .update(readFileSync(PHOTO_SOURCE));
   for (const cover of [...new Set(specs.flatMap((spec) => (spec.cover ? [spec.cover] : [])))].sort()) {
     digest.update(readFileSync(resolve(ROOT, "public", coverImagePath(cover).replace(/^\//, ""))));
+    digest.update(JSON.stringify(getCover(cover)));
   }
   return digest.digest("hex");
 }
